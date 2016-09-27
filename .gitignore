@@ -1,5 +1,5 @@
 # Ignore the file with the api key
-# apikey.xml
+app/src/main/res/values/apikey.xml
 
 # Local configuration file
 local.properties

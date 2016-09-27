@@ -6,7 +6,10 @@ Currently only the Empatica E4 is supported.
 ## Setup Empatica E4
 
 - Clone / download this repository.
-- Open the sample project in Android Studio.
 - Make sure you have a valid API key. You can request one for your Empatica Connect account from our [Developer Area][1].
-- Edit res/values/apikey.xml and enter your API key in the apikey xml element.
+- Edit the apikey.xml and enter your API key in the apikey xml element.
+- Open the sample project in Android Studio.
+- Move the apikey.xml file to res/values/apikey.xml
 - Launch the application.
+
+[1]: https://www.empatica.com/connect/developer.php
