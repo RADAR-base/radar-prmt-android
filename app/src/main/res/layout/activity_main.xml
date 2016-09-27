@@ -23,7 +23,7 @@
         android:visibility="gone"
         android:id="@+id/dataArea"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_below="@id/deviceName">
 
         <TextView
@@ -84,7 +84,8 @@
             android:layout_below="@id/accel_area"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/bvp_label" />
+            android:text="@string/bvp_label"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_below="@id/bvp_label"
@@ -153,6 +154,46 @@
             android:id="@+id/battery"
             android:text="@string/emptyText"/>
 
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/timer_label"
+            android:layout_marginTop="10dp"
+            android:layout_below="@id/battery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/timer_label" />
+
+        <TextView
+            android:layout_below="@id/timer_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/timer"
+            android:text="@string/emptyText"/>
+
+     </RelativeLayout>
+
+    <Button
+        android:layout_below="@+id/dataArea"
+        android:layout_marginTop="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/stopButton"
+        android:text="Stop Recording"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Restart Recording"
+        android:id="@+id/restartButton"
+        android:layout_below="@+id/stopButton"/>
+
+    <Button
+        android:layout_below="@id/restartButton"
+        android:layout_marginTop="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/showButton"
+        android:text="Show Output"/>
+
+
 
 </RelativeLayout>

@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.loopj.android:android-async-http:1.4.6'
     compile project(':empalink-2.0')
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
 }
