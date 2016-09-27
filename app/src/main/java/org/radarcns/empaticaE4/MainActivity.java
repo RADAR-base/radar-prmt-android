@@ -1,4 +1,4 @@
-package com.empatica.sample;
+package org.radarcns.empaticaE4;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -21,6 +21,7 @@ import com.empatica.empalink.config.EmpaSensorType;
 import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
+import org.radarcns.empaticaE4.R;
 
 
 public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate {
@@ -30,7 +31,6 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private Time mTimer;
 
     private EmpaDeviceManager deviceManager;
-    private BluetoothDevice mLastDeviceConnected;
 
     private TextView accel_xLabel;
     private TextView accel_yLabel;
@@ -88,15 +88,6 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "RESTARTED RECORDING", Toast.LENGTH_SHORT).show();
                 deviceManager.startScanning();
-//                try {
-//                    // Connect to the device
-//                    deviceManager.startScanning();
-//                    deviceManager.connectDevice(mLastDeviceConnected);
-//                    updateLabel(deviceNameLabel, "To: " + mLastDeviceConnected.getName());
-//                } catch (ConnectionNotAllowedException e) {
-//                    // This should happen only if you try to connect when allowed == false.
-//                    Toast.makeText(MainActivity.this, "Sorry, you can't connect to this device", Toast.LENGTH_SHORT).show();
-//                }
             }
         });
 
@@ -142,7 +133,6 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             try {
                 // Connect to the device
                 deviceManager.connectDevice(bluetoothDevice);
-                mLastDeviceConnected = bluetoothDevice;
                 updateLabel(deviceNameLabel, "To: " + deviceName);
             } catch (ConnectionNotAllowedException e) {
                 // This should happen only if you try to connect when allowed == false.
@@ -205,15 +195,15 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                dataCnt.setVisibility(View.VISIBLE);
+//                dataCnt.setVisibility(View.VISIBLE);
                 // After a time period the run() is executed, disconnecting the device.
-//                new Handler().postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        // Disconnect device
-//                        deviceManager.disconnect();
-//                    }
-//                }, streaming_time);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Disconnect device
+                        deviceManager.disconnect();
+                    }
+                }, streaming_time);
             }
         });
 

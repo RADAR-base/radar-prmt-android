@@ -1,4 +1,4 @@
-package com.empatica.sample;
+package org.radarcns.empaticaE4;
 
 import android.content.Context;
 

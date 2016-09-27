@@ -1,4 +1,4 @@
-package com.empatica.sample;
+package org.radarcns.empaticaE4;
 
 /**
  * Created by Maxim on 13-09-16.

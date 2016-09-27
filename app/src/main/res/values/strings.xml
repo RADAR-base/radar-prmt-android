@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RADAR-CNS EmpaLink Sample Project</string>
+    <string name="app_name">RADAR-CNS Empatica E4 connection</string>
     <string name="accel">Accelerometers</string>
     <string name="accel_x">x:</string>
     <string name="accel_y">y:</string>
