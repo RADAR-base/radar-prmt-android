@@ -23,6 +23,8 @@ import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
 import org.radarcns.empaticaE4.R;
 
+import java.util.Locale;
+
 
 public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate {
 
@@ -227,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
-        updateLabel(batteryLabel, String.format("%.1f %%", battery * 100));
+        updateLabel(batteryLabel, String.format(Locale.ENGLISH, "%.1f %%", battery * 100));
     }
 
     @Override

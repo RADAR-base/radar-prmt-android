@@ -5,6 +5,7 @@ import android.content.Context;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Scanner;
 
 /**
@@ -75,7 +76,7 @@ public class FileHandler {
 
     public void writeMeasurement(double timestamp, Object... elements) {
         // Initialize row with a line number and timestamp
-        String row = String.format("%d: %.3f", mLineCounter, timestamp);
+        String row = String.format(Locale.ENGLISH, "%d: %.3f", mLineCounter, timestamp);
         mLineCounter += 1;
 
         // Add elements to the row. Tab separated
