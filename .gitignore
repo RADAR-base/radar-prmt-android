@@ -77,7 +77,7 @@ captures/
 .idea/uiDesigner.xml
 
 # Gradle:
-#.idea/gradle.xml  # always use bundled Gradle
+.idea/gradle.xml
 .gradle/
 .idea/libraries
 
