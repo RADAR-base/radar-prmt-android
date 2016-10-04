@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -21,18 +22,35 @@ import com.empatica.empalink.config.EmpaSensorType;
 import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
-import org.radarcns.empaticaE4.R;
 
+import org.apache.avro.generic.GenericRecord;
+import org.radarcns.SchemaRetriever;
+import org.radarcns.android.MeasurementIterator;
+import org.radarcns.android.MeasurementTable;
+import org.radarcns.collect.LocalSchemaRetriever;
+import org.radarcns.collect.Topic;
+import org.radarcns.collect.rest.RestProducer;
+import org.radarcns.collect.rest.SchemaRegistryRetriever;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Locale;
-
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate {
+    private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final long STREAMING_TIME = 10000; // Stops streaming 10 seconds after connection (was 10 sec)
     private Time mTimer;
 
     private EmpaDeviceManager deviceManager;
+    private BluetoothDevice mLastDeviceConnected;
 
     private TextView accel_xLabel;
     private TextView accel_yLabel;
@@ -50,15 +68,24 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private Button showButton;
     private RelativeLayout dataCnt;
 
-    private FileHandler bvpFileHandler;
-    private FileHandler accFileHandler;
-    private FileHandler edaFileHandler;
-    private FileHandler tempFileHandler;
-    private FileHandler ibiFileHandler;
+    private MeasurementTable bvpTable;
+    private MeasurementTable accTable;
+    private MeasurementTable edaTable;
+    private MeasurementTable tempTable;
+    private MeasurementTable ibiTable;
+    private Topic accelerationTopic;
+    private Topic batteryTopic;
+    private Topic bvpTopic;
+    private Topic edaTopic;
+    private Topic ibiTopic;
+    private Topic temperatureTopic;
+
+    private RestProducer sender;
+    private String groupId;
+    private String deviceId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Context context = getApplicationContext();
@@ -80,11 +107,28 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         showButton = (Button) findViewById(R.id.showButton);
         stopButton = (Button) findViewById(R.id.stopButton);
 
-        bvpFileHandler = new FileHandler("bvp.txt", context);
-        accFileHandler = new FileHandler("acc.txt", context);
-        edaFileHandler = new FileHandler("eda.txt", context);
-        tempFileHandler = new FileHandler("temp.txt", context);
-        ibiFileHandler = new FileHandler("ibi.txt", context);
+        SchemaRetriever localSchemaRetriever = new LocalSchemaRetriever();
+        try {
+            accelerationTopic = new Topic("empatica_e4_acceleration", localSchemaRetriever);
+            batteryTopic = new Topic("empatica_e4_battery_level", localSchemaRetriever);
+            bvpTopic = new Topic("empatica_e4_blood_volume_pulse", localSchemaRetriever);
+            edaTopic = new Topic("empatica_e4_electrodermal_activity", localSchemaRetriever);
+            ibiTopic = new Topic("empatica_e4_inter_beat_interval", localSchemaRetriever);
+            temperatureTopic = new Topic("empatica_e4_temperature", localSchemaRetriever);
+        } catch (IOException ex) {
+            logger.error("missing topic schema", ex);
+            throw new RuntimeException(ex);
+        }
+
+        SchemaRetriever remoteSchemaRetriever = new SchemaRegistryRetriever("http://radar-test.thehyve.net:8081");
+        sender = new RestProducer("radar-test.thehyve.net:8082", 1000, remoteSchemaRetriever);
+        sender.start();
+
+        bvpTable = new MeasurementTable(context, bvpTopic);
+        accTable = new MeasurementTable(context, accelerationTopic);
+        edaTable = new MeasurementTable(context, edaTopic);
+        tempTable = new MeasurementTable(context, temperatureTopic);
+        ibiTable = new MeasurementTable(context, ibiTopic);
 
         restartButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -101,7 +145,15 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
         showButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, ibiFileHandler.read(), Toast.LENGTH_LONG).show();
+                String view = "";
+                DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
+                try (MeasurementIterator measurements = ibiTable.getMeasurements(100)) {
+                    for (Pair<String, GenericRecord> measurement : measurements) {
+                        String t = timeFormat.format(1000d * (Double)measurement.second.get(0));
+                        view = t + ": " + measurement.second.get(2) + "\n" + view;
+                    }
+                }
+                Toast.makeText(MainActivity.this, view, Toast.LENGTH_LONG).show();
             }
         });
 
@@ -109,18 +161,50 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         deviceManager = new EmpaDeviceManager(getApplicationContext(), this, this);
         // Initialize the Device Manager using your API key. You need to have Internet access at this point.
         String empatica_api_key = getString(R.string.apikey);
+        groupId = getString(R.string.group_id);
+        deviceId = null;
         deviceManager.authenticateWithAPIKey(empatica_api_key);
+        uploadTables();
+
+        ScheduledExecutorService scheduler =
+                Executors.newSingleThreadScheduledExecutor();
+
+        scheduler.scheduleAtFixedRate
+                (new Runnable() {
+                    public void run() {
+                        updateTables();
+                    }
+                }, 0, 5, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate
+                (new Runnable() {
+                    public void run() {
+                        cleanTables();
+                    }
+                }, 0, 1, TimeUnit.HOURS);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        try {
+            sender.flush();
+        } catch (InterruptedException e) {
+            // do nothing
+        }
+        cleanTables();
+
         deviceManager.stopScanning();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        try {
+            sender.close();
+        } catch (InterruptedException e) {
+            // do nothing
+        }
+        cleanTables();
         deviceManager.cleanUp();
     }
 
@@ -135,6 +219,8 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             try {
                 // Connect to the device
                 deviceManager.connectDevice(bluetoothDevice);
+                mLastDeviceConnected = bluetoothDevice;
+                this.deviceId = this.groupId + "-" + bluetoothDevice.getAddress();
                 updateLabel(deviceNameLabel, "To: " + deviceName);
             } catch (ConnectionNotAllowedException e) {
                 // This should happen only if you try to connect when allowed == false.
@@ -215,42 +301,49 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
     @Override
     public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
-        updateLabel(accel_xLabel, "" + x);
-        updateLabel(accel_yLabel, "" + y);
-        updateLabel(accel_zLabel, "" + z);
-        accFileHandler.writeMeasurement( timestamp, x, y, z );
+        updateLabel(accel_xLabel, String.valueOf(x));
+        updateLabel(accel_yLabel, String.valueOf(y));
+        updateLabel(accel_zLabel, String.valueOf(z));
+
+        sendAndAddToTable(accelerationTopic, accTable, timestamp, x, y, z);
     }
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
-        updateLabel(bvpLabel, "" + bvp + "   " + timestamp);
-        bvpFileHandler.writeMeasurement( timestamp, bvp );
+        updateLabel(bvpLabel, bvp + "   " + timestamp);
+
+        sendAndAddToTable(bvpTopic, bvpTable, timestamp, bvp);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         updateLabel(batteryLabel, String.format(Locale.ENGLISH, "%.1f %%", battery * 100));
+
+        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, battery);
+        sender.send(batteryTopic.getName(), deviceId, record);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
-        updateLabel(edaLabel, "" + gsr);
-        edaFileHandler.writeMeasurement( timestamp, gsr );
+        updateLabel(edaLabel, String.valueOf(gsr));
+
+        sendAndAddToTable(edaTopic, edaTable, timestamp, gsr);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
-        updateLabel(ibiLabel, "" + ibi);
-        ibiFileHandler.writeMeasurement( timestamp, ibi );
+        updateLabel(ibiLabel, String.valueOf(ibi));
+
+        sendAndAddToTable(ibiTopic, ibiTable, timestamp, ibi);
     }
 
     @Override
-    public void didReceiveTemperature(float temp, double timestamp) {
-        updateLabel(temperatureLabel, "" + temp);
-        tempFileHandler.writeMeasurement( timestamp, temp );
+    public void didReceiveTemperature(float temperature, double timestamp) {
+        updateLabel(temperatureLabel, String.valueOf(temperature));
 
+        sendAndAddToTable(temperatureTopic, tempTable, timestamp, temperature);
         // Update timer label
-        updateLabel(timerLabel, "" + mTimer.getRemainingSeconds());
+        updateLabel(timerLabel, String.valueOf(mTimer.getRemainingSeconds()));
     }
 
     // Update a label with some text, making sure this is run in the UI thread
@@ -261,5 +354,44 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
                 label.setText(text);
             }
         });
+    }
+
+    private void sendAndAddToTable(Topic topic, MeasurementTable table, double timestamp, Object... values) {
+        GenericRecord record = topic.createSimpleRecord(timestamp, values);
+        long offset = sender.send(topic.getName(), deviceId, record);
+        table.addMeasurement(offset, deviceId, timestamp, record.get("timeReceived"), values);
+    }
+
+    private void cleanTables() {
+        double timestamp = (System.currentTimeMillis() - Long.parseLong(getString(R.string.data_retention_ms))) / 1000d;
+        bvpTable.removeBeforeTimestamp(timestamp);
+        accTable.removeBeforeTimestamp(timestamp);
+        edaTable.removeBeforeTimestamp(timestamp);
+        tempTable.removeBeforeTimestamp(timestamp);
+        ibiTable.removeBeforeTimestamp(timestamp);
+    }
+
+    private void updateTables() {
+        bvpTable.markSent(sender.getLastSentOffset(bvpTopic.getName()));
+        accTable.markSent(sender.getLastSentOffset(accelerationTopic.getName()));
+        edaTable.markSent(sender.getLastSentOffset(edaTopic.getName()));
+        tempTable.markSent(sender.getLastSentOffset(temperatureTopic.getName()));
+        ibiTable.markSent(sender.getLastSentOffset(ibiTopic.getName()));
+    }
+
+    private void uploadTables() {
+        uploadTable(bvpTopic, bvpTable);
+        uploadTable(accelerationTopic, accTable);
+        uploadTable(edaTopic, edaTable);
+        uploadTable(temperatureTopic, tempTable);
+        uploadTable(ibiTopic, ibiTable);
+    }
+
+    private void uploadTable(Topic topic, MeasurementTable table) {
+        try (MeasurementIterator measurements = table.getUnsentMeasurements()) {
+            for (Pair<String, GenericRecord> record : measurements) {
+                sender.send(topic.getName(), record.first, record.second);
+            }
+        }
     }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="group_id">radarTestTheHyveEmpaticaDevice0</string>
+    <!-- Keep data for 24 hours -->
+    <string name="data_retention_ms">82800000</string>
+</resources>
