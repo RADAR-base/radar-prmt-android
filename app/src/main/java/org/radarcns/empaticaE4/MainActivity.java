@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
                     public void run() {
                         updateTables();
                     }
-                }, 0, 5, TimeUnit.SECONDS);
+                }, 5, 5, TimeUnit.SECONDS);
         scheduler.scheduleAtFixedRate
                 (new Runnable() {
                     public void run() {
@@ -191,8 +191,6 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         } catch (InterruptedException e) {
             // do nothing
         }
-        cleanTables();
-
         deviceManager.stopScanning();
     }
 

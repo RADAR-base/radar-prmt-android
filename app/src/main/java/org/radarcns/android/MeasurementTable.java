@@ -11,12 +11,15 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.radarcns.collect.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class MeasurementTable {
-    private final static String DATABASE_NAME = "MeasurementIterator.db";
+    private final static String DATABASE_NAME = "Measurements.db";
     private final static int DATABASE_VERSION = 1;
+    private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
     private final MeasurementDBHelper dbHelper;
     private final Topic topic;
 
@@ -88,23 +91,23 @@ public class MeasurementTable {
     }
 
     /**
-     * Remove all measurements before a given offset.
-     * @param offset offset (inclusive) to remove.
-     * @return number of rows removed
-     */
-    public int removeBeforeOffset(long offset) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        return db.delete(topic.getName(), "offset <= " + offset, null);
-    }
-
-    /**
      * Remove all sent measurements before a given offset.
      * @param timestamp time before which to remove.
      * @return number of rows removed
      */
     public int removeBeforeTimestamp(double timestamp) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        return db.delete(topic.getName(), "timeReceived <= " + timestamp + " AND sent = 1", null);
+        int result = db.delete(topic.getName(), "timeReceived <= " + timestamp + " AND sent = 1", null);
+        db.close();
+        db = dbHelper.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + this.topic.getName() + " WHERE timeReceived <= " + timestamp + " AND sent = 0", null)) {
+            cursor.moveToNext();
+            int unsent = cursor.getInt(0);
+            if (unsent > 1000) {
+                logger.warn("Accumulating unsent results, currently {} unsent values.", unsent);
+            }
+        }
+        return result;
     }
 
     /**
@@ -117,15 +120,6 @@ public class MeasurementTable {
         ContentValues content = new ContentValues();
         content.put("sent", Boolean.TRUE);
         return db.update(topic.getName(), content, "offset <= " + offset, null);
-    }
-
-    /**
-     * Remove all measurements before a given offset.
-     * @return number of rows removed
-     */
-    public int removeSent() {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        return db.delete(topic.getName(), "sent = 1", null);
     }
 
     /**
