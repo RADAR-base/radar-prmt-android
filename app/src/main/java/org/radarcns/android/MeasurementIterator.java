@@ -22,7 +22,8 @@ public class MeasurementIterator implements Iterable<Pair<String, GenericRecord>
 
     @Override
     public void close() {
-        cursor.close();
+        if (!cursor.isClosed())
+            cursor.close();
     }
 
     @Override
@@ -30,11 +31,16 @@ public class MeasurementIterator implements Iterable<Pair<String, GenericRecord>
         if (hasMoved) {
             return true;
         }
+        if (cursor.isClosed()) {
+            return false;
+        }
         if (cursor.moveToNext()) {
             hasMoved = true;
             return true;
+        } else {
+            cursor.close();
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -44,6 +50,11 @@ public class MeasurementIterator implements Iterable<Pair<String, GenericRecord>
         }
         hasMoved = false;
         return table.rowToRecord(cursor);
+    }
+
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
