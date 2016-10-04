@@ -3,16 +3,12 @@ package org.radarcns.empaticaE4;
 /**
  * Created by Maxim on 13-09-16.
  */
-public class Time {
+public class CountdownTimer {
 
     private long mStart;
-    private long mCountdownTime;
+    private final long mCountdownTime;
 
-    public Time() {
-        this(0);
-    }
-
-    public Time(long countDownTime) {
+    public CountdownTimer(long countDownTime) {
         mCountdownTime = countDownTime;
         mStart = System.currentTimeMillis();
     }

@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final long STREAMING_TIME = 10000; // Stops streaming 10 seconds after connection (was 10 sec)
-    private Time mTimer;
+    private CountdownTimer mTimer;
 
     private EmpaDeviceManager deviceManager;
     private BluetoothDevice mLastDeviceConnected;
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
                 updateLabel(deviceNameLabel, "To: " + deviceName);
             } catch (ConnectionNotAllowedException e) {
                 // This should happen only if you try to connect when allowed == false.
-                Toast.makeText(MainActivity.this, "Sorry, you can't connect to this device", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Sorry, you cannott connect to this device", Toast.LENGTH_SHORT).show();
             }
         } else {
             Toast.makeText(MainActivity.this, "Not allowed", Toast.LENGTH_SHORT).show();
@@ -270,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             // Stop streaming after STREAMING_TIME
             startStreaming(STREAMING_TIME);
 //            dataCnt.setVisibility(View.VISIBLE);
-//            mTimer = new Time(STREAMING_TIME);
+//            mTimer = new CountdownTimer(STREAMING_TIME);
         // The device manager disconnected from a device
         } else if (status == EmpaStatus.DISCONNECTED) {
             updateLabel(deviceNameLabel, "");
@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         });
 
         // Start the clock
-        mTimer = new Time(STREAMING_TIME);
+        mTimer = new CountdownTimer(STREAMING_TIME);
     }
 
     @Override
