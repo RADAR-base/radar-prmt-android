@@ -1,17 +1,21 @@
 package org.radarcns.empaticaE4;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,16 +29,20 @@ import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
 import org.apache.avro.generic.GenericRecord;
 import org.radarcns.SchemaRetriever;
+import org.radarcns.android.MeasurementDBHelper;
 import org.radarcns.android.MeasurementIterator;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.collect.LocalSchemaRetriever;
+import org.radarcns.collect.RestProducer;
+import org.radarcns.collect.SchemaRegistryRetriever;
 import org.radarcns.collect.Topic;
-import org.radarcns.collect.rest.RestProducer;
-import org.radarcns.collect.rest.SchemaRegistryRetriever;
+import org.radarcns.util.CountdownTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -47,10 +55,10 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final long STREAMING_TIME = 10000; // Stops streaming 10 seconds after connection (was 10 sec)
+    private static final int COARSE_LOCATION_REQUEST_ID = 12345; // Stops streaming 10 seconds after connection (was 10 sec)
     private CountdownTimer mTimer;
 
     private EmpaDeviceManager deviceManager;
-    private BluetoothDevice mLastDeviceConnected;
 
     private TextView accel_xLabel;
     private TextView accel_yLabel;
@@ -66,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private Button restartButton;
     private Button stopButton;
     private Button showButton;
-    private RelativeLayout dataCnt;
 
     private MeasurementTable bvpTable;
     private MeasurementTable accTable;
@@ -84,15 +91,54 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private String groupId;
     private String deviceId;
 
+
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == COARSE_LOCATION_REQUEST_ID) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                enableEmpatica();
+            } else {
+                // User refused to grant permission.
+                updateLabel(statusLabel, "Cannot connect to Empatica E4 without location permissions");
+            }
+        }
+    }
+
+    private void enableEmpatica() {
+        // Create a new EmpaDeviceManager. MainActivity is both its data and status delegate.
+        deviceManager = new EmpaDeviceManager(getApplicationContext(), this, this);
+        // Initialize the Device Manager using your API key. You need to have Internet access at this point.
+        String empatica_api_key = getString(R.string.apikey);
+        groupId = getString(R.string.group_id);
+        deviceId = null;
+        deviceManager.authenticateWithAPIKey(empatica_api_key);
+
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                deviceManager.disconnect();
+            }
+        });
+        stopButton.setVisibility(View.VISIBLE);
+        restartButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "RESTARTED RECORDING", Toast.LENGTH_SHORT).show();
+                deviceManager.startScanning();
+            }
+        });
+        restartButton.setVisibility(View.VISIBLE);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         Context context = getApplicationContext();
 
         // Initialize vars that reference UI components
         statusLabel = (TextView) findViewById(R.id.status);
-        dataCnt = (RelativeLayout) findViewById(R.id.dataArea);
         accel_xLabel = (TextView) findViewById(R.id.accel_x);
         accel_yLabel = (TextView) findViewById(R.id.accel_y);
         accel_zLabel = (TextView) findViewById(R.id.accel_z);
@@ -104,8 +150,10 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         deviceNameLabel = (TextView) findViewById(R.id.deviceName);
         timerLabel = (TextView) findViewById(R.id.timer);
         restartButton = (Button) findViewById(R.id.restartButton);
+        restartButton.setVisibility(View.INVISIBLE);
         showButton = (Button) findViewById(R.id.showButton);
         stopButton = (Button) findViewById(R.id.stopButton);
+        stopButton.setVisibility(View.INVISIBLE);
 
         SchemaRetriever localSchemaRetriever = new LocalSchemaRetriever();
         try {
@@ -120,50 +168,37 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             throw new RuntimeException(ex);
         }
 
-        SchemaRetriever remoteSchemaRetriever = new SchemaRegistryRetriever("http://radar-test.thehyve.net:8081");
-        sender = new RestProducer("radar-test.thehyve.net:8082", 1000, remoteSchemaRetriever);
+        SchemaRetriever remoteSchemaRetriever = new SchemaRegistryRetriever(getString(R.string.schema_registry_url));
+        try {
+            sender = new RestProducer(new URL(getString(R.string.kafka_rest_proxy_url)), 1000, remoteSchemaRetriever);
+        } catch (MalformedURLException e) {
+            logger.error("Malformed Kafka server URL {}", getString(R.string.kafka_rest_proxy_url));
+            throw new RuntimeException(e);
+        }
         sender.start();
 
-        bvpTable = new MeasurementTable(context, bvpTopic);
-        accTable = new MeasurementTable(context, accelerationTopic);
-        edaTable = new MeasurementTable(context, edaTopic);
-        tempTable = new MeasurementTable(context, temperatureTopic);
-        ibiTable = new MeasurementTable(context, ibiTopic);
+        MeasurementDBHelper db = new MeasurementDBHelper(context);
 
-        restartButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "RESTARTED RECORDING", Toast.LENGTH_SHORT).show();
-                deviceManager.startScanning();
-            }
-        });
-
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                deviceManager.disconnect();
-            }
-        });
+        bvpTable = db.createTable(bvpTopic);
+        accTable = db.createTable(accelerationTopic);
+        edaTable = db.createTable(edaTopic);
+        tempTable = db.createTable(temperatureTopic);
+        ibiTable = db.createTable(ibiTopic);
 
         showButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String view = "";
                 DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
                 try (MeasurementIterator measurements = ibiTable.getMeasurements(100)) {
-                    for (Pair<String, GenericRecord> measurement : measurements) {
-                        String t = timeFormat.format(1000d * (Double)measurement.second.get(0));
-                        view = t + ": " + measurement.second.get(2) + "\n" + view;
+                    for (MeasurementTable.Measurement measurement : measurements) {
+                        String t = timeFormat.format(1000d * (Double)measurement.value.get(0));
+                        view = t + ": " + measurement.value.get(2) + "\n" + view;
                     }
                 }
                 Toast.makeText(MainActivity.this, view, Toast.LENGTH_LONG).show();
             }
         });
 
-        // Create a new EmpaDeviceManager. MainActivity is both its data and status delegate.
-        deviceManager = new EmpaDeviceManager(getApplicationContext(), this, this);
-        // Initialize the Device Manager using your API key. You need to have Internet access at this point.
-        String empatica_api_key = getString(R.string.apikey);
-        groupId = getString(R.string.group_id);
-        deviceId = null;
-        deviceManager.authenticateWithAPIKey(empatica_api_key);
         uploadTables();
 
         ScheduledExecutorService scheduler =
@@ -181,6 +216,14 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
                         cleanTables();
                     }
                 }, 0, 1, TimeUnit.HOURS);
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, COARSE_LOCATION_REQUEST_ID);
+            deviceManager = null;
+        } else {
+            enableEmpatica();
+        }
     }
 
     @Override
@@ -191,7 +234,9 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         } catch (InterruptedException e) {
             // do nothing
         }
-        deviceManager.stopScanning();
+        if (deviceManager != null) {
+            deviceManager.stopScanning();
+        }
     }
 
     @Override
@@ -203,7 +248,9 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             // do nothing
         }
         cleanTables();
-        deviceManager.cleanUp();
+        if (deviceManager != null) {
+            deviceManager.cleanUp();
+        }
     }
 
     @Override
@@ -217,7 +264,6 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             try {
                 // Connect to the device
                 deviceManager.connectDevice(bluetoothDevice);
-                mLastDeviceConnected = bluetoothDevice;
                 this.deviceId = this.groupId + "-" + bluetoothDevice.getAddress();
                 updateLabel(deviceNameLabel, "To: " + deviceName);
             } catch (ConnectionNotAllowedException e) {
@@ -303,43 +349,43 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         updateLabel(accel_yLabel, String.valueOf(y));
         updateLabel(accel_zLabel, String.valueOf(z));
 
-        sendAndAddToTable(accelerationTopic, accTable, timestamp, x, y, z);
+        sendAndAddToTable(accelerationTopic, accTable, timestamp, "x", x / 64f, "y", y / 64f, "z", z / 64f);
     }
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
         updateLabel(bvpLabel, bvp + "   " + timestamp);
 
-        sendAndAddToTable(bvpTopic, bvpTable, timestamp, bvp);
+        sendAndAddToTable(bvpTopic, bvpTable, timestamp, "bloodVolumePulse", bvp);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         updateLabel(batteryLabel, String.format(Locale.ENGLISH, "%.1f %%", battery * 100));
 
-        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, battery);
-        sender.send(batteryTopic.getName(), deviceId, record);
+        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, "batteryLevel", battery);
+        sender.send(0L, batteryTopic.getName(), deviceId, record);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
         updateLabel(edaLabel, String.valueOf(gsr));
 
-        sendAndAddToTable(edaTopic, edaTable, timestamp, gsr);
+        sendAndAddToTable(edaTopic, edaTable, timestamp, "electroDermalActivity", gsr);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
         updateLabel(ibiLabel, String.valueOf(ibi));
 
-        sendAndAddToTable(ibiTopic, ibiTable, timestamp, ibi);
+        sendAndAddToTable(ibiTopic, ibiTable, timestamp, "interBeatInterval", ibi);
     }
 
     @Override
     public void didReceiveTemperature(float temperature, double timestamp) {
         updateLabel(temperatureLabel, String.valueOf(temperature));
 
-        sendAndAddToTable(temperatureTopic, tempTable, timestamp, temperature);
+        sendAndAddToTable(temperatureTopic, tempTable, timestamp, "temperature", temperature);
         // Update timer label
         updateLabel(timerLabel, String.valueOf(mTimer.getRemainingSeconds()));
     }
@@ -356,8 +402,14 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
     private void sendAndAddToTable(Topic topic, MeasurementTable table, double timestamp, Object... values) {
         GenericRecord record = topic.createSimpleRecord(timestamp, values);
-        long offset = sender.send(topic.getName(), deviceId, record);
-        table.addMeasurement(offset, deviceId, timestamp, record.get("timeReceived"), values);
+        Object[] valueArray = new Object[values.length / 2 + 2];
+        valueArray[0] = timestamp;
+        valueArray[1] = record.get("timeReceived");
+        for (int i = 0; i < values.length; i += 2) {
+            valueArray[i / 2 + 2] = values[i + 1];
+        }
+        long offset = table.addMeasurement(deviceId, valueArray);
+        sender.send(offset, topic.getName(), deviceId, record);
     }
 
     private void cleanTables() {
@@ -387,8 +439,8 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
     private void uploadTable(Topic topic, MeasurementTable table) {
         try (MeasurementIterator measurements = table.getUnsentMeasurements()) {
-            for (Pair<String, GenericRecord> record : measurements) {
-                sender.send(topic.getName(), record.first, record.second);
+            for (MeasurementTable.Measurement record : measurements) {
+                sender.send(record.offset, topic.getName(), record.key, record.value);
             }
         }
     }

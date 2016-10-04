@@ -1,4 +1,4 @@
-package org.radarcns.empaticaE4;
+package org.radarcns.util;
 
 /**
  * Created by Maxim on 13-09-16.

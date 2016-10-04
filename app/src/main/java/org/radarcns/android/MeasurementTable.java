@@ -1,11 +1,8 @@
 package org.radarcns.android;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Pair;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -17,18 +14,16 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class MeasurementTable {
-    private final static String DATABASE_NAME = "Measurements.db";
-    private final static int DATABASE_VERSION = 1;
     private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
     private final MeasurementDBHelper dbHelper;
     private final Topic topic;
 
-    public MeasurementTable(Context context, Topic topic) {
-        this.dbHelper = new MeasurementDBHelper(context);
+    public MeasurementTable(MeasurementDBHelper dbHelper, Topic topic) {
+        this.dbHelper = dbHelper;
         this.topic = topic;
 
 
-        for (Schema.Field f : this.topic.getValueSchema().getFields()) {
+        for (Schema.Field f : this.getTopic().getValueSchema().getFields()) {
             switch (f.schema().getType()) {
                 case RECORD:
                 case ENUM:
@@ -46,48 +41,52 @@ public class MeasurementTable {
     /**
      * Add a measurement to the table.
      *
-     * @param offset offset that the system gave to the measurement
      * @param values values of the measurement. These must match the fieldTypes passed to the
      *               constructor.
+     * @return offset of the measurement in the database
      */
-    public void addMeasurement(long offset, String deviceId, Object... values) {
+    public long addMeasurement(String deviceId, Object[] values) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
-        content.put("offset", offset);
         content.put("deviceId", deviceId);
-        List<Schema.Field> fields = this.topic.getValueSchema().getFields();
+        List<Schema.Field> fields = this.getTopic().getValueSchema().getFields();
         for (int i = 0; i < values.length; i++) {
             Schema.Field f = fields.get(i);
-            switch (f.schema().getType()) {
-                case STRING:
-                    content.put(f.name(), (String)values[i]);
-                    break;
-                case BYTES:
-                    content.put(f.name(), (byte[]) values[i]);
-                    break;
-                case LONG:
-                    content.put(f.name(), (Long) values[i]);
-                    break;
-                case INT:
-                    content.put(f.name(), (Integer) values[i]);
-                    break;
-                case BOOLEAN:
-                    content.put(f.name(), (Boolean)values[i]);
-                    break;
-                case FLOAT:
-                    content.put(f.name(), (Float)values[i]);
-                    break;
-                case DOUBLE:
-                    content.put(f.name(), (Double)values[i]);
-                    break;
-                case NULL:
-                    content.putNull(f.name());
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot handle type " + f.schema().getType());
+            try {
+                switch (f.schema().getType()) {
+                    case STRING:
+                        content.put(f.name(), (String) values[i]);
+                        break;
+                    case BYTES:
+                        content.put(f.name(), (byte[]) values[i]);
+                        break;
+                    case LONG:
+                        content.put(f.name(), (Long) values[i]);
+                        break;
+                    case INT:
+                        content.put(f.name(), (Integer) values[i]);
+                        break;
+                    case BOOLEAN:
+                        content.put(f.name(), (Boolean) values[i]);
+                        break;
+                    case FLOAT:
+                        content.put(f.name(), (Float) values[i]);
+                        break;
+                    case DOUBLE:
+                        content.put(f.name(), (Double) values[i]);
+                        break;
+                    case NULL:
+                        content.putNull(f.name());
+                        break;
+                    default:
+                        throw new IllegalStateException("Cannot handle type " + f.schema().getType());
+                }
+            } catch (ClassCastException ex) {
+                logger.error("Cannot cast value {} of field {} to {}", values[i], f.name(), f.schema().getType());
+                throw ex;
             }
         }
-        db.insert(topic.getName(), null, content);
+        return db.insert(getTopic().getName(), null, content);
     }
 
     /**
@@ -97,10 +96,10 @@ public class MeasurementTable {
      */
     public int removeBeforeTimestamp(double timestamp) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int result = db.delete(topic.getName(), "timeReceived <= " + timestamp + " AND sent = 1", null);
+        int result = db.delete(getTopic().getName(), "timeReceived <= " + timestamp + " AND sent = 1", null);
         db.close();
         db = dbHelper.getReadableDatabase();
-        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + this.topic.getName() + " WHERE timeReceived <= " + timestamp + " AND sent = 0", null)) {
+        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + this.getTopic().getName() + " WHERE timeReceived <= " + timestamp + " AND sent = 0", null)) {
             cursor.moveToNext();
             int unsent = cursor.getInt(0);
             if (unsent > 1000) {
@@ -119,7 +118,7 @@ public class MeasurementTable {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
         content.put("sent", Boolean.TRUE);
-        return db.update(topic.getName(), content, "offset <= " + offset, null);
+        return db.update(getTopic().getName(), content, "offset <= " + offset, null);
     }
 
     /**
@@ -130,7 +129,7 @@ public class MeasurementTable {
      */
     public MeasurementIterator getUnsentMeasurements() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " WHERE sent = 0 ORDER BY offset ASC", null);
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + getTopic().getName() + " WHERE sent = 0 ORDER BY offset ASC", null);
         return new MeasurementIterator(cursor, this);
     }
 
@@ -142,58 +141,25 @@ public class MeasurementTable {
      */
     public MeasurementIterator getMeasurements(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " ORDER BY offset DESC LIMIT " + limit, null);
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + getTopic().getName() + " ORDER BY offset DESC LIMIT " + limit, null);
         return new MeasurementIterator(cursor, this);
     }
 
-    private class MeasurementDBHelper extends SQLiteOpenHelper {
-        MeasurementDBHelper(Context context) {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            String query = "CREATE TABLE " + topic.getName() + " (offset INTEGER PRIMARY KEY, deviceId TEXT, sent INTEGER DEFAULT 0, time REAL, timeReceived REAL";
-            for (Schema.Field f : topic.getValueSchema().getFields()) {
-                query += ", " + f.name() + " ";
-                switch (f.schema().getType()) {
-                    case STRING:
-                        query += "TEXT";
-                        break;
-                    case BYTES:
-                        query += "BLOB";
-                        break;
-                    case LONG:
-                    case INT:
-                    case BOOLEAN:
-                        query += "INTEGER";
-                        break;
-                    case FLOAT:
-                    case DOUBLE:
-                        query += "REAL";
-                        break;
-                    case NULL:
-                        query += "NULL";
-                        break;
-                    default:
-                        throw new IllegalStateException("Cannot handle type " + f.schema().getType());
-                }
-            }
-            query += ")";
-            db.execSQL(query);
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS " + topic.getName());
-            onCreate(db);
+    public static class Measurement {
+        public final long offset;
+        public final String key;
+        public final GenericRecord value;
+        Measurement(long offset, String key, GenericRecord value) {
+            this.offset = offset;
+            this.key = key;
+            this.value = value;
         }
     }
 
-    Pair<String, GenericRecord> rowToRecord(Cursor cursor) {
-        List<Schema.Field> fields = topic.getValueSchema().getFields();
+    Measurement rowToRecord(Cursor cursor) {
+        List<Schema.Field> fields = getTopic().getValueSchema().getFields();
 
-        GenericRecord avroRecord = new GenericData.Record(this.topic.getValueSchema());
+        GenericRecord avroRecord = new GenericData.Record(this.getTopic().getValueSchema());
 
         for (int i = 0; i < fields.size(); i++) {
             switch (fields.get(i).schema().getType()) {
@@ -226,6 +192,10 @@ public class MeasurementTable {
             }
         }
 
-        return new Pair<>(cursor.getString(1), avroRecord);
+        return new Measurement(cursor.getLong(0), cursor.getString(1), avroRecord);
+    }
+
+    public Topic getTopic() {
+        return topic;
     }
 }

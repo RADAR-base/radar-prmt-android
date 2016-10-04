@@ -29,11 +29,16 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    // logging
     compile 'org.slf4j:slf4j-android:1.7.21'
-    compile 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
     compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.loopj.android:android-async-http:1.4.6'
     compile project(':empalink-2.0')
     compile 'com.google.android.gms:play-services-appindexing:9.6.1'
     compile 'org.apache.avro:avro:1.7.7'
+    compile ('io.confluent:kafka-avro-serializer:3.0.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j'
+        exclude group: 'junit'
+    }
 }

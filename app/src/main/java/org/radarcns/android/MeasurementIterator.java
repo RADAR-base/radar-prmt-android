@@ -9,7 +9,7 @@ import java.io.Closeable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class MeasurementIterator implements Iterable<Pair<String, GenericRecord>>, Iterator<Pair<String, GenericRecord>>, Closeable {
+public class MeasurementIterator implements Iterable<MeasurementTable.Measurement>, Iterator<MeasurementTable.Measurement>, Closeable {
     private final MeasurementTable table;
     private boolean hasMoved = false;
     private final Cursor cursor;
@@ -44,7 +44,7 @@ public class MeasurementIterator implements Iterable<Pair<String, GenericRecord>
     }
 
     @Override
-    public Pair<String, GenericRecord> next() {
+    public MeasurementTable.Measurement next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
@@ -58,7 +58,7 @@ public class MeasurementIterator implements Iterable<Pair<String, GenericRecord>
     }
 
     @Override
-    public Iterator<Pair<String, GenericRecord>> iterator() {
+    public Iterator<MeasurementTable.Measurement> iterator() {
         return this;
     }
 }
