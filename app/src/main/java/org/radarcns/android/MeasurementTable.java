@@ -234,7 +234,7 @@ public class MeasurementTable {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
         content.put("sent", Boolean.TRUE);
-        return db.update(topic.getName(), content, "offset <= " + offset, null);
+        return db.update(topic.getName(), content, "offset <= " + offset + " AND sent = 0", null);
     }
 
     /**
