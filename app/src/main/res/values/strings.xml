@@ -10,6 +10,4 @@
     <string name="emptyText">-</string>
     <string name="temp_label">Temperature</string>
     <string name="battery_label">Battery</string>
-    <string name="timer_label">Time Left</string>
-
 </resources>

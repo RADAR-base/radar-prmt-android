@@ -39,6 +39,6 @@ dependencies {
     compile ('io.confluent:kafka-avro-serializer:3.0.1') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
         exclude group: 'log4j'
-        exclude group: 'junit'
+        exclude group: 'jline'
     }
 }

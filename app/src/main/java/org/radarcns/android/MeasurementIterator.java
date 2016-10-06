@@ -1,9 +1,6 @@
 package org.radarcns.android;
 
 import android.database.Cursor;
-import android.util.Pair;
-
-import org.apache.avro.generic.GenericRecord;
 
 import java.io.Closeable;
 import java.util.Iterator;

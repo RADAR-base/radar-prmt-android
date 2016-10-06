@@ -9,13 +9,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,14 +29,11 @@ import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
 import org.apache.avro.generic.GenericRecord;
 import org.radarcns.SchemaRetriever;
-import org.radarcns.android.MeasurementDBHelper;
 import org.radarcns.android.MeasurementIterator;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.collect.LocalSchemaRetriever;
-import org.radarcns.collect.RestProducer;
 import org.radarcns.collect.SchemaRegistryRetriever;
 import org.radarcns.collect.Topic;
-import org.radarcns.util.CountdownTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,19 +42,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_BT = 1;
-    private static final long STREAMING_TIME = 10000; // Stops streaming 10 seconds after connection (was 10 sec)
-    private static final int COARSE_LOCATION_REQUEST_ID = 12345; // Stops streaming 10 seconds after connection (was 10 sec)
-    private CountdownTimer mTimer;
-
+    private static final int REQUEST_ENABLE_COARSE_LOCATION = 2;
     private EmpaDeviceManager deviceManager;
 
     private TextView accel_xLabel;
@@ -70,16 +63,10 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private TextView batteryLabel;
     private TextView statusLabel;
     private TextView deviceNameLabel;
-    private TextView timerLabel;
     private Button restartButton;
     private Button stopButton;
-    private Button showButton;
+    private RelativeLayout dataCnt;
 
-    private MeasurementTable bvpTable;
-    private MeasurementTable accTable;
-    private MeasurementTable edaTable;
-    private MeasurementTable tempTable;
-    private MeasurementTable ibiTable;
     private Topic accelerationTopic;
     private Topic batteryTopic;
     private Topic bvpTopic;
@@ -87,15 +74,17 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private Topic ibiTopic;
     private Topic temperatureTopic;
 
-    private RestProducer sender;
     private String groupId;
     private String deviceId;
-
+    private long uiRefreshRate;
+    private Map<TextView, Long> lastRefresh;
+    private boolean deviceManagerIsReady;
+    private DataHandler dataHandler;
 
     @Override
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == COARSE_LOCATION_REQUEST_ID) {
+        if (requestCode == REQUEST_ENABLE_COARSE_LOCATION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
                 enableEmpatica();
@@ -139,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
         // Initialize vars that reference UI components
         statusLabel = (TextView) findViewById(R.id.status);
+        dataCnt = (RelativeLayout) findViewById(R.id.dataArea);
         accel_xLabel = (TextView) findViewById(R.id.accel_x);
         accel_yLabel = (TextView) findViewById(R.id.accel_y);
         accel_zLabel = (TextView) findViewById(R.id.accel_z);
@@ -148,12 +138,13 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         temperatureLabel = (TextView) findViewById(R.id.temperature);
         batteryLabel = (TextView) findViewById(R.id.battery);
         deviceNameLabel = (TextView) findViewById(R.id.deviceName);
-        timerLabel = (TextView) findViewById(R.id.timer);
         restartButton = (Button) findViewById(R.id.restartButton);
         restartButton.setVisibility(View.INVISIBLE);
-        showButton = (Button) findViewById(R.id.showButton);
+        Button showButton = (Button) findViewById(R.id.showButton);
         stopButton = (Button) findViewById(R.id.stopButton);
         stopButton.setVisibility(View.INVISIBLE);
+
+        lastRefresh = new HashMap<>();
 
         SchemaRetriever localSchemaRetriever = new LocalSchemaRetriever();
         try {
@@ -169,57 +160,35 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         }
 
         SchemaRetriever remoteSchemaRetriever = new SchemaRegistryRetriever(getString(R.string.schema_registry_url));
+        URL kafkaUrl;
         try {
-            sender = new RestProducer(new URL(getString(R.string.kafka_rest_proxy_url)), 1000, remoteSchemaRetriever);
+            kafkaUrl = new URL(getString(R.string.kafka_rest_proxy_url));
         } catch (MalformedURLException e) {
             logger.error("Malformed Kafka server URL {}", getString(R.string.kafka_rest_proxy_url));
             throw new RuntimeException(e);
         }
-        sender.start();
-
-        MeasurementDBHelper db = new MeasurementDBHelper(context);
-
-        bvpTable = db.createTable(bvpTopic);
-        accTable = db.createTable(accelerationTopic);
-        edaTable = db.createTable(edaTopic);
-        tempTable = db.createTable(temperatureTopic);
-        ibiTable = db.createTable(ibiTopic);
+        dataHandler = new DataHandler(context, 1000, kafkaUrl, 5000, 1000, remoteSchemaRetriever, Long.parseLong(getString(R.string.data_retention_ms)), accelerationTopic, bvpTopic, edaTopic, ibiTopic, temperatureTopic);
 
         showButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String view = "";
                 DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-                try (MeasurementIterator measurements = ibiTable.getMeasurements(100)) {
+                try (MeasurementIterator measurements = dataHandler.getTable(ibiTopic).getMeasurements(100)) {
                     for (MeasurementTable.Measurement measurement : measurements) {
                         String t = timeFormat.format(1000d * (Double)measurement.value.get(0));
                         view = t + ": " + measurement.value.get(2) + "\n" + view;
                     }
                 }
+                logger.info("Data:\n{}", view);
                 Toast.makeText(MainActivity.this, view, Toast.LENGTH_LONG).show();
             }
         });
 
-        uploadTables();
+        uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
 
-        ScheduledExecutorService scheduler =
-                Executors.newSingleThreadScheduledExecutor();
-
-        scheduler.scheduleAtFixedRate
-                (new Runnable() {
-                    public void run() {
-                        updateTables();
-                    }
-                }, 5, 5, TimeUnit.SECONDS);
-        scheduler.scheduleAtFixedRate
-                (new Runnable() {
-                    public void run() {
-                        cleanTables();
-                    }
-                }, 0, 1, TimeUnit.HOURS);
-
-
+        deviceManagerIsReady = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, COARSE_LOCATION_REQUEST_ID);
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_ENABLE_COARSE_LOCATION);
             deviceManager = null;
         } else {
             enableEmpatica();
@@ -229,13 +198,21 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     @Override
     protected void onPause() {
         super.onPause();
-        try {
-            sender.flush();
-        } catch (InterruptedException e) {
-            // do nothing
-        }
-        if (deviceManager != null) {
+        if (deviceManagerIsReady) {
             deviceManager.stopScanning();
+        }
+        try {
+            dataHandler.pause();
+        } catch (InterruptedException e) {
+            logger.warn("Data handler interrupted");
+        }
+    }
+
+    protected void onResume() {
+        super.onResume();
+        dataHandler.start();
+        if (deviceManagerIsReady) {
+            deviceManager.startScanning();
         }
     }
 
@@ -243,12 +220,11 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     protected void onDestroy() {
         super.onDestroy();
         try {
-            sender.close();
+            dataHandler.close();
         } catch (InterruptedException e) {
             // do nothing
         }
-        cleanTables();
-        if (deviceManager != null) {
+        if (deviceManagerIsReady) {
             deviceManager.cleanUp();
         }
     }
@@ -268,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
                 updateLabel(deviceNameLabel, "To: " + deviceName);
             } catch (ConnectionNotAllowedException e) {
                 // This should happen only if you try to connect when allowed == false.
-                Toast.makeText(MainActivity.this, "Sorry, you cannott connect to this device", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Sorry, you cannot connect to this device", Toast.LENGTH_SHORT).show();
             }
         } else {
             Toast.makeText(MainActivity.this, "Not allowed", Toast.LENGTH_SHORT).show();
@@ -285,9 +261,14 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // The user chose not to enable Bluetooth
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
-            // You should deal with this
-            return;
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == Activity.RESULT_CANCELED) {
+                updateLabel(statusLabel, "Please enable Bluetooth for any incoming data");
+                return;
+            }
+            if (resultCode == Activity.RESULT_OK) {
+                deviceManager.startScanning();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -308,39 +289,26 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
         // The device manager is ready for use
         if (status == EmpaStatus.READY) {
-            updateLabel(statusLabel, status.name() + " - Turn on your device");
+            updateLabel(statusLabel, "READY - Turn on your device");
             // Start scanning
+            deviceManagerIsReady = true;
             deviceManager.startScanning();
         // The device manager has established a connection
         } else if (status == EmpaStatus.CONNECTED) {
             // Stop streaming after STREAMING_TIME
-            startStreaming(STREAMING_TIME);
-//            dataCnt.setVisibility(View.VISIBLE);
-//            mTimer = new CountdownTimer(STREAMING_TIME);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    dataCnt.setVisibility(View.VISIBLE);
+                }
+            });
         // The device manager disconnected from a device
         } else if (status == EmpaStatus.DISCONNECTED) {
-            updateLabel(deviceNameLabel, "");
-        }
-    }
-
-    private void startStreaming(final long streaming_time) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-//                dataCnt.setVisibility(View.VISIBLE);
-                // After a time period the run() is executed, disconnecting the device.
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Disconnect device
-                        deviceManager.disconnect();
-                    }
-                }, streaming_time);
+            updateLabel(deviceNameLabel, "DISCONNECTED");
+            if (deviceManagerIsReady) {
+                deviceManager.startScanning();
             }
-        });
-
-        // Start the clock
-        mTimer = new CountdownTimer(STREAMING_TIME);
+        }
     }
 
     @Override
@@ -348,100 +316,52 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         updateLabel(accel_xLabel, String.valueOf(x));
         updateLabel(accel_yLabel, String.valueOf(y));
         updateLabel(accel_zLabel, String.valueOf(z));
-
-        sendAndAddToTable(accelerationTopic, accTable, timestamp, "x", x / 64f, "y", y / 64f, "z", z / 64f);
+        dataHandler.sendAndAddToTable(accelerationTopic, deviceId, timestamp, "x", x / 64f, "y", y / 64f, "z", z / 64f);
     }
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
         updateLabel(bvpLabel, bvp + "   " + timestamp);
-
-        sendAndAddToTable(bvpTopic, bvpTable, timestamp, "bloodVolumePulse", bvp);
+        dataHandler.sendAndAddToTable(bvpTopic, deviceId, timestamp, "bloodVolumePulse", bvp);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         updateLabel(batteryLabel, String.format(Locale.ENGLISH, "%.1f %%", battery * 100));
-
         GenericRecord record = batteryTopic.createSimpleRecord(timestamp, "batteryLevel", battery);
-        sender.send(0L, batteryTopic.getName(), deviceId, record);
+        dataHandler.trySend(0L, batteryTopic.getName(), deviceId, record);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
         updateLabel(edaLabel, String.valueOf(gsr));
-
-        sendAndAddToTable(edaTopic, edaTable, timestamp, "electroDermalActivity", gsr);
+        dataHandler.sendAndAddToTable(edaTopic, deviceId, timestamp, "electroDermalActivity", gsr);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
         updateLabel(ibiLabel, String.valueOf(ibi));
-
-        sendAndAddToTable(ibiTopic, ibiTable, timestamp, "interBeatInterval", ibi);
+        dataHandler.sendAndAddToTable(ibiTopic, deviceId, timestamp, "interBeatInterval", ibi);
     }
 
     @Override
     public void didReceiveTemperature(float temperature, double timestamp) {
         updateLabel(temperatureLabel, String.valueOf(temperature));
-
-        sendAndAddToTable(temperatureTopic, tempTable, timestamp, "temperature", temperature);
-        // Update timer label
-        updateLabel(timerLabel, String.valueOf(mTimer.getRemainingSeconds()));
+        dataHandler.sendAndAddToTable(temperatureTopic, deviceId, timestamp, "temperature", temperature);
     }
 
     // Update a label with some text, making sure this is run in the UI thread
     private void updateLabel(final TextView label, final String text) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                label.setText(text);
-            }
-        });
-    }
-
-    private void sendAndAddToTable(Topic topic, MeasurementTable table, double timestamp, Object... values) {
-        GenericRecord record = topic.createSimpleRecord(timestamp, values);
-        Object[] valueArray = new Object[values.length / 2 + 2];
-        valueArray[0] = timestamp;
-        valueArray[1] = record.get("timeReceived");
-        for (int i = 0; i < values.length; i += 2) {
-            valueArray[i / 2 + 2] = values[i + 1];
-        }
-        long offset = table.addMeasurement(deviceId, valueArray);
-        sender.send(offset, topic.getName(), deviceId, record);
-    }
-
-    private void cleanTables() {
-        double timestamp = (System.currentTimeMillis() - Long.parseLong(getString(R.string.data_retention_ms))) / 1000d;
-        bvpTable.removeBeforeTimestamp(timestamp);
-        accTable.removeBeforeTimestamp(timestamp);
-        edaTable.removeBeforeTimestamp(timestamp);
-        tempTable.removeBeforeTimestamp(timestamp);
-        ibiTable.removeBeforeTimestamp(timestamp);
-    }
-
-    private void updateTables() {
-        bvpTable.markSent(sender.getLastSentOffset(bvpTopic.getName()));
-        accTable.markSent(sender.getLastSentOffset(accelerationTopic.getName()));
-        edaTable.markSent(sender.getLastSentOffset(edaTopic.getName()));
-        tempTable.markSent(sender.getLastSentOffset(temperatureTopic.getName()));
-        ibiTable.markSent(sender.getLastSentOffset(ibiTopic.getName()));
-    }
-
-    private void uploadTables() {
-        uploadTable(bvpTopic, bvpTable);
-        uploadTable(accelerationTopic, accTable);
-        uploadTable(edaTopic, edaTable);
-        uploadTable(temperatureTopic, tempTable);
-        uploadTable(ibiTopic, ibiTable);
-    }
-
-    private void uploadTable(Topic topic, MeasurementTable table) {
-        try (MeasurementIterator measurements = table.getUnsentMeasurements()) {
-            for (MeasurementTable.Measurement record : measurements) {
-                sender.send(record.offset, topic.getName(), record.key, record.value);
-            }
+        long now = System.currentTimeMillis();
+        Long refresh = this.lastRefresh.get(label);
+        if (refresh == null || now - refresh > uiRefreshRate) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    label.setText(text);
+                }
+            });
+            this.lastRefresh.put(label, now);
         }
     }
 }

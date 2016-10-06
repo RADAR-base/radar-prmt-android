@@ -18,13 +18,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <RelativeLayout
-        android:layout_marginTop="20dp"
-        android:visibility="gone"
-        android:id="@+id/dataArea"
-        android:layout_width="match_parent"
+    <Button
+        android:layout_below="@+id/deviceName"
+        android:layout_marginTop="50dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/deviceName">
+        android:id="@+id/stopButton"
+        android:text="Stop Recording"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Restart Recording"
+        android:id="@+id/restartButton"
+        android:layout_below="@+id/stopButton"/>
+
+    <Button
+        android:layout_below="@id/restartButton"
+        android:layout_marginTop="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/showButton"
+        android:text="Show Output"/>
+
+    <RelativeLayout
+        android:layout_marginStart="20dp"
+        android:visibility="invisible"
+        android:id="@+id/dataArea"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/restartButton">
 
         <TextView
             android:id="@+id/accel_label"
@@ -154,46 +177,20 @@
             android:id="@+id/battery"
             android:text="@string/emptyText"/>
 
-        <TextView
-            android:id="@+id/timer_label"
-            android:layout_marginTop="10dp"
-            android:layout_below="@id/battery"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/timer_label" />
+        <!--<TextView-->
+            <!--android:id="@+id/timer_label"-->
+            <!--android:layout_marginTop="10dp"-->
+            <!--android:layout_below="@id/battery"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="@string/timer_label" />-->
 
-        <TextView
-            android:layout_below="@id/timer_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/timer"
-            android:text="@string/emptyText"/>
+        <!--<TextView-->
+            <!--android:layout_below="@id/timer_label"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:id="@+id/timer"-->
+            <!--android:text="@string/emptyText"/>-->
 
      </RelativeLayout>
-
-    <Button
-        android:layout_below="@+id/dataArea"
-        android:layout_marginTop="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/stopButton"
-        android:text="Stop Recording"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Restart Recording"
-        android:id="@+id/restartButton"
-        android:layout_below="@+id/stopButton"/>
-
-    <Button
-        android:layout_below="@id/restartButton"
-        android:layout_marginTop="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/showButton"
-        android:text="Show Output"/>
-
-
-
 </RelativeLayout>
