@@ -1,5 +1,6 @@
 # Ignore the file with the api key
 app/src/main/res/values/apikey.xml
+app/src/main/res/values/server.xml
 
 # Local configuration file
 local.properties
@@ -21,6 +22,7 @@ bin/
 gen/
 out/
 build/
+app/libs/
 
 # OSX stuff
 .DS_Store
@@ -32,7 +34,7 @@ proguard/
 *.log
 
 # EmpaLink lib
-empalink*.aar
+empalink-2.0/*
 
 # Files for the ART/Dalvik VM
 *.dex

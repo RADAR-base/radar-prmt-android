@@ -1,12 +1,19 @@
 package org.radarcns.empaticaE4;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -21,17 +28,31 @@ import com.empatica.empalink.config.EmpaSensorType;
 import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
-import org.radarcns.empaticaE4.R;
 
+import org.apache.avro.generic.GenericRecord;
+import org.radarcns.SchemaRetriever;
+import org.radarcns.android.MeasurementIterator;
+import org.radarcns.android.MeasurementTable;
+import org.radarcns.collect.LocalSchemaRetriever;
+import org.radarcns.collect.SchemaRegistryRetriever;
+import org.radarcns.collect.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
-
-public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate {
+public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate, ServerStatusListener {
+    private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_BT = 1;
-    private static final long STREAMING_TIME = 10000; // Stops streaming 10 seconds after connection (was 10 sec)
-    private Time mTimer;
-
+    private static final int REQUEST_ENABLE_COARSE_LOCATION = 2;
     private EmpaDeviceManager deviceManager;
 
     private TextView accel_xLabel;
@@ -44,22 +65,82 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private TextView batteryLabel;
     private TextView statusLabel;
     private TextView deviceNameLabel;
-    private TextView timerLabel;
+    private TextView serverStatusLabel;
     private Button restartButton;
     private Button stopButton;
-    private Button showButton;
+    private Button reconnectButton;
     private RelativeLayout dataCnt;
 
-    private FileHandler bvpFileHandler;
-    private FileHandler accFileHandler;
-    private FileHandler edaFileHandler;
-    private FileHandler tempFileHandler;
-    private FileHandler ibiFileHandler;
+    private Topic accelerationTopic;
+    private Topic batteryTopic;
+    private Topic bvpTopic;
+    private Topic edaTopic;
+    private Topic ibiTopic;
+    private Topic temperatureTopic;
+
+    private String groupId;
+    private String deviceId;
+    private long uiRefreshRate;
+    private Map<TextView, Long> lastRefresh;
+    private boolean deviceManagerIsReady;
+    private DataHandler dataHandler;
+
+
+    private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                if (state == BluetoothAdapter.STATE_OFF) {
+                    enableBt();
+                }
+            }
+        }
+    };
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_ENABLE_COARSE_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                enableEmpatica();
+            } else {
+                // User refused to grant permission.
+                updateLabel(statusLabel, "Cannot connect to Empatica E4 without location permissions");
+            }
+        }
+    }
+
+    private void enableEmpatica() {
+        // Create a new EmpaDeviceManager. MainActivity is both its data and status delegate.
+        deviceManager = new EmpaDeviceManager(getApplicationContext(), this, this);
+        // Initialize the Device Manager using your API key. You need to have Internet access at this point.
+        String empatica_api_key = getString(R.string.apikey);
+        groupId = getString(R.string.group_id);
+        deviceId = null;
+        deviceManager.authenticateWithAPIKey(empatica_api_key);
+
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                deviceManager.disconnect();
+            }
+        });
+        stopButton.setVisibility(View.VISIBLE);
+        restartButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "RESTARTED RECORDING", Toast.LENGTH_SHORT).show();
+                deviceManager.startScanning();
+            }
+        });
+        restartButton.setVisibility(View.VISIBLE);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         Context context = getApplicationContext();
 
@@ -72,56 +153,125 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         bvpLabel = (TextView) findViewById(R.id.bvp);
         edaLabel = (TextView) findViewById(R.id.eda);
         ibiLabel = (TextView) findViewById(R.id.ibi);
+        serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
         temperatureLabel = (TextView) findViewById(R.id.temperature);
         batteryLabel = (TextView) findViewById(R.id.battery);
         deviceNameLabel = (TextView) findViewById(R.id.deviceName);
-        timerLabel = (TextView) findViewById(R.id.timer);
         restartButton = (Button) findViewById(R.id.restartButton);
-        showButton = (Button) findViewById(R.id.showButton);
+        restartButton.setVisibility(View.INVISIBLE);
+        Button showButton = (Button) findViewById(R.id.showButton);
         stopButton = (Button) findViewById(R.id.stopButton);
+        stopButton.setVisibility(View.INVISIBLE);
+        reconnectButton = (Button) findViewById(R.id.reconnectButton);
+        reconnectButton.setVisibility(View.INVISIBLE);
 
-        bvpFileHandler = new FileHandler("bvp.txt", context);
-        accFileHandler = new FileHandler("acc.txt", context);
-        edaFileHandler = new FileHandler("eda.txt", context);
-        tempFileHandler = new FileHandler("temp.txt", context);
-        ibiFileHandler = new FileHandler("ibi.txt", context);
+        lastRefresh = new HashMap<>();
 
-        restartButton.setOnClickListener(new View.OnClickListener() {
+        SchemaRetriever localSchemaRetriever = new LocalSchemaRetriever();
+        try {
+            accelerationTopic = new Topic("empatica_e4_acceleration", localSchemaRetriever);
+            batteryTopic = new Topic("empatica_e4_battery_level", localSchemaRetriever);
+            bvpTopic = new Topic("empatica_e4_blood_volume_pulse", localSchemaRetriever);
+            edaTopic = new Topic("empatica_e4_electrodermal_activity", localSchemaRetriever);
+            ibiTopic = new Topic("empatica_e4_inter_beat_interval", localSchemaRetriever);
+            temperatureTopic = new Topic("empatica_e4_temperature", localSchemaRetriever);
+        } catch (IOException ex) {
+            logger.error("missing topic schema", ex);
+            throw new RuntimeException(ex);
+        }
+
+        SchemaRetriever remoteSchemaRetriever = new SchemaRegistryRetriever(getString(R.string.schema_registry_url));
+        URL kafkaUrl;
+        try {
+            kafkaUrl = new URL(getString(R.string.kafka_rest_proxy_url));
+        } catch (MalformedURLException e) {
+            logger.error("Malformed Kafka server URL {}", getString(R.string.kafka_rest_proxy_url));
+            throw new RuntimeException(e);
+        }
+        dataHandler = new DataHandler(context, 1000, kafkaUrl, 5000, 1000, remoteSchemaRetriever, Long.parseLong(getString(R.string.data_retention_ms)), accelerationTopic, bvpTopic, edaTopic, ibiTopic, temperatureTopic);
+        dataHandler.addStatusListener(this);
+
+        reconnectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "RESTARTED RECORDING", Toast.LENGTH_SHORT).show();
-                deviceManager.startScanning();
-            }
-        });
-
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                deviceManager.disconnect();
+                dataHandler.checkConnection();
             }
         });
 
         showButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, ibiFileHandler.read(), Toast.LENGTH_LONG).show();
+                String view = "";
+                DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
+                try (MeasurementIterator measurements = dataHandler.getTable(ibiTopic).getMeasurements(100)) {
+                    for (MeasurementTable.Measurement measurement : measurements) {
+                        String t = timeFormat.format(1000d * (Double)measurement.value.get(0));
+                        view = t + ": " + (int)(60d/((Number)measurement.value.get(2)).doubleValue()) + "\n" + view;
+                    }
+                }
+                logger.info("Data:\n{}", view);
+                Toast.makeText(MainActivity.this, view, Toast.LENGTH_LONG).show();
             }
         });
 
-        // Create a new EmpaDeviceManager. MainActivity is both its data and status delegate.
-        deviceManager = new EmpaDeviceManager(getApplicationContext(), this, this);
-        // Initialize the Device Manager using your API key. You need to have Internet access at this point.
-        String empatica_api_key = getString(R.string.apikey);
-        deviceManager.authenticateWithAPIKey(empatica_api_key);
+        uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
+
+        // Register for broadcasts on BluetoothAdapter state change
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(mBluetoothReceiver, filter);
+        enableBt();
+
+        deviceManagerIsReady = false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_ENABLE_COARSE_LOCATION);
+            deviceManager = null;
+        } else {
+            enableEmpatica();
+        }
+    }
+
+    private void enableBt() {
+        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        deviceManager.stopScanning();
+        if (deviceManagerIsReady) {
+            deviceManager.stopScanning();
+        }
+        try {
+            dataHandler.pause();
+        } catch (InterruptedException e) {
+            logger.warn("Data handler interrupted");
+        }
+    }
+
+    protected void onResume() {
+        super.onResume();
+        dataHandler.start();
+        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            enableBt();
+        } else if (deviceManagerIsReady) {
+            deviceManager.startScanning();
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        deviceManager.cleanUp();
+        try {
+            dataHandler.close();
+        } catch (InterruptedException e) {
+            // do nothing
+        }
+        if (deviceManagerIsReady) {
+            deviceManager.cleanUp();
+        }
+
+        // Unregister broadcast listeners
+        unregisterReceiver(mBluetoothReceiver);
     }
 
     @Override
@@ -135,10 +285,11 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             try {
                 // Connect to the device
                 deviceManager.connectDevice(bluetoothDevice);
+                this.deviceId = this.groupId + "-" + bluetoothDevice.getAddress();
                 updateLabel(deviceNameLabel, "To: " + deviceName);
             } catch (ConnectionNotAllowedException e) {
                 // This should happen only if you try to connect when allowed == false.
-                Toast.makeText(MainActivity.this, "Sorry, you can't connect to this device", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Sorry, you cannot connect to this device", Toast.LENGTH_SHORT).show();
             }
         } else {
             Toast.makeText(MainActivity.this, "Not allowed", Toast.LENGTH_SHORT).show();
@@ -148,16 +299,20 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     @Override
     public void didRequestEnableBluetooth() {
         // Request the user to enable Bluetooth
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        enableBt();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // The user chose not to enable Bluetooth
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
-            // You should deal with this
-            return;
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == Activity.RESULT_CANCELED) {
+                updateLabel(statusLabel, "Please enable Bluetooth for any incoming data");
+                return;
+            }
+            if (resultCode == Activity.RESULT_OK) {
+                deviceManager.startScanning();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -178,87 +333,107 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
         // The device manager is ready for use
         if (status == EmpaStatus.READY) {
-            updateLabel(statusLabel, status.name() + " - Turn on your device");
+            updateLabel(statusLabel, "READY - Turn on your device");
             // Start scanning
-            deviceManager.startScanning();
+            deviceManagerIsReady = true;
+            if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                deviceManager.startScanning();
+            }
         // The device manager has established a connection
         } else if (status == EmpaStatus.CONNECTED) {
             // Stop streaming after STREAMING_TIME
-            startStreaming(STREAMING_TIME);
-//            dataCnt.setVisibility(View.VISIBLE);
-//            mTimer = new Time(STREAMING_TIME);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    dataCnt.setVisibility(View.VISIBLE);
+                }
+            });
         // The device manager disconnected from a device
         } else if (status == EmpaStatus.DISCONNECTED) {
-            updateLabel(deviceNameLabel, "");
-        }
-    }
-
-    private void startStreaming(final long streaming_time) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-//                dataCnt.setVisibility(View.VISIBLE);
-                // After a time period the run() is executed, disconnecting the device.
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Disconnect device
-                        deviceManager.disconnect();
-                    }
-                }, streaming_time);
+            updateLabel(deviceNameLabel, "DISCONNECTED");
+            if (deviceManagerIsReady) {
+                deviceManager.startScanning();
             }
-        });
-
-        // Start the clock
-        mTimer = new Time(STREAMING_TIME);
+        }
     }
 
     @Override
     public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
-        updateLabel(accel_xLabel, "" + x);
-        updateLabel(accel_yLabel, "" + y);
-        updateLabel(accel_zLabel, "" + z);
-        accFileHandler.writeMeasurement( timestamp, x, y, z );
+        updateLabel(accel_xLabel, String.valueOf(x));
+        updateLabel(accel_yLabel, String.valueOf(y));
+        updateLabel(accel_zLabel, String.valueOf(z));
+        dataHandler.sendAndAddToTable(accelerationTopic, deviceId, timestamp, "x", x / 64f, "y", y / 64f, "z", z / 64f);
     }
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
-        updateLabel(bvpLabel, "" + bvp + "   " + timestamp);
-        bvpFileHandler.writeMeasurement( timestamp, bvp );
+        updateLabel(bvpLabel, bvp + "   " + timestamp);
+        dataHandler.sendAndAddToTable(bvpTopic, deviceId, timestamp, "bloodVolumePulse", bvp);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         updateLabel(batteryLabel, String.format(Locale.ENGLISH, "%.1f %%", battery * 100));
+        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, "batteryLevel", battery);
+        dataHandler.trySend(0L, batteryTopic.getName(), deviceId, record);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
-        updateLabel(edaLabel, "" + gsr);
-        edaFileHandler.writeMeasurement( timestamp, gsr );
+        updateLabel(edaLabel, String.valueOf(gsr));
+        dataHandler.sendAndAddToTable(edaTopic, deviceId, timestamp, "electroDermalActivity", gsr);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
-        updateLabel(ibiLabel, "" + ibi);
-        ibiFileHandler.writeMeasurement( timestamp, ibi );
+        updateLabel(ibiLabel, String.valueOf(ibi));
+        dataHandler.sendAndAddToTable(ibiTopic, deviceId, timestamp, "interBeatInterval", ibi);
     }
 
     @Override
-    public void didReceiveTemperature(float temp, double timestamp) {
-        updateLabel(temperatureLabel, "" + temp);
-        tempFileHandler.writeMeasurement( timestamp, temp );
-
-        // Update timer label
-        updateLabel(timerLabel, "" + mTimer.getRemainingSeconds());
+    public void didReceiveTemperature(float temperature, double timestamp) {
+        updateLabel(temperatureLabel, String.valueOf(temperature));
+        dataHandler.sendAndAddToTable(temperatureTopic, deviceId, timestamp, "temperature", temperature);
     }
 
     // Update a label with some text, making sure this is run in the UI thread
     private void updateLabel(final TextView label, final String text) {
+        long now = System.currentTimeMillis();
+        Long refresh = this.lastRefresh.get(label);
+        if (refresh == null || now - refresh > uiRefreshRate) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    label.setText(text);
+                }
+            });
+            this.lastRefresh.put(label, now);
+        }
+    }
+
+    @Override
+    public void updateStatus(final Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                label.setText(text);
+                switch (status) {
+                    case CONNECTED:
+                        serverStatusLabel.setText("Server connected");
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
+                    case DISCONNECTED:
+                        serverStatusLabel.setText("Server disconnected");
+                        reconnectButton.setVisibility(View.VISIBLE);
+                        break;
+                    case CONNECTING:
+                        serverStatusLabel.setText("Connecting to server");
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
+                    case UPLOADING:
+                        serverStatusLabel.setText("Uploading");
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
+                }
             }
         });
     }
