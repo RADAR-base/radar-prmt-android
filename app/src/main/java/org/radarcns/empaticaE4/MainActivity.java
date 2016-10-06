@@ -4,8 +4,10 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -83,6 +85,20 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private boolean deviceManagerIsReady;
     private DataHandler dataHandler;
 
+
+    private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                if (state == BluetoothAdapter.STATE_OFF) {
+                    enableBt();
+                }
+            }
+        }
+    };
     @Override
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -198,12 +214,24 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
 
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
 
+        // Register for broadcasts on BluetoothAdapter state change
+        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(mBluetoothReceiver, filter);
+        enableBt();
+
         deviceManagerIsReady = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_ENABLE_COARSE_LOCATION);
             deviceManager = null;
         } else {
             enableEmpatica();
+        }
+    }
+
+    private void enableBt() {
+        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
     }
 
@@ -239,6 +267,9 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         if (deviceManagerIsReady) {
             deviceManager.cleanUp();
         }
+
+        // Unregister broadcast listeners
+        unregisterReceiver(mBluetoothReceiver);
     }
 
     @Override
@@ -266,8 +297,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     @Override
     public void didRequestEnableBluetooth() {
         // Request the user to enable Bluetooth
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        enableBt();
     }
 
     @Override
@@ -304,7 +334,9 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             updateLabel(statusLabel, "READY - Turn on your device");
             // Start scanning
             deviceManagerIsReady = true;
-            deviceManager.startScanning();
+            if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                deviceManager.startScanning();
+            }
         // The device manager has established a connection
         } else if (status == EmpaStatus.CONNECTED) {
             // Stop streaming after STREAMING_TIME
