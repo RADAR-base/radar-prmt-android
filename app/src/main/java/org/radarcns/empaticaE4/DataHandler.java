@@ -74,10 +74,12 @@ class DataHandler {
         private final static long UPLOAD_INTERVAL = 1_000L; // 1 second
         private final static long CLOSED_CHECK_INTERVAL = 600_000L; // 10 minutes
         private final static long SENDER_FLUSH_INTERVAL = 10_000L; // 10 seconds
+        private final static long UPDATE_INTERVAL = 3_000L; // 3 seconds
 
         boolean isClosed;
         private long lastClean;
         private long lastUpload;
+        private long lastUpdate;
         private long lastClosedCheck;
         private long lastSenderFlush;
 
@@ -86,6 +88,7 @@ class DataHandler {
             isClosed = false;
             lastClean = 0L;
             lastUpload = 0L;
+            lastUpdate = 0L;
             lastClosedCheck = 0L;
             lastSenderFlush = System.currentTimeMillis();
         }
@@ -93,13 +96,14 @@ class DataHandler {
         public void run() {
             try {
                 while (true) {
-                    long nextClean, nextUpload, nextClosedCheck, nextSenderFlush, nextEvent, now;
+                    long nextClean, nextUpload, nextClosedCheck, nextUpdate, nextSenderFlush, nextEvent, now;
                     synchronized (this) {
                         nextClean = lastClean + CLEAN_INTERVAL;
                         nextUpload = lastUpload + UPLOAD_INTERVAL;
+                        nextUpdate = lastUpdate + UPDATE_INTERVAL;
                         nextClosedCheck = lastClosedCheck + CLOSED_CHECK_INTERVAL;
                         nextSenderFlush = lastSenderFlush + SENDER_FLUSH_INTERVAL;
-                        nextEvent = Math.min(nextSenderFlush, Math.min(nextClean, Math.min(nextUpload, nextClosedCheck)));
+                        nextEvent = Math.min(nextUpdate, Math.min(nextSenderFlush, Math.min(nextClean, Math.min(nextUpload, nextClosedCheck))));
                         now = System.currentTimeMillis();
                         while (!this.isClosed && nextEvent > now) {
                             wait(nextEvent - now);
@@ -133,7 +137,11 @@ class DataHandler {
                         for (ServerStatusListener listener : statusListeners) {
                             listener.updateStatus(ServerStatusListener.Status.CONNECTED);
                         }
+                        updateTables();
                         lastSenderFlush = now;
+                    } else if (nextEvent == nextUpdate) {
+                        updateTables();
+                        lastUpdate = now;
                     }
                 }
             } catch (InterruptedException e) {
