@@ -153,7 +153,7 @@ public class MeasurementTable {
                             db.execSQL(statement, values[1]);
                             valuesCommitted++;
                         }
-                        logger.info("Committed {} records to topic {}", valuesCommitted, topic.getName());
+                        logger.debug("Committed {} records to topic {}", valuesCommitted, topic.getName());
                     } finally {
                         db.endTransaction();
                     }

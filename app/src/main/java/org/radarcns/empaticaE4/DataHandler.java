@@ -178,6 +178,7 @@ class DataHandler {
                 }
                 lastOffsetUploaded.put(topic, lastOffset);
             }
+            logger.debug("uploaded {} {} records", sent, topic.getName());
             return sent;
         }
     }
@@ -213,7 +214,8 @@ class DataHandler {
 
     private void updateTables() {
         for (Map.Entry<Topic, MeasurementTable> entry : tables.entrySet()) {
-            entry.getValue().markSent(sender.getLastSentOffset(entry.getKey().getName()));
+            int marked = entry.getValue().markSent(sender.getLastSentOffset(entry.getKey().getName()));
+            logger.debug("marked {} {} records as sent", marked, entry.getKey().getName());
         }
     }
 
