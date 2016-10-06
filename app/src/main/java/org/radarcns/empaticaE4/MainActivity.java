@@ -251,7 +251,9 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     protected void onResume() {
         super.onResume();
         dataHandler.start();
-        if (deviceManagerIsReady) {
+        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            enableBt();
+        } else if (deviceManagerIsReady) {
             deviceManager.startScanning();
         }
     }
