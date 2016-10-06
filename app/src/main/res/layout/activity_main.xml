@@ -41,6 +41,22 @@
         android:id="@+id/showButton"
         android:text="Show Output"/>
 
+
+    <TextView
+        android:id="@+id/serverStatus"
+        android:layout_below="@id/showButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:layout_below="@id/serverStatus"
+        android:layout_marginTop="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/reconnectButton"
+        android:text="Reconnect to server"/>
+
+
     <RelativeLayout
         android:layout_marginStart="20dp"
         android:visibility="invisible"

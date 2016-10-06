@@ -46,7 +46,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate {
+public class MainActivity extends AppCompatActivity implements EmpaDataDelegate, EmpaStatusDelegate, ServerStatusListener {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_BT = 1;
@@ -63,8 +63,10 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
     private TextView batteryLabel;
     private TextView statusLabel;
     private TextView deviceNameLabel;
+    private TextView serverStatusLabel;
     private Button restartButton;
     private Button stopButton;
+    private Button reconnectButton;
     private RelativeLayout dataCnt;
 
     private Topic accelerationTopic;
@@ -135,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         bvpLabel = (TextView) findViewById(R.id.bvp);
         edaLabel = (TextView) findViewById(R.id.eda);
         ibiLabel = (TextView) findViewById(R.id.ibi);
+        serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
         temperatureLabel = (TextView) findViewById(R.id.temperature);
         batteryLabel = (TextView) findViewById(R.id.battery);
         deviceNameLabel = (TextView) findViewById(R.id.deviceName);
@@ -143,6 +146,8 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
         Button showButton = (Button) findViewById(R.id.showButton);
         stopButton = (Button) findViewById(R.id.stopButton);
         stopButton.setVisibility(View.INVISIBLE);
+        reconnectButton = (Button) findViewById(R.id.reconnectButton);
+        reconnectButton.setVisibility(View.INVISIBLE);
 
         lastRefresh = new HashMap<>();
 
@@ -168,6 +173,13 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             throw new RuntimeException(e);
         }
         dataHandler = new DataHandler(context, 1000, kafkaUrl, 5000, 1000, remoteSchemaRetriever, Long.parseLong(getString(R.string.data_retention_ms)), accelerationTopic, bvpTopic, edaTopic, ibiTopic, temperatureTopic);
+        dataHandler.addStatusListener(this);
+
+        reconnectButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                dataHandler.checkConnection();
+            }
+        });
 
         showButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -363,5 +375,32 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
             });
             this.lastRefresh.put(label, now);
         }
+    }
+
+    @Override
+    public void updateStatus(final Status status) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (status) {
+                    case CONNECTED:
+                        serverStatusLabel.setText("Server connected");
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
+                    case DISCONNECTED:
+                        serverStatusLabel.setText("Server disconnected");
+                        reconnectButton.setVisibility(View.VISIBLE);
+                        break;
+                    case CONNECTING:
+                        serverStatusLabel.setText("Connecting to server");
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
+                    case UPLOADING:
+                        serverStatusLabel.setText("Uploading");
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
+                }
+            }
+        });
     }
 }
