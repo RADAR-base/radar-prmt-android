@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements EmpaDataDelegate,
                 try (MeasurementIterator measurements = dataHandler.getTable(ibiTopic).getMeasurements(100)) {
                     for (MeasurementTable.Measurement measurement : measurements) {
                         String t = timeFormat.format(1000d * (Double)measurement.value.get(0));
-                        view = t + ": " + measurement.value.get(2) + "\n" + view;
+                        view = t + ": " + (int)(60d/((Number)measurement.value.get(2)).doubleValue()) + "\n" + view;
                     }
                 }
                 logger.info("Data:\n{}", view);
