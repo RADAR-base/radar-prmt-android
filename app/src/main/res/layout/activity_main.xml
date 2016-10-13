@@ -15,55 +15,57 @@
     <TextView
         android:id="@+id/deviceName"
         android:layout_below="@id/status"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <Button
-        android:layout_below="@+id/deviceName"
-        android:layout_marginTop="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/stopButton"
-        android:text="Stop Recording"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Restart Recording"
-        android:id="@+id/restartButton"
-        android:layout_below="@+id/stopButton"/>
-
-    <Button
-        android:layout_below="@id/restartButton"
-        android:layout_marginTop="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/showButton"
-        android:text="Show heart rate"/>
-
-
-    <TextView
-        android:id="@+id/serverStatus"
-        android:layout_below="@id/showButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:layout_below="@id/serverStatus"
-        android:layout_marginTop="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/reconnectButton"
-        android:text="Reconnect to server"/>
 
 
     <RelativeLayout
+        android:id="@+id/controlPanel"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_below="@id/deviceName"
+        android:layout_marginTop="50dp">
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stop recording"/>
+
+        <Button
+            android:id="@+id/showButton"
+            android:layout_below="@id/stopButton"
+            android:layout_marginTop="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:text="Show heart rate"/>
+
+
+        <TextView
+            android:id="@+id/serverStatus"
+            android:layout_below="@id/showButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/reconnectButton"
+            android:layout_below="@id/serverStatus"
+            android:layout_marginTop="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:text="Reconnect to server"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/dataArea"
         android:layout_marginStart="20dp"
         android:visibility="invisible"
-        android:id="@+id/dataArea"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/restartButton">
+        android:layout_below="@id/deviceName"
+        android:layout_toEndOf="@id/controlPanel">
 
         <TextView
             android:id="@+id/accel_label"
@@ -127,10 +129,10 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/bvp"
             android:layout_below="@id/bvp_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/bvp"
             android:text="@string/emptyText"/>
 
         <TextView
@@ -172,10 +174,10 @@
             android:text="@string/temp_label" />
 
         <TextView
+            android:id="@+id/temperature"
             android:layout_below="@id/temp_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/temperature"
             android:text="@string/emptyText"/>
 
         <TextView
@@ -187,26 +189,10 @@
             android:text="@string/battery_label" />
 
         <TextView
+            android:id="@+id/battery"
             android:layout_below="@id/battery_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/battery"
             android:text="@string/emptyText"/>
-
-        <!--<TextView-->
-            <!--android:id="@+id/timer_label"-->
-            <!--android:layout_marginTop="10dp"-->
-            <!--android:layout_below="@id/battery"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="@string/timer_label" />-->
-
-        <!--<TextView-->
-            <!--android:layout_below="@id/timer_label"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:id="@+id/timer"-->
-            <!--android:text="@string/emptyText"/>-->
-
      </RelativeLayout>
 </RelativeLayout>

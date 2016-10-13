@@ -10,4 +10,7 @@
     <string name="emptyText">-</string>
     <string name="temp_label">Temperature</string>
     <string name="battery_label">Battery</string>
+    <string name="service_notification_ticker">Empatica E4 data collection</string>
+    <string name="service_notification_text">Collecting data from your wearable bluetooth device.</string>
+    <string name="service_notification_title">Empatica E4 data collection</string>
 </resources>

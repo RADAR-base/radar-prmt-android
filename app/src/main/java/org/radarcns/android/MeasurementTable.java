@@ -9,12 +9,15 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.radarcns.collect.Topic;
+import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Sqlite table for measurements.
@@ -57,120 +60,85 @@ public class MeasurementTable {
             throw new IllegalStateException("Submit thread already started");
         }
         this.submitThread = new SubmitThread();
-        this.submitThread.start();
-    }
-
-    public Topic getTopic() {
-        return this.topic;
     }
 
     /** Submits new values to the database */
-    private class SubmitThread extends Thread {
-        private boolean isClosed;
-        private boolean doFlush;
-        private final Queue<Object[][]> queue;
-        private long firstMessageReceived;
-        private boolean isPaused;
+    private class SubmitThread {
+        private final ScheduledExecutorService executor;
+        private final List<Object[][]> queue;
+        private final RollingTimeAverage average;
+        private boolean hasFuture;
 
         SubmitThread() {
-            super("MeasurementTable " + topic.getName());
-            this.isClosed = false;
-            this.doFlush = false;
-            this.queue = new ArrayDeque<>();
-            this.firstMessageReceived = Long.MAX_VALUE;
+            this.queue = new ArrayList<>();
+            this.executor = Executors.newSingleThreadScheduledExecutor();
+            this.hasFuture = false;
+            this.average = new RollingTimeAverage(20_000L);
+        }
+
+        private class DoSubmitValues implements Runnable {
+            @Override
+            public void run() {
+                List<Object[][]> localQueue;
+                synchronized (this) {
+                    hasFuture = false;
+                    if (queue.isEmpty()) {
+                        return;
+                    }
+                    localQueue = new ArrayList<>(queue);
+                    queue.clear();
+                }
+
+                average.add(localQueue.size());
+                Object[][] firstValues = localQueue.get(0);
+                String statement = "INSERT INTO " + topic.getName() + '(';
+                for (int i = 0; i < firstValues[0].length; i++) {
+                    if (i > 0) {
+                        statement += ',';
+                    }
+                    statement += firstValues[0][i];
+                }
+                statement += ") VALUES (";
+                for (int i = 0; i < firstValues[1].length; i++) {
+                    if (i > 0) {
+                        statement += ",?";
+                    } else {
+                        statement += '?';
+                    }
+                }
+                statement += ')';
+
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+                db.beginTransaction();
+                try {
+                    for (Object[][] values : localQueue) {
+                        db.execSQL(statement, values[1]);
+                    }
+                    logger.debug("Committed {} records to topic {}", localQueue.size(), topic.getName());
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                logger.info("Committing {} records per second to topic {}", Math.round(average.getAverage()), topic.getName());
+            }
         }
 
         synchronized void add(Object[][] value) {
-            if (firstMessageReceived == Long.MAX_VALUE) {
-                firstMessageReceived = System.currentTimeMillis();
+            if (!hasFuture) {
+                this.executor.schedule(new DoSubmitValues(), window, TimeUnit.MILLISECONDS);
+                hasFuture = true;
             }
             queue.add(value);
-            notify();
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    synchronized (this) {
-                        // if there is no value, this is System.currentTimeMillis - Long.MAX_VALUE
-                        // if there is a value, this is a smallish number.
-                        long timeWaited = System.currentTimeMillis() - firstMessageReceived;
-                        while (!isClosed && timeWaited < window && !doFlush) {
-                            if (firstMessageReceived == Long.MAX_VALUE) {
-                                wait();
-                            } else {
-                                wait(window - timeWaited);
-                            }
-                            timeWaited = System.currentTimeMillis() - firstMessageReceived;
-                        }
-                        if (doFlush) {
-                            doFlush = false;
-                        }
-                        // do a transaction first, break in the end.
-                    }
-
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-                    int valuesCommitted = 0;
-                    db.beginTransaction();
-                    try {
-                        Object[][] values;
-                        String statement = null;
-                        while (true) {
-                            synchronized (this) {
-                                if (queue.isEmpty()) {
-                                    db.setTransactionSuccessful();
-                                    firstMessageReceived = Long.MAX_VALUE;
-
-                                    if (isClosed) {
-                                        return;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                values = queue.remove();
-                            }
-                            if (statement == null) {
-                                statement = "INSERT INTO " + topic.getName() + '(';
-                                for (int i = 0; i < values[0].length; i++) {
-                                    if (i > 0) {
-                                        statement += ',';
-                                    }
-                                    statement += values[0][i];
-                                }
-                                statement += ") VALUES (";
-                                for (int i = 0; i < values[1].length; i++) {
-                                    if (i > 0) {
-                                        statement += ",?";
-                                    } else {
-                                        statement += '?';
-                                    }
-                                }
-                                statement += ')';
-                            }
-
-                            db.execSQL(statement, values[1]);
-                            valuesCommitted++;
-                        }
-                        logger.debug("Committed {} records to topic {}", valuesCommitted, topic.getName());
-                    } finally {
-                        db.endTransaction();
-                    }
-                }
-            } catch (InterruptedException e) {
-                logger.debug("MeasurementTable {} interrupted", topic.getName());
-            }
         }
 
         synchronized void flush() {
-            this.doFlush = true;
-            this.notify();
+            this.executor.schedule(new DoSubmitValues(), window, TimeUnit.MILLISECONDS);
+            hasFuture = true;
         }
 
-        synchronized void close() {
-            this.isClosed = true;
-            this.notify();
+        void close() {
+            this.executor.shutdown();
         }
     }
 
@@ -243,9 +211,9 @@ public class MeasurementTable {
      * Use in a try-with-resources statement.
      * @return Iterator with column-name to value map.
      */
-    public MeasurementIterator getUnsentMeasurements(long offset, int limit) {
+    public MeasurementIterator getUnsentMeasurements(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " WHERE sent = 0 AND offset > " + offset + " ORDER BY offset ASC LIMIT " + limit, null);
+        final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " WHERE sent = 0 ORDER BY offset ASC LIMIT " + limit, null);
         return new MeasurementIterator(cursor, this);
     }
 
