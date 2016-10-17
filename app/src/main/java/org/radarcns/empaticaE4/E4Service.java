@@ -219,7 +219,9 @@ public class E4Service extends Service {
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
         }
-        dataHandler.start();
+        if (!dataHandler.isStarted()) {
+            dataHandler.start();
+        }
         forcedDisconnect.set(false);
         startScanning();
     }

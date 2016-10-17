@@ -15,27 +15,37 @@ import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.radarcns.android.DataHandler;
+import org.radarcns.android.MeasurementTable;
 import org.radarcns.collect.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
+    private final static Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
+
     private final DataHandler dataHandler;
-    private final Topic accelerationTopic;
     private final String groupId;
     private final Context context;
     private final String apiKey;
     private final E4Service e4service;
+    private final Schema.Field xField, yField, zField;
+    private final Schema.Field batteryLevelField;
+    private final Schema.Field bloodVolumePulseField;
+    private final Schema.Field electroDermalActivityField;
     private Handler mHandler;
     private final HandlerThread mHandlerThread;
     private String deviceId;
-    private final Topic bvpTopic;
+
+    private final MeasurementTable accelerationTable;
+    private final MeasurementTable bvpTable;
+    private final MeasurementTable edaTable;
+    private final MeasurementTable ibiTable;
+    private final MeasurementTable temperatureTable;
     private final Topic batteryTopic;
-    private final Topic edaTopic;
-    private final Topic ibiTopic;
-    private final Topic temperatureTopic;
+
     private float latestBloodVolumePulse = Float.NaN;
     private float latestBatteryLevel = Float.NaN;
     private float latestElectroDermalActivity = Float.NaN;
@@ -45,16 +55,26 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private EmpaDeviceManager deviceManager;
     private String deviceName;
     private boolean isScanning;
-    private final static Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
+    private Schema.Field interBeatIntervalField;
+    private Schema.Field temperatureField;
 
     public E4DeviceManager(Context context, E4Service e4Service, String apiKey, String groupId, DataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
-        this.accelerationTopic = topics.getAccelerationTopic();
-        this.bvpTopic = topics.getBloodVolumePulseTopic();
+        this.accelerationTable = dataHandler.getTable(topics.getAccelerationTopic());
+        this.bvpTable = dataHandler.getTable(topics.getBloodVolumePulseTopic());
+        this.edaTable = dataHandler.getTable(topics.getElectroDermalActivityTopic());
+        this.ibiTable = dataHandler.getTable(topics.getInterBeatIntervalTopic());
+        this.temperatureTable = dataHandler.getTable(topics.getTemperatureTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
-        this.edaTopic = topics.getElectroDermalActivityTopic();
-        this.ibiTopic = topics.getInterBeatIntervalTopic();
-        this.temperatureTopic = topics.getTemperatureTopic();
+        xField = accelerationTable.getTopic().getValueField("x");
+        yField = accelerationTable.getTopic().getValueField("y");
+        zField = accelerationTable.getTopic().getValueField("z");
+        batteryLevelField = batteryTopic.getValueField("batteryLevel");
+        bloodVolumePulseField = bvpTable.getTopic().getValueField("bloodVolumePulse");
+        electroDermalActivityField = edaTable.getTopic().getValueField("electroDermalActivity");
+        interBeatIntervalField = ibiTable.getTopic().getValueField("interBeatInterval");
+        temperatureField = temperatureTable.getTopic().getValueField("temperature");
+
         this.e4service = e4Service;
 
         this.context = context;
@@ -64,7 +84,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         this.groupId = groupId;
         this.deviceId = null;
         this.deviceName = null;
-        this.mHandlerThread = new HandlerThread("E4 device handler", Process.THREAD_PRIORITY_AUDIO);
+        this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
     }
 
     void start() {
@@ -197,38 +217,38 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         latestAcceleration[0] = x / 64f;
         latestAcceleration[1] = y / 64f;
         latestAcceleration[2] = z / 64f;
-        dataHandler.sendAndAddToTable(accelerationTopic, deviceId, timestamp, "x", latestAcceleration[0], "y", latestAcceleration[1], "z", latestAcceleration[2]);
+        dataHandler.addMeasurement(accelerationTable, deviceId, timestamp, xField, latestAcceleration[0], yField, latestAcceleration[1], zField, latestAcceleration[2]);
     }
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
         latestBloodVolumePulse = bvp;
-        dataHandler.sendAndAddToTable(bvpTopic, deviceId, timestamp, "bloodVolumePulse", bvp);
+        dataHandler.addMeasurement(bvpTable, deviceId, timestamp, bloodVolumePulseField, bvp);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         latestBatteryLevel = battery;
-        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, "batteryLevel", battery);
+        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, batteryLevelField, battery);
         dataHandler.trySend(batteryTopic, 0L, deviceId, record);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
         latestElectroDermalActivity = gsr;
-        dataHandler.sendAndAddToTable(edaTopic, deviceId, timestamp, "electroDermalActivity", gsr);
+        dataHandler.addMeasurement(edaTable, deviceId, timestamp, electroDermalActivityField, gsr);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
         latestInterBeatInterval = ibi;
-        dataHandler.sendAndAddToTable(ibiTopic, deviceId, timestamp, "interBeatInterval", ibi);
+        dataHandler.addMeasurement(ibiTable, deviceId, timestamp, interBeatIntervalField, ibi);
     }
 
     @Override
     public void didReceiveTemperature(float temperature, double timestamp) {
         latestTemperature = temperature;
-        dataHandler.sendAndAddToTable(temperatureTopic, deviceId, timestamp, "temperature", temperature);
+        dataHandler.addMeasurement(temperatureTable, deviceId, timestamp, temperatureField, temperature);
     }
 
     float getLatestBloodVolumePulse() {
