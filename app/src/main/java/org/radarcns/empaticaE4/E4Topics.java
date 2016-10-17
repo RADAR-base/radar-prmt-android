@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/** Thread-safe topic manager for topics concerning the Empatica E4. */
 public class E4Topics {
     private final ThreadLocal<Topic> accelerationTopic;
     private final ThreadLocal<Topic> batteryLevelTopic;

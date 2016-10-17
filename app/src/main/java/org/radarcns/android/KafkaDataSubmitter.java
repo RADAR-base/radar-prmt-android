@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Separate thread to read from the database and addMeasurement it to the Kafka server. Also cleans the
+ * Separate thread to read from the database and send it to the Kafka server. It cleans the
  * database.
  *
  * It uses a set of timers to addMeasurement data and clean the databases.

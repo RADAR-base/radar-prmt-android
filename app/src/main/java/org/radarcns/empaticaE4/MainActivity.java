@@ -62,39 +62,6 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     private boolean waitingForPermission;
     private boolean waitingForBind;
 
-    @Override
-    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted.
-                waitingForPermission = false;
-                enableEmpatica();
-                this.bindToEmpatica();
-            } else {
-                // User refused to grant permission.
-                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
-            }
-        }
-    }
-
-    private void enableEmpatica() {
-        if (!waitingForPermission) {
-            logger.info("Intending to start E4 service");
-            Intent e4serviceIntent = new Intent(this, E4Service.class);
-            startService(e4serviceIntent);
-        }
-    }
-
-    private void bindToEmpatica() {
-        if (waitingForBind && !waitingForPermission) {
-            logger.info("Intending to bind to E4 service");
-            Intent intent = new Intent(this, E4Service.class);
-            bindService(intent, mConnection, Context.BIND_ABOVE_CLIENT);
-            waitingForBind = false;
-        }
-    }
-
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -280,6 +247,40 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             e4Service.removeStatusListener(this);
             unbindService(mConnection);
             mBound = false;
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                waitingForPermission = false;
+                enableEmpatica();
+                this.bindToEmpatica();
+            } else {
+                // User refused to grant permission.
+                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
+            }
+        }
+    }
+
+    private void enableEmpatica() {
+        if (!waitingForPermission) {
+            logger.info("Intending to start E4 service");
+            Intent e4serviceIntent = new Intent(this, E4Service.class);
+            startService(e4serviceIntent);
+        }
+    }
+
+    private void bindToEmpatica() {
+        if (waitingForBind && !waitingForPermission) {
+            logger.info("Intending to bind to E4 service");
+            Intent intent = new Intent(this, E4Service.class);
+            bindService(intent, mConnection, Context.BIND_ABOVE_CLIENT);
+            waitingForBind = false;
         }
     }
 
