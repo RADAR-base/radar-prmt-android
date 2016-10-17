@@ -87,17 +87,6 @@ public class DataHandler {
         }
     }
 
-    public synchronized void addStatusListener(ServerStatusListener listener) {
-        synchronized (statusListeners) {
-            statusListeners.add(listener);
-        }
-    }
-    public synchronized void removeStatusListener(ServerStatusListener listener) {
-        synchronized (statusListeners) {
-            statusListeners.remove(listener);
-        }
-    }
-
     /**
      * Remove old measurements from the database.
      */
@@ -125,7 +114,24 @@ public class DataHandler {
         submitter.checkConnection();
     }
 
-    /** Send a record and add it to the local table. */
+
+    /**
+     * Send a record and add it to the local table.
+     *
+     * Values are passed as tuples with the Schema.Field of the topic schema and then the value, e.g.
+     * {@code
+     * Schema schema = table.getTopic().getValueSchema();
+     * Schema.Field myField1 = schema.getField("myField1");
+     * Schema.Field myField2 = schema.getField("myField2");
+     * dataHandler.addMeasurement(table, device, time, myField1, myValue1, myField2, myValue2);
+     * }
+     * For performance reasons, re-use the Schema.Field objects when adding any measurements.
+     *
+     * @param table table to add measurement to
+     * @param deviceId device ID the measurement belongs to
+     * @param timestamp timestamp that the measurement device reported
+     * @param values values to add, alternating between the Schema.Field of the topic that the value belongs and the values themselves.
+     */
     public void addMeasurement(MeasurementTable table, String deviceId, double timestamp, Object... values) {
         table.addMeasurement(deviceId, timestamp, System.currentTimeMillis() / 1000d, values);
     }
@@ -139,6 +145,17 @@ public class DataHandler {
 
     Map<Topic, MeasurementTable> getTables() {
         return tables;
+    }
+
+    public void addStatusListener(ServerStatusListener listener) {
+        synchronized (statusListeners) {
+            statusListeners.add(listener);
+        }
+    }
+    public void removeStatusListener(ServerStatusListener listener) {
+        synchronized (statusListeners) {
+            statusListeners.remove(listener);
+        }
     }
 
     void updateStatus(ServerStatusListener.Status status) {
