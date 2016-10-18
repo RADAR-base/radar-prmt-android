@@ -174,23 +174,23 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                 if (devices.hasNext()) {
                     E4DeviceManager e4DeviceManager = devices.next();
                     float[] acceleration = e4DeviceManager.getLatestAcceleration();
-                    setText(accel_xLabel, acceleration[0], "g");
-                    setText(accel_yLabel, acceleration[1], "g");
-                    setText(accel_zLabel, acceleration[2], "g");
-                    setText(bvpLabel, e4DeviceManager.getLatestBloodVolumePulse(), "\u00B5W");
-                    setText(edaLabel, e4DeviceManager.getLatestElectroDermalActivity(), "\u00B5S");
-                    setText(ibiLabel, e4DeviceManager.getLatestInterBeatInterval(), "s");
-                    setText(temperatureLabel, e4DeviceManager.getLatestTemperature(), "\u2103");
-                    setText(batteryLabel, 100*e4DeviceManager.getLatestBatteryLevel(), "%");
+                    setText(accel_xLabel, acceleration[0], "g", singleDecimal);
+                    setText(accel_yLabel, acceleration[1], "g", singleDecimal);
+                    setText(accel_zLabel, acceleration[2], "g", singleDecimal);
+                    setText(bvpLabel, e4DeviceManager.getLatestBloodVolumePulse(), "\u00B5W", singleDecimal);
+                    setText(edaLabel, e4DeviceManager.getLatestElectroDermalActivity(), "\u00B5S", doubleDecimal);
+                    setText(ibiLabel, e4DeviceManager.getLatestInterBeatInterval(), "s", doubleDecimal);
+                    setText(temperatureLabel, e4DeviceManager.getLatestTemperature(), "\u2103", singleDecimal);
+                    setText(batteryLabel, 100*e4DeviceManager.getLatestBatteryLevel(), "%", noDecimals);
                 }
             }
 
-            void setText(TextView label, float value, String suffix) {
+            void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
                 if (Float.isNaN(value)) {
                     // em dash
                     label.setText("\u2014");
                 } else {
-                    label.setText(singleDecimal.format(value) + " " + suffix);
+                    label.setText(formatter.format(value) + " " + suffix);
                 }
             }
         };
