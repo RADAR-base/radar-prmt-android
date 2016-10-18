@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             E4Service.LocalBinder binder = (E4Service.LocalBinder) service;
             e4Service = binder.getService();
             e4Service.getDataHandler().addStatusListener(MainActivity.this);
+            updateServerStatus(e4Service.getDataHandler().getStatus());
             e4Service.getDataHandler().checkConnection();
             e4Service.addStatusListener(MainActivity.this);
             if (e4Service.isRecording()) {
@@ -161,7 +162,9 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
         mHandler = new Handler();
         mUIUpdater = new Runnable() {
-            DecimalFormat singleDecimal = new DecimalFormat("#.#");
+            final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+            final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+            final DecimalFormat noDecimals = new DecimalFormat("0");
             @Override
             public void run() {
                 if (!mBound) {
@@ -300,20 +303,28 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             @Override
             public void run() {
                 switch (status) {
+                    case INACTIVE:
+                        serverStatusLabel.setVisibility(View.INVISIBLE);
+                        reconnectButton.setVisibility(View.INVISIBLE);
+                        break;
                     case CONNECTED:
                         serverStatusLabel.setText("Server connected");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
                         reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                     case DISCONNECTED:
                         serverStatusLabel.setText("Server disconnected");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
                         reconnectButton.setVisibility(View.VISIBLE);
                         break;
                     case CONNECTING:
                         serverStatusLabel.setText("Connecting to server");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
                         reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                     case UPLOADING:
                         serverStatusLabel.setText("Uploading");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
                         reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                 }

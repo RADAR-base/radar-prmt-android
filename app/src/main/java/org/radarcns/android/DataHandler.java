@@ -24,9 +24,13 @@ public class DataHandler {
     private final ThreadFactory threadFactory;
     private final Map<Topic, MeasurementTable> tables;
     private final Collection<ServerStatusListener> statusListeners;
+    private ServerStatusListener.Status status;
 
     private KafkaDataSubmitter submitter;
 
+    /**
+     * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
+     */
     public DataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, Topic... topics) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
@@ -38,12 +42,17 @@ public class DataHandler {
 
         submitter = null;
         statusListeners = new ArrayList<>();
-        this.threadFactory = new ThreadFactory() {
-            @Override
-            public Thread newThread(@NonNull Runnable r) {
-                return new Thread(r, "DataHandler");
-            }
-        };
+        if (kafkaUrl != null) {
+            this.threadFactory = new ThreadFactory() {
+                @Override
+                public Thread newThread(@NonNull Runnable r) {
+                    return new Thread(r, "DataHandler");
+                }
+            };
+        } else {
+            this.threadFactory = null;
+        }
+        updateStatus(ServerStatusListener.Status.INACTIVE);
     }
 
     /**
@@ -55,8 +64,10 @@ public class DataHandler {
         if (isStarted()) {
             throw new IllegalStateException("Cannot start submitter, it is already started");
         }
-        updateStatus(ServerStatusListener.Status.CONNECTING);
-        this.submitter = new KafkaDataSubmitter(this, kafkaUrl, schemaRetriever, threadFactory);
+        if (kafkaUrl != null) {
+            updateStatus(ServerStatusListener.Status.CONNECTING);
+            this.submitter = new KafkaDataSubmitter(this, kafkaUrl, schemaRetriever, threadFactory);
+        }
     }
 
     public boolean isStarted() {
@@ -68,8 +79,10 @@ public class DataHandler {
      * This waits for any remaining data to be sent.
      */
     public void stop() {
-        this.submitter.close();
-        this.submitter = null;
+        if (submitter != null) {
+            this.submitter.close();
+            this.submitter = null;
+        }
     }
 
     /**
@@ -111,7 +124,9 @@ public class DataHandler {
         if (submitter == null) {
             start();
         }
-        submitter.checkConnection();
+        if (submitter != null) {
+            submitter.checkConnection();
+        }
     }
 
 
@@ -163,6 +178,13 @@ public class DataHandler {
             for (ServerStatusListener listener : statusListeners) {
                 listener.updateServerStatus(status);
             }
+            this.status = status;
+        }
+    }
+
+    public ServerStatusListener.Status getStatus() {
+        synchronized (statusListeners) {
+            return this.status;
         }
     }
 }

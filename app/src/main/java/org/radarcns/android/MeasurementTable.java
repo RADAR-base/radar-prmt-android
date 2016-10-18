@@ -151,54 +151,14 @@ public class MeasurementTable {
                     queue.clear();
                 }
 
-                SQLiteDatabase db = dbHelper.getWritableDatabase();
                 List<Schema.Field> fields = topic.getValueSchema().getFields();
 
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
                 db.beginTransaction();
                 try {
                     for (Object[] values : localQueue) {
-                        statement.clearBindings();
-                        for (int i = 0; i < values.length; i++) {
-                            Schema.Type expectedType;
-                            if (i == values.length - 1) {
-                                expectedType = Schema.Type.STRING;
-                            } else {
-                                expectedType = fields.get(i).schema().getType();
-                            }
-                            if (values[i] == null) {
-                                statement.bindNull(i + 1);
-                            } else if (values[i] instanceof Double || values[i] instanceof Float) {
-                                if (expectedType != Schema.Type.FLOAT && expectedType != Schema.Type.DOUBLE) {
-                                    throw new IllegalArgumentException("Expected type " + expectedType + " for column " + i + ", found DOUBLE " + values[i]);
-                                }
-                                statement.bindDouble(i + 1, ((Number) values[i]).doubleValue());
-                            } else if (values[i] instanceof String) {
-                                if (expectedType != Schema.Type.STRING) {
-                                    throw new IllegalArgumentException("Expected type " + expectedType + " for column " + i + ", found STRING " + values[i]);
-                                }
-                                statement.bindString(i + 1, (String) values[i]);
-                            } else if (values[i] instanceof Integer || values[i] instanceof Long) {
-                                if (expectedType != Schema.Type.INT && expectedType != Schema.Type.LONG) {
-                                    throw new IllegalArgumentException("Expected type " + expectedType + " for column " + i + ", found LONG " + values[i]);
-                                }
-                                statement.bindLong(i + 1, ((Number) values[i]).longValue());
-                            } else if (values[i] instanceof Boolean) {
-                                if (expectedType != Schema.Type.BOOLEAN) {
-                                    throw new IllegalArgumentException("Expected type " + expectedType + " for column " + i + ", found BOOLEAN " + values[i]);
-                                }
-                                statement.bindLong(i + 1, values[i].equals(Boolean.TRUE) ? 1L : 0L);
-                            } else if (values[i] instanceof byte[]) {
-                                if (expectedType != Schema.Type.BYTES) {
-                                    throw new IllegalArgumentException("Expected type " + expectedType + " for column " + i + ", found BYTES " + values[i]);
-                                }
-                                statement.bindBlob(i + 1, (byte[]) values[i]);
-                            } else {
-                                throw new IllegalArgumentException("Cannot parse type " + values[i].getClass());
-                            }
-                        }
-                        if (statement.executeInsert() == -1) {
-                            throw new RuntimeException("Failed to insert record with statement " + statement);
-                        }
+                        insertRow(values, fields);
+                        db.yieldIfContendedSafely();
                     }
                     db.setTransactionSuccessful();
                 } catch (RuntimeException ex) {
@@ -208,6 +168,53 @@ public class MeasurementTable {
                     db.endTransaction();
                 }
                 logger.info("Committing {} records per second to topic {}", Math.round(average.getAverage()), topic.getName());
+            }
+
+            private void insertRow(Object[] values, List<Schema.Field> fields) {
+                statement.clearBindings();
+                for (int i = 0; i < values.length; i++) {
+                    Schema.Type actualType;
+
+                    // bind argument
+                    if (values[i] == null) {
+                        actualType = Schema.Type.NULL;
+                        statement.bindNull(i + 1);
+                    } else if (values[i] instanceof Double || values[i] instanceof Float) {
+                        actualType = Schema.Type.DOUBLE;
+                        statement.bindDouble(i + 1, ((Number) values[i]).doubleValue());
+                    } else if (values[i] instanceof String) {
+                        actualType = Schema.Type.STRING;
+                        statement.bindString(i + 1, (String) values[i]);
+                    } else if (values[i] instanceof Integer || values[i] instanceof Long) {
+                        actualType = Schema.Type.LONG;
+                        statement.bindLong(i + 1, ((Number) values[i]).longValue());
+                    } else if (values[i] instanceof Boolean) {
+                        actualType = Schema.Type.BOOLEAN;
+                        statement.bindLong(i + 1, values[i].equals(Boolean.TRUE) ? 1L : 0L);
+                    } else if (values[i] instanceof byte[]) {
+                        actualType = Schema.Type.BYTES;
+                        statement.bindBlob(i + 1, (byte[]) values[i]);
+                    } else {
+                        throw new IllegalArgumentException("Cannot parse type " + values[i].getClass());
+                    }
+
+                    // check bound arguments
+                    if (i == values.length - 1) {
+                        if (actualType != Schema.Type.STRING) {
+                            throw new IllegalArgumentException("Expected type STRING for column `deviceId`, found " + actualType + " " + values[i]);
+                        }
+                    } else {
+                        Schema.Type expectedType = fields.get(i).schema().getType();
+                        if (actualType != expectedType &&
+                                !(expectedType == Schema.Type.FLOAT && actualType == Schema.Type.DOUBLE) &&
+                                !(expectedType == Schema.Type.INT && actualType == Schema.Type.LONG)) {
+                            throw new IllegalArgumentException("Expected type " + expectedType + " for column `" + fields.get(i).name() + "`, found " + actualType + " " + values[i]);
+                        }
+                    }
+                }
+                if (statement.executeInsert() == -1) {
+                    throw new RuntimeException("Failed to insert record with statement " + statement);
+                }
             }
         }
 

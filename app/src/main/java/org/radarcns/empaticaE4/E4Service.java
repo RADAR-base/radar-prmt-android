@@ -79,13 +79,20 @@ public class E4Service extends Service {
             throw new RuntimeException(ex);
         }
 
-        SchemaRetriever remoteSchemaRetriever = new SchemaRegistryRetriever(getString(R.string.schema_registry_url));
+        String kafkaUrlString = getString(R.string.kafka_rest_proxy_url);
         URL kafkaUrl;
-        try {
-            kafkaUrl = new URL(getString(R.string.kafka_rest_proxy_url));
-        } catch (MalformedURLException e) {
-            logger.error("Malformed Kafka server URL {}", getString(R.string.kafka_rest_proxy_url));
-            throw new RuntimeException(e);
+        SchemaRetriever remoteSchemaRetriever;
+        if (!kafkaUrlString.isEmpty()) {
+            remoteSchemaRetriever = new SchemaRegistryRetriever(getString(R.string.schema_registry_url));
+            try {
+                kafkaUrl = new URL(getString(R.string.kafka_rest_proxy_url));
+            } catch (MalformedURLException e) {
+                logger.error("Malformed Kafka server URL {}", getString(R.string.kafka_rest_proxy_url));
+                throw new RuntimeException(e);
+            }
+        } else {
+            kafkaUrl = null;
+            remoteSchemaRetriever = null;
         }
         dataHandler = new DataHandler(context, 2500, kafkaUrl, remoteSchemaRetriever,
                 Long.parseLong(getString(R.string.data_retention_ms)),
