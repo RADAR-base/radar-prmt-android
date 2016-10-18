@@ -10,7 +10,7 @@ Currently only the Empatica E4 is supported.
 - Run `./gradlew jar` there, and copy the resulting `build/libs/radarbackend.jar` to the current repository's `app/libs`.
 - Make sure you have a valid API key. You can request one for your Empatica Connect account from our [Developer Area][1].
 - Edit the `apikey.xml` and enter your API key in the apikey xml element.
-- Edit the `server.xml` and add the URLs of the Kafka REST Proxy and the Schema Registry.
+- Edit the `server.xml` and add the URLs of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.
 - Move the `apikey.xml` and `server.xml` files to the `app/src/main/res/values/` directory.
 - Open the sample project in Android Studio.
 - Launch the application. Note that the application only runs on an ARM architecture
