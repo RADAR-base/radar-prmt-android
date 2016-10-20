@@ -30,7 +30,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private final String groupId;
     private final Context context;
     private final String apiKey;
-    private final E4Service e4service;
+    private final E4DeviceStatusListener e4service;
     private final Schema.Field xField, yField, zField;
     private final Schema.Field batteryLevelField;
     private final Schema.Field bloodVolumePulseField;
@@ -55,10 +55,11 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private EmpaDeviceManager deviceManager;
     private String deviceName;
     private boolean isScanning;
+    private boolean isDisconnected;
     private Schema.Field interBeatIntervalField;
     private Schema.Field temperatureField;
 
-    public E4DeviceManager(Context context, E4Service e4Service, String apiKey, String groupId, DataHandler dataHandler, E4Topics topics) {
+    public E4DeviceManager(Context context, E4DeviceStatusListener e4Service, String apiKey, String groupId, DataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getTable(topics.getAccelerationTopic());
         this.bvpTable = dataHandler.getTable(topics.getBloodVolumePulseTopic());
@@ -85,6 +86,8 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         this.deviceId = null;
         this.deviceName = null;
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
+        this.isDisconnected = false;
+        this.isScanning = false;
     }
 
     void start() {
@@ -124,15 +127,15 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
             case CONNECTED:
                 // The device manager has established a connection
                 this.deviceManager.stopScanning();
-                this.e4service.addDevice(this);
+                this.e4service.deviceStatusUpdated(this, E4DeviceStatusListener.Status.CONNECTED);
                 break;
             case DISCONNECTING:
             case DISCONNECTED:
                 // The device manager disconnected from a device. Before it ever makes a connection,
                 // it also calls this, so check if we have a connected device first.
-                if (deviceName != null) {
-                    this.e4service.removeDevice(this);
-                    deviceName = null;
+                if (!isDisconnected) {
+                    this.e4service.deviceStatusUpdated(this, E4DeviceStatusListener.Status.DISCONNECTED);
+                    isDisconnected = true;
                 }
                 break;
         }
@@ -156,18 +159,18 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
                     public void run() {
                         try {
                             // Connect to the device
-                            e4service.connectingDevice(E4DeviceManager.this);
+                            e4service.deviceStatusUpdated(E4DeviceManager.this, E4DeviceStatusListener.Status.CONNECTING);
                             deviceManager.connectDevice(bluetoothDevice);
                             deviceId = groupId + "-" + bluetoothDevice.getAddress();
                         } catch (ConnectionNotAllowedException e) {
                             // This should happen only if you try to connect when allowed == false.
-                            e4service.failedToConnect(deviceName);
+                            e4service.deviceFailedToConnect(deviceName);
                         }
                     }
                 });
             }
         } else {
-            e4service.failedToConnect(deviceName);
+            e4service.deviceFailedToConnect(deviceName);
         }
     }
 
@@ -208,7 +211,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     public void didRequestEnableBluetooth() {
         if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
             logger.warn("Bluetooth is not enabled.");
-            e4service.removeDevice(this);
+            e4service.deviceStatusUpdated(this, E4DeviceStatusListener.Status.DISCONNECTED);
         }
     }
 

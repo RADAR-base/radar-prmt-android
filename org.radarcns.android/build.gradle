@@ -1,10 +1,10 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.3'
+    buildToolsVersion "24.0.3"
+
     defaultConfig {
-        applicationId 'org.radarcns.android.android'
         minSdkVersion 19
         targetSdkVersion 24
         versionCode 1
@@ -23,14 +23,19 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
     }
-    productFlavors {
-    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     // logging
-    compile project(':org.radarcns.android')
-    compile 'com.google.android.gms:play-services-appindexing:9.6.1'
+    compile 'org.slf4j:slf4j-android:1.7.21'
+    compile 'com.loopj.android:android-async-http:1.4.6'
+    compile project(':empalink-2.0')
+    compile 'org.apache.avro:avro:1.7.7'
+    compile ('io.confluent:kafka-avro-serializer:3.0.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j'
+        exclude group: 'jline'
+    }
     compile 'com.android.support:appcompat-v7:24.2.1'
 }

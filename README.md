@@ -7,7 +7,7 @@ Currently only the Empatica E4 is supported.
 
 - Clone / download this repository.
 - Clone / download [RADAR-Backend](https://github.com/RADAR-CNS/RADAR-Backend.git)
-- Run `./gradlew jar` there, and copy the resulting `build/libs/radarbackend.jar` to the current repository's `app/libs`.
+- Run `./gradlew jar` there, and copy the resulting `build/libs/radarbackend.jar` to the current repository's `org.radarcns.android/libs`.
 - Make sure you have a valid API key. You can request one for your Empatica Connect account from our [Developer Area][1].
 - Edit the `apikey.xml` and enter your API key in the apikey xml element.
 - Edit the `server.xml` and add the URLs of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.

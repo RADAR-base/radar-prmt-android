@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class E4Service extends Service {
+public class E4Service extends Service implements E4DeviceStatusListener {
     private final static int ONGOING_NOTIFICATION_ID = 11;
     private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
         @Override
@@ -79,15 +79,15 @@ public class E4Service extends Service {
             throw new RuntimeException(ex);
         }
 
-        String kafkaUrlString = getString(R.string.kafka_rest_proxy_url);
+        String kafkaUrlString = context.getString(R.string.kafka_rest_proxy_url);
         URL kafkaUrl;
         SchemaRetriever remoteSchemaRetriever;
         if (!kafkaUrlString.isEmpty()) {
-            remoteSchemaRetriever = new SchemaRegistryRetriever(getString(R.string.schema_registry_url));
+            remoteSchemaRetriever = new SchemaRegistryRetriever(context.getString(R.string.schema_registry_url));
             try {
-                kafkaUrl = new URL(getString(R.string.kafka_rest_proxy_url));
+                kafkaUrl = new URL(kafkaUrlString);
             } catch (MalformedURLException e) {
-                logger.error("Malformed Kafka server URL {}", getString(R.string.kafka_rest_proxy_url));
+                logger.error("Malformed Kafka server URL {}", kafkaUrlString);
                 throw new RuntimeException(e);
             }
         } else {
@@ -95,7 +95,7 @@ public class E4Service extends Service {
             remoteSchemaRetriever = null;
         }
         dataHandler = new DataHandler(context, 2500, kafkaUrl, remoteSchemaRetriever,
-                Long.parseLong(getString(R.string.data_retention_ms)),
+                Long.parseLong(context.getString(R.string.data_retention_ms)),
                 topics.getAccelerationTopic(), topics.getBloodVolumePulseTopic(),
                 topics.getElectroDermalActivityTopic(), topics.getInterBeatIntervalTopic(),
                 topics.getTemperatureTopic());
@@ -155,58 +155,67 @@ public class E4Service extends Service {
         return dataHandler;
     }
 
-    public synchronized void removeDevice(E4DeviceManager e4DeviceManager) {
-        if (e4DeviceManager == null) {
-            return;
-        }
-        if (e4DeviceManager.equals(device)) {
-            device = null;
-            deviceIsConnected = false;
-            if (!e4DeviceManager.isClosed()) {
-                e4DeviceManager.close();
-            }
-            for (E4DeviceStatusListener listener : listeners) {
-                listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.DISCONNECTED);
-            }
-            stopForeground(true);
-            if (this.numberOfActivitiesBound.get() == 0) {
-                stopSelf();
-            } else if (!forcedDisconnect.get()) {
-                startScanning();
-            }
-        }
-    }
+    @Override
+    public synchronized void deviceStatusUpdated(E4DeviceManager e4DeviceManager, Status status) {
+        switch (status) {
+            case CONNECTED:
+                if (e4DeviceManager != device) {
+                    return;
+                }
+                deviceIsConnected = true;
 
-    public synchronized void addDevice(E4DeviceManager e4DeviceManager) {
-        if (e4DeviceManager != device) {
-            return;
-        }
-        deviceIsConnected = true;
+                Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
 
-        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+                Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
+                Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
+                        R.mipmap.ic_launcher);
+                notificationBuilder.setSmallIcon(R.drawable .ic_launcher);
+                notificationBuilder.setLargeIcon(largeIcon);
+                notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
+                notificationBuilder.setWhen(System.currentTimeMillis());
+                notificationBuilder.setContentIntent(pendingIntent);
+                notificationBuilder.setContentText(getText(R.string.service_notification_text));
+                notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
+                Notification notification = notificationBuilder.build();
+                startForeground(ONGOING_NOTIFICATION_ID, notification);
 
-        Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
-        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
-                R.mipmap.ic_launcher);
-        notificationBuilder.setSmallIcon(R.drawable .ic_launcher);
-        notificationBuilder.setLargeIcon(largeIcon);
-        notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
-        notificationBuilder.setWhen(System.currentTimeMillis());
-        notificationBuilder.setContentIntent(pendingIntent);
-        notificationBuilder.setContentText(getText(R.string.service_notification_text));
-        notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
-        Notification notification = notificationBuilder.build();
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
-
-        for (E4DeviceStatusListener listener : listeners) {
-            listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.CONNECTED);
+                for (E4DeviceStatusListener listener : listeners) {
+                    listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.CONNECTED);
+                }
+                break;
+            case DISCONNECTED:
+                if (e4DeviceManager == null) {
+                    return;
+                }
+                if (e4DeviceManager.equals(device)) {
+                    device = null;
+                    deviceIsConnected = false;
+                    if (!e4DeviceManager.isClosed()) {
+                        e4DeviceManager.close();
+                    }
+                    for (E4DeviceStatusListener listener : listeners) {
+                        listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.DISCONNECTED);
+                    }
+                    stopForeground(true);
+                    if (this.numberOfActivitiesBound.get() == 0) {
+                        stopSelf();
+                    } else if (!forcedDisconnect.get()) {
+                        startScanning();
+                    }
+                }
+                break;
+            case CONNECTING:
+                for (E4DeviceStatusListener listener : listeners) {
+                    listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.CONNECTING);
+                }
+                break;
         }
     }
 
     public synchronized void disconnect() {
         forcedDisconnect.set(true);
-        removeDevice(device);
+        deviceStatusUpdated(device, Status.DISCONNECTED);
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.DISCONNECTED);
         }
@@ -246,15 +255,10 @@ public class E4Service extends Service {
         }
     }
 
-    public synchronized void failedToConnect(String deviceName) {
+    @Override
+    public synchronized void deviceFailedToConnect(String deviceName) {
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceFailedToConnect(deviceName);
-        }
-    }
-
-    public synchronized void connectingDevice(E4DeviceManager deviceManager) {
-        for (E4DeviceStatusListener listener : listeners) {
-            listener.deviceStatusUpdated(deviceManager, E4DeviceStatusListener.Status.CONNECTING);
         }
     }
 

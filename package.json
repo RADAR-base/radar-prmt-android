@@ -1,0 +1,37 @@
+{
+  "name": "radar-empatica-plugin",
+  "version": "0.1.0-dev",
+  "description": "Cordova Contacts Plugin",
+  "cordova": {
+    "id": "radar-empatica-plugin",
+    "platforms": [
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RADAR-CNS/RADAR-AndroidApplication.git"
+  },
+  "keywords": [
+    "cordova",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-wp8"
+  ],
+  "scripts": {
+    "test": "npm run jshint",
+    "jshint": "node node_modules/jshint/bin/jshint www && node node_modules/jshint/bin/jshint src && node node_modules/jshint/bin/jshint tests"
+  },
+  "author": "Apache Software Foundation",
+  "license": "Apache-2.0",
+  "engines": {
+    "cordovaDependencies": {
+      "3.0.0": {
+        "cordova": ">100"
+      }
+    }
+  },
+  "devDependencies": {
+    "jshint": "^2.6.0"
+  }
+}
