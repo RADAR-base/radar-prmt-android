@@ -21,7 +21,7 @@ public class E4Topics {
     private static E4Topics instance = null;
     private final static Logger logger = LoggerFactory.getLogger(E4Topics.class);
 
-    static E4Topics getInstance() throws IOException {
+    public static E4Topics getInstance() throws IOException {
         synchronized (syncObject) {
             if (instance == null) {
                 instance = new E4Topics();

@@ -1,11 +1,15 @@
 package org.radarcns.empaticaE4;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -274,6 +278,10 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         if (!waitingForPermission) {
             logger.info("Intending to start E4 service");
             Intent e4serviceIntent = new Intent(this, E4Service.class);
+            e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+            e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+            e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
+            e4serviceIntent.putExtra("api_key", getString(R.string.apikey));
             startService(e4serviceIntent);
         }
     }
@@ -340,6 +348,22 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                 String deviceName = deviceManager != null ? deviceManager.getDeviceName() : null;
                 switch (status) {
                     case CONNECTED:
+                        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+
+                        Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
+                        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
+                                R.mipmap.ic_launcher);
+                        notificationBuilder.setSmallIcon(R.drawable .ic_launcher);
+                        notificationBuilder.setLargeIcon(largeIcon);
+                        notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
+                        notificationBuilder.setWhen(System.currentTimeMillis());
+                        notificationBuilder.setContentIntent(pendingIntent);
+                        notificationBuilder.setContentText(getText(R.string.service_notification_text));
+                        notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
+                        Notification notification = notificationBuilder.build();
+                        e4Service.startBackgroundListener(notification);
+
                         updateLabel(stopButton, "Stop Recording");
                         dataCnt.setVisibility(View.VISIBLE);
                         statusLabel.setText("CONNECTED");
@@ -358,6 +382,7 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                         dataCnt.setVisibility(View.INVISIBLE);
                         statusLabel.setText("DISCONNECTED");
                         deviceNameLabel.setText("\u2014");
+                        e4Service.stopBackgroundListener();
                         updateLabel(stopButton, "Record");
                         break;
                     case READY:

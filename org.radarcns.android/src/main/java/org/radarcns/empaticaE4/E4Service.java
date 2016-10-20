@@ -59,19 +59,19 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     private E4DeviceManager device;
     private boolean deviceIsConnected;
     private E4Topics topics;
-    private Context context;
     private final AtomicBoolean forcedDisconnect = new AtomicBoolean(false);
     private final LocalBinder mBinder = new LocalBinder();
     private final Collection<E4DeviceStatusListener> listeners = new ArrayList<>();
     private final AtomicInteger numberOfActivitiesBound = new AtomicInteger(0);
+    private String apiKey;
+    private String groupId;
+    private boolean isInForeground;
 
     @Override
     public void onCreate() {
         logger.info("Creating E4 service {}", this);
 
         super.onCreate();
-        context = getApplicationContext();
-
         try {
             topics = E4Topics.getInstance();
         } catch (IOException ex) {
@@ -79,37 +79,13 @@ public class E4Service extends Service implements E4DeviceStatusListener {
             throw new RuntimeException(ex);
         }
 
-        String kafkaUrlString = context.getString(R.string.kafka_rest_proxy_url);
-        URL kafkaUrl;
-        SchemaRetriever remoteSchemaRetriever;
-        if (!kafkaUrlString.isEmpty()) {
-            remoteSchemaRetriever = new SchemaRegistryRetriever(context.getString(R.string.schema_registry_url));
-            try {
-                kafkaUrl = new URL(kafkaUrlString);
-            } catch (MalformedURLException e) {
-                logger.error("Malformed Kafka server URL {}", kafkaUrlString);
-                throw new RuntimeException(e);
-            }
-        } else {
-            kafkaUrl = null;
-            remoteSchemaRetriever = null;
-        }
-        dataHandler = new DataHandler(context, 2500, kafkaUrl, remoteSchemaRetriever,
-                Long.parseLong(context.getString(R.string.data_retention_ms)),
-                topics.getAccelerationTopic(), topics.getBloodVolumePulseTopic(),
-                topics.getElectroDermalActivityTopic(), topics.getInterBeatIntervalTopic(),
-                topics.getTemperatureTopic());
-
-        device = null;
-        deviceIsConnected = false;
-        forcedDisconnect.set(false);
-        numberOfActivitiesBound.set(0);
-        listeners.clear();
-
         // Register for broadcasts on BluetoothAdapter state change
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoothReceiver, filter);
         enableBt();
+        synchronized (this) {
+            isInForeground = false;
+        }
     }
 
     @Override
@@ -155,6 +131,20 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         return dataHandler;
     }
 
+    public synchronized void startBackgroundListener(Notification notification) {
+        if (!isInForeground) {
+            startForeground(ONGOING_NOTIFICATION_ID, notification);
+            isInForeground = true;
+        }
+    }
+
+    public synchronized void stopBackgroundListener() {
+        if (isInForeground) {
+            stopForeground(true);
+            isInForeground = false;
+        }
+    }
+
     @Override
     public synchronized void deviceStatusUpdated(E4DeviceManager e4DeviceManager, Status status) {
         switch (status) {
@@ -163,22 +153,6 @@ public class E4Service extends Service implements E4DeviceStatusListener {
                     return;
                 }
                 deviceIsConnected = true;
-
-                Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
-
-                Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
-                Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
-                        R.mipmap.ic_launcher);
-                notificationBuilder.setSmallIcon(R.drawable .ic_launcher);
-                notificationBuilder.setLargeIcon(largeIcon);
-                notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
-                notificationBuilder.setWhen(System.currentTimeMillis());
-                notificationBuilder.setContentIntent(pendingIntent);
-                notificationBuilder.setContentText(getText(R.string.service_notification_text));
-                notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
-                Notification notification = notificationBuilder.build();
-                startForeground(ONGOING_NOTIFICATION_ID, notification);
 
                 for (E4DeviceStatusListener listener : listeners) {
                     listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.CONNECTED);
@@ -197,7 +171,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
                     for (E4DeviceStatusListener listener : listeners) {
                         listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.DISCONNECTED);
                     }
-                    stopForeground(true);
+                    stopBackgroundListener();
                     if (this.numberOfActivitiesBound.get() == 0) {
                         stopSelf();
                     } else if (!forcedDisconnect.get()) {
@@ -248,7 +222,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         if (device != null) {
             throw new IllegalStateException("Already connecting");
         }
-        device = new E4DeviceManager(context, this, getString(R.string.apikey), getString(R.string.group_id), dataHandler, topics);
+        device = new E4DeviceManager(getApplicationContext(), this, apiKey, groupId, dataHandler, topics);
         device.start();
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
@@ -287,6 +261,37 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         logger.info("Starting E4 service {}", this);
+        synchronized (this) {
+            if (dataHandler == null) {
+                apiKey = intent.getStringExtra("empatica_api_key");
+                groupId = intent.getStringExtra("group_id");
+                URL kafkaUrl = null;
+                SchemaRetriever remoteSchemaRetriever = null;
+                if (intent.hasExtra("kafka_rest_proxy_url")) {
+                    String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
+                    if (!kafkaUrlString.isEmpty()) {
+                        remoteSchemaRetriever = new SchemaRegistryRetriever(intent.getStringExtra("schema_registry_url"));
+                        try {
+                            kafkaUrl = new URL(kafkaUrlString);
+                        } catch (MalformedURLException e) {
+                            logger.error("Malformed Kafka server URL {}", kafkaUrlString);
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
+                dataHandler = new DataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
+                        dataRetentionMs, topics.getAccelerationTopic(),
+                        topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
+                        topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
+
+                device = null;
+                deviceIsConnected = false;
+                forcedDisconnect.set(false);
+                numberOfActivitiesBound.set(0);
+                listeners.clear();
+            }
+        }
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
