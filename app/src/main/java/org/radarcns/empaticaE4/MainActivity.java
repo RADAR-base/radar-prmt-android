@@ -80,6 +80,9 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             e4Service.addStatusListener(MainActivity.this);
             if (e4Service.isRecording()) {
                 deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
+                for (E4DeviceManager device : e4Service.getDevices()) {
+                    deviceStatusUpdated(device, device.getStatus());
+                }
             }
             for (E4DeviceManager device : e4Service.getDevices()) {
                 deviceStatusUpdated(device, E4DeviceStatusListener.Status.CONNECTED);
@@ -354,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                         Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
                         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
                                 R.mipmap.ic_launcher);
-                        notificationBuilder.setSmallIcon(R.drawable .ic_launcher);
+                        notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
                         notificationBuilder.setLargeIcon(largeIcon);
                         notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
                         notificationBuilder.setWhen(System.currentTimeMillis());
