@@ -1,8 +1,8 @@
 package org.radarcns.empaticaE4;
 
-import org.radarcns.SchemaRetriever;
-import org.radarcns.collect.LocalSchemaRetriever;
-import org.radarcns.collect.Topic;
+import org.radarcns.kafka.SchemaRetriever;
+import org.radarcns.kafka.LocalSchemaRetriever;
+import org.radarcns.kafka.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,12 +10,12 @@ import java.io.IOException;
 
 /** Thread-safe topic manager for topics concerning the Empatica E4. */
 public class E4Topics {
-    private final ThreadLocal<Topic> accelerationTopic;
-    private final ThreadLocal<Topic> batteryLevelTopic;
-    private final ThreadLocal<Topic> bloodVolumePulseTopic;
-    private final ThreadLocal<Topic> electroDermalActivityTopic;
-    private final ThreadLocal<Topic> interBeatIntervalTopic;
-    private final ThreadLocal<Topic> temperatureTopic;
+    private final ThreadLocal<AvroTopic> accelerationTopic;
+    private final ThreadLocal<AvroTopic> batteryLevelTopic;
+    private final ThreadLocal<AvroTopic> bloodVolumePulseTopic;
+    private final ThreadLocal<AvroTopic> electroDermalActivityTopic;
+    private final ThreadLocal<AvroTopic> interBeatIntervalTopic;
+    private final ThreadLocal<AvroTopic> temperatureTopic;
 
     private final static Object syncObject = new Object();
     private static E4Topics instance = null;
@@ -48,7 +48,7 @@ public class E4Topics {
         }
     }
 
-    private class ThreadLocalTopic extends ThreadLocal<Topic> {
+    private class ThreadLocalTopic extends ThreadLocal<AvroTopic> {
         final String name;
         final SchemaRetriever schemaRetriever;
         ThreadLocalTopic(String name, SchemaRetriever retriever) {
@@ -56,9 +56,9 @@ public class E4Topics {
             this.schemaRetriever = retriever;
         }
         @Override
-        protected Topic initialValue() {
+        protected AvroTopic initialValue() {
             try {
-                return new Topic(name, schemaRetriever);
+                return new AvroTopic(name, schemaRetriever);
             } catch (IOException e) {
                 logger.error("Topic {} cannot be retrieved", name, e);
                 return null;
@@ -66,27 +66,27 @@ public class E4Topics {
         }
     }
 
-    public Topic getAccelerationTopic() {
+    public AvroTopic getAccelerationTopic() {
         return accelerationTopic.get();
     }
 
-    public Topic getBatteryLevelTopic() {
+    public AvroTopic getBatteryLevelTopic() {
         return batteryLevelTopic.get();
     }
 
-    public Topic getBloodVolumePulseTopic() {
+    public AvroTopic getBloodVolumePulseTopic() {
         return bloodVolumePulseTopic.get();
     }
 
-    public Topic getElectroDermalActivityTopic() {
+    public AvroTopic getElectroDermalActivityTopic() {
         return electroDermalActivityTopic.get();
     }
 
-    public Topic getInterBeatIntervalTopic() {
+    public AvroTopic getInterBeatIntervalTopic() {
         return interBeatIntervalTopic.get();
     }
 
-    public Topic getTemperatureTopic() {
+    public AvroTopic getTemperatureTopic() {
         return temperatureTopic.get();
     }
 }

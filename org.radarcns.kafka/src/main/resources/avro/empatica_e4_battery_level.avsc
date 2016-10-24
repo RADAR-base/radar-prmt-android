@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "empatica_e4_battery_level",
+  "doc": "Device battery level.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "batteryLevel", "type": "float", "doc": "battery level from 0 to 1"}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "empatica_e4_electrodermal_activity",
+  "doc": "Data from the electrodermal activity sensor expressed as microsiemens (µS). Uses a galvanic skin response sensor.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "electroDermalActivity", "type": "float", "doc": "electrodermal activity (µS)"}
+  ]
+}

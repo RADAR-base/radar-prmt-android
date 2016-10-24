@@ -4,8 +4,8 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import org.apache.avro.generic.GenericRecord;
-import org.radarcns.SchemaRetriever;
-import org.radarcns.collect.Topic;
+import org.radarcns.kafka.SchemaRetriever;
+import org.radarcns.kafka.AvroTopic;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class DataHandler {
     private final URL kafkaUrl;
     private final SchemaRetriever schemaRetriever;
     private final ThreadFactory threadFactory;
-    private final Map<Topic, MeasurementTable> tables;
+    private final Map<AvroTopic, MeasurementTable> tables;
     private final Collection<ServerStatusListener> statusListeners;
     private ServerStatusListener.Status status;
 
@@ -31,11 +31,11 @@ public class DataHandler {
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
-    public DataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, Topic... topics) {
+    public DataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic... topics) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         tables = new HashMap<>(topics.length * 2);
-        for (Topic topic : topics) {
+        for (AvroTopic topic : topics) {
             tables.put(topic, new MeasurementTable(context, topic, dbAgeMillis));
         }
         dataRetention = dataRetentionMillis;
@@ -110,7 +110,7 @@ public class DataHandler {
         }
     }
 
-    public boolean trySend(Topic topic, long offset, String deviceId, GenericRecord record) {
+    public boolean trySend(AvroTopic topic, long offset, String deviceId, GenericRecord record) {
         return submitter != null && submitter.trySend(topic, offset, deviceId, record);
     }
 
@@ -154,11 +154,11 @@ public class DataHandler {
     /**
      * Get the table of a given topic
      */
-    public MeasurementTable getTable(Topic topic) {
+    public MeasurementTable getTable(AvroTopic topic) {
         return this.tables.get(topic);
     }
 
-    Map<Topic, MeasurementTable> getTables() {
+    Map<AvroTopic, MeasurementTable> getTables() {
         return tables;
     }
 

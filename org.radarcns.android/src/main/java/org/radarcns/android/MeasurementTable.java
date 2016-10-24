@@ -11,7 +11,7 @@ import android.support.annotation.NonNull;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.radarcns.collect.Topic;
+import org.radarcns.kafka.AvroTopic;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementTable {
     private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
     private final MeasurementDBHelper dbHelper;
-    private final Topic topic;
+    private final AvroTopic topic;
     private final long window;
     private final Schema.Field timeField;
     private final Schema.Field timeReceivedField;
@@ -48,7 +48,7 @@ public class MeasurementTable {
         decimalFormat.setMaximumFractionDigits(24);
     }
 
-    public MeasurementTable(Context context, Topic topic, long timeWindowMillis) {
+    public MeasurementTable(Context context, AvroTopic topic, long timeWindowMillis) {
         if (timeWindowMillis > System.currentTimeMillis()) {
             throw new IllegalArgumentException("Time window must be smaller than current absolute time");
         }
@@ -95,7 +95,7 @@ public class MeasurementTable {
         this.submitThread = new SubmitThread();
     }
 
-    public Topic getTopic() {
+    public AvroTopic getTopic() {
         return topic;
     }
 

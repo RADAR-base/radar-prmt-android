@@ -1,22 +1,19 @@
 package org.radarcns.empaticaE4;
 
 import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import org.radarcns.SchemaRetriever;
+import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.android.DataHandler;
-import org.radarcns.collect.SchemaRegistryRetriever;
+import org.radarcns.kafka.SchemaRegistryRetriever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

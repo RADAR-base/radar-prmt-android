@@ -1,13 +1,13 @@
 package org.radarcns.android;
 
 import org.apache.avro.generic.GenericRecord;
-import org.radarcns.SchemaRetriever;
-import org.radarcns.collect.KafkaSender;
-import org.radarcns.collect.RecordList;
-import org.radarcns.collect.Topic;
-import org.radarcns.collect.rest.GenericRecordEncoder;
-import org.radarcns.collect.rest.RestSender;
-import org.radarcns.collect.rest.StringEncoder;
+import org.radarcns.kafka.SchemaRetriever;
+import org.radarcns.kafka.AvroTopic;
+import org.radarcns.kafka.KafkaSender;
+import org.radarcns.kafka.RecordList;
+import org.radarcns.kafka.rest.GenericRecordEncoder;
+import org.radarcns.kafka.rest.RestSender;
+import org.radarcns.kafka.rest.StringEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +37,8 @@ class KafkaDataSubmitter {
     private DataHandler dataHandler;
     private final KafkaSender<String, GenericRecord> directSender;
     private final ScheduledExecutorService executor;
-    private final ConcurrentMap<Topic, RecordList<String, GenericRecord>> trySendCache;
-    private final ConcurrentMap<Topic, ScheduledFuture<?>> trySendFuture;
+    private final ConcurrentMap<AvroTopic, RecordList<String, GenericRecord>> trySendCache;
+    private final ConcurrentMap<AvroTopic, ScheduledFuture<?>> trySendFuture;
     private AtomicBoolean isConnected;
     private long lastConnection;
 
@@ -68,7 +68,7 @@ class KafkaDataSubmitter {
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                final HashSet<Topic> topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getTables().keySet());
+                final HashSet<AvroTopic> topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getTables().keySet());
                 executor.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -122,7 +122,7 @@ class KafkaDataSubmitter {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                Map<Topic, MeasurementTable> tables = dataHandler.getTables();
+                Map<AvroTopic, MeasurementTable> tables = dataHandler.getTables();
                 for (MeasurementTable table : tables.values()) {
                     table.flush();
                 }
@@ -177,10 +177,10 @@ class KafkaDataSubmitter {
     /**
      * Upload a limited amount of data stored in the database which is not yet sent.
      */
-    private void uploadTables(Set<Topic> toSend) {
+    private void uploadTables(Set<AvroTopic> toSend) {
         boolean uploadingNotified = false;
         try {
-            for (Map.Entry<Topic, MeasurementTable> entry : dataHandler.getTables().entrySet()) {
+            for (Map.Entry<AvroTopic, MeasurementTable> entry : dataHandler.getTables().entrySet()) {
                 int sent = uploadTable(entry.getKey(), entry.getValue(), SEND_LIMIT, uploadingNotified);
                 if (sent < SEND_LIMIT) {
                     toSend.remove(entry.getKey());
@@ -200,7 +200,7 @@ class KafkaDataSubmitter {
      * Upload some data from a single table.
      * @return number of records sent.
      */
-    private int uploadTable(Topic topic, MeasurementTable table, int limit, boolean uploadingNotified) throws IOException {
+    private int uploadTable(AvroTopic topic, MeasurementTable table, int limit, boolean uploadingNotified) throws IOException {
         RecordList<String, GenericRecord> records = new RecordList<>(topic);
         try (MeasurementIterator measurements = table.getUnsentMeasurements(limit)) {
             if (measurements.hasNext() && !uploadingNotified) {
@@ -259,7 +259,7 @@ class KafkaDataSubmitter {
      * messages to be lost. If the sender is disconnected, messages are immediately discarded.
      * @return whether the message was queued for sending.
      */
-    boolean trySend(final Topic topic, final long offset, final String deviceId, final GenericRecord record) {
+    boolean trySend(final AvroTopic topic, final long offset, final String deviceId, final GenericRecord record) {
         if (!isConnected.get()) {
             return false;
         }

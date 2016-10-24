@@ -1,0 +1,16 @@
+apply plugin: 'java'
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.apache.avro:avro:1.7.7'
+    compile ('io.confluent:kafka-avro-serializer:3.0.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'log4j'
+        exclude group: 'jline'
+    }
+    testCompile 'junit:junit:4.12'
+    testRuntime 'org.slf4j:log4j-over-slf4j:1.7.21'
+}

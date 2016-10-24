@@ -19,7 +19,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.radarcns.android.DataHandler;
 import org.radarcns.android.MeasurementTable;
-import org.radarcns.collect.Topic;
+import org.radarcns.kafka.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private final MeasurementTable edaTable;
     private final MeasurementTable ibiTable;
     private final MeasurementTable temperatureTable;
-    private final Topic batteryTopic;
+    private final AvroTopic batteryTopic;
 
     private float latestBloodVolumePulse = Float.NaN;
     private float latestBatteryLevel = Float.NaN;
@@ -234,7 +234,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         latestBatteryLevel = battery;
-        GenericRecord record = batteryTopic.createSimpleRecord(timestamp, batteryLevelField, battery);
+        GenericRecord record = batteryTopic.createValueRecord(timestamp, batteryLevelField, battery);
         dataHandler.trySend(batteryTopic, 0L, deviceId, record);
     }
 
@@ -282,6 +282,14 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
 
     String getDeviceName() {
         return deviceName;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) return true;
+        if (other == null || !getClass().equals(other.getClass())) return false;
+
+        return deviceId != null && deviceId.equals(((E4DeviceManager)other).deviceId);
     }
 
     private synchronized void updateStatus(E4DeviceStatusListener.Status status) {
