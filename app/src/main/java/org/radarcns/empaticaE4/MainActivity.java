@@ -20,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,9 +34,12 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements ServerStatusListener, E4DeviceStatusListener {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
@@ -50,11 +54,13 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     private TextView temperatureLabel;
     private TextView batteryLabel;
     private TextView statusLabel;
-    private TextView deviceNameLabel;
     private TextView serverStatusLabel;
+    private TextView emptyDevices;
     private Button stopButton;
     private Button reconnectButton;
     private RelativeLayout dataCnt;
+    private RelativeLayout deviceView;
+    private Map<String, Button> deviceButtons;
 
     private long uiRefreshRate;
     private Handler mHandler;
@@ -65,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     private boolean mBound;
     private boolean waitingForPermission;
     private boolean waitingForBind;
+    private Collection<E4DeviceManager> devices;
+    private E4DeviceManager activeDevice = null;
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -131,6 +139,9 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        this.devices = new ArrayList<>();
+
         mBound = false;
         setContentView(R.layout.activity_main);
 
@@ -143,10 +154,12 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         bvpLabel = (TextView) findViewById(R.id.bvp);
         edaLabel = (TextView) findViewById(R.id.eda);
         ibiLabel = (TextView) findViewById(R.id.ibi);
+        deviceView = (RelativeLayout) findViewById(R.id.deviceNames);
+        emptyDevices = (TextView) findViewById(R.id.emptyDevices);
         serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
         temperatureLabel = (TextView) findViewById(R.id.temperature);
         batteryLabel = (TextView) findViewById(R.id.battery);
-        deviceNameLabel = (TextView) findViewById(R.id.deviceName);
+        deviceButtons = new HashMap<>();
         stopButton = (Button) findViewById(R.id.stopButton);
         stopButton.setVisibility(View.INVISIBLE);
         reconnectButton = (Button) findViewById(R.id.reconnectButton);
@@ -174,22 +187,18 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             final DecimalFormat noDecimals = new DecimalFormat("0");
             @Override
             public void run() {
-                if (!mBound) {
+                if (!mBound || activeDevice == null) {
                     return;
                 }
-                Iterator<E4DeviceManager> devices = e4Service.getDevices().iterator();
-                if (devices.hasNext()) {
-                    E4DeviceManager e4DeviceManager = devices.next();
-                    float[] acceleration = e4DeviceManager.getLatestAcceleration();
-                    setText(accel_xLabel, acceleration[0], "g", singleDecimal);
-                    setText(accel_yLabel, acceleration[1], "g", singleDecimal);
-                    setText(accel_zLabel, acceleration[2], "g", singleDecimal);
-                    setText(bvpLabel, e4DeviceManager.getLatestBloodVolumePulse(), "\u00B5W", singleDecimal);
-                    setText(edaLabel, e4DeviceManager.getLatestElectroDermalActivity(), "\u00B5S", doubleDecimal);
-                    setText(ibiLabel, e4DeviceManager.getLatestInterBeatInterval(), "s", doubleDecimal);
-                    setText(temperatureLabel, e4DeviceManager.getLatestTemperature(), "\u2103", singleDecimal);
-                    setText(batteryLabel, 100*e4DeviceManager.getLatestBatteryLevel(), "%", noDecimals);
-                }
+                float[] acceleration = activeDevice.getLatestAcceleration();
+                setText(accel_xLabel, acceleration[0], "g", singleDecimal);
+                setText(accel_yLabel, acceleration[1], "g", singleDecimal);
+                setText(accel_zLabel, acceleration[2], "g", singleDecimal);
+                setText(bvpLabel, activeDevice.getLatestBloodVolumePulse(), "\u00B5W", singleDecimal);
+                setText(edaLabel, activeDevice.getLatestElectroDermalActivity(), "\u00B5S", doubleDecimal);
+                setText(ibiLabel, activeDevice.getLatestInterBeatInterval(), "s", doubleDecimal);
+                setText(temperatureLabel, activeDevice.getLatestTemperature(), "\u2103", singleDecimal);
+                setText(batteryLabel, 100*activeDevice.getLatestBatteryLevel(), "%", noDecimals);
             }
 
             void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
@@ -351,46 +360,69 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                 String deviceName = deviceManager != null ? deviceManager.getDeviceName() : null;
                 switch (status) {
                     case CONNECTED:
-                        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+                        if (devices.isEmpty()) {
+                            Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
 
-                        Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
-                        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
-                                R.mipmap.ic_launcher);
-                        notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
-                        notificationBuilder.setLargeIcon(largeIcon);
-                        notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
-                        notificationBuilder.setWhen(System.currentTimeMillis());
-                        notificationBuilder.setContentIntent(pendingIntent);
-                        notificationBuilder.setContentText(getText(R.string.service_notification_text));
-                        notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
-                        Notification notification = notificationBuilder.build();
-                        e4Service.startBackgroundListener(notification);
+                            Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
+                            Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
+                                    R.mipmap.ic_launcher);
+                            notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
+                            notificationBuilder.setLargeIcon(largeIcon);
+                            notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
+                            notificationBuilder.setWhen(System.currentTimeMillis());
+                            notificationBuilder.setContentIntent(pendingIntent);
+                            notificationBuilder.setContentText(getText(R.string.service_notification_text));
+                            notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
+                            Notification notification = notificationBuilder.build();
+                            e4Service.startBackgroundListener(notification);
+                        }
+                        devices.add(deviceManager);
+                        addDeviceButton(deviceManager);
+                        if (activeDevice == null) {
+                            activeDevice = deviceManager;
+                        }
 
                         updateLabel(stopButton, "Stop Recording");
                         dataCnt.setVisibility(View.VISIBLE);
                         statusLabel.setText("CONNECTED");
-                        deviceNameLabel.setText(deviceName);
                         break;
                     case CONNECTING:
                         updateLabel(stopButton, "Stop Recording");
                         statusLabel.setText("CONNECTING");
-                        if (deviceName == null) {
-                            deviceNameLabel.setText("\u2014");
-                        } else {
-                            deviceNameLabel.setText(deviceName);
-                        }
                         break;
                     case DISCONNECTED:
+                        if (deviceManager != null) {
+                            Button btn = deviceButtons.remove(deviceManager.getDeviceName());
+                            deviceView.removeView(btn);
+                            devices.remove(deviceManager);
+                            if (deviceManager.equals(activeDevice)) {
+                                activeDevice = null;
+                            }
+                        } else {
+                            for (Button btn : deviceButtons.values()) {
+                                deviceView.removeView(btn);
+                            }
+                            deviceButtons.clear();
+                            devices.clear();
+                            devices.addAll(e4Service.getDevices());
+                            for (E4DeviceManager device : devices) {
+                                addDeviceButton(device);
+                            }
+                            if (activeDevice != null && !devices.contains(activeDevice)) {
+                                activeDevice = null;
+                            }
+                        }
+                        if (devices.isEmpty()) {
+                            emptyDevices.setVisibility(View.VISIBLE);
+                        }
                         dataCnt.setVisibility(View.INVISIBLE);
                         statusLabel.setText("DISCONNECTED");
-                        deviceNameLabel.setText("\u2014");
                         e4Service.stopBackgroundListener();
                         updateLabel(stopButton, "Record");
                         break;
                     case READY:
                         statusLabel.setText("Scanning...");
-                        deviceNameLabel.setText("\u2014");
                         stopButton.setOnClickListener(new View.OnClickListener() {
                             public void onClick(View v) {
                                 if (e4Service.isRecording()) {
@@ -403,6 +435,26 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                         updateLabel(stopButton, "Stop Recording");
                         stopButton.setVisibility(View.VISIBLE);
                         break;
+                }
+            }
+            private void addDeviceButton(final E4DeviceManager manager) {
+                String name = manager.getDeviceName();
+                if (name != null) {
+                    emptyDevices.setVisibility(View.INVISIBLE);
+                    Button btn = new Button(MainActivity.this);
+                    btn.setLayoutParams(new LayoutParams(
+                            LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT));
+                    btn.setText(name);
+                    btn.setId(View.NO_ID);
+                    btn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            activeDevice = manager;
+                            mUIUpdater.run();
+                        }
+                    });
+                    deviceView.addView(btn);
+                    deviceButtons.put(name, btn);
                 }
             }
         });

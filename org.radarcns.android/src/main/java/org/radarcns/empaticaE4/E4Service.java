@@ -22,7 +22,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -35,8 +34,8 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                if (state == BluetoothAdapter.STATE_ON && !forcedDisconnect.get() && device == null) {
-                    logger.warn("Bluetooth has turned on");
+                if (state == BluetoothAdapter.STATE_ON && !forcedDisconnect.get() && deviceScanner == null) {
+                    logger.info("Bluetooth has turned on");
                     connect();
                 } else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
                     logger.warn("Bluetooth is turning off");
@@ -53,8 +52,8 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
     private final static Logger logger = LoggerFactory.getLogger(E4Service.class);
     private DataHandler dataHandler;
-    private E4DeviceManager device;
-    private boolean deviceIsConnected;
+    private Collection<E4DeviceManager> devices;
+    private E4DeviceManager deviceScanner;
     private E4Topics topics;
     private final AtomicBoolean forcedDisconnect = new AtomicBoolean(false);
     private final LocalBinder mBinder = new LocalBinder();
@@ -80,8 +79,14 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoothReceiver, filter);
         enableBt();
+
         synchronized (this) {
+            forcedDisconnect.set(false);
+            numberOfActivitiesBound.set(0);
+            listeners.clear();
             isInForeground = false;
+            devices = new ArrayList<>();
+            deviceScanner = null;
         }
     }
 
@@ -108,7 +113,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     @Override
     public void onRebind(Intent intent) {
         if (numberOfActivitiesBound.getAndIncrement() == 0) {
-            if (!forcedDisconnect.get() && device == null && BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            if (!forcedDisconnect.get() && deviceScanner == null && BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                 connect();
             }
         }
@@ -117,7 +122,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     @Override
     public boolean onUnbind(Intent intent) {
         if (numberOfActivitiesBound.decrementAndGet() == 0) {
-            if (!deviceIsConnected) {
+            if (devices.isEmpty()) {
                 stopSelf();
             }
         }
@@ -146,32 +151,38 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     public synchronized void deviceStatusUpdated(E4DeviceManager e4DeviceManager, Status status) {
         switch (status) {
             case CONNECTED:
-                if (e4DeviceManager != device) {
+                if (e4DeviceManager != deviceScanner) {
                     return;
                 }
-                deviceIsConnected = true;
+                devices.add(deviceScanner);
+                deviceScanner = null;
 
                 for (E4DeviceStatusListener listener : listeners) {
                     listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.CONNECTED);
                 }
+
+                startScanning();
                 break;
             case DISCONNECTED:
                 if (e4DeviceManager == null) {
                     return;
                 }
-                if (e4DeviceManager.equals(device)) {
-                    device = null;
-                    deviceIsConnected = false;
+                if (devices.contains(e4DeviceManager)) {
+                    devices.remove(e4DeviceManager);
                     if (!e4DeviceManager.isClosed()) {
                         e4DeviceManager.close();
                     }
                     for (E4DeviceStatusListener listener : listeners) {
                         listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.DISCONNECTED);
                     }
-                    stopBackgroundListener();
-                    if (this.numberOfActivitiesBound.get() == 0) {
-                        stopSelf();
-                    } else if (!forcedDisconnect.get()) {
+                    if (devices.isEmpty()) {
+                        stopBackgroundListener();
+                        if (this.numberOfActivitiesBound.get() == 0) {
+                            stopSelf();
+                        }
+                    }
+                } else if (e4DeviceManager.equals(deviceScanner)) {
+                    if (!forcedDisconnect.get()) {
                         startScanning();
                     }
                 }
@@ -186,7 +197,12 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
     public synchronized void disconnect() {
         forcedDisconnect.set(true);
-        deviceStatusUpdated(device, Status.DISCONNECTED);
+        if (deviceScanner != null) {
+            deviceStatusUpdated(deviceScanner, Status.DISCONNECTED);
+        }
+        for (E4DeviceManager device : devices) {
+            deviceStatusUpdated(device, E4DeviceStatusListener.Status.DISCONNECTED);
+        }
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.DISCONNECTED);
         }
@@ -196,15 +212,12 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     }
 
     public synchronized boolean isRecording() {
-        return device != null;
+        return deviceScanner != null || !devices.isEmpty();
     }
 
     synchronized void connect() {
-        if (device != null) {
+        if (deviceScanner != null) {
             throw new IllegalStateException("Already connecting");
-        }
-        for (E4DeviceStatusListener listener : listeners) {
-            listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
         }
         if (!dataHandler.isStarted()) {
             dataHandler.start();
@@ -216,11 +229,11 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     private synchronized void startScanning() {
         // Only scan if no devices are connected.
         // TODO: support multiple devices
-        if (device != null) {
+        if (deviceScanner != null) {
             throw new IllegalStateException("Already connecting");
         }
-        device = new E4DeviceManager(getApplicationContext(), this, apiKey, groupId, dataHandler, topics);
-        device.start();
+        deviceScanner = new E4DeviceManager(getApplicationContext(), this, apiKey, groupId, dataHandler, topics);
+        deviceScanner.start();
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
         }
@@ -248,11 +261,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     }
 
     synchronized Collection<E4DeviceManager> getDevices() {
-        if (deviceIsConnected) {
-            return Collections.singletonList(device);
-        } else {
-            return Collections.emptyList();
-        }
+        return new ArrayList<>(devices);
     }
 
     @Override
@@ -281,12 +290,6 @@ public class E4Service extends Service implements E4DeviceStatusListener {
                         dataRetentionMs, topics.getAccelerationTopic(),
                         topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
                         topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
-
-                device = null;
-                deviceIsConnected = false;
-                forcedDisconnect.set(false);
-                numberOfActivitiesBound.set(0);
-                listeners.clear();
             }
         }
         // If we get killed, after returning from here, restart
