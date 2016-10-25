@@ -1,5 +1,7 @@
 package org.radarcns.kafka;
 
+import org.radarcns.data.RecordList;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Properties;

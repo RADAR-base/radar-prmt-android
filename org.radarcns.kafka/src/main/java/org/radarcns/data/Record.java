@@ -1,4 +1,4 @@
-package org.radarcns.kafka;
+package org.radarcns.data;
 
 public class Record<K, V> {
     public final long offset;

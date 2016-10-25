@@ -11,6 +11,9 @@ import android.support.annotation.NonNull;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.radarcns.data.DataCache;
+import org.radarcns.data.Record;
+import org.radarcns.data.RecordIterable;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
@@ -32,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Measurements are grouped into transactions before being committed in a separate Thread
  */
-public class MeasurementTable {
+public class MeasurementTable implements DataCache<String, GenericRecord> {
     private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
     private final MeasurementDBHelper dbHelper;
     private final AvroTopic topic;
@@ -95,6 +98,7 @@ public class MeasurementTable {
         this.submitThread = new SubmitThread();
     }
 
+    @Override
     public AvroTopic getTopic() {
         return topic;
     }
@@ -285,10 +289,10 @@ public class MeasurementTable {
      * @param timestamp time before which to remove.
      * @return number of rows removed
      */
-    public int removeBeforeTimestamp(double timestamp) {
+    public int removeBeforeTimestamp(long timestamp) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        int result = db.delete(topic.getName(), "timeReceived <= " + timestamp + " AND sent = 1", null);
-        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + this.topic.getName() + " WHERE timeReceived <= " + timestamp + " AND sent = 0", null)) {
+        int result = db.delete(topic.getName(), "timeReceived <= " + timestamp/1000d + " AND sent = 1", null);
+        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + this.topic.getName() + " WHERE timeReceived <= " + timestamp/1000d + " AND sent = 0", null)) {
             cursor.moveToNext();
             int unsent = cursor.getInt(0);
             if (unsent > 1000) {
@@ -316,7 +320,8 @@ public class MeasurementTable {
      * Use in a try-with-resources statement.
      * @return Iterator with column-name to value map.
      */
-    public MeasurementIterator getUnsentMeasurements(int limit) {
+    @Override
+    public RecordIterable<String, GenericRecord> unsentRecords(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " WHERE sent = 0 ORDER BY offset ASC LIMIT " + limit, null);
         return new MeasurementIterator(cursor, this);
@@ -373,23 +378,9 @@ public class MeasurementTable {
     }
 
     /**
-     * A single measurement in the MeasurementTable.
-     */
-    public static class Measurement {
-        public final long offset;
-        public final String key;
-        public final GenericRecord value;
-        Measurement(long offset, String key, GenericRecord value) {
-            this.offset = offset;
-            this.key = key;
-            this.value = value;
-        }
-    }
-
-    /**
      * Converts a database row into a measurement.
      */
-    Measurement rowToRecord(Cursor cursor) {
+    Record<String, GenericRecord> rowToRecord(Cursor cursor) {
         List<Schema.Field> fields = topic.getValueSchema().getFields();
 
         GenericRecord avroRecord = new GenericData.Record(topic.getValueSchema());
@@ -425,6 +416,6 @@ public class MeasurementTable {
             }
         }
 
-        return new Measurement(cursor.getLong(0), cursor.getString(1), avroRecord);
+        return new Record<>(cursor.getLong(0), cursor.getString(1), avroRecord);
     }
 }

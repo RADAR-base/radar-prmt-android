@@ -1,12 +1,20 @@
 package org.radarcns.android;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import org.apache.avro.generic.GenericRecord;
+import org.radarcns.data.DataCache;
+import org.radarcns.data.DataHandler;
+import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.AvroTopic;
+import org.radarcns.kafka.KafkaDataSubmitter;
+import org.radarcns.kafka.rest.GenericRecordEncoder;
+import org.radarcns.kafka.rest.RestSender;
+import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.kafka.rest.StringEncoder;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,7 +25,7 @@ import java.util.concurrent.ThreadFactory;
 /**
  * Stores data in databases and sends it to the server.
  */
-public class DataHandler {
+public class TableDataHandler implements DataHandler<String, GenericRecord> {
     private final long dataRetention;
     private final URL kafkaUrl;
     private final SchemaRetriever schemaRetriever;
@@ -26,12 +34,12 @@ public class DataHandler {
     private final Collection<ServerStatusListener> statusListeners;
     private ServerStatusListener.Status status;
 
-    private KafkaDataSubmitter submitter;
+    private KafkaDataSubmitter<String, GenericRecord> submitter;
 
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
-    public DataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic... topics) {
+    public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic... topics) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         tables = new HashMap<>(topics.length * 2);
@@ -43,16 +51,11 @@ public class DataHandler {
         submitter = null;
         statusListeners = new ArrayList<>();
         if (kafkaUrl != null) {
-            this.threadFactory = new ThreadFactory() {
-                @Override
-                public Thread newThread(@NonNull Runnable r) {
-                    return new Thread(r, "DataHandler");
-                }
-            };
+            this.threadFactory = new AndroidThreadFactory("DataHandler", android.os.Process.THREAD_PRIORITY_BACKGROUND);
         } else {
             this.threadFactory = null;
         }
-        updateStatus(ServerStatusListener.Status.INACTIVE);
+        updateServerStatus(ServerStatusListener.Status.READY);
     }
 
     /**
@@ -65,8 +68,9 @@ public class DataHandler {
             throw new IllegalStateException("Cannot start submitter, it is already started");
         }
         if (kafkaUrl != null) {
-            updateStatus(ServerStatusListener.Status.CONNECTING);
-            this.submitter = new KafkaDataSubmitter(this, kafkaUrl, schemaRetriever, threadFactory);
+            updateServerStatus(ServerStatusListener.Status.CONNECTING);
+            KafkaSender<String, GenericRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new StringEncoder(), new GenericRecordEncoder());
+            this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
         }
     }
 
@@ -87,25 +91,29 @@ public class DataHandler {
 
     /**
      * Sends any remaining data and closes the tables and connections.
+     * @throws IOException if the tables cannot be flushed
      */
-    public void close() throws InterruptedException {
+    public void close() throws IOException {
         if (this.submitter != null) {
-            this.submitter.close();
-            this.submitter.join(5_000L);
-            this.submitter = null;
+            try {
+                this.submitter.close();
+                this.submitter.join(5_000L);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } finally {
+                this.submitter = null;
+            }
         }
-        cleanTables();
-        for (MeasurementTable table : tables.values()) {
+        clean();
+        for (DataCache<String, GenericRecord> table : tables.values()) {
             table.close();
         }
     }
 
-    /**
-     * Remove old measurements from the database.
-     */
-    void cleanTables() {
-        double timestamp = (System.currentTimeMillis() - dataRetention) / 1000d;
-        for (MeasurementTable table : tables.values()) {
+    @Override
+    public void clean() {
+        long timestamp = (System.currentTimeMillis() - dataRetention);
+        for (DataCache<String, GenericRecord> table : tables.values()) {
             table.removeBeforeTimestamp(timestamp);
         }
     }
@@ -154,11 +162,12 @@ public class DataHandler {
     /**
      * Get the table of a given topic
      */
-    public MeasurementTable getTable(AvroTopic topic) {
+    @Override
+    public MeasurementTable getCache(AvroTopic topic) {
         return this.tables.get(topic);
     }
 
-    Map<AvroTopic, MeasurementTable> getTables() {
+    public Map<AvroTopic, MeasurementTable> getCaches() {
         return tables;
     }
 
@@ -173,7 +182,8 @@ public class DataHandler {
         }
     }
 
-    void updateStatus(ServerStatusListener.Status status) {
+    @Override
+    public void updateServerStatus(ServerStatusListener.Status status) {
         synchronized (statusListeners) {
             for (ServerStatusListener listener : statusListeners) {
                 listener.updateServerStatus(status);

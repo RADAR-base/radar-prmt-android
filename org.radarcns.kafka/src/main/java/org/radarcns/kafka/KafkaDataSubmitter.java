@@ -1,18 +1,16 @@
-package org.radarcns.android;
+package org.radarcns.kafka;
 
-import org.apache.avro.generic.GenericRecord;
-import org.radarcns.kafka.SchemaRetriever;
-import org.radarcns.kafka.AvroTopic;
-import org.radarcns.kafka.KafkaSender;
-import org.radarcns.kafka.RecordList;
-import org.radarcns.kafka.rest.GenericRecordEncoder;
-import org.radarcns.kafka.rest.RestSender;
-import org.radarcns.kafka.rest.StringEncoder;
+import org.radarcns.data.DataCache;
+import org.radarcns.data.DataHandler;
+import org.radarcns.data.Record;
+import org.radarcns.data.RecordIterable;
+import org.radarcns.data.RecordList;
+import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,36 +29,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * It uses a set of timers to addMeasurement data and clean the databases.
  */
-class KafkaDataSubmitter {
+public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
     private final static int SEND_LIMIT = 5000;
-    private DataHandler dataHandler;
-    private final KafkaSender<String, GenericRecord> directSender;
+    private DataHandler<K, V> dataHandler;
+    private final KafkaSender<K, V> directSender;
     private final ScheduledExecutorService executor;
-    private final ConcurrentMap<AvroTopic, RecordList<String, GenericRecord>> trySendCache;
+    private final ConcurrentMap<AvroTopic, RecordList<K, V>> trySendCache;
     private final ConcurrentMap<AvroTopic, ScheduledFuture<?>> trySendFuture;
     private AtomicBoolean isConnected;
     private long lastConnection;
 
-    KafkaDataSubmitter(DataHandler dataHandler, URL kafkaUrl, SchemaRetriever schemaRetriever, ThreadFactory threadFactory) {
+    public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory) {
         this.dataHandler = dataHandler;
-        directSender = new RestSender<>(kafkaUrl, schemaRetriever, new StringEncoder(), new GenericRecordEncoder());
+        directSender = sender;
         directSender.configure(null);
         trySendCache = new ConcurrentHashMap<>();
         trySendFuture = new ConcurrentHashMap<>();
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-        executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            }
-        });
 
         // Remove old data from tables infrequently
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                KafkaDataSubmitter.this.dataHandler.cleanTables();
+                KafkaDataSubmitter.this.dataHandler.clean();
             }
         }, 0L, 1L, TimeUnit.HOURS);
 
@@ -68,11 +60,11 @@ class KafkaDataSubmitter {
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                final HashSet<AvroTopic> topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getTables().keySet());
+                final HashSet<AvroTopic> topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getCaches().keySet());
                 executor.submit(new Runnable() {
                     @Override
                     public void run() {
-                        uploadTables(topicsToSend);
+                        uploadCaches(topicsToSend);
                         if (!topicsToSend.isEmpty()) {
                             executor.submit(this);
                         }
@@ -118,15 +110,19 @@ class KafkaDataSubmitter {
      *
      * Call {@link #join(long)} to wait for this to finish.
      */
-    void close() {
+    public void close() {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                Map<AvroTopic, MeasurementTable> tables = dataHandler.getTables();
-                for (MeasurementTable table : tables.values()) {
-                    table.flush();
+                Map<AvroTopic, ? extends DataCache<K, V>> caches = dataHandler.getCaches();
+                for (DataCache<K, V> cache : caches.values()) {
+                    try {
+                        cache.flush();
+                    } catch (IOException ex) {
+                        logger.error("Cannot flush cache", ex);
+                    }
                 }
-                uploadTables(new HashSet<>(tables.keySet()));
+                uploadCaches(new HashSet<>(caches.keySet()));
                 if (isConnected.get()) {
                     try {
                         synchronized (trySendFuture) {
@@ -134,7 +130,7 @@ class KafkaDataSubmitter {
                                 future.cancel(true);
                             }
                             trySendFuture.clear();
-                            for (RecordList<String, GenericRecord> records : trySendCache.values()) {
+                            for (RecordList<K, V> records : trySendCache.values()) {
                                 directSender.send(records);
                             }
                             trySendCache.clear();
@@ -158,14 +154,14 @@ class KafkaDataSubmitter {
      * @param millis milliseconds to wait.
      * @throws InterruptedException
      */
-    void join(long millis) throws InterruptedException {
+    public void join(long millis) throws InterruptedException {
         executor.awaitTermination(millis, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Check the connection status eventually.
      */
-    void checkConnection() {
+    public void checkConnection() {
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -177,18 +173,18 @@ class KafkaDataSubmitter {
     /**
      * Upload a limited amount of data stored in the database which is not yet sent.
      */
-    private void uploadTables(Set<AvroTopic> toSend) {
+    private void uploadCaches(Set<AvroTopic> toSend) {
         boolean uploadingNotified = false;
         try {
-            for (Map.Entry<AvroTopic, MeasurementTable> entry : dataHandler.getTables().entrySet()) {
-                int sent = uploadTable(entry.getKey(), entry.getValue(), SEND_LIMIT, uploadingNotified);
+            for (Map.Entry<AvroTopic, ? extends DataCache<K, V>> entry : dataHandler.getCaches().entrySet()) {
+                int sent = uploadCache(entry.getKey(), entry.getValue(), SEND_LIMIT, uploadingNotified);
                 if (sent < SEND_LIMIT) {
                     toSend.remove(entry.getKey());
                 }
                 uploadingNotified |= sent > 0;
             }
             if (uploadingNotified) {
-                dataHandler.updateStatus(ServerStatusListener.Status.CONNECTED);
+                dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
                 lastConnection = System.currentTimeMillis();
             }
         } catch (IOException ex) {
@@ -200,20 +196,20 @@ class KafkaDataSubmitter {
      * Upload some data from a single table.
      * @return number of records sent.
      */
-    private int uploadTable(AvroTopic topic, MeasurementTable table, int limit, boolean uploadingNotified) throws IOException {
-        RecordList<String, GenericRecord> records = new RecordList<>(topic);
-        try (MeasurementIterator measurements = table.getUnsentMeasurements(limit)) {
-            if (measurements.hasNext() && !uploadingNotified) {
-                dataHandler.updateStatus(ServerStatusListener.Status.UPLOADING);
+    private int uploadCache(AvroTopic topic, DataCache<K, V> cache, int limit, boolean uploadingNotified) throws IOException {
+        RecordList<K, V> records = new RecordList<>(topic);
+        try (RecordIterable<K, V> measurements = cache.unsentRecords(limit)) {
+            if (measurements.iterator().hasNext() && !uploadingNotified) {
+                dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
             }
-            for (MeasurementTable.Measurement record : measurements) {
+            for (Record<K, V> record : measurements) {
                 records.add(record.offset, record.key, record.value);
             }
         }
 
         if (!records.isEmpty()) {
             directSender.send(records);
-            table.markSent(records.getLastOffset());
+            cache.markSent(records.getLastOffset());
         }
         logger.debug("uploaded {} {} records", records.size(), topic.getName());
         return records.size();
@@ -226,7 +222,7 @@ class KafkaDataSubmitter {
         if (!isConnected.get() && (directSender.isConnected() || directSender.resetConnection())) {
             isConnected.set(true);
             lastConnection = System.currentTimeMillis();
-            dataHandler.updateStatus(ServerStatusListener.Status.CONNECTED);
+            dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
             logger.info("Sender reconnected");
         }
     }
@@ -237,11 +233,11 @@ class KafkaDataSubmitter {
     private void senderDisconnected() {
         if (isConnected.compareAndSet(true, false)) {
             logger.warn("Sender disconnected");
-            dataHandler.updateStatus(ServerStatusListener.Status.DISCONNECTED);
+            dataHandler.updateServerStatus(ServerStatusListener.Status.DISCONNECTED);
             if (directSender.resetConnection()) {
                 isConnected.set(true);
                 logger.info("Sender reconnected");
-                dataHandler.updateStatus(ServerStatusListener.Status.CONNECTED);
+                dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
             } else {
                 synchronized (trySendFuture) {
                     for (ScheduledFuture<?> future : trySendFuture.values()) {
@@ -259,12 +255,12 @@ class KafkaDataSubmitter {
      * messages to be lost. If the sender is disconnected, messages are immediately discarded.
      * @return whether the message was queued for sending.
      */
-    boolean trySend(final AvroTopic topic, final long offset, final String deviceId, final GenericRecord record) {
+    public boolean trySend(final AvroTopic topic, final long offset, final K deviceId, final V record) {
         if (!isConnected.get()) {
             return false;
         }
         synchronized (trySendFuture) {
-            RecordList<String, GenericRecord> records = trySendCache.get(topic);
+            RecordList<K, V> records = trySendCache.get(topic);
             if (records == null) {
                 records = new RecordList<>(topic);
                 trySendCache.put(topic, records);
@@ -278,7 +274,7 @@ class KafkaDataSubmitter {
                             return;
                         }
 
-                        RecordList<String, GenericRecord> localRecords;
+                        RecordList<K, V> localRecords;
                         synchronized (trySendFuture) {
                             localRecords = trySendCache.remove(topic);
                             trySendFuture.remove(topic);

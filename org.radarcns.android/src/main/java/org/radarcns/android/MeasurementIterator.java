@@ -2,11 +2,14 @@ package org.radarcns.android;
 
 import android.database.Cursor;
 
-import java.io.Closeable;
+import org.apache.avro.generic.GenericRecord;
+import org.radarcns.data.Record;
+import org.radarcns.data.RecordIterable;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class MeasurementIterator implements Iterable<MeasurementTable.Measurement>, Iterator<MeasurementTable.Measurement>, Closeable {
+public class MeasurementIterator implements RecordIterable<String, GenericRecord>, Iterator<Record<String, GenericRecord>> {
     private final MeasurementTable table;
     private boolean hasMoved = false;
     private final Cursor cursor;
@@ -41,7 +44,7 @@ public class MeasurementIterator implements Iterable<MeasurementTable.Measuremen
     }
 
     @Override
-    public MeasurementTable.Measurement next() {
+    public Record<String, GenericRecord> next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
         }
@@ -55,7 +58,7 @@ public class MeasurementIterator implements Iterable<MeasurementTable.Measuremen
     }
 
     @Override
-    public Iterator<MeasurementTable.Measurement> iterator() {
+    public Iterator<Record<String, GenericRecord>> iterator() {
         return this;
     }
 }

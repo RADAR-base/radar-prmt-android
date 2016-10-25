@@ -1,4 +1,6 @@
-package org.radarcns.kafka;
+package org.radarcns.data;
+
+import org.radarcns.kafka.AvroTopic;
 
 import java.util.ArrayList;
 import java.util.Collection;

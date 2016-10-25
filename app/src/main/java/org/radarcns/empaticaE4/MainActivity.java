@@ -24,9 +24,11 @@ import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.avro.generic.GenericRecord;
 import org.radarcns.android.MeasurementIterator;
 import org.radarcns.android.MeasurementTable;
-import org.radarcns.android.ServerStatusListener;
+import org.radarcns.data.Record;
+import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,20 +103,20 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             showButton.setVisibility(View.VISIBLE);
             showButton.setOnClickListener(new View.OnClickListener() {
                 final DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-                final LinkedList<MeasurementTable.Measurement> reversedMeasurements = new LinkedList<>();
-                final MeasurementTable table = e4Service.getDataHandler().getTable(topics.getInterBeatIntervalTopic());
+                final LinkedList<Record<String, GenericRecord>> reversedMeasurements = new LinkedList<>();
+                final MeasurementTable table = e4Service.getDataHandler().getCache(topics.getInterBeatIntervalTopic());
 
                 public void onClick(View v) {
                     reversedMeasurements.clear();
                     try (MeasurementIterator measurements = table.getMeasurements(25)) {
-                        for (MeasurementTable.Measurement measurement : measurements) {
+                        for (Record<String, GenericRecord> measurement : measurements) {
                             reversedMeasurements.addFirst(measurement);
                         }
                     }
 
                     if (!reversedMeasurements.isEmpty()) {
                         StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                        for (MeasurementTable.Measurement measurement : reversedMeasurements) {
+                        for (Record<String, GenericRecord> measurement : reversedMeasurements) {
                             sb.append(timeFormat.format(1000d * (Double)measurement.value.get(0)));
                             sb.append(": ");
                             sb.append(String.valueOf((int)(60d/((Number)measurement.value.get(2)).doubleValue())));
@@ -293,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
             e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
             e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-            e4serviceIntent.putExtra("api_key", getString(R.string.apikey));
+            e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
             startService(e4serviceIntent);
         }
     }
@@ -323,7 +325,8 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             @Override
             public void run() {
                 switch (status) {
-                    case INACTIVE:
+                    case READY:
+                    case DISABLED:
                         serverStatusLabel.setVisibility(View.INVISIBLE);
                         reconnectButton.setVisibility(View.INVISIBLE);
                         break;
@@ -357,7 +360,6 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String deviceName = deviceManager != null ? deviceManager.getDeviceName() : null;
                 switch (status) {
                     case CONNECTED:
                         if (devices.isEmpty()) {

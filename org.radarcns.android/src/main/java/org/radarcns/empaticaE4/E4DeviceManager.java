@@ -17,7 +17,7 @@ import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.radarcns.android.DataHandler;
+import org.radarcns.android.TableDataHandler;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.kafka.AvroTopic;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private final static Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
 
-    private final DataHandler dataHandler;
+    private final TableDataHandler dataHandler;
     private final String groupId;
     private final Context context;
     private final String apiKey;
@@ -60,13 +60,13 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private Schema.Field temperatureField;
     private E4DeviceStatusListener.Status status;
 
-    public E4DeviceManager(Context context, E4DeviceStatusListener e4Service, String apiKey, String groupId, DataHandler dataHandler, E4Topics topics) {
+    public E4DeviceManager(Context context, E4DeviceStatusListener e4Service, String apiKey, String groupId, TableDataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
-        this.accelerationTable = dataHandler.getTable(topics.getAccelerationTopic());
-        this.bvpTable = dataHandler.getTable(topics.getBloodVolumePulseTopic());
-        this.edaTable = dataHandler.getTable(topics.getElectroDermalActivityTopic());
-        this.ibiTable = dataHandler.getTable(topics.getInterBeatIntervalTopic());
-        this.temperatureTable = dataHandler.getTable(topics.getTemperatureTopic());
+        this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
+        this.bvpTable = dataHandler.getCache(topics.getBloodVolumePulseTopic());
+        this.edaTable = dataHandler.getCache(topics.getElectroDermalActivityTopic());
+        this.ibiTable = dataHandler.getCache(topics.getInterBeatIntervalTopic());
+        this.temperatureTable = dataHandler.getCache(topics.getTemperatureTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
         xField = accelerationTable.getTopic().getValueField("x");
         yField = accelerationTable.getTopic().getValueField("y");

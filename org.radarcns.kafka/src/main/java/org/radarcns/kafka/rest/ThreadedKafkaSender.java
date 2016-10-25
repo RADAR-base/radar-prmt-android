@@ -2,7 +2,7 @@ package org.radarcns.kafka.rest;
 
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaSender;
-import org.radarcns.kafka.RecordList;
+import org.radarcns.data.RecordList;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

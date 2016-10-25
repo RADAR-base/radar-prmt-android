@@ -12,7 +12,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 import org.radarcns.kafka.SchemaRetriever;
-import org.radarcns.android.DataHandler;
+import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.SchemaRegistryRetriever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     };
 
     private final static Logger logger = LoggerFactory.getLogger(E4Service.class);
-    private DataHandler dataHandler;
+    private TableDataHandler dataHandler;
     private Collection<E4DeviceManager> devices;
     private E4DeviceManager deviceScanner;
     private E4Topics topics;
@@ -98,7 +98,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         disconnect();
         try {
             dataHandler.close();
-        } catch (InterruptedException e) {
+        } catch (IOException e) {
             // do nothing
         }
     }
@@ -129,7 +129,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         return true;
     }
 
-    public DataHandler getDataHandler() {
+    public TableDataHandler getDataHandler() {
         return dataHandler;
     }
 
@@ -181,10 +181,6 @@ public class E4Service extends Service implements E4DeviceStatusListener {
                             stopSelf();
                         }
                     }
-                } else if (e4DeviceManager.equals(deviceScanner)) {
-                    if (!forcedDisconnect.get()) {
-                        startScanning();
-                    }
                 }
                 break;
             case CONNECTING:
@@ -198,7 +194,8 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     public synchronized void disconnect() {
         forcedDisconnect.set(true);
         if (deviceScanner != null) {
-            deviceStatusUpdated(deviceScanner, Status.DISCONNECTED);
+            deviceScanner.close();
+            deviceScanner = null;
         }
         for (E4DeviceManager device : devices) {
             deviceStatusUpdated(device, E4DeviceStatusListener.Status.DISCONNECTED);
@@ -286,7 +283,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
                     }
                 }
                 long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
-                dataHandler = new DataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
+                dataHandler = new TableDataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
                         dataRetentionMs, topics.getAccelerationTopic(),
                         topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
                         topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
