@@ -229,7 +229,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         if (deviceScanner != null) {
             throw new IllegalStateException("Already connecting");
         }
-        deviceScanner = new E4DeviceManager(getApplicationContext(), this, apiKey, groupId, dataHandler, topics);
+        deviceScanner = new E4DeviceManager(this, this, apiKey, groupId, dataHandler, topics);
         deviceScanner.start();
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);

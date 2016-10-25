@@ -3,8 +3,10 @@ package org.radarcns.empaticaE4;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Process;
 
 import com.empatica.empalink.ConnectionNotAllowedException;
@@ -35,6 +37,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private final Schema.Field batteryLevelField;
     private final Schema.Field bloodVolumePulseField;
     private final Schema.Field electroDermalActivityField;
+    private final HandlerThread e4deviceThread;
     private Handler mHandler;
     private final HandlerThread mHandlerThread;
     private String deviceId;
@@ -87,12 +90,14 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         this.deviceId = null;
         this.deviceName = null;
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
+        this.e4deviceThread = new HandlerThread("E4-device-looper", Process.THREAD_PRIORITY_AUDIO);
         this.isDisconnected = false;
         this.isScanning = false;
     }
 
     void start() {
         this.mHandlerThread.start();
+        this.e4deviceThread.start();
         synchronized (this) {
             this.mHandler = new Handler(this.mHandlerThread.getLooper());
         }
@@ -100,7 +105,12 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
             @Override
             public void run() {
                 // Create a new EmpaDeviceManager. E4DeviceManager is both its data and status delegate.
-                deviceManager = new EmpaDeviceManager(context, E4DeviceManager.this, E4DeviceManager.this);
+                deviceManager = new EmpaDeviceManager(new ContextWrapper(context) {
+                    @Override
+                    public Looper getMainLooper() {
+                        return e4deviceThread.getLooper();
+                    }
+                }, E4DeviceManager.this, E4DeviceManager.this);
                 // Initialize the Device Manager using your API key. You need to have Internet access at this point.
                 deviceManager.authenticateWithAPIKey(apiKey);
             }
@@ -207,6 +217,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
             }
         });
         this.mHandlerThread.quitSafely();
+        this.e4deviceThread.quitSafely();
     }
 
     @Override
