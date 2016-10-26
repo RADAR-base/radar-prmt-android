@@ -12,4 +12,5 @@ public interface DataHandler<K, V> extends ServerStatusListener {
     void clean();
     Map<AvroTopic, ? extends DataCache<K, V>> getCaches();
     DataCache<K, V> getCache(AvroTopic topic);
+    void addMeasurement(DataCache<K, V> cache, K key, V value);
 }

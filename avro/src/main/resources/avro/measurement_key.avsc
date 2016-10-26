@@ -1,0 +1,10 @@
+{
+  "namespace": "org.radarcns.key",
+  "type": "record",
+  "name": "MeasurementKey",
+  "doc": "Measurement key",
+  "fields": [
+    {"name": "deviceId", "type": "string", "doc": "device timestamp ID"},
+    {"name": "userId", "type": "string", "doc": "user ID"}
+  ]
+}

@@ -39,24 +39,24 @@ public class MockDevice extends Thread {
             bvp = new AvroTopic("empatica_e4_blood_volume_pulse", schemaRetriever);
             eda = new AvroTopic("empatica_e4_electrodermal_activity", schemaRetriever);
             ibi = new AvroTopic("empatica_e4_inter_beat_interval", schemaRetriever);
-            tags = new AvroTopic("empatica_e4_tags", schemaRetriever);
+            tags = new AvroTopic("empatica_e4_tag", schemaRetriever);
             temperature = new AvroTopic("empatica_e4_temperature", schemaRetriever);
         } catch (IOException ex) {
             logger.error("missing topic schema", ex);
             throw new RuntimeException(ex);
         }
-        hertz_modulus = 1;
+        hertz_modulus = 64;
         nanoTimeStep = 1000000000L / hertz_modulus;
         lastSleep = 0;
 
         topicFrequency = new HashMap<>();
-        topicFrequency.put(acceleration, 0); // 32
+        topicFrequency.put(acceleration, 32); // 32
         topicFrequency.put(battery, 1);
-        topicFrequency.put(bvp, 0); // 64
-        topicFrequency.put(eda, 0); // 4
-        topicFrequency.put(ibi, 0); // 1
-        topicFrequency.put(tags, 0); // 1
-        topicFrequency.put(temperature, 0); // 4
+        topicFrequency.put(bvp, 64); // 64
+        topicFrequency.put(eda, 4); // 4
+        topicFrequency.put(ibi, 1); // 1
+        topicFrequency.put(tags, 1); // 1
+        topicFrequency.put(temperature, 4); // 4
 
         // decay
         Random random = new Random();
@@ -89,6 +89,7 @@ public class MockDevice extends Thread {
                     sendIfNeeded(i, temperature, temperatureField, 37.0f);
                     sleep();
                 }
+                System.out.println("One time step");
             }
         } catch (InterruptedException ex) {
             // do nothing, just exit the loop
@@ -102,7 +103,8 @@ public class MockDevice extends Thread {
             try {
                 sender.send(topic, offset.incrementAndGet(), deviceId, avroRecord);
             } catch (IOException e) {
-                logger.warn("Failed to send message to topic {}", topic.getName(), e);
+                System.err.println("Failed to send message to topic " + topic.getName());
+                e.printStackTrace();
             }
         }
     }

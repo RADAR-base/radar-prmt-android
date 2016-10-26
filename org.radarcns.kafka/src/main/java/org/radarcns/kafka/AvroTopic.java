@@ -3,16 +3,26 @@ package org.radarcns.kafka;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.specific.SpecificData;
+import org.apache.avro.specific.SpecificRecord;
+import org.jboss.netty.logging.InternalLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 /** AvroTopic with schema */
 public class AvroTopic {
+    private final static Logger logger = LoggerFactory.getLogger(AvroTopic.class);
+
     private final String name;
     private final Schema valueSchema;
     private final Schema keySchema;
     private final Schema.Field timeField;
     private final Schema.Field timeReceivedField;
+    private final Schema.Type[] valueFieldTypes;
+    private Class valueClass;
 
     public AvroTopic(String name, SchemaRetriever retriever) throws IOException {
         this(name, Schema.create(Schema.Type.STRING),
@@ -34,6 +44,12 @@ public class AvroTopic {
         if (timeReceivedField == null) {
             throw new IllegalArgumentException("Schema must have timeReceived as its second field");
         }
+        this.valueClass = null;
+        List<Schema.Field> fields = valueSchema.getFields();
+        this.valueFieldTypes = new Schema.Type[fields.size()];
+        for (int i = 0; i < fields.size(); i++) {
+            valueFieldTypes[i] = fields.get(i).schema().getType();
+        }
     }
 
     public Schema getKeySchema() {
@@ -43,6 +59,13 @@ public class AvroTopic {
     public Schema getValueSchema() {
         return valueSchema;
     }
+    
+    public SpecificRecord newValueInstance() {
+        if (valueClass == null) {
+            valueClass = SpecificData.get().getClass(valueSchema);
+        }
+        return (SpecificRecord)SpecificData.newInstance(valueClass, valueSchema);
+    }
 
     public Schema.Field getValueField(String name) {
         Schema.Field field = valueSchema.getField(name);
@@ -50,6 +73,10 @@ public class AvroTopic {
             throw new IllegalArgumentException("Field " + name + " not in value valueSchema");
         }
         return field;
+    }
+
+    public Schema.Type[] getValueFieldTypes() {
+        return valueFieldTypes;
     }
 
     public GenericRecord createValueRecord(double time, Object... values) {
@@ -82,6 +109,32 @@ public class AvroTopic {
 
         return name.equals(topic.name) && keySchema.equals(topic.keySchema) &&
                 valueSchema.equals(topic.valueSchema);
+    }
+
+    public static ThreadLocal<AvroTopic> newThreadLocalTopic(String name, SchemaRetriever retriever) throws IOException {
+        ThreadLocalTopic localTopic = new ThreadLocalTopic(name, retriever);
+        if (localTopic.get() == null) {
+            throw new IOException("Cannot find schema of topic " + name);
+        }
+        return localTopic;
+    }
+    private static class ThreadLocalTopic extends ThreadLocal<AvroTopic> {
+        final String name;
+        final SchemaRetriever schemaRetriever;
+
+        ThreadLocalTopic(String name, SchemaRetriever retriever) {
+            this.name = name;
+            this.schemaRetriever = retriever;
+        }
+        @Override
+        protected AvroTopic initialValue() {
+            try {
+                return new AvroTopic(name, schemaRetriever);
+            } catch (IOException e) {
+                logger.error("Topic {} cannot be retrieved", name, e);
+                return null;
+            }
+        }
     }
 
     @Override

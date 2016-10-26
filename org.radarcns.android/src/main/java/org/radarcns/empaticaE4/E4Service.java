@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,14 +35,12 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                if (state == BluetoothAdapter.STATE_ON && !forcedDisconnect.get() && deviceScanner == null) {
+                if (state == BluetoothAdapter.STATE_ON && deviceScanner == null) {
                     logger.info("Bluetooth has turned on");
                     connect();
                 } else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
                     logger.warn("Bluetooth is turning off");
-                    boolean oldDisconnect = forcedDisconnect.get();
                     disconnect();
-                    forcedDisconnect.set(oldDisconnect);
                 } else if (state == BluetoothAdapter.STATE_OFF) {
                     logger.warn("Bluetooth is off");
                     enableBt();
@@ -52,16 +51,15 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
     private final static Logger logger = LoggerFactory.getLogger(E4Service.class);
     private TableDataHandler dataHandler;
-    private Collection<E4DeviceManager> devices;
     private E4DeviceManager deviceScanner;
     private E4Topics topics;
-    private final AtomicBoolean forcedDisconnect = new AtomicBoolean(false);
     private final LocalBinder mBinder = new LocalBinder();
     private final Collection<E4DeviceStatusListener> listeners = new ArrayList<>();
     private final AtomicInteger numberOfActivitiesBound = new AtomicInteger(0);
     private String apiKey;
     private String groupId;
     private boolean isInForeground;
+    private boolean isConnected;
 
     @Override
     public void onCreate() {
@@ -81,11 +79,9 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         enableBt();
 
         synchronized (this) {
-            forcedDisconnect.set(false);
             numberOfActivitiesBound.set(0);
             listeners.clear();
             isInForeground = false;
-            devices = new ArrayList<>();
             deviceScanner = null;
         }
     }
@@ -113,16 +109,16 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     @Override
     public void onRebind(Intent intent) {
         if (numberOfActivitiesBound.getAndIncrement() == 0) {
-            if (!forcedDisconnect.get() && deviceScanner == null && BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            if (!isConnected && BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                 connect();
             }
         }
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
+    public synchronized boolean onUnbind(Intent intent) {
         if (numberOfActivitiesBound.decrementAndGet() == 0) {
-            if (devices.isEmpty()) {
+            if (!isConnected) {
                 stopSelf();
             }
         }
@@ -149,38 +145,33 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
     @Override
     public synchronized void deviceStatusUpdated(E4DeviceManager e4DeviceManager, Status status) {
+        if (e4DeviceManager != deviceScanner) {
+            return;
+        }
         switch (status) {
             case CONNECTED:
-                if (e4DeviceManager != deviceScanner) {
-                    return;
-                }
-                devices.add(deviceScanner);
-                deviceScanner = null;
+                isConnected = true;
 
                 for (E4DeviceStatusListener listener : listeners) {
-                    listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.CONNECTED);
+                    listener.deviceStatusUpdated(deviceScanner, E4DeviceStatusListener.Status.CONNECTED);
                 }
-
-                startScanning();
                 break;
             case DISCONNECTED:
                 if (e4DeviceManager == null) {
                     return;
                 }
-                if (devices.contains(e4DeviceManager)) {
-                    devices.remove(e4DeviceManager);
-                    if (!e4DeviceManager.isClosed()) {
-                        e4DeviceManager.close();
-                    }
-                    for (E4DeviceStatusListener listener : listeners) {
-                        listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.DISCONNECTED);
-                    }
-                    if (devices.isEmpty()) {
-                        stopBackgroundListener();
-                        if (this.numberOfActivitiesBound.get() == 0) {
-                            stopSelf();
-                        }
-                    }
+                deviceScanner = null;
+                stopBackgroundListener();
+                if (!e4DeviceManager.isClosed()) {
+                    e4DeviceManager.close();
+                }
+                for (E4DeviceStatusListener listener : listeners) {
+                    listener.deviceStatusUpdated(e4DeviceManager, E4DeviceStatusListener.Status.DISCONNECTED);
+                }
+                if (this.numberOfActivitiesBound.get() == 0) {
+                    stopSelf();
+                } else {
+                    startScanning();
                 }
                 break;
             case CONNECTING:
@@ -191,27 +182,6 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         }
     }
 
-    public synchronized void disconnect() {
-        forcedDisconnect.set(true);
-        if (deviceScanner != null) {
-            deviceScanner.close();
-            deviceScanner = null;
-        }
-        for (E4DeviceManager device : devices) {
-            deviceStatusUpdated(device, E4DeviceStatusListener.Status.DISCONNECTED);
-        }
-        for (E4DeviceStatusListener listener : listeners) {
-            listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.DISCONNECTED);
-        }
-        if (dataHandler.isStarted()) {
-            dataHandler.stop();
-        }
-    }
-
-    public synchronized boolean isRecording() {
-        return deviceScanner != null || !devices.isEmpty();
-    }
-
     synchronized void connect() {
         if (deviceScanner != null) {
             throw new IllegalStateException("Already connecting");
@@ -219,13 +189,11 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         if (!dataHandler.isStarted()) {
             dataHandler.start();
         }
-        forcedDisconnect.set(false);
         startScanning();
     }
 
     private synchronized void startScanning() {
         // Only scan if no devices are connected.
-        // TODO: support multiple devices
         if (deviceScanner != null) {
             throw new IllegalStateException("Already connecting");
         }
@@ -234,6 +202,27 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         for (E4DeviceStatusListener listener : listeners) {
             listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
         }
+    }
+
+    public synchronized void disconnect() {
+        if (deviceScanner != null) {
+            deviceScanner.close();
+            deviceScanner = null;
+            for (E4DeviceStatusListener listener : listeners) {
+                listener.deviceStatusUpdated(deviceScanner, E4DeviceStatusListener.Status.DISCONNECTED);
+            }
+        } else {
+            for (E4DeviceStatusListener listener : listeners) {
+                listener.deviceStatusUpdated(null, E4DeviceStatusListener.Status.DISCONNECTED);
+            }
+        }
+        if (dataHandler.isStarted()) {
+            dataHandler.stop();
+        }
+    }
+
+    public synchronized boolean isRecording() {
+        return deviceScanner != null;
     }
 
     @Override
@@ -257,8 +246,8 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         }
     }
 
-    synchronized Collection<E4DeviceManager> getDevices() {
-        return new ArrayList<>(devices);
+    synchronized E4DeviceManager getDevice() {
+        return deviceScanner;
     }
 
     @Override

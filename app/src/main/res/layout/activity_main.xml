@@ -51,15 +51,6 @@
             android:layout_below="@id/showButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/reconnectButton"
-            android:layout_below="@id/serverStatus"
-            android:layout_marginTop="50dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            android:text="@string/reconnect_to_server"/>
     </RelativeLayout>
 
     <RelativeLayout

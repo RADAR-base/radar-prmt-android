@@ -6,15 +6,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Process;
-import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.Record;
-import org.radarcns.data.RecordIterable;
 import org.radarcns.kafka.AvroTopic;
+import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +34,11 @@ import java.util.concurrent.TimeUnit;
  *
  * Measurements are grouped into transactions before being committed in a separate Thread
  */
-public class MeasurementTable implements DataCache<String, GenericRecord> {
+public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecord> {
     private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
     private final MeasurementDBHelper dbHelper;
     private final AvroTopic topic;
     private final long window;
-    private final Schema.Field timeField;
-    private final Schema.Field timeReceivedField;
-    private final int valueSize;
     private SubmitThread submitThread;
     private final static NumberFormat decimalFormat = new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.US));
     private final ThreadFactory threadFactory;
@@ -59,32 +55,19 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
         this.topic = topic;
         this.window = timeWindowMillis;
         this.submitThread = null;
-        this.threadFactory = new ThreadFactory() {
-            @Override
-            public Thread newThread(@NonNull Runnable r) {
-                return new Thread(r, "MeasurementTable-" + MeasurementTable.this.topic.getName());
-            }
-        };
-        Schema schema = topic.getValueSchema();
-        this.timeField = schema.getField("time");
-        this.timeReceivedField = schema.getField("timeReceived");
-        if (timeField == null) {
-            throw new IllegalArgumentException("Schema must have time as its first field");
-        }
-        if (timeReceivedField == null) {
-            throw new IllegalArgumentException("Schema must have timeReceived as its second field");
-        }
-        valueSize = 1 + schema.getFields().size();
+        this.threadFactory = new AndroidThreadFactory(
+                "MeasurementTable-" + MeasurementTable.this.topic.getName(),
+                Process.THREAD_PRIORITY_BACKGROUND);
 
-        for (Schema.Field f : this.topic.getValueSchema().getFields()) {
-            switch (f.schema().getType()) {
+        for (Schema.Type fieldType : this.topic.getValueFieldTypes()) {
+            switch (fieldType) {
                 case RECORD:
                 case ENUM:
                 case ARRAY:
                 case MAP:
                 case UNION:
                 case FIXED:
-                    throw new IllegalArgumentException("Cannot handle type " + f.schema().getType());
+                    throw new IllegalArgumentException("Cannot handle type " + fieldType);
                 default:
                     // nothing
             }
@@ -106,7 +89,7 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
     /** Submits new values to the database */
     private class SubmitThread {
         private final ScheduledExecutorService executor;
-        private final List<Object[]> queue;
+        private final List<Pair<MeasurementKey, SpecificRecord>> queue;
         private final RollingTimeAverage average;
         private final SQLiteStatement statement;
         private boolean hasFuture;
@@ -114,12 +97,6 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
         SubmitThread() {
             this.queue = new ArrayList<>();
             this.executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-            this.executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-                }
-            });
             this.hasFuture = false;
             this.average = new RollingTimeAverage(20_000L);
             this.statement = compileInsert();
@@ -129,15 +106,15 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
             List<Schema.Field> fields = topic.getValueSchema().getFields();
 
             StringBuilder sb = new StringBuilder(50 + topic.getName().length() + 20 * fields.size());
-            sb.append("INSERT INTO ").append(topic.getName()).append("(");
+            sb.append("INSERT INTO ").append(topic.getName()).append("(userId, sourceId");
             for (Schema.Field field : fields) {
-                sb.append(field.name()).append(',');
+                sb.append(',').append(field.name());
             }
-            sb.append("deviceId) VALUES (");
+            sb.append(") VALUES (?,?");
             for (int i = 0; i < fields.size(); i++) {
-                sb.append("?,");
+                sb.append(",?");
             }
-            sb.append("?)");
+            sb.append(')');
 
             return dbHelper.getWritableDatabase().compileStatement(sb.toString());
         }
@@ -145,7 +122,7 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
         private class DoSubmitValues implements Runnable {
             @Override
             public void run() {
-                List<Object[]> localQueue;
+                List<Pair<MeasurementKey, SpecificRecord>> localQueue;
                 synchronized (this) {
                     hasFuture = false;
                     if (queue.isEmpty()) {
@@ -155,13 +132,13 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
                     queue.clear();
                 }
 
-                List<Schema.Field> fields = topic.getValueSchema().getFields();
+                Schema.Type[] fieldTypes = topic.getValueFieldTypes();
 
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
                 db.beginTransaction();
                 try {
-                    for (Object[] values : localQueue) {
-                        insertRow(values, fields);
+                    for (Pair<MeasurementKey, SpecificRecord> values : localQueue) {
+                        insertRecord(values.first, values.second, fieldTypes);
                         db.yieldIfContendedSafely();
                     }
                     db.setTransactionSuccessful();
@@ -174,46 +151,34 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
                 logger.info("Committing {} records per second to topic {}", Math.round(average.getAverage()), topic.getName());
             }
 
-            private void insertRow(Object[] values, List<Schema.Field> fields) {
+            private void insertRecord(MeasurementKey key, SpecificRecord record, Schema.Type[] fieldTypes) {
                 statement.clearBindings();
-                for (int i = 0; i < values.length; i++) {
-                    Schema.Type actualType;
-
-                    // bind argument
-                    if (values[i] == null) {
-                        actualType = Schema.Type.NULL;
+                statement.bindString(0, key.getUserId());
+                statement.bindString(1, key.getDeviceId());
+                for (int i = 0; i < fieldTypes.length; i++) {
+                    Object value = record.get(i);
+                    if (value == null) {
                         statement.bindNull(i + 1);
-                    } else if (values[i] instanceof Double || values[i] instanceof Float) {
-                        actualType = Schema.Type.DOUBLE;
-                        statement.bindDouble(i + 1, ((Number) values[i]).doubleValue());
-                    } else if (values[i] instanceof String) {
-                        actualType = Schema.Type.STRING;
-                        statement.bindString(i + 1, (String) values[i]);
-                    } else if (values[i] instanceof Integer || values[i] instanceof Long) {
-                        actualType = Schema.Type.LONG;
-                        statement.bindLong(i + 1, ((Number) values[i]).longValue());
-                    } else if (values[i] instanceof Boolean) {
-                        actualType = Schema.Type.BOOLEAN;
-                        statement.bindLong(i + 1, values[i].equals(Boolean.TRUE) ? 1L : 0L);
-                    } else if (values[i] instanceof byte[]) {
-                        actualType = Schema.Type.BYTES;
-                        statement.bindBlob(i + 1, (byte[]) values[i]);
-                    } else {
-                        throw new IllegalArgumentException("Cannot parse type " + values[i].getClass());
-                    }
-
-                    // check bound arguments
-                    if (i == values.length - 1) {
-                        if (actualType != Schema.Type.STRING) {
-                            throw new IllegalArgumentException("Expected type STRING for column `deviceId`, found " + actualType + " " + values[i]);
-                        }
-                    } else {
-                        Schema.Type expectedType = fields.get(i).schema().getType();
-                        if (actualType != expectedType &&
-                                !(expectedType == Schema.Type.FLOAT && actualType == Schema.Type.DOUBLE) &&
-                                !(expectedType == Schema.Type.INT && actualType == Schema.Type.LONG)) {
-                            throw new IllegalArgumentException("Expected type " + expectedType + " for column `" + fields.get(i).name() + "`, found " + actualType + " " + values[i]);
-                        }
+                    } else switch (fieldTypes[i]) {
+                        case DOUBLE:
+                        case FLOAT:
+                            statement.bindDouble(i + 2, ((Number) value).doubleValue());
+                            break;
+                        case LONG:
+                        case INT:
+                            statement.bindLong(i + 2, ((Number) value).longValue());
+                            break;
+                        case STRING:
+                            statement.bindLong(i + 2, ((Number) value).longValue());
+                            break;
+                        case BOOLEAN:
+                            statement.bindLong(i + 2, value.equals(Boolean.TRUE) ? 1L : 0L);
+                            break;
+                        case BYTES:
+                            statement.bindBlob(i + 2, (byte[]) value);
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Field type " + fieldTypes[i] + " cannot be processed");
                     }
                 }
                 if (statement.executeInsert() == -1) {
@@ -222,12 +187,12 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
             }
         }
 
-        synchronized void add(Object[] value) {
+        synchronized void add(MeasurementKey key, SpecificRecord value) {
             if (!hasFuture) {
                 this.executor.schedule(new DoSubmitValues(), window, TimeUnit.MILLISECONDS);
                 hasFuture = true;
             }
-            queue.add(value);
+            queue.add(new Pair<>(key, value));
         }
 
         synchronized void flush() {
@@ -256,32 +221,15 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
     /**
      * Add a measurement to the table.
      *
-     * @param values values of the measurement. These must match the fieldTypes passed to the
-     *               constructor.
+     * @param value values of the measurement. These must match the fieldTypes passed to the
+     *              constructor.
      */
-    void addMeasurement(String deviceId, double time, double timeReceived, Object[] values) {
+    @Override
+    public void addMeasurement(MeasurementKey key, SpecificRecord value) {
         if (submitThread == null) {
             start();
         }
-
-        Object[] content = new Object[valueSize];
-        content[timeField.pos()] = time;
-        content[timeReceivedField.pos()] = timeReceived;
-
-        for (int i = 0; i < values.length; i += 2) {
-            Schema.Field field;
-            if (values[i] instanceof Schema.Field) {
-                field = (Schema.Field) values[i];
-            } else if (values[i] instanceof String) {
-                field = topic.getValueSchema().getField((String) values[i]);
-            } else {
-                throw new IllegalArgumentException("Record key " + values[i] + " is not a Schema.Field or String");
-            }
-            content[field.pos()] = values[i + 1];
-        }
-
-        content[content.length - 1] = deviceId;
-        submitThread.add(content);
+        submitThread.add(key, value);
     }
 
     /**
@@ -321,10 +269,58 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
      * @return Iterator with column-name to value map.
      */
     @Override
-    public RecordIterable<String, GenericRecord> unsentRecords(int limit) {
+    public Iterable<Record<MeasurementKey, SpecificRecord>> unsentRecords(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " WHERE sent = 0 ORDER BY offset ASC LIMIT " + limit, null);
-        return new MeasurementIterator(cursor, this);
+        String sql = "SELECT * FROM " + topic.getName() +
+                " WHERE sent = 0 ORDER BY offset ASC LIMIT " + limit;
+        try (Cursor cursor = db.rawQuery(sql, null)) {
+            return cursorToRecords(cursor);
+        }
+    }
+
+    /**
+     * Converts a database rows into a measurement.
+     */
+    private List<Record<MeasurementKey, SpecificRecord>> cursorToRecords(Cursor cursor) {
+        List<Record<MeasurementKey, SpecificRecord>> records = new ArrayList<>(cursor.getCount());
+        Schema.Type[] fieldTypes = topic.getValueFieldTypes();
+
+        while (cursor.moveToNext()) {
+            SpecificRecord avroRecord = topic.newValueInstance();
+
+            for (int i = 0; i < fieldTypes.length; i++) {
+                switch (fieldTypes[i]) {
+                    case STRING:
+                        avroRecord.put(i, cursor.getString(i + 4));
+                        break;
+                    case BYTES:
+                        avroRecord.put(i, cursor.getBlob(i + 4));
+                        break;
+                    case LONG:
+                        avroRecord.put(i, cursor.getLong(i + 4));
+                        break;
+                    case INT:
+                        avroRecord.put(i, cursor.getInt(i + 4));
+                        break;
+                    case BOOLEAN:
+                        avroRecord.put(i, cursor.getInt(i + 4) > 0);
+                        break;
+                    case FLOAT:
+                        avroRecord.put(i, cursor.getFloat(i + 4));
+                        break;
+                    case DOUBLE:
+                        avroRecord.put(i, cursor.getDouble(i + 4));
+                        break;
+                    case NULL:
+                        avroRecord.put(i, null);
+                        break;
+                    default:
+                        throw new IllegalStateException("Cannot handle type " + fieldTypes[i]);
+                }
+            }
+            records.add(new Record<>(cursor.getLong(0), new MeasurementKey(cursor.getString(1), cursor.getString(2)), avroRecord));
+        }
+        return records;
     }
 
     /**
@@ -333,15 +329,17 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
      * Use in a try-with-resources statement.
      * @return Iterator with column-name to value map.
      */
-    public MeasurementIterator getMeasurements(int limit) {
+    public Iterable<Record<MeasurementKey, SpecificRecord>> getMeasurements(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        final Cursor cursor = db.rawQuery("SELECT * FROM " + topic.getName() + " ORDER BY offset DESC LIMIT " + limit, null);
-        return new MeasurementIterator(cursor, this);
+        String sql = "SELECT * FROM " + topic.getName() + " ORDER BY offset DESC LIMIT " + limit;
+        try (Cursor cursor = db.rawQuery(sql, null)) {
+            return cursorToRecords(cursor);
+        }
     }
 
     /** Create this table in the database. */
     void createTable(SQLiteDatabase db) {
-        String query = "CREATE TABLE " + topic.getName() + " (offset INTEGER PRIMARY KEY AUTOINCREMENT, deviceId TEXT, sent INTEGER DEFAULT 0";
+        String query = "CREATE TABLE " + topic.getName() + " (offset INTEGER PRIMARY KEY AUTOINCREMENT, userId TEXT, sourceId TEXT, sent INTEGER DEFAULT 0";
         for (Schema.Field f : topic.getValueSchema().getFields()) {
             query += ", " + f.name() + " ";
             switch (f.schema().getType()) {
@@ -375,47 +373,5 @@ public class MeasurementTable implements DataCache<String, GenericRecord> {
     /** Drop this table from the database. */
     void dropTable(SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS " + topic.getName());
-    }
-
-    /**
-     * Converts a database row into a measurement.
-     */
-    Record<String, GenericRecord> rowToRecord(Cursor cursor) {
-        List<Schema.Field> fields = topic.getValueSchema().getFields();
-
-        GenericRecord avroRecord = new GenericData.Record(topic.getValueSchema());
-
-        for (int i = 0; i < fields.size(); i++) {
-            switch (fields.get(i).schema().getType()) {
-                case STRING:
-                    avroRecord.put(i, cursor.getString(i + 3));
-                    break;
-                case BYTES:
-                    avroRecord.put(i, cursor.getBlob(i + 3));
-                    break;
-                case LONG:
-                    avroRecord.put(i, cursor.getLong(i + 3));
-                    break;
-                case INT:
-                    avroRecord.put(i, cursor.getInt(i + 3));
-                    break;
-                case BOOLEAN:
-                    avroRecord.put(i, cursor.getInt(i + 3) > 0);
-                    break;
-                case FLOAT:
-                    avroRecord.put(i, cursor.getFloat(i + 3));
-                    break;
-                case DOUBLE:
-                    avroRecord.put(i, cursor.getDouble(i + 3));
-                    break;
-                case NULL:
-                    avroRecord.put(i, null);
-                    break;
-                default:
-                    throw new IllegalStateException("Cannot handle type " + fields.get(i).schema().getType());
-            }
-        }
-
-        return new Record<>(cursor.getLong(0), cursor.getString(1), avroRecord);
     }
 }

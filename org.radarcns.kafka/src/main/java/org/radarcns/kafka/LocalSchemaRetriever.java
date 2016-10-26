@@ -12,7 +12,13 @@ public class LocalSchemaRetriever extends SchemaRetriever {
     @Override
     protected ParsedSchemaMetadata retrieveSchemaMetadata(String topic, boolean ofValue) throws IOException {
         logger.debug("Retrieving schema for topic {} locally", topic);
-        String schemaString = IO.readInputStream(AvroTopic.class.getResourceAsStream("/avro/" + topic + ".avsc"));
-        return new ParsedSchemaMetadata(null, null, parseSchema(schemaString));
+        try {
+            String schemaString = IO.readInputStream(LocalSchemaRetriever.class.getClassLoader().getResourceAsStream("avro/" + topic + ".avsc"));
+            return new ParsedSchemaMetadata(null, null, parseSchema(schemaString));
+        } catch (IOException ex) {
+            System.out.println("Cannot parse schema " + topic);
+            ex.printStackTrace();
+            throw ex;
+        }
     }
 }

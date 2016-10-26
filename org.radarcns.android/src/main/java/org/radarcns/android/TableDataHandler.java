@@ -2,17 +2,17 @@ package org.radarcns.android;
 
 import android.content.Context;
 
-import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
-import org.radarcns.kafka.KafkaSender;
-import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaDataSubmitter;
-import org.radarcns.kafka.rest.GenericRecordEncoder;
+import org.radarcns.kafka.KafkaSender;
+import org.radarcns.key.MeasurementKey;
+import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.RestSender;
 import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.kafka.rest.StringEncoder;
+import org.radarcns.kafka.rest.SpecificRecordEncoder;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadFactory;
 /**
  * Stores data in databases and sends it to the server.
  */
-public class TableDataHandler implements DataHandler<String, GenericRecord> {
+public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRecord> {
     private final long dataRetention;
     private final URL kafkaUrl;
     private final SchemaRetriever schemaRetriever;
@@ -34,7 +34,7 @@ public class TableDataHandler implements DataHandler<String, GenericRecord> {
     private final Collection<ServerStatusListener> statusListeners;
     private ServerStatusListener.Status status;
 
-    private KafkaDataSubmitter<String, GenericRecord> submitter;
+    private KafkaDataSubmitter<MeasurementKey, SpecificRecord> submitter;
 
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
@@ -69,7 +69,7 @@ public class TableDataHandler implements DataHandler<String, GenericRecord> {
         }
         if (kafkaUrl != null) {
             updateServerStatus(ServerStatusListener.Status.CONNECTING);
-            KafkaSender<String, GenericRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new StringEncoder(), new GenericRecordEncoder());
+            KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(), new SpecificRecordEncoder());
             this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
         }
     }
@@ -105,7 +105,7 @@ public class TableDataHandler implements DataHandler<String, GenericRecord> {
             }
         }
         clean();
-        for (DataCache<String, GenericRecord> table : tables.values()) {
+        for (DataCache<MeasurementKey, SpecificRecord> table : tables.values()) {
             table.close();
         }
     }
@@ -113,12 +113,12 @@ public class TableDataHandler implements DataHandler<String, GenericRecord> {
     @Override
     public void clean() {
         long timestamp = (System.currentTimeMillis() - dataRetention);
-        for (DataCache<String, GenericRecord> table : tables.values()) {
+        for (DataCache<MeasurementKey, SpecificRecord> table : tables.values()) {
             table.removeBeforeTimestamp(timestamp);
         }
     }
 
-    public boolean trySend(AvroTopic topic, long offset, String deviceId, GenericRecord record) {
+    public boolean trySend(AvroTopic topic, long offset, MeasurementKey deviceId, SpecificRecord record) {
         return submitter != null && submitter.trySend(topic, offset, deviceId, record);
     }
 
@@ -137,34 +137,17 @@ public class TableDataHandler implements DataHandler<String, GenericRecord> {
         }
     }
 
-
-    /**
-     * Send a record and add it to the local table.
-     *
-     * Values are passed as tuples with the Schema.Field of the topic schema and then the value, e.g.
-     * {@code
-     * Schema schema = table.getTopic().getValueSchema();
-     * Schema.Field myField1 = schema.getField("myField1");
-     * Schema.Field myField2 = schema.getField("myField2");
-     * dataHandler.addMeasurement(table, device, time, myField1, myValue1, myField2, myValue2);
-     * }
-     * For performance reasons, re-use the Schema.Field objects when adding any measurements.
-     *
-     * @param table table to add measurement to
-     * @param deviceId device ID the measurement belongs to
-     * @param timestamp timestamp that the measurement device reported
-     * @param values values to add, alternating between the Schema.Field of the topic that the value belongs and the values themselves.
-     */
-    public void addMeasurement(MeasurementTable table, String deviceId, double timestamp, Object... values) {
-        table.addMeasurement(deviceId, timestamp, System.currentTimeMillis() / 1000d, values);
-    }
-
     /**
      * Get the table of a given topic
      */
     @Override
     public MeasurementTable getCache(AvroTopic topic) {
         return this.tables.get(topic);
+    }
+
+    @Override
+    public void addMeasurement(DataCache<MeasurementKey, SpecificRecord> table, MeasurementKey key, SpecificRecord value) {
+        table.addMeasurement(key, value);
     }
 
     public Map<AvroTopic, MeasurementTable> getCaches() {

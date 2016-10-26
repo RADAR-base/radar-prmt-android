@@ -198,13 +198,13 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      */
     private int uploadCache(AvroTopic topic, DataCache<K, V> cache, int limit, boolean uploadingNotified) throws IOException {
         RecordList<K, V> records = new RecordList<>(topic);
-        try (RecordIterable<K, V> measurements = cache.unsentRecords(limit)) {
-            if (measurements.iterator().hasNext() && !uploadingNotified) {
-                dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
-            }
-            for (Record<K, V> record : measurements) {
-                records.add(record.offset, record.key, record.value);
-            }
+        Iterable<Record<K, V>> measurements = cache.unsentRecords(limit);
+
+        if (measurements.iterator().hasNext() && !uploadingNotified) {
+            dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
+        }
+        for (Record<K, V> record : measurements) {
+            records.add(record.offset, record.key, record.value);
         }
 
         if (!records.isEmpty()) {

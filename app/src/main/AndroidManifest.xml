@@ -23,7 +23,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".E4Service"/>
+        <service android:name=".E4Service1" android:process=":org.radarcns.empaticaE4.E4Service1"/>
+        <service android:name=".E4Service2" android:process=":org.radarcns.empaticaE4.E4Service2"/>
+        <service android:name=".E4Service3" android:process=":org.radarcns.empaticaE4.E4Service3"/>
+        <service android:name=".E4Service0" android:process=":org.radarcns.empaticaE4.E4Service4"/>
 
         <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->

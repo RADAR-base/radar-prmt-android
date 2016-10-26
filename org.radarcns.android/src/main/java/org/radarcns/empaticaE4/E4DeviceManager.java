@@ -3,10 +3,8 @@ package org.radarcns.empaticaE4;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Process;
 
 import com.empatica.empalink.ConnectionNotAllowedException;
@@ -17,11 +15,11 @@ import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericRecord;
-import org.radarcns.android.TableDataHandler;
+import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.android.MeasurementTable;
+import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
+import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,18 +27,13 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private final static Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
 
     private final TableDataHandler dataHandler;
-    private final String groupId;
     private final Context context;
     private final String apiKey;
+
     private final E4DeviceStatusListener e4service;
-    private final Schema.Field xField, yField, zField;
-    private final Schema.Field batteryLevelField;
-    private final Schema.Field bloodVolumePulseField;
-    private final Schema.Field electroDermalActivityField;
-    private final HandlerThread e4deviceThread;
     private Handler mHandler;
     private final HandlerThread mHandlerThread;
-    private String deviceId;
+    private MeasurementKey deviceId;
 
     private final MeasurementTable accelerationTable;
     private final MeasurementTable bvpTable;
@@ -59,8 +52,6 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private String deviceName;
     private boolean isScanning;
     private boolean isDisconnected;
-    private Schema.Field interBeatIntervalField;
-    private Schema.Field temperatureField;
     private E4DeviceStatusListener.Status status;
 
     public E4DeviceManager(Context context, E4DeviceStatusListener e4Service, String apiKey, String groupId, TableDataHandler dataHandler, E4Topics topics) {
@@ -71,14 +62,6 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         this.ibiTable = dataHandler.getCache(topics.getInterBeatIntervalTopic());
         this.temperatureTable = dataHandler.getCache(topics.getTemperatureTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
-        xField = accelerationTable.getTopic().getValueField("x");
-        yField = accelerationTable.getTopic().getValueField("y");
-        zField = accelerationTable.getTopic().getValueField("z");
-        batteryLevelField = batteryTopic.getValueField("batteryLevel");
-        bloodVolumePulseField = bvpTable.getTopic().getValueField("bloodVolumePulse");
-        electroDermalActivityField = edaTable.getTopic().getValueField("electroDermalActivity");
-        interBeatIntervalField = ibiTable.getTopic().getValueField("interBeatInterval");
-        temperatureField = temperatureTable.getTopic().getValueField("temperature");
 
         this.e4service = e4Service;
 
@@ -86,18 +69,15 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         this.apiKey = apiKey;
         deviceManager = null;
         // Initialize the Device Manager using your API key. You need to have Internet access at this point.
-        this.groupId = groupId;
-        this.deviceId = null;
+        this.deviceId = new MeasurementKey(groupId, null);
         this.deviceName = null;
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
-        this.e4deviceThread = new HandlerThread("E4-device-looper", Process.THREAD_PRIORITY_AUDIO);
         this.isDisconnected = false;
         this.isScanning = false;
     }
 
     void start() {
         this.mHandlerThread.start();
-        this.e4deviceThread.start();
         synchronized (this) {
             this.mHandler = new Handler(this.mHandlerThread.getLooper());
         }
@@ -105,12 +85,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
             @Override
             public void run() {
                 // Create a new EmpaDeviceManager. E4DeviceManager is both its data and status delegate.
-                deviceManager = new EmpaDeviceManager(new ContextWrapper(context) {
-                    @Override
-                    public Looper getMainLooper() {
-                        return e4deviceThread.getLooper();
-                    }
-                }, E4DeviceManager.this, E4DeviceManager.this);
+                deviceManager = new EmpaDeviceManager(context, E4DeviceManager.this, E4DeviceManager.this);
                 // Initialize the Device Manager using your API key. You need to have Internet access at this point.
                 deviceManager.authenticateWithAPIKey(apiKey);
             }
@@ -173,7 +148,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
                             // Connect to the device
                             updateStatus(E4DeviceStatusListener.Status.CONNECTING);
                             deviceManager.connectDevice(bluetoothDevice);
-                            deviceId = groupId + "-" + bluetoothDevice.getAddress();
+                            deviceId.setDeviceId(bluetoothDevice.getAddress());
                         } catch (ConnectionNotAllowedException e) {
                             // This should happen only if you try to connect when allowed == false.
                             e4service.deviceFailedToConnect(deviceName);
@@ -217,7 +192,6 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
             }
         });
         this.mHandlerThread.quitSafely();
-        this.e4deviceThread.quitSafely();
     }
 
     @Override
@@ -233,38 +207,46 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         latestAcceleration[0] = x / 64f;
         latestAcceleration[1] = y / 64f;
         latestAcceleration[2] = z / 64f;
-        dataHandler.addMeasurement(accelerationTable, deviceId, timestamp, xField, latestAcceleration[0], yField, latestAcceleration[1], zField, latestAcceleration[2]);
+        SpecificRecord value = new EmpaticaE4Acceleration(
+                timestamp, System.currentTimeMillis() / 1000d,
+                latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
+
+        dataHandler.addMeasurement(accelerationTable, deviceId, value);
     }
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
         latestBloodVolumePulse = bvp;
-        dataHandler.addMeasurement(bvpTable, deviceId, timestamp, bloodVolumePulseField, bvp);
+        SpecificRecord value = new EmpaticaE4BloodVolumePulse(timestamp, System.currentTimeMillis() / 1000d, bvp);
+        dataHandler.addMeasurement(bvpTable, deviceId, value);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
         latestBatteryLevel = battery;
-        GenericRecord record = batteryTopic.createValueRecord(timestamp, batteryLevelField, battery);
-        dataHandler.trySend(batteryTopic, 0L, deviceId, record);
+        SpecificRecord value = new EmpaticaE4BatteryLevel(timestamp, System.currentTimeMillis() / 1000d, battery);
+        dataHandler.trySend(batteryTopic, 0L, deviceId, value);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
         latestElectroDermalActivity = gsr;
-        dataHandler.addMeasurement(edaTable, deviceId, timestamp, electroDermalActivityField, gsr);
+        SpecificRecord value = new EmpaticaE4ElectroDermalActivity(timestamp, System.currentTimeMillis() / 1000d, gsr);
+        dataHandler.addMeasurement(edaTable, deviceId, value);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
         latestInterBeatInterval = ibi;
-        dataHandler.addMeasurement(ibiTable, deviceId, timestamp, interBeatIntervalField, ibi);
+        SpecificRecord value = new EmpaticaE4InterBeatInterval(timestamp, System.currentTimeMillis() / 1000d, ibi);
+        dataHandler.addMeasurement(ibiTable, deviceId, value);
     }
 
     @Override
     public void didReceiveTemperature(float temperature, double timestamp) {
         latestTemperature = temperature;
-        dataHandler.addMeasurement(temperatureTable, deviceId, timestamp, temperatureField, temperature);
+        SpecificRecord value = new EmpaticaE4Temperature(timestamp, System.currentTimeMillis() / 1000d, temperature);
+        dataHandler.addMeasurement(temperatureTable, deviceId, value);
     }
 
     float getLatestBloodVolumePulse() {
@@ -297,10 +279,9 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
 
     @Override
     public boolean equals(Object other) {
-        if (other == this) return true;
-        if (other == null || !getClass().equals(other.getClass())) return false;
-
-        return deviceId != null && deviceId.equals(((E4DeviceManager)other).deviceId);
+        return other == this ||
+                other != null && getClass().equals(other.getClass()) &&
+                deviceId.getDeviceId() != null && deviceId.equals(((E4DeviceManager) other).deviceId);
     }
 
     private synchronized void updateStatus(E4DeviceStatusListener.Status status) {
