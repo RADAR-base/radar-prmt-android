@@ -1,1 +1,1 @@
-include ':app', ':empalink-2.0', ':org.radarcns.android', ':org.radarcns.kafka', ':avro'
+include ':app', ':empalink-2.0', ':avro'

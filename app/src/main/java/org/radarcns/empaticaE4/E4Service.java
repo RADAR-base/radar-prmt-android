@@ -105,6 +105,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
 
     @Override
     public synchronized void onRebind(Intent intent) {
+        ensureDataHandler(intent);
         if (numberOfActivitiesBound.getAndIncrement() == 0) {
             if (!isConnected && BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                 connect();
@@ -247,34 +248,36 @@ public class E4Service extends Service implements E4DeviceStatusListener {
         return deviceScanner;
     }
 
+    synchronized void ensureDataHandler(Intent intent) {
+        if (dataHandler == null) {
+            apiKey = intent.getStringExtra("empatica_api_key");
+            groupId = intent.getStringExtra("group_id");
+            URL kafkaUrl = null;
+            SchemaRetriever remoteSchemaRetriever = null;
+            if (intent.hasExtra("kafka_rest_proxy_url")) {
+                String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
+                if (!kafkaUrlString.isEmpty()) {
+                    remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
+                    try {
+                        kafkaUrl = new URL(kafkaUrlString);
+                    } catch (MalformedURLException e) {
+                        logger.error("Malformed Kafka server URL {}", kafkaUrlString);
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
+            dataHandler = new TableDataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
+                    dataRetentionMs, topics.getAccelerationTopic(),
+                    topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
+                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
+        }
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         logger.info("Starting E4 service {}", this);
-        synchronized (this) {
-            if (dataHandler == null) {
-                apiKey = intent.getStringExtra("empatica_api_key");
-                groupId = intent.getStringExtra("group_id");
-                URL kafkaUrl = null;
-                SchemaRetriever remoteSchemaRetriever = null;
-                if (intent.hasExtra("kafka_rest_proxy_url")) {
-                    String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
-                    if (!kafkaUrlString.isEmpty()) {
-                        remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
-                        try {
-                            kafkaUrl = new URL(kafkaUrlString);
-                        } catch (MalformedURLException e) {
-                            logger.error("Malformed Kafka server URL {}", kafkaUrlString);
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-                long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
-                dataHandler = new TableDataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
-                        dataRetentionMs, topics.getAccelerationTopic(),
-                        topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
-                        topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
-            }
-        }
+        ensureDataHandler(intent);
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
