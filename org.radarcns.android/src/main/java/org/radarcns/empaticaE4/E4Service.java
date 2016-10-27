@@ -104,7 +104,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
     }
 
     @Override
-    public void onRebind(Intent intent) {
+    public synchronized void onRebind(Intent intent) {
         if (numberOfActivitiesBound.getAndIncrement() == 0) {
             if (!isConnected && BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                 connect();

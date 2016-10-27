@@ -109,36 +109,31 @@ class E4ServiceConnection implements ServiceConnection, E4DeviceStatusListener {
 
     @Override
     public void deviceStatusUpdated(final E4DeviceManager deviceManager, final E4DeviceStatusListener.Status status) {
-        mainActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                switch (status) {
-                    case CONNECTED:
-                        Intent notificationIntent = new Intent(mainActivity.getApplicationContext(), MainActivity.class);
-                        PendingIntent pendingIntent = PendingIntent.getActivity(mainActivity.getApplicationContext(), 0, notificationIntent, 0);
+        switch (status) {
+            case CONNECTED:
+                Intent notificationIntent = new Intent(mainActivity.getApplicationContext(), MainActivity.class);
+                PendingIntent pendingIntent = PendingIntent.getActivity(mainActivity.getApplicationContext(), 0, notificationIntent, 0);
 
-                        Notification.Builder notificationBuilder = new Notification.Builder(mainActivity.getApplicationContext());
-                        Bitmap largeIcon = BitmapFactory.decodeResource(mainActivity.getResources(),
-                                R.mipmap.ic_launcher);
-                        notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
-                        notificationBuilder.setLargeIcon(largeIcon);
-                        notificationBuilder.setTicker(mainActivity.getText(R.string.service_notification_ticker));
-                        notificationBuilder.setWhen(System.currentTimeMillis());
-                        notificationBuilder.setContentIntent(pendingIntent);
-                        notificationBuilder.setContentText(mainActivity.getText(R.string.service_notification_text));
-                        notificationBuilder.setContentTitle(mainActivity.getText(R.string.service_notification_title));
-                        Notification notification = notificationBuilder.build();
+                Notification.Builder notificationBuilder = new Notification.Builder(mainActivity.getApplicationContext());
+                Bitmap largeIcon = BitmapFactory.decodeResource(mainActivity.getResources(),
+                        R.mipmap.ic_launcher);
+                notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
+                notificationBuilder.setLargeIcon(largeIcon);
+                notificationBuilder.setTicker(mainActivity.getText(R.string.service_notification_ticker));
+                notificationBuilder.setWhen(System.currentTimeMillis());
+                notificationBuilder.setContentIntent(pendingIntent);
+                notificationBuilder.setContentText(mainActivity.getText(R.string.service_notification_text));
+                notificationBuilder.setContentTitle(mainActivity.getText(R.string.service_notification_title));
+                Notification notification = notificationBuilder.build();
 
-                        e4Service.startBackgroundListener(notification);
-                        device = deviceManager;
-                        break;
-                    case DISCONNECTED:
-                        device = e4Service.getDevice();
-                        e4Service.stopBackgroundListener();
-                        break;
-                }
-            }
-        });
+                e4Service.startBackgroundListener(notification);
+                device = deviceManager;
+                break;
+            case DISCONNECTED:
+                device = e4Service.getDevice();
+                e4Service.stopBackgroundListener();
+                break;
+        }
     }
 
     void disconnect() {
@@ -173,6 +168,7 @@ class E4ServiceConnection implements ServiceConnection, E4DeviceStatusListener {
 
     public void close() {
         e4Service.getDataHandler().removeStatusListener(mainActivity);
+        e4Service.removeStatusListener(mainActivity);
         e4Service.removeStatusListener(this);
         e4Service = null;
     }

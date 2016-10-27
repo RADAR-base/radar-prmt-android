@@ -124,19 +124,7 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             }
         };
 
-        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
-
-        waitingForPermission = false;
-        isDisconnected = false;
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                waitingForPermission = true;
-                break;
-            }
-        }
-        if (waitingForPermission) {
-            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
-        }
+        checkBluetoothPermissions();
     }
 
     @Override
@@ -168,21 +156,6 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
             if (mConnection.hasService()) {
                 unbindService(mConnection);
                 mConnection.close();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted.
-                waitingForPermission = false;
-                enableEmpatica();
-            } else {
-                // User refused to grant permission.
-                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
             }
         }
     }
@@ -227,7 +200,6 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         });
     }
 
-
     void addDeviceButton(final E4DeviceManager manager) {
         String name = manager.getDeviceName();
         if (name != null) {
@@ -250,68 +222,71 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     }
 
     @Override
-    public void deviceStatusUpdated(E4DeviceManager deviceManager, E4DeviceStatusListener.Status status) {
-        switch (status) {
-            case CONNECTED:
-                addDeviceButton(deviceManager);
+    public void deviceStatusUpdated(final E4DeviceManager deviceManager, final E4DeviceStatusListener.Status status) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (status) {
+                    case CONNECTED:
+                        addDeviceButton(deviceManager);
 
-                if (activeDevice == null) {
-                    activeDevice = deviceManager;
-                }
-                updateLabel(stopButton, "Stop Recording");
-                isDisconnected = false;
-                dataCnt.setVisibility(View.VISIBLE);
-                statusLabel.setText("CONNECTED");
-                enableEmpatica();
-                break;
-            case CONNECTING:
-                updateLabel(stopButton, "Stop Recording");
-                isDisconnected = false;
-                statusLabel.setText("CONNECTING");
-                break;
-            case DISCONNECTED:
-                if (deviceManager != null) {
-                    Button btn = deviceButtons.remove(deviceManager.getDeviceName());
-                    deviceView.removeView(btn);
-                    if (deviceManager.equals(activeDevice)) {
-                        activeDevice = null;
-                    }
-                }
-                if (deviceButtons.isEmpty()) {
-                    emptyDevices.setVisibility(View.VISIBLE);
-                }
-                dataCnt.setVisibility(View.INVISIBLE);
-                statusLabel.setText("DISCONNECTED");
-                break;
-            case READY:
-                statusLabel.setText("Scanning...");
-                stopButton.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        if (isDisconnected) {
-                            enableEmpatica();
-                        } else {
-                            for (E4ServiceConnection mConnection : mConnections) {
-                                mConnection.disconnect();
-                            }
-                            disconnect();
-                            isDisconnected = true;
+                        if (activeDevice == null) {
+                            activeDevice = deviceManager;
                         }
+                        updateLabel(stopButton, "Stop Recording");
+                        isDisconnected = false;
+                        dataCnt.setVisibility(View.VISIBLE);
+                        statusLabel.setText("CONNECTED");
+                        enableEmpatica();
+                        break;
+                    case CONNECTING:
+                        updateLabel(stopButton, "Stop Recording");
+                        isDisconnected = false;
+                        statusLabel.setText("CONNECTING");
+                        break;
+                    case DISCONNECTED:
+                        if (deviceManager != null) {
+                            Button btn = deviceButtons.remove(deviceManager.getDeviceName());
+                            deviceView.removeView(btn);
+                            if (deviceManager.equals(activeDevice)) {
+                                activeDevice = null;
+                            }
+                        }
+                        if (deviceButtons.isEmpty()) {
+                            emptyDevices.setVisibility(View.VISIBLE);
+                        }
+                        dataCnt.setVisibility(View.INVISIBLE);
+                        statusLabel.setText("DISCONNECTED");
+                        break;
+                    case READY:
+                        statusLabel.setText("Scanning...");
+                        stopButton.setOnClickListener(new View.OnClickListener() {
+                            public void onClick(View v) {
+                                if (isDisconnected) {
+                                    enableEmpatica();
+                                } else {
+                                    for (E4ServiceConnection mConnection : mConnections) {
+                                        mConnection.disconnect();
+                                    }
+                                    disconnect();
+                                    isDisconnected = true;
+                                }
 
-                    }
-                });
-                updateLabel(stopButton, "Stop Recording");
-                isDisconnected = false;
-                stopButton.setVisibility(View.VISIBLE);
-                break;
-        }
-
+                            }
+                        });
+                        updateLabel(stopButton, "Stop Recording");
+                        isDisconnected = false;
+                        stopButton.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+        });
     }
 
     @Override
     public void deviceFailedToConnect(String name) {
         Toast.makeText(this, "Cannot connect to device " + name, Toast.LENGTH_SHORT).show();
     }
-
 
     @Override
     public void updateServerStatus(final ServerStatusListener.Status status) {
@@ -342,5 +317,36 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
                 }
             }
         });
+    }
+
+    private void checkBluetoothPermissions() {
+        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
+
+        waitingForPermission = false;
+        isDisconnected = false;
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                waitingForPermission = true;
+                break;
+            }
+        }
+        if (waitingForPermission) {
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                waitingForPermission = false;
+                enableEmpatica();
+            } else {
+                // User refused to grant permission.
+                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
+            }
+        }
     }
 }
