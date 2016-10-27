@@ -21,8 +21,8 @@ public class ThreadedKafkaSender<K, V> extends Thread implements KafkaSender<K, 
     private final static Logger logger = LoggerFactory.getLogger(ThreadedKafkaSender.class);
     private final static int RETRIES = 3;
     private final static int QUEUE_CAPACITY = 100;
-    private final static long HEARTBEAT_TIMEOUT_MILLIS = 60000L;
-    private final static long HEARTBEAT_TIMEOUT_MARGIN = 10000L;
+    private final static long HEARTBEAT_TIMEOUT_MILLIS = 60_000L;
+    private final static long HEARTBEAT_TIMEOUT_MARGIN = 10_000L;
 
     private final KafkaSender<K, V> sender;
     private long lastHeartbeat;
@@ -70,21 +70,20 @@ public class ThreadedKafkaSender<K, V> extends Thread implements KafkaSender<K, 
                 }
 
                 opsRequests.add(1);
-                boolean result;
+                boolean success;
                 if (records != null) {
                     opsSent.add(records.size());
-                    result = sendMessages(records);
-
+                    success = sendMessages(records);
                 } else {
-                    result = sendHeartbeat();
+                    success = sendHeartbeat();
                 }
 
                 synchronized (this) {
-                    if (result) {
+                    if (records == null) {
+                        lastHeartbeat = System.currentTimeMillis();
+                    }
+                    if (success) {
                         lastConnection = System.currentTimeMillis();
-                        if (records == null) {
-                            lastHeartbeat = System.currentTimeMillis();
-                        }
                     } else {
                         logger.error("Failed to send message");
                         disconnect();

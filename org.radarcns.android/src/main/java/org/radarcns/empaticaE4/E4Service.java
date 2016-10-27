@@ -13,7 +13,6 @@ import android.support.annotation.Nullable;
 
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.android.TableDataHandler;
-import org.radarcns.kafka.SchemaRegistryRetriever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +21,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class E4Service extends Service implements E4DeviceStatusListener {
@@ -262,7 +259,7 @@ public class E4Service extends Service implements E4DeviceStatusListener {
                 if (intent.hasExtra("kafka_rest_proxy_url")) {
                     String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
                     if (!kafkaUrlString.isEmpty()) {
-                        remoteSchemaRetriever = new SchemaRegistryRetriever(intent.getStringExtra("schema_registry_url"));
+                        remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
                         try {
                             kafkaUrl = new URL(kafkaUrlString);
                         } catch (MalformedURLException e) {

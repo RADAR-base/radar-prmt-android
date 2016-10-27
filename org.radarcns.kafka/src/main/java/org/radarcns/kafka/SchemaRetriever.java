@@ -8,13 +8,19 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+
 /** Retriever of an Avro Schema */
-public abstract class SchemaRetriever {
+public class SchemaRetriever {
     private final static Logger logger = LoggerFactory.getLogger(SchemaRetriever.class);
     private final ConcurrentMap<String, ParsedSchemaMetadata> cache;
+    private final CachedSchemaRegistryClient schemaClient;
 
-    public SchemaRetriever() {
+    public SchemaRetriever(String url) {
         cache = new ConcurrentHashMap<>();
+        this.schemaClient = new CachedSchemaRegistryClient(url, 1024);
     }
 
     /** The subject in the Avro Schema Registry, given a Kafka topic. */
@@ -23,7 +29,17 @@ public abstract class SchemaRetriever {
     }
 
     /** Retrieve schema metadata */
-    protected abstract ParsedSchemaMetadata retrieveSchemaMetadata(String topic, boolean ofValue) throws IOException;
+    protected ParsedSchemaMetadata retrieveSchemaMetadata(String topic, boolean ofValue) throws IOException {
+        String subject = subject(topic, ofValue);
+
+        try {
+            SchemaMetadata metadata = schemaClient.getLatestSchemaMetadata(subject);
+            Schema schema = parseSchema(metadata.getSchema());
+            return new ParsedSchemaMetadata(metadata.getId(), metadata.getVersion(), schema);
+        } catch (RestClientException ex) {
+            throw new IOException(ex);
+        }
+    }
 
     public ParsedSchemaMetadata getSchemaMetadata(String topic, boolean ofValue) throws IOException {
         ParsedSchemaMetadata value = cache.get(subject(topic, ofValue));
@@ -49,6 +65,13 @@ public abstract class SchemaRetriever {
      * This implementation only adds it to the cache.
      */
     public void addSchemaMetadata(String topic, boolean ofValue, ParsedSchemaMetadata metadata) throws IOException {
+        if (metadata.getId() == null) {
+            try {
+                metadata.setId(schemaClient.register(subject(topic, ofValue), metadata.getSchema()));
+            } catch (RestClientException ex) {
+                throw new IOException(ex);
+            }
+        }
         cache.put(subject(topic, ofValue), metadata);
     }
 
