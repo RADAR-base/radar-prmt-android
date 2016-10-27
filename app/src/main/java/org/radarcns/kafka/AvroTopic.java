@@ -50,7 +50,7 @@ public class AvroTopic {
     public Schema getValueSchema() {
         return valueSchema;
     }
-    
+
     public SpecificRecord newValueInstance() {
         if (valueClass == null) {
             valueClass = SpecificData.get().getClass(valueSchema);

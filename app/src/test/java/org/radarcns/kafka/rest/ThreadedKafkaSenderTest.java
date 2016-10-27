@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.data.SpecificRecordEncoder;
+import org.radarcns.data.StringEncoder;
 import org.radarcns.kafka.MockDevice;
 import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.SchemaRetriever;

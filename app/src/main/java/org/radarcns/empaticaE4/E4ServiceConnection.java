@@ -1,151 +1,124 @@
 package org.radarcns.empaticaE4;
 
-import android.app.Notification;
-import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.IBinder;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
+import android.os.Parcel;
+import android.os.RemoteException;
 
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.android.MeasurementTable;
+import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
+import org.radarcns.data.SpecificRecordDecoder;
+import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.LinkedList;
-import java.util.Locale;
+import java.util.List;
+
+import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
+import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
+import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_SERVICE_CLASS;
+import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
+import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 
 /**
  * Created by joris on 26/10/2016.
  */
-class E4ServiceConnection implements ServiceConnection, E4DeviceStatusListener {
+class E4ServiceConnection implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(E4ServiceConnection.class);
     private final MainActivity mainActivity;
-    private E4Service e4Service;
-    private E4DeviceManager device;
+    private E4DeviceStatusListener.Status deviceStatus;
+    public String deviceName;
+
+    private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(DEVICE_STATUS_CHANGED) && intent.getStringExtra(DEVICE_STATUS_SERVICE_CLASS).endsWith(String.valueOf(clsNumber))) {
+                if (intent.hasExtra(DEVICE_STATUS_NAME)) {
+                    deviceName = intent.getStringExtra(DEVICE_STATUS_NAME);
+                }
+                deviceStatus = E4DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
+                mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
+                if (deviceStatus == E4DeviceStatusListener.Status.DISCONNECTED) {
+                    serviceBinder = null;
+                }
+            }
+        }
+    };
     final int clsNumber;
-    private final E4Topics topics;
+    private IBinder serviceBinder;
 
     E4ServiceConnection(MainActivity mainActivity, int clsNumber) {
         this.mainActivity = mainActivity;
         this.clsNumber = clsNumber;
-        this.e4Service = null;
-        try {
-            this.topics = E4Topics.getInstance();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        this.device = null;
+        this.serviceBinder = null;
+        this.deviceName = null;
+        this.deviceStatus = E4DeviceStatusListener.Status.DISCONNECTED;
+        IntentFilter filter = new IntentFilter(DEVICE_STATUS_CHANGED);
+        mainActivity.registerReceiver(statusReceiver, filter);
     }
 
     @Override
     public void onServiceConnected(ComponentName className,
                                    IBinder service) {
+        serviceBinder = service;
+
         // We've bound to the running Service, cast the IBinder and get instance
-        E4Service.LocalBinder binder = (E4Service.LocalBinder) service;
-        e4Service = binder.getService();
-        e4Service.getDataHandler().addStatusListener(mainActivity);
-        mainActivity.updateServerStatus(e4Service.getDataHandler().getStatus());
-        e4Service.getDataHandler().checkConnection();
-        e4Service.addStatusListener(this);
-        e4Service.addStatusListener(mainActivity);
-        device = e4Service.getDevice();
-        if (device != null) {
-            deviceStatusUpdated(device, device.getStatus());
-            mainActivity.deviceStatusUpdated(device, device.getStatus());
-        } else {
-            deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
-            mainActivity.deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
+        mainActivity.serviceConnected(this);
+        try {
+            this.serviceBinder.linkToDeath(new IBinder.DeathRecipient() {
+                @Override
+                public void binderDied() {
+                    mainActivity.deviceStatusUpdated(E4ServiceConnection.this, E4DeviceStatusListener.Status.DISCONNECTED);
+                    serviceBinder = null;
+                }
+            }, 0);
+        } catch (RemoteException e) {
+            logger.error("Failed to link to death", e);
+        }
+    }
+
+    public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic topic, int limit) throws RemoteException, IOException {
+        Parcel data = Parcel.obtain();
+        data.writeString(topic.getName());
+        data.writeInt(limit);
+        Parcel reply = Parcel.obtain();
+        serviceBinder.transact(TRANSACT_GET_RECORDS, data, reply, 0);
+        AvroDecoder.AvroReader<MeasurementKey> keyDecoder = new SpecificRecordDecoder<MeasurementKey>(true).reader(topic.getKeySchema());
+        AvroDecoder.AvroReader<V> valueDecoder = new SpecificRecordDecoder<V>(true).reader(topic.getValueSchema());
+
+        int len = reply.readInt();
+        LinkedList<Record<MeasurementKey, V>> result = new LinkedList<>();
+        for (int i = 0; i < len; i++) {
+            long offset = reply.readLong();
+            MeasurementKey key = keyDecoder.decode(reply.createByteArray());
+            V value = valueDecoder.decode(reply.createByteArray());
+            result.addFirst(new Record<>(offset, key, value));
         }
 
-        Button showButton = (Button) mainActivity.findViewById(R.id.showButton);
-        showButton.setVisibility(View.VISIBLE);
-        showButton.setOnClickListener(new View.OnClickListener() {
-            final DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-            final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-            final LinkedList<Record<MeasurementKey, SpecificRecord>> reversedMeasurements = new LinkedList<>();
-            final MeasurementTable table = e4Service.getDataHandler().getCache(topics.getInterBeatIntervalTopic());
+        return result;
+    }
 
-            public void onClick(View v) {
-                reversedMeasurements.clear();
-                for (Record<MeasurementKey, SpecificRecord> measurement : table.getMeasurements(25)) {
-                    reversedMeasurements.addFirst(measurement);
-                }
+    public E4DeviceStatus getDeviceData() throws RemoteException {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        serviceBinder.transact(TRANSACT_GET_DEVICE_STATUS, data, reply, 0);
 
-                if (!reversedMeasurements.isEmpty()) {
-                    StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                    for (Record<MeasurementKey, SpecificRecord> measurement : reversedMeasurements) {
-                        EmpaticaE4InterBeatInterval ibi = (EmpaticaE4InterBeatInterval) measurement.value;
-                        sb.append(timeFormat.format(1000d * ibi.getTime()));
-                        sb.append(": ");
-                        sb.append(singleDecimal.format(60d / ibi.getInterBeatInterval()));
-                        sb.append('\n');
-                    }
-                    String view = sb.toString();
-                    Toast.makeText(mainActivity, view, Toast.LENGTH_LONG).show();
-                    logger.info("Data:\n{}", view);
-                } else {
-                    Toast.makeText(mainActivity, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        return E4DeviceStatus.CREATOR.createFromParcel(reply);
     }
 
     @Override
     public void onServiceDisconnected(ComponentName className) {
-        e4Service = null;
+        serviceBinder = null;
     }
-
-    @Override
-    public void deviceStatusUpdated(final E4DeviceManager deviceManager, final E4DeviceStatusListener.Status status) {
-        switch (status) {
-            case CONNECTED:
-                Intent notificationIntent = new Intent(mainActivity.getApplicationContext(), MainActivity.class);
-                PendingIntent pendingIntent = PendingIntent.getActivity(mainActivity.getApplicationContext(), 0, notificationIntent, 0);
-
-                Notification.Builder notificationBuilder = new Notification.Builder(mainActivity.getApplicationContext());
-                Bitmap largeIcon = BitmapFactory.decodeResource(mainActivity.getResources(),
-                        R.mipmap.ic_launcher);
-                notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
-                notificationBuilder.setLargeIcon(largeIcon);
-                notificationBuilder.setTicker(mainActivity.getText(R.string.service_notification_ticker));
-                notificationBuilder.setWhen(System.currentTimeMillis());
-                notificationBuilder.setContentIntent(pendingIntent);
-                notificationBuilder.setContentText(mainActivity.getText(R.string.service_notification_text));
-                notificationBuilder.setContentTitle(mainActivity.getText(R.string.service_notification_title));
-                Notification notification = notificationBuilder.build();
-
-                e4Service.startBackgroundListener(notification);
-                device = deviceManager;
-                break;
-            case DISCONNECTED:
-                device = e4Service.getDevice();
-                e4Service.stopBackgroundListener();
-                break;
-        }
-    }
-
-    void disconnect() {
-        if (e4Service.isRecording()) {
-            e4Service.disconnect();
-        }
-    }
-
-    @Override
-    public void deviceFailedToConnect(String name) {
-    }
-
 
     Class<? extends E4Service> serviceClass() {
         switch (clsNumber) {
@@ -163,13 +136,14 @@ class E4ServiceConnection implements ServiceConnection, E4DeviceStatusListener {
     }
 
     public boolean hasService() {
-        return e4Service != null;
+        return serviceBinder != null;
     }
 
     public void close() {
-        e4Service.getDataHandler().removeStatusListener(mainActivity);
-        e4Service.removeStatusListener(mainActivity);
-        e4Service.removeStatusListener(this);
-        e4Service = null;
+        mainActivity.unregisterReceiver(statusReceiver);
+    }
+
+    public String getDeviceName() {
+        return deviceName;
     }
 }

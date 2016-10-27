@@ -1,4 +1,4 @@
-package org.radarcns.kafka.rest;
+package org.radarcns.data;
 
 import org.apache.avro.Schema;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -18,7 +18,7 @@ public class StringEncoder implements AvroEncoder<String>, AvroEncoder.AvroWrite
     }
 
     @Override
-    public String encode(String object) throws IOException {
-        return jsonEncoder.writeValueAsString(object);
+    public byte[] encode(String object) throws IOException {
+        return jsonEncoder.writeValueAsBytes(object);
     }
 }

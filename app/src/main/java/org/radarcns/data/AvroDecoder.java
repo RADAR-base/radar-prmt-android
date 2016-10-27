@@ -1,16 +1,16 @@
-package org.radarcns.kafka.rest;
+package org.radarcns.data;
 
 import org.apache.avro.Schema;
 
 import java.io.IOException;
 
 /** Encode Avro values with a given encoder */
-interface AvroEncoder<T> {
+public interface AvroDecoder<T> {
     /** Create a new writer. This method is thread-safe */
-    AvroWriter<T> writer(Schema schema) throws IOException;
+    AvroReader<T> reader(Schema schema) throws IOException;
 
-    interface AvroWriter<T> {
+    interface AvroReader<T> {
         /** Encode an object to String. This method is not thread-safe. */
-        String encode(T object) throws IOException;
+        T decode(byte[] object) throws IOException;
     }
 }

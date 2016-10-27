@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import org.apache.avro.Schema;
+import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.RecordList;
 import org.radarcns.kafka.AvroTopic;
@@ -104,9 +105,9 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
                     for (Record<K, V> record : records) {
                         writer.writeStartObject();
                         writer.writeFieldName("key");
-                        writer.writeRawValue(keyWriter.encode(record.key));
+                        writer.writeRawValue(new String(keyWriter.encode(record.key)));
                         writer.writeFieldName("value");
-                        writer.writeRawValue(valueWriter.encode(record.value));
+                        writer.writeRawValue(new String(valueWriter.encode(record.value)));
                         writer.writeEndObject();
                     }
                     writer.writeEndArray();

@@ -329,7 +329,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
      * Use in a try-with-resources statement.
      * @return Iterator with column-name to value map.
      */
-    public Iterable<Record<MeasurementKey, SpecificRecord>> getMeasurements(int limit) {
+    public List<Record<MeasurementKey, SpecificRecord>> getMeasurements(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql = "SELECT * FROM " + topic.getName() + " ORDER BY offset DESC LIMIT " + limit;
         try (Cursor cursor = db.rawQuery(sql, null)) {

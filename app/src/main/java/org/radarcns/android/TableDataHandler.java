@@ -12,7 +12,7 @@ import org.radarcns.key.MeasurementKey;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.RestSender;
 import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.kafka.rest.SpecificRecordEncoder;
+import org.radarcns.data.SpecificRecordEncoder;
 
 import java.io.IOException;
 import java.net.URL;

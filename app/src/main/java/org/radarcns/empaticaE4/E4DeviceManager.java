@@ -42,17 +42,12 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     private final MeasurementTable temperatureTable;
     private final AvroTopic batteryTopic;
 
-    private float latestBloodVolumePulse = Float.NaN;
-    private float latestBatteryLevel = Float.NaN;
-    private float latestElectroDermalActivity = Float.NaN;
-    private float[] latestAcceleration = {Float.NaN, Float.NaN, Float.NaN};
-    private float latestInterBeatInterval = Float.NaN;
-    private float latestTemperature = Float.NaN;
+    private final E4DeviceStatus deviceStatus;
+
     private EmpaDeviceManager deviceManager;
     private String deviceName;
     private boolean isScanning;
     private boolean isDisconnected;
-    private E4DeviceStatusListener.Status status;
 
     public E4DeviceManager(Context context, E4DeviceStatusListener e4Service, String apiKey, String groupId, TableDataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
@@ -74,6 +69,8 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
         this.isDisconnected = false;
         this.isScanning = false;
+
+        this.deviceStatus = new E4DeviceStatus();
     }
 
     void start() {
@@ -204,9 +201,8 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
 
     @Override
     public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
-        latestAcceleration[0] = x / 64f;
-        latestAcceleration[1] = y / 64f;
-        latestAcceleration[2] = z / 64f;
+        deviceStatus.setAcceleration(x / 64f, y / 64f, z / 64f);
+        float[] latestAcceleration = deviceStatus.getAcceleration();
         SpecificRecord value = new EmpaticaE4Acceleration(
                 timestamp, System.currentTimeMillis() / 1000d,
                 latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
@@ -216,61 +212,37 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
 
     @Override
     public void didReceiveBVP(float bvp, double timestamp) {
-        latestBloodVolumePulse = bvp;
+        deviceStatus.setBloodVolumePulse(bvp);
         SpecificRecord value = new EmpaticaE4BloodVolumePulse(timestamp, System.currentTimeMillis() / 1000d, bvp);
         dataHandler.addMeasurement(bvpTable, deviceId, value);
     }
 
     @Override
     public void didReceiveBatteryLevel(float battery, double timestamp) {
-        latestBatteryLevel = battery;
+        deviceStatus.setBatteryLevel(battery);
         SpecificRecord value = new EmpaticaE4BatteryLevel(timestamp, System.currentTimeMillis() / 1000d, battery);
         dataHandler.trySend(batteryTopic, 0L, deviceId, value);
     }
 
     @Override
     public void didReceiveGSR(float gsr, double timestamp) {
-        latestElectroDermalActivity = gsr;
+        deviceStatus.setElectroDermalActivity(gsr);
         SpecificRecord value = new EmpaticaE4ElectroDermalActivity(timestamp, System.currentTimeMillis() / 1000d, gsr);
         dataHandler.addMeasurement(edaTable, deviceId, value);
     }
 
     @Override
     public void didReceiveIBI(float ibi, double timestamp) {
-        latestInterBeatInterval = ibi;
+        deviceStatus.setInterBeatInterval(ibi);
         SpecificRecord value = new EmpaticaE4InterBeatInterval(timestamp, System.currentTimeMillis() / 1000d, ibi);
         dataHandler.addMeasurement(ibiTable, deviceId, value);
     }
 
     @Override
     public void didReceiveTemperature(float temperature, double timestamp) {
-        latestTemperature = temperature;
+        deviceStatus.setTemperature(temperature);
         SpecificRecord value = new EmpaticaE4Temperature(timestamp, System.currentTimeMillis() / 1000d, temperature);
         dataHandler.addMeasurement(temperatureTable, deviceId, value);
-    }
-
-    float getLatestBloodVolumePulse() {
-        return latestBloodVolumePulse;
-    }
-
-    float getLatestBatteryLevel() {
-        return latestBatteryLevel;
-    }
-
-    float getLatestElectroDermalActivity() {
-        return latestElectroDermalActivity;
-    }
-
-    float getLatestInterBeatInterval() {
-        return latestInterBeatInterval;
-    }
-
-    float getLatestTemperature() {
-        return latestTemperature;
-    }
-
-    float[] getLatestAcceleration() {
-        return this.latestAcceleration;
     }
 
     String getDeviceName() {
@@ -285,11 +257,11 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate {
     }
 
     private synchronized void updateStatus(E4DeviceStatusListener.Status status) {
-        this.status = status;
+        this.deviceStatus.setStatus(status);
         this.e4service.deviceStatusUpdated(this, status);
     }
 
-    public synchronized E4DeviceStatusListener.Status getStatus() {
-        return status;
+    public E4DeviceStatus getStatus() {
+        return deviceStatus;
     }
 }
