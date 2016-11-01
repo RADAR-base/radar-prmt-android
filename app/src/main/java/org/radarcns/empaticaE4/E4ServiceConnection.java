@@ -11,8 +11,8 @@ import android.os.Parcel;
 import android.os.RemoteException;
 
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.data.AvroDecoder;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.kafka.AvroTopic;
@@ -88,14 +88,14 @@ class E4ServiceConnection implements ServiceConnection {
         }
     }
 
-    public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic topic, int limit) throws RemoteException, IOException {
+    public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic<MeasurementKey, V> topic, int limit) throws RemoteException, IOException {
         Parcel data = Parcel.obtain();
         data.writeString(topic.getName());
         data.writeInt(limit);
         Parcel reply = Parcel.obtain();
         serviceBinder.transact(TRANSACT_GET_RECORDS, data, reply, 0);
-        AvroDecoder.AvroReader<MeasurementKey> keyDecoder = new SpecificRecordDecoder<MeasurementKey>(true).reader(topic.getKeySchema());
-        AvroDecoder.AvroReader<V> valueDecoder = new SpecificRecordDecoder<V>(true).reader(topic.getValueSchema());
+        AvroDecoder.AvroReader<MeasurementKey> keyDecoder = new SpecificRecordDecoder(true).reader(topic.getKeySchema(), MeasurementKey.class);
+        AvroDecoder.AvroReader<V> valueDecoder = new SpecificRecordDecoder(true).reader(topic.getValueSchema(), topic.getValueClass());
 
         int len = reply.readInt();
         LinkedList<Record<MeasurementKey, V>> result = new LinkedList<>();
