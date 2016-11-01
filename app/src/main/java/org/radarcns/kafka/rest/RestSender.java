@@ -33,15 +33,15 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     private final static Logger logger = LoggerFactory.getLogger(RestSender.class);
     private final SchemaRetriever schemaRetriever;
     private final URL kafkaUrl;
-    private final AvroEncoder<? super K> keyEncoder;
-    private final AvroEncoder<? super V> valueEncoder;
+    private final AvroEncoder keyEncoder;
+    private final AvroEncoder valueEncoder;
     private final JsonFactory jsonFactory;
     private final OkHttpClient httpClient;
     public final static String KAFKA_REST_ACCEPT_ENCODING = "application/vnd.kafka.v1+json, application/vnd.kafka+json, application/json";
     public final static MediaType KAFKA_REST_AVRO_ENCODING = MediaType.parse("application/vnd.kafka.avro.v1+json; charset=utf-8");
     private final Request isConnectedRequest;
 
-    public RestSender(URL kafkaUrl, SchemaRetriever schemaRetriever, AvroEncoder<? super K> keyEncoder, AvroEncoder<? super V> valueEncoder) {
+    public RestSender(URL kafkaUrl, SchemaRetriever schemaRetriever, AvroEncoder keyEncoder, AvroEncoder valueEncoder) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         this.keyEncoder = keyEncoder;
@@ -51,13 +51,13 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         isConnectedRequest = new Request.Builder().url(kafkaUrl).head().build();
     }
 
-    class RestTopicSender implements KafkaTopicSender<K, V> {
+    class RestTopicSender<L extends K, W extends V> implements KafkaTopicSender<L, W> {
         long lastOffsetSent = -1L;
-        final AvroTopic topic;
+        final AvroTopic<L, W> topic;
         final Request request;
         final TopicRequestBody requestBody;
 
-        RestTopicSender(AvroTopic topic) throws IOException {
+        RestTopicSender(AvroTopic<L, W> topic) throws IOException {
             this.topic = topic;
             URL rawUrl = new URL(kafkaUrl, "topics/" + topic.getName());
             HttpUrl url = HttpUrl.get(rawUrl);
@@ -74,8 +74,8 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         }
 
         @Override
-        public void send(long offset, K key, V value) throws IOException {
-            List<Record<K, V>> records = new ArrayList<>(1);
+        public void send(long offset, L key, W value) throws IOException {
+            List<Record<L, W>> records = new ArrayList<>(1);
             records.add(new Record<>(offset, key, value));
             send(records);
         }
@@ -86,7 +86,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
          * @throws IOException if records could not be sent
          */
         @Override
-        public void send(List<Record<K, V>> records) throws IOException {
+        public void send(List<Record<L, W>> records) throws IOException {
             if (records.isEmpty()) {
                 return;
             }
@@ -141,14 +141,14 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         class TopicRequestBody extends RequestBody {
             Integer keySchemaId, valueSchemaId;
             String keySchemaString, valueSchemaString;
-            final AvroEncoder.AvroWriter<? super K> keyWriter;
-            final AvroEncoder.AvroWriter<? super V> valueWriter;
+            final AvroEncoder.AvroWriter<L> keyWriter;
+            final AvroEncoder.AvroWriter<W> valueWriter;
 
-            List<Record<K, V>> records;
+            List<Record<L, W>> records;
 
             TopicRequestBody() throws IOException {
-                keyWriter = keyEncoder.writer(topic.getKeySchema());
-                valueWriter = valueEncoder.writer(topic.getValueSchema());
+                keyWriter = keyEncoder.writer(topic.getKeySchema(), topic.getKeyClass());
+                valueWriter = valueEncoder.writer(topic.getValueSchema(), topic.getValueClass());
             }
 
             @Override
@@ -174,7 +174,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
 
                     writer.writeArrayFieldStart("records");
 
-                    for (Record<K, V> record : records) {
+                    for (Record<L, W> record : records) {
                         writer.writeStartObject();
                         writer.writeFieldName("key");
                         writer.writeRawValue(new String(keyWriter.encode(record.key)));
@@ -191,8 +191,8 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     }
 
     @Override
-    public KafkaTopicSender<K, V> sender(AvroTopic topic) throws IOException {
-        return new RestTopicSender(topic);
+    public <L extends K, W extends V> KafkaTopicSender<L, W> sender(AvroTopic<L, W> topic) throws IOException {
+        return new RestTopicSender<>(topic);
     }
 
     @Override

@@ -3,9 +3,9 @@ package org.radarcns.kafka.rest;
 import android.support.annotation.NonNull;
 
 import org.radarcns.data.Record;
+import org.radarcns.data.RecordList;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaSender;
-import org.radarcns.data.RecordList;
 import org.radarcns.kafka.KafkaTopicSender;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -40,11 +38,9 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
     private final ScheduledExecutorService executor;
     private final RollingTimeAverage opsSent;
     private final RollingTimeAverage opsRequests;
-    private long lastHeartbeat;
     private final Queue<RecordList<K, V>> recordQueue;
     private long lastConnection;
     private boolean wasDisconnected;
-    private boolean isSending;
 
     /**
      * Create a REST producer that caches some values
@@ -55,9 +51,7 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
         this.sender = sender;
         this.recordQueue = new ArrayDeque<>(QUEUE_CAPACITY);
         this.wasDisconnected = true;
-        this.lastHeartbeat = 0L;
         this.lastConnection = 0L;
-        this.isSending = false;
         this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(@NonNull Runnable r) {
@@ -73,7 +67,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
                 opsRequests.add(1);
 
                 boolean success = sendHeartbeat();
-                lastHeartbeat = System.currentTimeMillis();
                 if (success) {
                     lastConnection = System.currentTimeMillis();
                 } else {
@@ -88,71 +81,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
                 }
             }
         }, 0L, HEARTBEAT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Actually make REST requests.
-     *
-     * The offsets of the sent messages are added to a
-     */
-    public void run() {
-        Map<AvroTopic<K, V>, KafkaTopicSender<K, V>> topicSenders = new HashMap<>();
-        try {
-            resetConnection();
-            while (true) {
-                RecordList<K, V> records;
-
-                synchronized (this) {
-                    long nextHeartbeatEvent = Math.max(lastConnection, lastHeartbeat) + HEARTBEAT_TIMEOUT_MILLIS;
-                    long now = System.currentTimeMillis();
-                    while (this.recordQueue.isEmpty() && nextHeartbeatEvent > now) {
-                        wait(nextHeartbeatEvent - now);
-                        now = System.currentTimeMillis();
-                    }
-                    records = this.recordQueue.poll();
-                    isSending = records != null;
-                }
-
-                opsRequests.add(1);
-                boolean success;
-                if (records != null) {
-                    opsSent.add(records.size());
-                    success = sendMessages(records, topicSenders);
-                } else {
-                    success = sendHeartbeat();
-                }
-
-                synchronized (this) {
-                    if (records == null) {
-                        lastHeartbeat = System.currentTimeMillis();
-                    }
-                    if (success) {
-                        lastConnection = System.currentTimeMillis();
-                    } else {
-                        logger.error("Failed to send message");
-                        disconnect();
-                    }
-                    isSending = false;
-                    notifyAll();
-                }
-
-                if (opsSent.hasAverage() && opsRequests.hasAverage()) {
-                    logger.info("Sending {} messages in {} requests per second",
-                            (int) Math.round(opsSent.getAverage()),
-                            (int) Math.round(opsRequests.getAverage()));
-                }
-            }
-        } catch (InterruptedException e) {
-            // exit loop and reset interrupt status
-            Thread.currentThread().interrupt();
-        }
-        for (KafkaTopicSender<K, V> topicSender : topicSenders.values()) {
-            try {
-                topicSender.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private class ThreadedTopicSender<L extends K, W extends V> implements KafkaTopicSender<L, W>, Runnable {
@@ -187,7 +115,7 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
             if (!isConnected()) {
                 throw new IOException("Producer is not connected");
             }
-            synchronized (topicQueue) {
+            synchronized (this) {
                 topicQueue.add(records);
                 if (topicFuture == null) {
                     topicFuture = executor.submit(this);
@@ -199,7 +127,12 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
         }
 
         @Override
-        public synchronized void clear() {
+        public void clear() {
+            synchronized (this) {
+                topicFuture.cancel(false);
+                topicFuture = null;
+                topicQueue.clear();
+            }
             topicSender.clear();
         }
 
@@ -210,31 +143,33 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
         }
 
         @Override
-        public synchronized void flush() throws IOException {
-            try {
-                if (!isConnected()) {
-                    throw new IOException("Not connected.");
+        public void flush() throws IOException {
+            Future<?> localFuture = null;
+            synchronized (this) {
+                if (topicFuture != null) {
+                    localFuture = topicFuture;
                 }
-                while (!this.isInterrupted() && (isSending || !this.recordQueue.isEmpty())) {
-                    wait();
-                }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                throw new IOException(ex);
-            } finally {
-                topicSender.flush();
             }
+            if (localFuture != null) {
+                try {
+                    localFuture.wait();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            topicSender.flush();
         }
 
         @Override
         public void close() throws IOException {
+            flush();
             topicSender.close();
         }
 
         @Override
         public void run() {
             List<List<Record<L, W>>> localQueue;
-            synchronized (topicQueue) {
+            synchronized (this) {
                 localQueue = new ArrayList<>(topicQueue);
                 topicQueue.clear();
                 topicFuture = null;
@@ -256,14 +191,15 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
                 }
 
                 if (exception == null) {
-                    lastConnection = System.currentTimeMillis();
+                    synchronized (ThreadedKafkaSender.this) {
+                        lastConnection = System.currentTimeMillis();
+                    }
                 } else {
                     logger.error("Failed to send message");
                     disconnect();
                     break;
                 }
             }
-            isSending = false;
         }
     }
 
@@ -302,7 +238,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
             return true;
         } else if (sender.isConnected()) {
             synchronized (this) {
-                lastHeartbeat = System.currentTimeMillis();
                 lastConnection = System.currentTimeMillis();
                 this.wasDisconnected = false;
                 return true;
@@ -310,7 +245,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
         }
         return false;
     }
-
 
     @Override
     public <L extends K, W extends V> KafkaTopicSender<L, W> sender(AvroTopic<L, W> topic) throws IOException {
