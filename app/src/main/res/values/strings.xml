@@ -18,4 +18,14 @@
     <string name="reconnect_to_server">Reconnect to server</string>
     <string name="no_devices_connected">No devices connected</string>
     <string name="active_device">Device</string>
+
+    <!--Overview activity-->
+    <string name="button_connect">Connect</string>
+    <string name="button_details">Details</string>
+    <string name="header_battery">Battery</string>
+    <string name="header_status">Status</string>
+    <string name="header_device">Device</string>
+    <string name="header_temp">Temperature</string>
+    <string name="header_connect">*</string>
+
 </resources>

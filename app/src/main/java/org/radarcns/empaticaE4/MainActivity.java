@@ -23,6 +23,7 @@ import android.widget.Toast;
 import com.empatica.empalink.config.EmpaSensorStatus;
 import com.empatica.empalink.config.EmpaSensorType;
 
+import org.radarcns.R;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;

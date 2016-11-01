@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:stretchColumns="4">
+
+        <TableRow>
+            <TextView
+                style="@style/Header"
+                android:text="@string/header_device" />
+
+            <TextView
+                style="@style/Header"
+                android:text="@string/header_status" />
+
+            <TextView
+                style="@style/Header"
+                android:text="@string/header_battery" />
+
+            <TextView
+                style="@style/Header"
+                android:text="@string/header_temp" />
+
+            <TextView
+                style="@style/Header"
+                android:text="@string/header_connect" />
+
+            <TextView
+                style="@style/Header"
+                android:text="@string/header_connect" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/row1">
+
+            <TextView
+                android:id="@+id/deviceNameRow1"
+                style="@style/DeviceNameColumn"
+                android:text="Empatica E4 - 1" />
+
+            <View
+                android:id="@+id/statusRow1"
+                style="@style/StatusCircle"
+                android:background="@drawable/status_disconnected"/>
+
+            <TextView
+                android:id="@+id/batteryRow1"
+                style="@style/NumberColumn"
+                android:text="88.8%" />
+
+            <TextView
+                android:id="@+id/temperatureRow1"
+                style="@style/NumberColumn"
+                android:text="33.3 \u2103" />
+
+            <Button
+                android:id="@+id/refreshButtonRow1"
+                style="@style/ButtonColumn"
+                android:text="@string/button_connect"
+                android:onClick="" />
+
+            <Button
+                android:id="@+id/detailsButtonRow1"
+                style="@style/ButtonColumn"
+                android:text="@string/button_details"
+                android:onClick="sendMessage" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/row2">
+
+            <TextView
+                android:id="@+id/deviceNameRow2"
+                style="@style/DeviceNameColumn"
+                android:text="Empatica E4 - 2" />
+
+            <View
+                android:id="@+id/statusRow2"
+                style="@style/StatusCircle"
+                android:background="@drawable/status_connected" />
+
+            <TextView
+                android:id="@+id/batteryRow2"
+                style="@style/NumberColumn"
+                android:text="77.7%" />
+
+            <TextView
+                android:id="@+id/temperatureRow2"
+                style="@style/NumberColumn"
+                android:text="22.2 \u2103" />
+
+            <Button
+                android:id="@+id/refreshButtonRow2"
+                style="@style/ButtonColumn"
+                android:text="@string/button_connect"
+                android:onClick="" />
+
+            <Button
+                android:id="@+id/detailsButtonRow2"
+                style="@style/ButtonColumn"
+                android:text="@string/button_details"
+                android:onClick="sendMessage" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/row3">
+
+            <TextView
+                android:id="@+id/deviceNameRow3"
+                style="@style/DeviceNameColumn"
+                android:text="Angel Sensor" />
+
+            <View
+                android:id="@+id/statusRow3"
+                style="@style/StatusCircle"
+                android:background="@drawable/status_searching" />
+
+            <TextView
+                android:id="@+id/batteryRow3"
+                style="@style/NumberColumn"
+                android:text="55.5%" />
+
+            <TextView
+                android:id="@+id/temperatureRow3"
+                style="@style/NumberColumn"
+                android:text="-11.1 \u2103" />
+
+            <Button
+                android:id="@+id/refreshButtonRow3"
+                style="@style/ButtonColumn"
+                android:text="@string/button_connect"
+                android:onClick="" />
+
+            <Button
+                android:id="@+id/detailsButtonRow3"
+                style="@style/ButtonColumn"
+                android:text="@string/button_details"
+                android:onClick="sendMessage" />
+
+        </TableRow>
+    </TableLayout>
+
+
+</ScrollView>
