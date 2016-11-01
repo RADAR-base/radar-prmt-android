@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.data.StringEncoder;
 import org.radarcns.kafka.MockDevice;
@@ -25,12 +26,14 @@ public class ThreadedKafkaSenderTest extends TestCase {
         MockDevice[] threads = new MockDevice[numberOfDevices];
 
         SchemaRetriever schemaRetriever = new SchemaRetriever("http://radar-test.thehyve.net:8081");
+        URL kafkaURL = new URL("http://radar-test.thehyve.net:8082");
+        AvroEncoder<String> keyEncoder = new StringEncoder();
+        AvroEncoder<SpecificRecord> valueEncoder = new SpecificRecordEncoder<>(false);
 
-        KafkaSender<String, SpecificRecord> directSender = new RestSender<>(new URL("http://radar-test.thehyve.net:8082"), schemaRetriever, new StringEncoder(), new SpecificRecordEncoder());
+        KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
         KafkaSender<String, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);
 
         try (KafkaSender<String, SpecificRecord> sender = new BatchedKafkaSender<>(kafkaThread, 1000, 250)) {
-            sender.configure(null);
             Schema stringSchema = Schema.create(Schema.Type.STRING);
             for (int i = 0; i < numberOfDevices; i++) {
                 threads[i] = new MockDevice<>(sender, "device" + i, stringSchema);

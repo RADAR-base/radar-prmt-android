@@ -10,7 +10,7 @@ import org.apache.avro.specific.SpecificRecord;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class SpecificRecordEncoder<T extends SpecificRecord> implements AvroEncoder<T> {
+public class SpecificRecordEncoder implements AvroEncoder {
     private final EncoderFactory encoderFactory;
     private final boolean binary;
 
@@ -20,11 +20,14 @@ public class SpecificRecordEncoder<T extends SpecificRecord> implements AvroEnco
     }
 
     @Override
-    public AvroWriter<T> writer(Schema schema) throws IOException {
-        return new AvroRecordWriter(encoderFactory, schema, new SpecificDatumWriter<T>(schema));
+    public <T> AvroWriter<T> writer(Schema schema, Class<T> clazz) throws IOException {
+        if (!SpecificRecord.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Can only create readers for SpecificRecords.");
+        }
+        return new AvroRecordWriter<>(encoderFactory, schema, new SpecificDatumWriter<T>(schema));
     }
 
-    class AvroRecordWriter implements AvroEncoder.AvroWriter<T> {
+    class AvroRecordWriter<T> implements AvroEncoder.AvroWriter<T> {
         final Encoder encoder;
         final ByteArrayOutputStream out;
         private final DatumWriter<T> writer;

@@ -30,7 +30,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     private final URL kafkaUrl;
     private final SchemaRetriever schemaRetriever;
     private final ThreadFactory threadFactory;
-    private final Map<AvroTopic, MeasurementTable> tables;
+    private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> tables;
     private final Collection<ServerStatusListener> statusListeners;
     private ServerStatusListener.Status status;
 
@@ -39,12 +39,13 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
-    public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic... topics) {
+    @SafeVarargs
+    public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         tables = new HashMap<>(topics.length * 2);
-        for (AvroTopic topic : topics) {
-            tables.put(topic, new MeasurementTable(context, topic, dbAgeMillis));
+        for (AvroTopic<MeasurementKey, ? extends SpecificRecord> topic : topics) {
+            tables.put(topic, new MeasurementTable<>(context, topic, dbAgeMillis));
         }
         dataRetention = dataRetentionMillis;
 
@@ -55,7 +56,11 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         } else {
             this.threadFactory = null;
         }
-        updateServerStatus(ServerStatusListener.Status.READY);
+        if (kafkaUrl != null) {
+            updateServerStatus(Status.READY);
+        } else {
+            updateServerStatus(Status.DISABLED);
+        }
     }
 
     /**
@@ -67,9 +72,9 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         if (isStarted()) {
             throw new IllegalStateException("Cannot start submitter, it is already started");
         }
-        if (kafkaUrl != null) {
-            updateServerStatus(ServerStatusListener.Status.CONNECTING);
-            KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(), new SpecificRecordEncoder());
+        if (status != Status.DISABLED) {
+            updateServerStatus(Status.CONNECTING);
+            KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false));
             this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
         }
     }
@@ -86,6 +91,9 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         if (submitter != null) {
             this.submitter.close();
             this.submitter = null;
+        }
+        if (status != Status.DISABLED) {
+            updateServerStatus(Status.READY);
         }
     }
 
@@ -105,7 +113,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             }
         }
         clean();
-        for (DataCache<MeasurementKey, SpecificRecord> table : tables.values()) {
+        for (DataCache<MeasurementKey, ? extends SpecificRecord> table : tables.values()) {
             table.close();
         }
     }
@@ -113,7 +121,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     @Override
     public void clean() {
         long timestamp = (System.currentTimeMillis() - dataRetention);
-        for (DataCache<MeasurementKey, SpecificRecord> table : tables.values()) {
+        for (DataCache<MeasurementKey, ? extends SpecificRecord> table : tables.values()) {
             table.removeBeforeTimestamp(timestamp);
         }
     }
@@ -129,6 +137,9 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * {@link #addStatusListener(ServerStatusListener)}.
      */
     public void checkConnection() {
+        if (status == Status.DISABLED) {
+            return;
+        }
         if (submitter == null) {
             start();
         }
@@ -140,17 +151,18 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     /**
      * Get the table of a given topic
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public MeasurementTable getCache(AvroTopic topic) {
-        return this.tables.get(topic);
+    public <V extends SpecificRecord> MeasurementTable<V> getCache(AvroTopic<MeasurementKey, V> topic) {
+        return (MeasurementTable<V>)this.tables.get(topic);
     }
 
     @Override
-    public void addMeasurement(DataCache<MeasurementKey, SpecificRecord> table, MeasurementKey key, SpecificRecord value) {
+    public <V extends SpecificRecord> void addMeasurement(DataCache<MeasurementKey, V> table, MeasurementKey key, V value) {
         table.addMeasurement(key, value);
     }
 
-    public Map<AvroTopic, MeasurementTable> getCaches() {
+    public Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> getCaches() {
         return tables;
     }
 

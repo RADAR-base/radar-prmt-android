@@ -1,18 +1,17 @@
 package org.radarcns.empaticaE4;
 
+import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
-import java.io.IOException;
-
 /** Topic manager for topics concerning the Empatica E4. */
 public class E4Topics {
-    private final AvroTopic accelerationTopic;
-    private final AvroTopic batteryLevelTopic;
-    private final AvroTopic bloodVolumePulseTopic;
-    private final AvroTopic electroDermalActivityTopic;
-    private final AvroTopic interBeatIntervalTopic;
-    private final AvroTopic temperatureTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4Acceleration> accelerationTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4BatteryLevel> batteryLevelTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4BloodVolumePulse> bloodVolumePulseTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4ElectroDermalActivity> electroDermalActivityTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> interBeatIntervalTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4Temperature> temperatureTopic;
 
     private final static Object syncObject = new Object();
     private static E4Topics instance = null;
@@ -27,15 +26,15 @@ public class E4Topics {
     }
 
     private E4Topics() {
-        accelerationTopic = new AvroTopic("empatica_e4_acceleration", MeasurementKey.getClassSchema(), EmpaticaE4Acceleration.getClassSchema());
-        batteryLevelTopic = new AvroTopic("empatica_e4_battery_level", MeasurementKey.getClassSchema(), EmpaticaE4BatteryLevel.getClassSchema());
-        bloodVolumePulseTopic = new AvroTopic("empatica_e4_blood_volume_pulse", MeasurementKey.getClassSchema(), EmpaticaE4BloodVolumePulse.getClassSchema());
-        electroDermalActivityTopic = new AvroTopic("empatica_e4_electrodermal_activity", MeasurementKey.getClassSchema(), EmpaticaE4ElectroDermalActivity.getClassSchema());
-        interBeatIntervalTopic = new AvroTopic("empatica_e4_inter_beat_interval", MeasurementKey.getClassSchema(), EmpaticaE4InterBeatInterval.getClassSchema());
-        temperatureTopic = new AvroTopic("empatica_e4_temperature", MeasurementKey.getClassSchema(), EmpaticaE4Temperature.getClassSchema());
+        accelerationTopic = new AvroTopic<>("empatica_e4_acceleration", MeasurementKey.getClassSchema(), EmpaticaE4Acceleration.getClassSchema(), MeasurementKey.class, EmpaticaE4Acceleration.class);
+        batteryLevelTopic = new AvroTopic<>("empatica_e4_battery_level", MeasurementKey.getClassSchema(), EmpaticaE4BatteryLevel.getClassSchema(), MeasurementKey.class, EmpaticaE4BatteryLevel.class);
+        bloodVolumePulseTopic = new AvroTopic<>("empatica_e4_blood_volume_pulse", MeasurementKey.getClassSchema(), EmpaticaE4BloodVolumePulse.getClassSchema(), MeasurementKey.class, EmpaticaE4BloodVolumePulse.class);
+        electroDermalActivityTopic = new AvroTopic<>("empatica_e4_electrodermal_activity", MeasurementKey.getClassSchema(), EmpaticaE4ElectroDermalActivity.getClassSchema(), MeasurementKey.class, EmpaticaE4ElectroDermalActivity.class);
+        interBeatIntervalTopic = new AvroTopic<>("empatica_e4_inter_beat_interval", MeasurementKey.getClassSchema(), EmpaticaE4InterBeatInterval.getClassSchema(), MeasurementKey.class, EmpaticaE4InterBeatInterval.class);
+        temperatureTopic = new AvroTopic<>("empatica_e4_temperature", MeasurementKey.getClassSchema(), EmpaticaE4Temperature.getClassSchema(), MeasurementKey.class, EmpaticaE4Temperature.class);
     }
 
-    public AvroTopic getTopic(String name) {
+    public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
         switch (name) {
             case "empatica_e4_acceleration":
                 return accelerationTopic;
@@ -54,27 +53,27 @@ public class E4Topics {
         }
     }
 
-    public AvroTopic getAccelerationTopic() {
+    public AvroTopic<MeasurementKey, EmpaticaE4Acceleration> getAccelerationTopic() {
         return accelerationTopic;
     }
 
-    public AvroTopic getBatteryLevelTopic() {
+    public AvroTopic<MeasurementKey, EmpaticaE4BatteryLevel> getBatteryLevelTopic() {
         return batteryLevelTopic;
     }
 
-    public AvroTopic getBloodVolumePulseTopic() {
+    public AvroTopic<MeasurementKey, EmpaticaE4BloodVolumePulse> getBloodVolumePulseTopic() {
         return bloodVolumePulseTopic;
     }
 
-    public AvroTopic getElectroDermalActivityTopic() {
+    public AvroTopic<MeasurementKey, EmpaticaE4ElectroDermalActivity> getElectroDermalActivityTopic() {
         return electroDermalActivityTopic;
     }
 
-    public AvroTopic getInterBeatIntervalTopic() {
+    public AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> getInterBeatIntervalTopic() {
         return interBeatIntervalTopic;
     }
 
-    public AvroTopic getTemperatureTopic() {
+    public AvroTopic<MeasurementKey, EmpaticaE4Temperature> getTemperatureTopic() {
         return temperatureTopic;
     }
 }

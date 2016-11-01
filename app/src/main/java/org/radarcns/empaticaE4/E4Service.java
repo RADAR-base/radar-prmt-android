@@ -17,10 +17,9 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.android.DeviceManager;
+import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.TableDataHandler;
-import org.radarcns.data.AvroEncoder;
-import org.radarcns.data.Record;
-import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -31,19 +30,21 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class E4Service extends Service implements E4DeviceStatusListener, ServerStatusListener {
+public class E4Service extends Service implements DeviceStatusListener, ServerStatusListener {
     private final static int ONGOING_NOTIFICATION_ID = 11;
     public final static int TRANSACT_GET_RECORDS = 12;
     public final static int TRANSACT_GET_DEVICE_STATUS = 13;
+    public final static int TRANSACT_START_RECORDING = 14;
+    public final static int TRANSACT_STOP_RECORDING = 15;
     public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
     public final static String DEVICE_STATUS_SERVICE_CLASS = "org.radarcns.empaticaE4.E4Service.getClass";
     public final static String DEVICE_STATUS_CHANGED = "org.radarcns.empaticaE4.E4DeviceStatusListener.Status";
-    public final static String DEVICE_STATUS_NAME = "org.radarcns.empaticaE4.E4DeviceManager.getDeviceName";
+    public final static String DEVICE_STATUS_NAME = "org.radarcns.empaticaE4.E4DeviceManager.getName";
     public final static String DEVICE_CONNECT_FAILED = "org.radarcns.empaticaE4.E4DeviceStatusListener.deviceFailedToConnect";
 
+    /** Stops the device when bluetooth is disabled. */
     private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -51,9 +52,18 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                if (state == BluetoothAdapter.STATE_OFF) {
-                    logger.warn("Bluetooth is off");
-                    stopSelf();
+                switch (state) {
+                    case BluetoothAdapter.STATE_TURNING_OFF: case BluetoothAdapter.STATE_OFF:
+                        logger.warn("Bluetooth is off");
+                        if (deviceScanner != null) {
+                            try {
+                                deviceScanner.close();
+                            } catch (IOException e) {
+                                // do nothing
+                            }
+                            deviceScanner = null;
+                        }
+                        break;
                 }
             }
         }
@@ -61,7 +71,7 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
 
     private final static Logger logger = LoggerFactory.getLogger(E4Service.class);
     private TableDataHandler dataHandler;
-    private E4DeviceManager deviceScanner;
+    private DeviceManager deviceScanner;
     private E4Topics topics;
     private final LocalBinder mBinder = new LocalBinder();
     private final AtomicInteger numberOfActivitiesBound = new AtomicInteger(0);
@@ -81,10 +91,6 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoothReceiver, filter);
 
-        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-            logger.warn("Bluetooth disabled. Cannot listen for devices.");
-            stopSelf();
-        }
         synchronized (this) {
             numberOfActivitiesBound.set(0);
             isInForeground = false;
@@ -97,16 +103,13 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
         super.onDestroy();
         // Unregister broadcast listeners
         unregisterReceiver(mBluetoothReceiver);
-        Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
-        statusChanged.putExtra(DEVICE_STATUS_CHANGED, E4DeviceStatusListener.Status.DISCONNECTED.ordinal());
-        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
-        if (deviceScanner != null && deviceScanner.getDeviceName() != null) {
-            statusChanged.putExtra(DEVICE_STATUS_NAME, deviceScanner.getDeviceName());
-        }
-        sendBroadcast(statusChanged);
 
-        if (dataHandler.isStarted()) {
-            dataHandler.stop();
+        if (deviceScanner != null) {
+            try {
+                deviceScanner.close();
+            } catch (IOException e) {
+                // do nothing
+            }
         }
         try {
             dataHandler.close();
@@ -119,8 +122,7 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         logger.info("Starting E4 service {}", this);
-        ensureDataHandler(intent);
-        dataHandler.start();
+        onRebind(intent);
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
@@ -134,14 +136,31 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
 
     @Override
     public synchronized void onRebind(Intent intent) {
-        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-            stopSelf();
-        }
-        ensureDataHandler(intent);
-        if (numberOfActivitiesBound.getAndIncrement() == 0) {
-            if (!isConnected) {
-                startScanning();
+        if (dataHandler == null) {
+            apiKey = intent.getStringExtra("empatica_api_key");
+            groupId = intent.getStringExtra("group_id");
+            URL kafkaUrl = null;
+            SchemaRetriever remoteSchemaRetriever = null;
+            if (intent.hasExtra("kafka_rest_proxy_url")) {
+                String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
+                if (!kafkaUrlString.isEmpty()) {
+                    remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
+                    try {
+                        kafkaUrl = new URL(kafkaUrlString);
+                    } catch (MalformedURLException e) {
+                        logger.error("Malformed Kafka server URL {}", kafkaUrlString);
+                        throw new RuntimeException(e);
+                    }
+                }
             }
+            long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
+            //noinspection unchecked
+            dataHandler = new TableDataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
+                    dataRetentionMs, topics.getAccelerationTopic(),
+                    topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
+                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
+            dataHandler.addStatusListener(this);
+            dataHandler.start();
         }
     }
 
@@ -153,6 +172,50 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
             }
         }
         return true;
+    }
+
+    @Override
+    public synchronized void deviceFailedToConnect(String deviceName) {
+        Intent statusChanged = new Intent(DEVICE_CONNECT_FAILED);
+        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
+        statusChanged.putExtra(DEVICE_STATUS_NAME, deviceName);
+        sendBroadcast(statusChanged);
+    }
+
+    @Override
+    public synchronized void deviceStatusUpdated(DeviceManager e4DeviceManager, DeviceStatusListener.Status status) {
+        if (e4DeviceManager != deviceScanner) {
+            return;
+        }
+
+        Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
+        statusChanged.putExtra(DEVICE_STATUS_CHANGED, status.ordinal());
+        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
+        if (e4DeviceManager.getName() != null) {
+            statusChanged.putExtra(DEVICE_STATUS_NAME, e4DeviceManager.getName());
+        }
+        sendBroadcast(statusChanged);
+
+        switch (status) {
+            case CONNECTED:
+                isConnected = true;
+                startBackgroundListener();
+                break;
+            case DISCONNECTED:
+                deviceScanner = null;
+                stopBackgroundListener();
+                if (!e4DeviceManager.isClosed()) {
+                    try {
+                        e4DeviceManager.close();
+                    } catch (IOException e) {
+                        // do nothing
+                    }
+                }
+                if (this.numberOfActivitiesBound.get() == 0) {
+                    stopSelf();
+                }
+                break;
+        }
     }
 
     public synchronized void startBackgroundListener() {
@@ -185,57 +248,6 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
     }
 
     @Override
-    public synchronized void deviceStatusUpdated(E4DeviceManager e4DeviceManager, E4DeviceStatusListener.Status status) {
-        if (e4DeviceManager != deviceScanner) {
-            return;
-        }
-
-        Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
-        statusChanged.putExtra(DEVICE_STATUS_CHANGED, status.ordinal());
-        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
-        if (e4DeviceManager != null && e4DeviceManager.getDeviceName() != null) {
-            statusChanged.putExtra(DEVICE_STATUS_NAME, e4DeviceManager.getDeviceName());
-        }
-        sendBroadcast(statusChanged);
-
-        switch (status) {
-            case CONNECTED:
-                isConnected = true;
-                startBackgroundListener();
-                break;
-            case DISCONNECTED:
-                deviceScanner = null;
-                stopBackgroundListener();
-                if (e4DeviceManager != null && !e4DeviceManager.isClosed()) {
-                    e4DeviceManager.close();
-                }
-                if (this.numberOfActivitiesBound.get() == 0) {
-                    stopSelf();
-                } else {
-                    startScanning();
-                }
-                break;
-        }
-    }
-
-    private synchronized void startScanning() {
-        // Only scan if no devices are connected.
-        if (deviceScanner != null) {
-            throw new IllegalStateException("Already connecting");
-        }
-        deviceScanner = new E4DeviceManager(this, this, apiKey, groupId, dataHandler, topics);
-        deviceScanner.start();
-    }
-
-    @Override
-    public synchronized void deviceFailedToConnect(String deviceName) {
-        Intent statusChanged = new Intent(DEVICE_CONNECT_FAILED);
-        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
-        statusChanged.putExtra(DEVICE_STATUS_NAME, deviceName);
-        sendBroadcast(statusChanged);
-    }
-
-    @Override
     public void updateServerStatus(ServerStatusListener.Status status) {
         Intent statusIntent = new Intent(SERVER_STATUS_CHANGED);
         statusIntent.putExtra(SERVER_STATUS_CHANGED, status.ordinal());
@@ -248,28 +260,34 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
             try {
                 switch (code) {
                     case TRANSACT_GET_RECORDS:
-                        AvroTopic topic = topics.getTopic(data.readString());
+                        AvroTopic<MeasurementKey, ? extends SpecificRecord> topic = topics.getTopic(data.readString());
                         int limit = data.readInt();
-                        AvroEncoder.AvroWriter<MeasurementKey> keyWriter = new SpecificRecordEncoder<MeasurementKey>(true).writer(topic.getKeySchema());
-                        AvroEncoder.AvroWriter<SpecificRecord> valueWriter = new SpecificRecordEncoder<>(true).writer(topic.getKeySchema());
-
-                        List<Record<MeasurementKey, SpecificRecord>> records = dataHandler.getCache(topic).getMeasurements(limit);
-                        reply.writeInt(records.size());
-                        for (Record<MeasurementKey, SpecificRecord> record : records) {
-                            reply.writeLong(record.offset);
-                            reply.writeByteArray(keyWriter.encode(record.key));
-                            reply.writeByteArray(valueWriter.encode(record.value));
-                        }
+                        dataHandler.getCache(topic).writeRecordsToParcel(reply, limit);
                         break;
                     case TRANSACT_GET_DEVICE_STATUS:
-                        E4DeviceStatus status;
                         if (deviceScanner == null) {
-                            status = new E4DeviceStatus();
-                            status.setStatus(E4DeviceStatusListener.Status.DISCONNECTED);
+                            E4DeviceStatus newStatus = new E4DeviceStatus();
+                            newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
+                            newStatus.writeToParcel(reply, 0);
                         } else {
-                            status = deviceScanner.getStatus();
+                            deviceScanner.getState().writeToParcel(reply, 0);
                         }
-                        status.writeToParcel(reply, 0);
+                        break;
+                    case TRANSACT_START_RECORDING:
+                        if (deviceScanner == null) {
+                            deviceScanner = new E4DeviceManager(E4Service.this, E4Service.this, apiKey, groupId, dataHandler, topics);
+                            deviceScanner.start();
+                        }
+                        deviceScanner.getState().writeToParcel(reply, 0);
+                        break;
+                    case TRANSACT_STOP_RECORDING:
+                        if (deviceScanner != null) {
+                            if (!deviceScanner.isClosed()) {
+                                deviceScanner.close();
+                            }
+                            deviceScanner = null;
+                        }
+                        break;
                     default:
                         return false;
                 }
@@ -277,32 +295,6 @@ public class E4Service extends Service implements E4DeviceStatusListener, Server
             } catch (IOException e) {
                 throw new RemoteException("IOException: " + e.getMessage());
             }
-        }
-    }
-
-    synchronized void ensureDataHandler(Intent intent) {
-        if (dataHandler == null) {
-            apiKey = intent.getStringExtra("empatica_api_key");
-            groupId = intent.getStringExtra("group_id");
-            URL kafkaUrl = null;
-            SchemaRetriever remoteSchemaRetriever = null;
-            if (intent.hasExtra("kafka_rest_proxy_url")) {
-                String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
-                if (!kafkaUrlString.isEmpty()) {
-                    remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
-                    try {
-                        kafkaUrl = new URL(kafkaUrlString);
-                    } catch (MalformedURLException e) {
-                        logger.error("Malformed Kafka server URL {}", kafkaUrlString);
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-            long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
-            dataHandler = new TableDataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
-                    dataRetentionMs, topics.getAccelerationTopic(),
-                    topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
-                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
         }
     }
 }

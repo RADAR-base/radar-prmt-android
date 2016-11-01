@@ -3,18 +3,22 @@ package org.radarcns.kafka;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.data.Record;
-import org.radarcns.data.RecordIterable;
-import org.radarcns.data.RecordList;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,19 +37,21 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
     private final static int SEND_LIMIT = 5000;
     private DataHandler<K, V> dataHandler;
-    private final KafkaSender<K, V> directSender;
+    private final KafkaSender<K, V> sender;
     private final ScheduledExecutorService executor;
-    private final ConcurrentMap<AvroTopic, RecordList<K, V>> trySendCache;
-    private final ConcurrentMap<AvroTopic, ScheduledFuture<?>> trySendFuture;
-    private AtomicBoolean isConnected;
+    private final ConcurrentMap<AvroTopic<K, V>, Queue<Record<K, V>>> trySendCache;
+    private final Map<AvroTopic<K, V>, ScheduledFuture<?>> trySendFuture;
+    private final Map<AvroTopic<K, V>, KafkaTopicSender<K, V>> topicSenders;
+    private final AtomicBoolean isConnected;
     private long lastConnection;
 
     public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory) {
         this.dataHandler = dataHandler;
-        directSender = sender;
-        directSender.configure(null);
+        this.sender = sender;
         trySendCache = new ConcurrentHashMap<>();
-        trySendFuture = new ConcurrentHashMap<>();
+        trySendFuture = new HashMap<>();
+        topicSenders = new HashMap<>();
+
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
 
         // Remove old data from tables infrequently
@@ -58,18 +64,17 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
 
         // Upload very frequently.
         executor.scheduleAtFixedRate(new Runnable() {
+            Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
             @Override
             public void run() {
-                final HashSet<AvroTopic> topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getCaches().keySet());
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        uploadCaches(topicsToSend);
-                        if (!topicsToSend.isEmpty()) {
-                            executor.submit(this);
-                        }
-                    }
-                });
+                if (topicsToSend.isEmpty()) {
+                    topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getCaches().keySet());
+                }
+                uploadCaches(topicsToSend);
+                // still more data to send, do that immediately
+                if (!topicsToSend.isEmpty()) {
+                    executor.submit(this);
+                }
             }
         }, 10L, 10L, TimeUnit.SECONDS);
 
@@ -91,7 +96,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 if (isConnected.get()) {
                     long now = System.currentTimeMillis();
                     if (now - lastConnection > 15_000L) {
-                        if (directSender.isConnected()) {
+                        if (KafkaDataSubmitter.this.sender.isConnected()) {
                             lastConnection = now;
                         } else {
                             senderDisconnected();
@@ -114,8 +119,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                Map<AvroTopic, ? extends DataCache<K, V>> caches = dataHandler.getCaches();
-                for (DataCache<K, V> cache : caches.values()) {
+                Map<AvroTopic<K, ? extends V>, ? extends DataCache<K, ? extends V>> caches = dataHandler.getCaches();
+                for (DataCache<K, ? extends V> cache : caches.values()) {
                     try {
                         cache.flush();
                     } catch (IOException ex) {
@@ -130,8 +135,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                                 future.cancel(true);
                             }
                             trySendFuture.clear();
-                            for (RecordList<K, V> records : trySendCache.values()) {
-                                directSender.send(records);
+                            for (Map.Entry<AvroTopic<K, V>, Queue<Record<K, V>>> records : trySendCache.entrySet()) {
+                                sender(records.getKey()).send(new ArrayList<>(records.getValue()));
                             }
                             trySendCache.clear();
                         }
@@ -139,14 +144,34 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                         logger.warn("Failed to addMeasurement latest measurements", e);
                     }
                 }
+
+                for (Map.Entry<AvroTopic<K, V>, KafkaTopicSender<K, V>> topicSender : topicSenders.entrySet()) {
+                    try {
+                        topicSender.getValue().close();
+                    } catch (IOException e) {
+                        logger.warn("failed to close topicSender for topic {}", topicSender.getKey().getName(), e);
+                    }
+                }
+                topicSenders.clear();
+
                 try {
-                    directSender.close();
+                    sender.close();
                 } catch (IOException e1) {
                     logger.warn("failed to addMeasurement latest batches", e1);
                 }
             }
         });
         executor.shutdown();
+    }
+
+    /** Get a sender for a topic. Per topic, only ONE thread may use this. */
+    private KafkaTopicSender<K, V> sender(AvroTopic<K, V> topic) throws IOException {
+        KafkaTopicSender<K, V> topicSender = topicSenders.get(topic);
+        if (topicSender == null) {
+            topicSender = sender.sender(topic);
+            topicSenders.put(topic, topicSender);
+        }
+        return topicSender;
     }
 
     /**
@@ -173,11 +198,15 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     /**
      * Upload a limited amount of data stored in the database which is not yet sent.
      */
-    private void uploadCaches(Set<AvroTopic> toSend) {
+    private void uploadCaches(Set<AvroTopic<K, ? extends V>> toSend) {
         boolean uploadingNotified = false;
         try {
-            for (Map.Entry<AvroTopic, ? extends DataCache<K, V>> entry : dataHandler.getCaches().entrySet()) {
-                int sent = uploadCache(entry.getKey(), entry.getValue(), SEND_LIMIT, uploadingNotified);
+            for (Map.Entry<AvroTopic<K, ? extends V>, ? extends DataCache<K, ? extends V>> entry : dataHandler.getCaches().entrySet()) {
+                if (!toSend.contains(entry.getKey())) {
+                    continue;
+                }
+                @SuppressWarnings("unchecked") // we can upload any record
+                int sent = uploadCache((AvroTopic<K, V>)entry.getKey(), (DataCache<K, V>)entry.getValue(), SEND_LIMIT, uploadingNotified);
                 if (sent < SEND_LIMIT) {
                     toSend.remove(entry.getKey());
                 }
@@ -196,30 +225,27 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * Upload some data from a single table.
      * @return number of records sent.
      */
-    private int uploadCache(AvroTopic topic, DataCache<K, V> cache, int limit, boolean uploadingNotified) throws IOException {
-        RecordList<K, V> records = new RecordList<>(topic);
-        Iterable<Record<K, V>> measurements = cache.unsentRecords(limit);
+    private int uploadCache(AvroTopic<K, V> topic, DataCache<K, V> cache, int limit, boolean uploadingNotified) throws IOException {
+        List<Record<K, V>> measurements = cache.unsentRecords(limit);
 
-        if (measurements.iterator().hasNext() && !uploadingNotified) {
+        if (measurements.isEmpty()) {
+            return 0;
+        }
+
+        if (!uploadingNotified) {
             dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
         }
-        for (Record<K, V> record : measurements) {
-            records.add(record.offset, record.key, record.value);
-        }
+        sender(topic).send(measurements);
 
-        if (!records.isEmpty()) {
-            directSender.send(records);
-            cache.markSent(records.getLastOffset());
-        }
-        logger.debug("uploaded {} {} records", records.size(), topic.getName());
-        return records.size();
+        logger.debug("uploaded {} {} records", measurements.size(), topic.getName());
+        return measurements.size();
     }
 
     /**
      * Check whether the connection was closed and try to reconnect.
      */
     private void checkClosed() {
-        if (!isConnected.get() && (directSender.isConnected() || directSender.resetConnection())) {
+        if (!isConnected.get() && (sender.isConnected() || sender.resetConnection())) {
             isConnected.set(true);
             lastConnection = System.currentTimeMillis();
             dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
@@ -228,13 +254,13 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     }
 
     /**
-     * Signal that the Kafka REST directSender has disconnected.
+     * Signal that the Kafka REST sender has disconnected.
      */
     private void senderDisconnected() {
         if (isConnected.compareAndSet(true, false)) {
             logger.warn("Sender disconnected");
             dataHandler.updateServerStatus(ServerStatusListener.Status.DISCONNECTED);
-            if (directSender.resetConnection()) {
+            if (sender.resetConnection()) {
                 isConnected.set(true);
                 logger.info("Sender reconnected");
                 dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
@@ -255,33 +281,38 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * messages to be lost. If the sender is disconnected, messages are immediately discarded.
      * @return whether the message was queued for sending.
      */
-    public boolean trySend(final AvroTopic topic, final long offset, final K deviceId, final V record) {
+    public <W extends V> boolean trySend(final AvroTopic<K, W> topic, final long offset, final K deviceId, final W record) {
         if (!isConnected.get()) {
             return false;
         }
+        @SuppressWarnings("unchecked")
+        final AvroTopic<K, V> castTopic = (AvroTopic<K, V>)topic;
+        Queue<Record<K, V>> records = trySendCache.get(castTopic);
+        if (records == null) {
+            records = new ConcurrentLinkedQueue<>();
+            //noinspection unchecked
+            trySendCache.put((AvroTopic<K, V>)topic, records);
+        }
+        records.add(new Record<>(offset, deviceId, (V)record));
+
         synchronized (trySendFuture) {
-            RecordList<K, V> records = trySendCache.get(topic);
-            if (records == null) {
-                records = new RecordList<>(topic);
-                trySendCache.put(topic, records);
-            }
-            records.add(offset, deviceId, record);
             if (!trySendFuture.containsKey(topic)) {
-                trySendFuture.put(topic, executor.schedule(new Runnable() {
+                trySendFuture.put(castTopic, executor.schedule(new Runnable() {
                     @Override
                     public void run() {
                         if (!isConnected.get()) {
                             return;
                         }
 
-                        RecordList<K, V> localRecords;
+                        List<Record<K, V>> localRecords;
                         synchronized (trySendFuture) {
-                            localRecords = trySendCache.remove(topic);
+                            Queue<Record<K, V>> queue = trySendCache.get(topic);
                             trySendFuture.remove(topic);
+                            localRecords = new ArrayList<>(queue);
                         }
 
                         try {
-                            directSender.send(localRecords);
+                            sender(castTopic).send(localRecords);
                             lastConnection = System.currentTimeMillis();
                         } catch (IOException e) {
                             senderDisconnected();

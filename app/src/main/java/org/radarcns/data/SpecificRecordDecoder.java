@@ -12,7 +12,7 @@ import org.apache.avro.specific.SpecificRecord;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public class SpecificRecordDecoder<T extends SpecificRecord> implements AvroDecoder<T> {
+public class SpecificRecordDecoder implements AvroDecoder {
     private final DecoderFactory decoderFactory;
     private final boolean binary;
 
@@ -22,11 +22,14 @@ public class SpecificRecordDecoder<T extends SpecificRecord> implements AvroDeco
     }
 
     @Override
-    public AvroReader<T> reader(Schema schema) throws IOException {
-        return new AvroRecordReader(schema, new SpecificDatumReader<T>(schema));
+    public <T> AvroReader<T> reader(Schema schema, Class<T> clazz) throws IOException {
+        if (!SpecificRecord.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Can only create readers for SpecificRecords.");
+        }
+        return new AvroRecordReader<>(schema, new SpecificDatumReader<T>(schema));
     }
 
-    class AvroRecordReader implements AvroReader<T> {
+    class AvroRecordReader<T> implements AvroReader<T> {
         private final DatumReader<T> reader;
         private final Schema schema;
         private Decoder decoder;

@@ -20,6 +20,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
@@ -63,9 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler;
     private Runnable mUIScheduler;
     private DeviceUIUpdater mUIUpdater;
-    private boolean isDisconnected = false;
-
-    private boolean waitingForPermission;
+    private boolean isForcedDisconnected = false;
 
     /** Defines callbacks for service binding, passed to bindService() */
     private final E4ServiceConnection[] mConnections = {
@@ -117,13 +116,14 @@ public class MainActivity extends AppCompatActivity {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 if (state == BluetoothAdapter.STATE_ON) {
                     logger.info("Bluetooth has turned on");
-                    enableEmpatica();
-                } else if (state == BluetoothAdapter.STATE_TURNING_OFF) {
-                    logger.warn("Bluetooth is turning off");
-                    disconnect();
+                    if (!isForcedDisconnected) {
+                        startScanning();
+                    }
                 } else if (state == BluetoothAdapter.STATE_OFF) {
                     logger.warn("Bluetooth is off");
-                    enableBt();
+                    if (!isForcedDisconnected) {
+                        enableBt();
+                    }
                 }
             }
         }
@@ -186,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        isForcedDisconnected = false;
         checkBluetoothPermissions();
     }
 
@@ -193,63 +194,75 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mHandler.post(mUIScheduler);
-        IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        registerReceiver(bluetoothReceiver, bluetoothFilter);
-        IntentFilter serverFilter = new IntentFilter(E4Service.SERVER_STATUS_CHANGED);
-        registerReceiver(serverStatusListener, serverFilter);
-        IntentFilter failedFilter = new IntentFilter(E4Service.DEVICE_CONNECT_FAILED);
-        registerReceiver(deviceFailedReceiver, failedFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mHandler.removeCallbacks(mUIScheduler);
-        unregisterReceiver(serverStatusListener);
-        unregisterReceiver(deviceFailedReceiver);
-        unregisterReceiver(bluetoothReceiver);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        enableEmpatica();
+        IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(bluetoothReceiver, bluetoothFilter);
+        IntentFilter serverFilter = new IntentFilter(E4Service.SERVER_STATUS_CHANGED);
+        registerReceiver(serverStatusListener, serverFilter);
+        IntentFilter failedFilter = new IntentFilter(E4Service.DEVICE_CONNECT_FAILED);
+        registerReceiver(deviceFailedReceiver, failedFilter);
+        for (E4ServiceConnection mConnection : mConnections) {
+            bindToEmpatica(mConnection);
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        disconnect();
+        unregisterReceiver(serverStatusListener);
+        unregisterReceiver(deviceFailedReceiver);
+        unregisterReceiver(bluetoothReceiver);
+        for (E4ServiceConnection mConnection : mConnections) {
+            unbindService(mConnection);
+            mConnection.close();
+        }
     }
 
     private void disconnect() {
         for (E4ServiceConnection mConnection : mConnections) {
-            if (mConnection.hasService()) {
-                unbindService(mConnection);
-                mConnection.close();
+            if (mConnection.isRecording()) {
+                try {
+                    mConnection.stopRecording();
+                } catch (RemoteException e) {
+                    // it cannot be reached so it already stopped recording
+                }
             }
         }
     }
 
-    private int freeServiceNumber() {
-        for (int i = 0; i < mConnections.length; i++) {
-            if (!mConnections[i].hasService()) {
-                return i;
+    /**
+     * If no E4Service is scanning, and ask one to start scanning.
+     */
+    private void startScanning() {
+        for (E4ServiceConnection mConnection : mConnections) {
+            if (mConnection.isScanning()) {
+                return;
             }
         }
-        return -1;
+        for (E4ServiceConnection mConnection : mConnections) {
+            if (mConnection.hasService() && !mConnection.isRecording()) {
+                try {
+                    mConnection.startRecording();
+                    return;
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
-    boolean enableEmpatica() {
-        if (waitingForPermission) {
-            return true;
-        }
-
-        int clsNumber = freeServiceNumber();
-        if (clsNumber == -1) {
-            return false;
-        }
-        Class<? extends E4Service> serviceCls = mConnections[clsNumber].serviceClass();
+    void bindToEmpatica(E4ServiceConnection connection) {
+        Class<? extends E4Service> serviceCls = connection.serviceClass();
         logger.info("Intending to start E4 service");
         startService(new Intent(this, serviceCls));
 
@@ -258,8 +271,7 @@ public class MainActivity extends AppCompatActivity {
         e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
         e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
         e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
-        bindService(e4serviceIntent, mConnections[clsNumber], Context.BIND_ABOVE_CLIENT);
-        return true;
+        bindService(e4serviceIntent, connection, Context.BIND_ABOVE_CLIENT);
     }
 
     // Update a label with some text, making sure this is run in the UI thread
@@ -323,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void deviceStatusUpdated(final E4ServiceConnection connection, final E4DeviceStatusListener.Status status) {
+    public void deviceStatusUpdated(final E4ServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -335,14 +347,12 @@ public class MainActivity extends AppCompatActivity {
                             activeConnection = connection;
                         }
                         updateLabel(stopButton, "Stop Recording");
-                        isDisconnected = false;
                         dataCnt.setVisibility(View.VISIBLE);
                         statusLabel.setText("CONNECTED");
-                        enableEmpatica();
+                        startScanning();
                         break;
                     case CONNECTING:
                         updateLabel(stopButton, "Stop Recording");
-                        isDisconnected = false;
                         statusLabel.setText("CONNECTING");
                         break;
                     case DISCONNECTED:
@@ -361,17 +371,19 @@ public class MainActivity extends AppCompatActivity {
                         statusLabel.setText("Scanning...");
                         stopButton.setOnClickListener(new View.OnClickListener() {
                             public void onClick(View v) {
-                                if (isDisconnected) {
-                                    enableEmpatica();
-                                } else {
+                                isForcedDisconnected = !isForcedDisconnected;
+                                if (isForcedDisconnected) {
                                     disconnect();
-                                    isDisconnected = true;
+                                } else {
+                                    if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                                        startScanning();
+                                    } else {
+                                        enableBt();
+                                    }
                                 }
-
                             }
                         });
                         updateLabel(stopButton, "Stop Recording");
-                        isDisconnected = false;
                         stopButton.setVisibility(View.VISIBLE);
                         break;
                 }
@@ -382,8 +394,7 @@ public class MainActivity extends AppCompatActivity {
     private void checkBluetoothPermissions() {
         String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
 
-        waitingForPermission = false;
-        isDisconnected = false;
+        boolean waitingForPermission = false;
         for (String permission : permissions) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 waitingForPermission = true;
@@ -410,8 +421,9 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
-                waitingForPermission = false;
-                enableEmpatica();
+                if (!isForcedDisconnected) {
+                    startScanning();
+                }
             } else {
                 // User refused to grant permission.
                 updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");

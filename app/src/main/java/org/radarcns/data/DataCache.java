@@ -1,19 +1,29 @@
 package org.radarcns.data;
 
-import org.apache.avro.specific.SpecificRecord;
+import android.os.Parcel;
+
 import org.radarcns.kafka.AvroTopic;
+import org.radarcns.key.MeasurementKey;
 
 import java.io.Closeable;
 import java.io.Flushable;
+import java.io.IOException;
+import java.util.List;
 
 public interface DataCache<K, V> extends Flushable, Closeable {
     /**
      * Get all unsent records in the cache.
      *
-     * Use in a try-with-resources statement.
-     * @return Iterator records.
+     * @return records.
      */
-    Iterable<Record<K, V>> unsentRecords(int limit);
+    List<Record<K, V>> unsentRecords(int limit);
+
+    /**
+     * Get latest records in the cache, from new to old.
+     *
+     * @return records.
+     */
+    List<Record<K, V>> getRecords(int limit);
 
     /**
      * Remove all records before a given offset.
@@ -31,5 +41,10 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      */
     int removeBeforeTimestamp(long millis);
 
-    AvroTopic getTopic();
+    AvroTopic<K, V> getTopic();
+
+    /**
+     * Write the latest records in the cache to a parcel, from new to old.
+     */
+    void writeRecordsToParcel(Parcel dest, int limit) throws IOException;
 }

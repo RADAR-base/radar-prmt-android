@@ -1,28 +1,20 @@
 package org.radarcns.kafka;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.specific.SpecificRecord;
-import org.jboss.netty.logging.InternalLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 
 /** AvroTopic with schema */
-public class AvroTopic {
-    private final static Logger logger = LoggerFactory.getLogger(AvroTopic.class);
-
+public class AvroTopic<K, V> {
     private final String name;
     private final Schema valueSchema;
     private final Schema keySchema;
     private final Schema.Type[] valueFieldTypes;
-    private Class valueClass;
+    private final Class<V> valueClass;
+    private final Class<K> keyClass;
 
-    public AvroTopic(String name, Schema keySchema, Schema valueSchema) {
+    public AvroTopic(String name, Schema keySchema, Schema valueSchema, Class<K> keyClass, Class<V> valueClass) {
         if (name == null) {
             throw new IllegalArgumentException("Name may not be null");
         }
@@ -35,7 +27,8 @@ public class AvroTopic {
         if (this.valueSchema.getField("timeReceived") == null) {
             throw new IllegalArgumentException("Schema must have timeReceived as a field");
         }
-        this.valueClass = null;
+        this.valueClass = valueClass;
+        this.keyClass = keyClass;
         List<Schema.Field> fields = valueSchema.getFields();
         this.valueFieldTypes = new Schema.Type[fields.size()];
         for (int i = 0; i < fields.size(); i++) {
@@ -51,11 +44,22 @@ public class AvroTopic {
         return valueSchema;
     }
 
-    public SpecificRecord newValueInstance() {
-        if (valueClass == null) {
-            valueClass = SpecificData.get().getClass(valueSchema);
-        }
-        return (SpecificRecord)SpecificData.newInstance(valueClass, valueSchema);
+    public Class<V> getValueClass() {
+        return valueClass;
+    }
+
+    public Class<K> getKeyClass() {
+        return keyClass;
+    }
+
+    /**
+     * Tries to construct a new SpecificData instance of the value.
+     * @return new empty SpecificData class
+     * @throws ClassCastException Value class is not a SpecificData class
+     */
+    @SuppressWarnings("unchecked")
+    public V newValueInstance() throws ClassCastException {
+        return (V)SpecificData.newInstance(valueClass, valueSchema);
     }
 
     public Schema.Type[] getValueFieldTypes() {
@@ -73,8 +77,7 @@ public class AvroTopic {
 
         AvroTopic topic = (AvroTopic) o;
 
-        return name.equals(topic.name) && keySchema.equals(topic.keySchema) &&
-                valueSchema.equals(topic.valueSchema);
+        return name.equals(topic.name);
     }
 
     @Override

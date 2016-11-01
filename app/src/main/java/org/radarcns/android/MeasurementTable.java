@@ -5,19 +5,23 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Parcel;
 import android.os.Process;
 import android.util.Pair;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.Record;
+import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
@@ -34,10 +38,10 @@ import java.util.concurrent.TimeUnit;
  *
  * Measurements are grouped into transactions before being committed in a separate Thread
  */
-public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecord> {
+public class MeasurementTable<V extends SpecificRecord> implements DataCache<MeasurementKey, V> {
     private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
     private final MeasurementDBHelper dbHelper;
-    private final AvroTopic topic;
+    private final AvroTopic<MeasurementKey, V> topic;
     private final long window;
     private SubmitThread submitThread;
     private final static NumberFormat decimalFormat = new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.US));
@@ -47,7 +51,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
         decimalFormat.setMaximumFractionDigits(24);
     }
 
-    public MeasurementTable(Context context, AvroTopic topic, long timeWindowMillis) {
+    public MeasurementTable(Context context, AvroTopic<MeasurementKey, V> topic, long timeWindowMillis) {
         if (timeWindowMillis > System.currentTimeMillis()) {
             throw new IllegalArgumentException("Time window must be smaller than current absolute time");
         }
@@ -82,14 +86,14 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
     }
 
     @Override
-    public AvroTopic getTopic() {
+    public AvroTopic<MeasurementKey, V> getTopic() {
         return topic;
     }
 
     /** Submits new values to the database */
     private class SubmitThread {
         private final ScheduledExecutorService executor;
-        private final List<Pair<MeasurementKey, SpecificRecord>> queue;
+        private final List<Pair<MeasurementKey, V>> queue;
         private final RollingTimeAverage average;
         private final SQLiteStatement statement;
         private boolean hasFuture;
@@ -122,7 +126,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
         private class DoSubmitValues implements Runnable {
             @Override
             public void run() {
-                List<Pair<MeasurementKey, SpecificRecord>> localQueue;
+                List<Pair<MeasurementKey, V>> localQueue;
                 synchronized (this) {
                     hasFuture = false;
                     if (queue.isEmpty()) {
@@ -137,7 +141,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
                 db.beginTransaction();
                 try {
-                    for (Pair<MeasurementKey, SpecificRecord> values : localQueue) {
+                    for (Pair<MeasurementKey, V> values : localQueue) {
                         insertRecord(values.first, values.second, fieldTypes);
                         db.yieldIfContendedSafely();
                     }
@@ -187,7 +191,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
             }
         }
 
-        synchronized void add(MeasurementKey key, SpecificRecord value) {
+        synchronized void add(MeasurementKey key, V value) {
             if (!hasFuture) {
                 this.executor.schedule(new DoSubmitValues(), window, TimeUnit.MILLISECONDS);
                 hasFuture = true;
@@ -225,7 +229,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
      *              constructor.
      */
     @Override
-    public void addMeasurement(MeasurementKey key, SpecificRecord value) {
+    public void addMeasurement(MeasurementKey key, V value) {
         if (submitThread == null) {
             start();
         }
@@ -269,7 +273,7 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
      * @return Iterator with column-name to value map.
      */
     @Override
-    public Iterable<Record<MeasurementKey, SpecificRecord>> unsentRecords(int limit) {
+    public List<Record<MeasurementKey, V>> unsentRecords(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql = "SELECT * FROM " + topic.getName() +
                 " WHERE sent = 0 ORDER BY offset ASC LIMIT " + limit;
@@ -281,12 +285,12 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
     /**
      * Converts a database rows into a measurement.
      */
-    private List<Record<MeasurementKey, SpecificRecord>> cursorToRecords(Cursor cursor) {
-        List<Record<MeasurementKey, SpecificRecord>> records = new ArrayList<>(cursor.getCount());
+    private List<Record<MeasurementKey, V>> cursorToRecords(Cursor cursor) {
+        List<Record<MeasurementKey, V>> records = new ArrayList<>(cursor.getCount());
         Schema.Type[] fieldTypes = topic.getValueFieldTypes();
 
         while (cursor.moveToNext()) {
-            SpecificRecord avroRecord = topic.newValueInstance();
+            V avroRecord = topic.newValueInstance();
 
             for (int i = 0; i < fieldTypes.length; i++) {
                 switch (fieldTypes[i]) {
@@ -323,13 +327,8 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
         return records;
     }
 
-    /**
-     * Return a given number of measurements.
-     *
-     * Use in a try-with-resources statement.
-     * @return Iterator with column-name to value map.
-     */
-    public List<Record<MeasurementKey, SpecificRecord>> getMeasurements(int limit) {
+    @Override
+    public List<Record<MeasurementKey, V>> getRecords(int limit) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql = "SELECT * FROM " + topic.getName() + " ORDER BY offset DESC LIMIT " + limit;
         try (Cursor cursor = db.rawQuery(sql, null)) {
@@ -373,5 +372,18 @@ public class MeasurementTable implements DataCache<MeasurementKey, SpecificRecor
     /** Drop this table from the database. */
     void dropTable(SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS " + topic.getName());
+    }
+
+    public void writeRecordsToParcel(Parcel dest, int limit) throws IOException {
+        List<Record<MeasurementKey, V>> records = getRecords(limit);
+        AvroEncoder.AvroWriter<MeasurementKey> keyWriter = new SpecificRecordEncoder(true).writer(topic.getKeySchema(), MeasurementKey.class);
+        AvroEncoder.AvroWriter<V> valueWriter = new SpecificRecordEncoder(true).writer(topic.getValueSchema(), topic.getValueClass());
+
+        dest.writeInt(records.size());
+        for (Record<MeasurementKey, V> record : records) {
+            dest.writeLong(record.offset);
+            dest.writeByteArray(keyWriter.encode(record.key));
+            dest.writeByteArray(valueWriter.encode(record.value));
+        }
     }
 }

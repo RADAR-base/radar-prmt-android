@@ -12,6 +12,7 @@ import android.os.RemoteException;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroDecoder;
+import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.kafka.AvroTopic;
@@ -28,15 +29,15 @@ import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_SERVICE_CLASS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
+import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-/**
- * Created by joris on 26/10/2016.
- */
 class E4ServiceConnection implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(E4ServiceConnection.class);
     private final MainActivity mainActivity;
-    private E4DeviceStatusListener.Status deviceStatus;
+    private DeviceStatusListener.Status deviceStatus;
+    private final int clsNumber;
     public String deviceName;
+    private IBinder serviceBinder;
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
@@ -45,29 +46,24 @@ class E4ServiceConnection implements ServiceConnection {
                 if (intent.hasExtra(DEVICE_STATUS_NAME)) {
                     deviceName = intent.getStringExtra(DEVICE_STATUS_NAME);
                 }
-                deviceStatus = E4DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
+                deviceStatus = DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
                 mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
-                if (deviceStatus == E4DeviceStatusListener.Status.DISCONNECTED) {
-                    serviceBinder = null;
-                }
             }
         }
     };
-    final int clsNumber;
-    private IBinder serviceBinder;
 
     E4ServiceConnection(MainActivity mainActivity, int clsNumber) {
         this.mainActivity = mainActivity;
         this.clsNumber = clsNumber;
         this.serviceBinder = null;
         this.deviceName = null;
-        this.deviceStatus = E4DeviceStatusListener.Status.DISCONNECTED;
+        this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         IntentFilter filter = new IntentFilter(DEVICE_STATUS_CHANGED);
         mainActivity.registerReceiver(statusReceiver, filter);
     }
 
     @Override
-    public void onServiceConnected(ComponentName className,
+    public void onServiceConnected(final ComponentName className,
                                    IBinder service) {
         serviceBinder = service;
 
@@ -77,12 +73,18 @@ class E4ServiceConnection implements ServiceConnection {
             this.serviceBinder.linkToDeath(new IBinder.DeathRecipient() {
                 @Override
                 public void binderDied() {
-                    mainActivity.deviceStatusUpdated(E4ServiceConnection.this, E4DeviceStatusListener.Status.DISCONNECTED);
-                    serviceBinder = null;
+                    onServiceDisconnected(className);
+                    mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
+                    mainActivity.bindToEmpatica(E4ServiceConnection.this);
                 }
             }, 0);
         } catch (RemoteException e) {
             logger.error("Failed to link to death", e);
+        }
+        try {
+            deviceStatus = getDeviceData().getStatus();
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
     }
 
@@ -107,6 +109,30 @@ class E4ServiceConnection implements ServiceConnection {
         return result;
     }
 
+    public void startRecording() throws RemoteException {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        serviceBinder.transact(TRANSACT_START_RECORDING, data, reply, 0);
+        deviceStatus = E4DeviceStatus.CREATOR.createFromParcel(reply).getStatus();
+    }
+
+    public void stopRecording() throws RemoteException {
+        Parcel data = Parcel.obtain();
+        serviceBinder.transact(TRANSACT_START_RECORDING, data, null, 0);
+    }
+
+    public boolean isRecording() {
+        return deviceStatus != DeviceStatusListener.Status.DISCONNECTED;
+    }
+
+    public boolean isScanning() {
+        return deviceStatus == DeviceStatusListener.Status.READY;
+    }
+
+    public boolean hasService() {
+        return serviceBinder != null;
+    }
+
     public E4DeviceStatus getDeviceData() throws RemoteException {
         Parcel data = Parcel.obtain();
         Parcel reply = Parcel.obtain();
@@ -118,6 +144,8 @@ class E4ServiceConnection implements ServiceConnection {
     @Override
     public void onServiceDisconnected(ComponentName className) {
         serviceBinder = null;
+        deviceName = null;
+        deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
     }
 
     Class<? extends E4Service> serviceClass() {
@@ -133,10 +161,6 @@ class E4ServiceConnection implements ServiceConnection {
             default:
                 return null;
         }
-    }
-
-    public boolean hasService() {
-        return serviceBinder != null;
     }
 
     public void close() {

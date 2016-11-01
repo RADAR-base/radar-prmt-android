@@ -3,15 +3,18 @@ package org.radarcns.empaticaE4;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.radarcns.android.DeviceState;
+import org.radarcns.android.DeviceStatusListener;
+
 /**
  * Created by joris on 27/10/2016.
  */
 
-public class E4DeviceStatus implements Parcelable {
+public class E4DeviceStatus implements DeviceState {
     public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
         public E4DeviceStatus createFromParcel(Parcel in) {
             E4DeviceStatus result = new E4DeviceStatus();
-            result.status = E4DeviceStatusListener.Status.values()[in.readInt()];
+            result.status = DeviceStatusListener.Status.values()[in.readInt()];
             result.acceleration[0] = in.readFloat();
             result.acceleration[1] = in.readFloat();
             result.acceleration[2] = in.readFloat();
@@ -28,7 +31,7 @@ public class E4DeviceStatus implements Parcelable {
         }
     };
 
-    private E4DeviceStatusListener.Status status = E4DeviceStatusListener.Status.READY;
+    private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float bloodVolumePulse = Float.NaN;
@@ -104,11 +107,11 @@ public class E4DeviceStatus implements Parcelable {
         this.temperature = temperature;
     }
 
-    public E4DeviceStatusListener.Status getStatus() {
+    public DeviceStatusListener.Status getStatus() {
         return status;
     }
 
-    public synchronized void setStatus(E4DeviceStatusListener.Status status) {
+    public synchronized void setStatus(DeviceStatusListener.Status status) {
         this.status = status;
     }
 }

@@ -6,15 +6,16 @@ import org.codehaus.jackson.map.ObjectWriter;
 
 import java.io.IOException;
 
-public class StringEncoder implements AvroEncoder<String>, AvroEncoder.AvroWriter<String> {
+public class StringEncoder implements AvroEncoder, AvroEncoder.AvroWriter<String> {
     private final static ObjectWriter jsonEncoder = new ObjectMapper().writer();
 
     @Override
-    public AvroWriter<String> writer(Schema schema) {
-        if (schema.getType() != Schema.Type.STRING) {
+    public <T> AvroWriter<T> writer(Schema schema, Class<T> clazz) {
+        if (schema.getType() != Schema.Type.STRING || !clazz.equals(String.class)) {
             throw new IllegalArgumentException("Cannot encode String with a different type than STRING.");
         }
-        return this;
+        // noinspection unchecked
+        return (AvroWriter<T>)this;
     }
 
     @Override
