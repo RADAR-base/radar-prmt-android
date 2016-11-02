@@ -8,13 +8,13 @@ package org.radarcns.empaticaE4;
 /** Sensor status according to the device. */
 @org.apache.avro.specific.AvroGenerated
 public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4SensorStatus\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Sensor status according to the device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"sensor\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor name; one of BVP, GSR, ACC, TEMP;\"},{\"name\":\"status\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4SensorStatus\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Sensor status according to the device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"sensor\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor name; one of BVP, GSR, ACC, TEMP.\"},{\"name\":\"status\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** sensor name; one of BVP, GSR, ACC, TEMP; */
+  /** sensor name; one of BVP, GSR, ACC, TEMP. */
   @Deprecated public java.lang.String sensor;
   /** sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD. */
   @Deprecated public java.lang.String status;
@@ -91,14 +91,14 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
 
   /**
    * Gets the value of the 'sensor' field.
-   * sensor name; one of BVP, GSR, ACC, TEMP;   */
+   * sensor name; one of BVP, GSR, ACC, TEMP.   */
   public java.lang.String getSensor() {
     return sensor;
   }
 
   /**
    * Sets the value of the 'sensor' field.
-   * sensor name; one of BVP, GSR, ACC, TEMP;   * @param value the value to set.
+   * sensor name; one of BVP, GSR, ACC, TEMP.   * @param value the value to set.
    */
   public void setSensor(java.lang.String value) {
     this.sensor = value;

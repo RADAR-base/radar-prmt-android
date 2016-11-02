@@ -21,19 +21,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
@@ -67,42 +60,14 @@ public class MainActivity extends AppCompatActivity {
     private boolean isForcedDisconnected = false;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private final E4ServiceConnection[] mConnections = {
-            new E4ServiceConnection(this, 0), new E4ServiceConnection(this, 1), new E4ServiceConnection(this, 2), new E4ServiceConnection(this, 3)
-    };
+    private E4ServiceConnection[] mConnections;
     private E4ServiceConnection activeConnection;
     private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                 final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        switch (status) {
-                            case READY:
-                            case DISABLED:
-                                serverStatusLabel.setVisibility(View.INVISIBLE);
-                                break;
-                            case CONNECTED:
-                                serverStatusLabel.setText("Server connected");
-                                serverStatusLabel.setVisibility(View.VISIBLE);
-                                break;
-                            case DISCONNECTED:
-                                serverStatusLabel.setText("Server disconnected");
-                                serverStatusLabel.setVisibility(View.VISIBLE);
-                                break;
-                            case CONNECTING:
-                                serverStatusLabel.setText("Connecting to server");
-                                serverStatusLabel.setVisibility(View.VISIBLE);
-                                break;
-                            case UPLOADING:
-                                serverStatusLabel.setText("Uploading");
-                                serverStatusLabel.setVisibility(View.VISIBLE);
-                                break;
-                        }
-                    }
-                });
+                updateServerStatus(status);
             }
         }
     };
@@ -116,15 +81,10 @@ public class MainActivity extends AppCompatActivity {
                 final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 if (state == BluetoothAdapter.STATE_ON) {
                     logger.info("Bluetooth has turned on");
-                    if (!isForcedDisconnected) {
-                        startScanning();
-                    }
                 } else if (state == BluetoothAdapter.STATE_OFF) {
                     logger.warn("Bluetooth is off");
-                    if (!isForcedDisconnected) {
-                        enableBt();
-                    }
                 }
+                startScanning();
             }
         }
     };
@@ -146,6 +106,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mConnections = new E4ServiceConnection[] {
+            new E4ServiceConnection(this, 0), new E4ServiceConnection(this, 1), new E4ServiceConnection(this, 2), new E4ServiceConnection(this, 3)
+        };
 
         setContentView(R.layout.activity_main);
 
@@ -175,8 +138,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    if (activeConnection != null) {
-                        mUIUpdater.updateWithData(activeConnection);
+                    E4ServiceConnection connection = getActiveConnection();
+                    if (connection != null) {
+                        mUIUpdater.updateWithData(connection);
                     }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
@@ -244,6 +208,12 @@ public class MainActivity extends AppCompatActivity {
      * If no E4Service is scanning, and ask one to start scanning.
      */
     private void startScanning() {
+        if (isForcedDisconnected) {
+            return;
+        } else if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            enableBt();
+            return;
+        }
         for (E4ServiceConnection mConnection : mConnections) {
             if (mConnection.isScanning()) {
                 return;
@@ -296,7 +266,9 @@ public class MainActivity extends AppCompatActivity {
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    activeConnection = connection;
+                    synchronized (MainActivity.this) {
+                        activeConnection = connection;
+                    }
                 }
             });
             deviceView.addView(btn);
@@ -304,32 +276,67 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void serviceConnected(final E4ServiceConnection connection) {
-        Button showButton = (Button) findViewById(R.id.showButton);
-        showButton.setVisibility(View.VISIBLE);
-        showButton.setOnClickListener(new View.OnClickListener() {
-            final DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-            final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+    synchronized E4ServiceConnection getActiveConnection() {
+        return activeConnection;
+    }
 
-            public void onClick(View v) {
-                try {
-                    List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = connection.getRecords(E4Topics.getInstance().getInterBeatIntervalTopic(), 25);
-                    if (!measurements.isEmpty()) {
-                        StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                        for (Record<MeasurementKey, EmpaticaE4InterBeatInterval> measurement : measurements) {
-                            sb.append(timeFormat.format(1000d * measurement.value.getTime()));
-                            sb.append(": ");
-                            sb.append(singleDecimal.format(60d / measurement.value.getInterBeatInterval()));
-                            sb.append('\n');
-                        }
-                        String view = sb.toString();
-                        Toast.makeText(MainActivity.this, view, Toast.LENGTH_LONG).show();
-                        logger.info("Data:\n{}", view);
-                    } else {
-                        Toast.makeText(MainActivity.this, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (RemoteException | IOException e) {
-                    Toast.makeText(MainActivity.this, "Failed to retrieve heart rates.", Toast.LENGTH_SHORT).show();
+    void serviceConnected(final E4ServiceConnection connection) {
+        synchronized (this) {
+            if (activeConnection == null) {
+                activeConnection = connection;
+            }
+        }
+        try {
+            ServerStatusListener.Status status = connection.getServerStatus();
+            logger.info("Initial server status: {}", status);
+            updateServerStatus(status);
+        } catch (RemoteException e) {
+            logger.warn("Failed to update UI server status");
+        }
+        runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                  Button showButton = (Button) findViewById(R.id.showButton);
+                  showButton.setVisibility(View.VISIBLE);
+                  showButton.setOnClickListener(new View.OnClickListener() {
+                      final E4HeartbeatToast toaster = new E4HeartbeatToast(MainActivity.this);
+                      public void onClick(View v) {
+                          E4ServiceConnection active = getActiveConnection();
+                          if (active != null) {
+                              toaster.execute(active);
+                          }
+                      }
+                  });
+              }
+        });
+        startScanning();
+    }
+
+    void updateServerStatus(final ServerStatusListener.Status status) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (status) {
+                    case READY:
+                    case DISABLED:
+                        serverStatusLabel.setVisibility(View.INVISIBLE);
+                        break;
+                    case CONNECTED:
+                        serverStatusLabel.setText("Server connected");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
+                        break;
+                    case DISCONNECTED:
+                        serverStatusLabel.setText("Server disconnected");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
+                        break;
+                    case CONNECTING:
+                        serverStatusLabel.setText("Connecting to server");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
+                        break;
+                    case UPLOADING:
+                        serverStatusLabel.setText("Uploading");
+                        serverStatusLabel.setVisibility(View.VISIBLE);
+                        break;
                 }
             }
         });
@@ -343,8 +350,10 @@ public class MainActivity extends AppCompatActivity {
                     case CONNECTED:
                         addDeviceButton(connection);
 
-                        if (activeConnection == null) {
-                            activeConnection = connection;
+                        synchronized (MainActivity.this) {
+                            if (activeConnection == null) {
+                                activeConnection = connection;
+                            }
                         }
                         updateLabel(stopButton, "Stop Recording");
                         dataCnt.setVisibility(View.VISIBLE);
@@ -358,8 +367,10 @@ public class MainActivity extends AppCompatActivity {
                     case DISCONNECTED:
                         Button btn = deviceButtons.remove(connection);
                         deviceView.removeView(btn);
-                        if (connection.equals(activeConnection)) {
-                            activeConnection = null;
+                        synchronized (MainActivity.this) {
+                            if (connection.equals(activeConnection)) {
+                                activeConnection = null;
+                            }
                         }
                         if (deviceButtons.isEmpty()) {
                             emptyDevices.setVisibility(View.VISIBLE);
@@ -375,11 +386,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (isForcedDisconnected) {
                                     disconnect();
                                 } else {
-                                    if (BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                                        startScanning();
-                                    } else {
-                                        enableBt();
-                                    }
+                                    startScanning();
                                 }
                             }
                         });
@@ -389,6 +396,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    void enableBt() {
+        BluetoothAdapter btAdaptor = BluetoothAdapter.getDefaultAdapter();
+        if (!btAdaptor.isEnabled() && btAdaptor.getState() != BluetoothAdapter.STATE_TURNING_ON) {
+            Intent btIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            btIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getApplicationContext().startActivity(btIntent);
+        }
     }
 
     private void checkBluetoothPermissions() {
@@ -406,24 +422,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void enableBt() {
-        BluetoothAdapter btAdaptor = BluetoothAdapter.getDefaultAdapter();
-        if (!btAdaptor.isEnabled() && btAdaptor.getState() != BluetoothAdapter.STATE_TURNING_ON) {
-            Intent btIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            btIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getApplicationContext().startActivity(btIntent);
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted.
-                if (!isForcedDisconnected) {
-                    startScanning();
-                }
+                startScanning();
             } else {
                 // User refused to grant permission.
                 updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");

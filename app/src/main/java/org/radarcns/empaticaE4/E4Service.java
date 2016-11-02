@@ -38,6 +38,7 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
     public final static int TRANSACT_GET_DEVICE_STATUS = 13;
     public final static int TRANSACT_START_RECORDING = 14;
     public final static int TRANSACT_STOP_RECORDING = 15;
+    public final static int TRANSACT_GET_SERVER_STATUS = 16;
     public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
     public final static String DEVICE_STATUS_SERVICE_CLASS = "org.radarcns.empaticaE4.E4Service.getClass";
     public final static String DEVICE_STATUS_CHANGED = "org.radarcns.empaticaE4.E4DeviceStatusListener.Status";
@@ -288,6 +289,9 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
                             }
                             deviceScanner = null;
                         }
+                        break;
+                    case TRANSACT_GET_SERVER_STATUS:
+                        reply.writeInt(dataHandler.getStatus().ordinal());
                         break;
                     default:
                         return false;

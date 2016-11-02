@@ -54,6 +54,17 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
 
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
 
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (KafkaDataSubmitter.this.sender.isConnected()) {
+                    KafkaDataSubmitter.this.dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
+                } else {
+                    KafkaDataSubmitter.this.dataHandler.updateServerStatus(ServerStatusListener.Status.DISCONNECTED);
+                }
+            }
+        });
+
         // Remove old data from tables infrequently
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -73,7 +84,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 uploadCaches(topicsToSend);
                 // still more data to send, do that immediately
                 if (!topicsToSend.isEmpty()) {
-                    executor.submit(this);
+                    executor.execute(this);
                 }
             }
         }, 10L, 10L, TimeUnit.SECONDS);
@@ -116,7 +127,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * Call {@link #join(long)} to wait for this to finish.
      */
     public void close() {
-        executor.submit(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 Map<AvroTopic<K, ? extends V>, ? extends DataCache<K, ? extends V>> caches = dataHandler.getCaches();
@@ -187,7 +198,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * Check the connection status eventually.
      */
     public void checkConnection() {
-        executor.submit(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 checkClosed();

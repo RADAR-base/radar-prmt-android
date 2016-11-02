@@ -16,6 +16,7 @@ import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.kafka.AvroTopic;
+import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_SERVICE_CLASS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
+import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
 class E4ServiceConnection implements ServiceConnection {
@@ -65,6 +67,7 @@ class E4ServiceConnection implements ServiceConnection {
     @Override
     public void onServiceConnected(final ComponentName className,
                                    IBinder service) {
+        logger.info("Bound to service {}", className);
         serviceBinder = service;
 
         // We've bound to the running Service, cast the IBinder and get instance
@@ -84,7 +87,7 @@ class E4ServiceConnection implements ServiceConnection {
         try {
             deviceStatus = getDeviceData().getStatus();
         } catch (RemoteException e) {
-            e.printStackTrace();
+            logger.error("Failed to get device status", e);
         }
     }
 
@@ -131,6 +134,12 @@ class E4ServiceConnection implements ServiceConnection {
 
     public boolean hasService() {
         return serviceBinder != null;
+    }
+
+    public ServerStatusListener.Status getServerStatus() throws RemoteException {
+        Parcel reply = Parcel.obtain();
+        serviceBinder.transact(TRANSACT_GET_SERVER_STATUS, Parcel.obtain(), reply, 0);
+        return ServerStatusListener.Status.values()[reply.readInt()];
     }
 
     public E4DeviceStatus getDeviceData() throws RemoteException {

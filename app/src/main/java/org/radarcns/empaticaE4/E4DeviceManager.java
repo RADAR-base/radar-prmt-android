@@ -120,7 +120,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
             case DISCONNECTED:
                 // The device manager disconnected from a device. Before it ever makes a connection,
                 // it also calls this, so check if we have a connected device first.
-                if (!isDisconnected) {
+                if (!isDisconnected && deviceName != null) {
                     this.updateStatus(DeviceStatusListener.Status.DISCONNECTED);
                     isDisconnected = true;
                 }
