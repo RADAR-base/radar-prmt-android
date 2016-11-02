@@ -15,11 +15,10 @@ import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
-import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.android.MeasurementTable;
-import org.radarcns.android.TableDataHandler;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.android.MeasurementTable;
+import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
@@ -42,6 +41,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
     private final MeasurementTable<EmpaticaE4ElectroDermalActivity> edaTable;
     private final MeasurementTable<EmpaticaE4InterBeatInterval> ibiTable;
     private final MeasurementTable<EmpaticaE4Temperature> temperatureTable;
+    private final MeasurementTable<EmpaticaE4SensorStatus> sensorStatusTable;
     private final AvroTopic<MeasurementKey, EmpaticaE4BatteryLevel> batteryTopic;
 
     private final E4DeviceStatus deviceStatus;
@@ -58,6 +58,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         this.edaTable = dataHandler.getCache(topics.getElectroDermalActivityTopic());
         this.ibiTable = dataHandler.getCache(topics.getInterBeatIntervalTopic());
         this.temperatureTable = dataHandler.getCache(topics.getTemperatureTopic());
+        this.sensorStatusTable = dataHandler.getCache(topics.getSensorStatusTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
 
         this.e4service = e4Service;
@@ -125,10 +126,6 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                 }
                 break;
         }
-    }
-
-    @Override
-    public void didUpdateSensorStatus(EmpaSensorStatus empaSensorStatus, EmpaSensorType empaSensorType) {
     }
 
     @Override
@@ -245,6 +242,14 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         deviceStatus.setTemperature(temperature);
         EmpaticaE4Temperature value = new EmpaticaE4Temperature(timestamp, System.currentTimeMillis() / 1000d, temperature);
         dataHandler.addMeasurement(temperatureTable, deviceId, value);
+    }
+
+    @Override
+    public void didUpdateSensorStatus(EmpaSensorStatus empaSensorStatus, EmpaSensorType empaSensorType) {
+        deviceStatus.setSensorStatus(empaSensorType, empaSensorStatus);
+        double now = System.currentTimeMillis() / 1000d;
+        EmpaticaE4SensorStatus value = new EmpaticaE4SensorStatus(now, now, empaSensorType.name(), empaSensorStatus.name());
+        dataHandler.addMeasurement(sensorStatusTable, deviceId, value);
     }
 
     public String getName() {

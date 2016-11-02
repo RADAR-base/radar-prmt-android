@@ -12,6 +12,7 @@ public class E4Topics {
     private final AvroTopic<MeasurementKey, EmpaticaE4ElectroDermalActivity> electroDermalActivityTopic;
     private final AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> interBeatIntervalTopic;
     private final AvroTopic<MeasurementKey, EmpaticaE4Temperature> temperatureTopic;
+    private final AvroTopic<MeasurementKey, EmpaticaE4SensorStatus> sensorStatusTopic;
 
     private final static Object syncObject = new Object();
     private static E4Topics instance = null;
@@ -32,6 +33,7 @@ public class E4Topics {
         electroDermalActivityTopic = new AvroTopic<>("empatica_e4_electrodermal_activity", MeasurementKey.getClassSchema(), EmpaticaE4ElectroDermalActivity.getClassSchema(), MeasurementKey.class, EmpaticaE4ElectroDermalActivity.class);
         interBeatIntervalTopic = new AvroTopic<>("empatica_e4_inter_beat_interval", MeasurementKey.getClassSchema(), EmpaticaE4InterBeatInterval.getClassSchema(), MeasurementKey.class, EmpaticaE4InterBeatInterval.class);
         temperatureTopic = new AvroTopic<>("empatica_e4_temperature", MeasurementKey.getClassSchema(), EmpaticaE4Temperature.getClassSchema(), MeasurementKey.class, EmpaticaE4Temperature.class);
+        sensorStatusTopic = new AvroTopic<>("empatica_e4_sensor_status", MeasurementKey.getClassSchema(), EmpaticaE4SensorStatus.getClassSchema(), MeasurementKey.class, EmpaticaE4SensorStatus.class);
     }
 
     public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
@@ -48,6 +50,8 @@ public class E4Topics {
                 return interBeatIntervalTopic;
             case "empatica_e4_temperature":
                 return temperatureTopic;
+            case "empatica_e4_sensor_status":
+                return sensorStatusTopic;
             default:
                 throw new IllegalArgumentException("Topic " + name + " unknown");
         }
@@ -75,5 +79,9 @@ public class E4Topics {
 
     public AvroTopic<MeasurementKey, EmpaticaE4Temperature> getTemperatureTopic() {
         return temperatureTopic;
+    }
+
+    public AvroTopic<MeasurementKey, EmpaticaE4SensorStatus> getSensorStatusTopic() {
+        return sensorStatusTopic;
     }
 }

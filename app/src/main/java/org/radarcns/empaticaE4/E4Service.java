@@ -155,10 +155,11 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
             }
             long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
             //noinspection unchecked
-            dataHandler = new TableDataHandler(getApplicationContext(), 2500, kafkaUrl, remoteSchemaRetriever,
+            dataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
                     dataRetentionMs, topics.getAccelerationTopic(),
                     topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
-                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic());
+                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic(),
+                    topics.getSensorStatusTopic());
             dataHandler.addStatusListener(this);
             dataHandler.start();
         }

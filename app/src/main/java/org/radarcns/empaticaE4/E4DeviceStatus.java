@@ -3,34 +3,20 @@ package org.radarcns.empaticaE4;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.empatica.empalink.config.EmpaSensorStatus;
+import com.empatica.empalink.config.EmpaSensorType;
+
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Created by joris on 27/10/2016.
  */
 
 public class E4DeviceStatus implements DeviceState {
-    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
-        public E4DeviceStatus createFromParcel(Parcel in) {
-            E4DeviceStatus result = new E4DeviceStatus();
-            result.status = DeviceStatusListener.Status.values()[in.readInt()];
-            result.acceleration[0] = in.readFloat();
-            result.acceleration[1] = in.readFloat();
-            result.acceleration[2] = in.readFloat();
-            result.batteryLevel = in.readFloat();
-            result.bloodVolumePulse = in.readFloat();
-            result.electroDermalActivity = in.readFloat();
-            result.interBeatInterval = in.readFloat();
-            result.temperature = in.readFloat();
-            return result;
-        }
-
-        public E4DeviceStatus[] newArray(int size) {
-            return new E4DeviceStatus[size];
-        }
-    };
-
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
@@ -38,6 +24,7 @@ public class E4DeviceStatus implements DeviceState {
     private float electroDermalActivity = Float.NaN;
     private float interBeatInterval = Float.NaN;
     private float temperature = Float.NaN;
+    private final Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = new EnumMap<>(EmpaSensorType.class);
 
     @Override
     public int describeContents() {
@@ -55,7 +42,36 @@ public class E4DeviceStatus implements DeviceState {
         dest.writeFloat(this.electroDermalActivity);
         dest.writeFloat(this.interBeatInterval);
         dest.writeFloat(this.temperature);
+        dest.writeInt(sensorStatus.size());
+        for (Map.Entry<EmpaSensorType, EmpaSensorStatus> sensor : sensorStatus.entrySet()) {
+            dest.writeInt(sensor.getKey().ordinal());
+            dest.writeInt(sensor.getValue().ordinal());
+        }
     }
+
+    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
+        public E4DeviceStatus createFromParcel(Parcel in) {
+            E4DeviceStatus result = new E4DeviceStatus();
+            result.status = DeviceStatusListener.Status.values()[in.readInt()];
+            result.acceleration[0] = in.readFloat();
+            result.acceleration[1] = in.readFloat();
+            result.acceleration[2] = in.readFloat();
+            result.batteryLevel = in.readFloat();
+            result.bloodVolumePulse = in.readFloat();
+            result.electroDermalActivity = in.readFloat();
+            result.interBeatInterval = in.readFloat();
+            result.temperature = in.readFloat();
+            int numSensors = in.readInt();
+            for (int i = 0; i < numSensors; i++) {
+                result.sensorStatus.put(EmpaSensorType.values()[in.readInt()], EmpaSensorStatus.values()[in.readInt()]);
+            }
+            return result;
+        }
+
+        public E4DeviceStatus[] newArray(int size) {
+            return new E4DeviceStatus[size];
+        }
+    };
 
     public float[] getAcceleration() {
         return acceleration;
@@ -113,5 +129,13 @@ public class E4DeviceStatus implements DeviceState {
 
     public synchronized void setStatus(DeviceStatusListener.Status status) {
         this.status = status;
+    }
+
+    public Map<EmpaSensorType, EmpaSensorStatus> getSensorStatus() {
+        return sensorStatus;
+    }
+
+    public synchronized void setSensorStatus(EmpaSensorType type, EmpaSensorStatus status) {
+        sensorStatus.put(type, status);
     }
 }
