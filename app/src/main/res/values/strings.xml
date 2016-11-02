@@ -26,6 +26,7 @@
     <string name="header_status">Status</string>
     <string name="header_device">Device</string>
     <string name="header_temp">Temperature</string>
-    <string name="header_connect">*</string>
+    <string name="header_connect">TODO:</string>
+    <string name="header_details">Server Status</string>
 
 </resources>

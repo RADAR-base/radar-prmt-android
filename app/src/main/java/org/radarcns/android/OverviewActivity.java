@@ -4,18 +4,112 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.TextView;
 
 import org.radarcns.R;
+import org.radarcns.empaticaE4.E4DeviceStatus;
+import org.radarcns.empaticaE4.E4Service1;
 import org.radarcns.empaticaE4.MainActivity;
 
+import java.text.DecimalFormat;
+
+import org.radarcns.android.DeviceStatusListener;
+
+import static org.radarcns.android.DeviceStatusListener.*;
+import static org.radarcns.android.DeviceStatusListener.Status.*;
 
 public class OverviewActivity extends AppCompatActivity {
+    private TextView[] mDeviceNameLabels;
+    private View[] mStatusIcons;
+    private TextView[] mTemperatureLabels;
+    private TextView[] mBatteryLabels;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_overview);
+
+        // Create arrays of labels. Fixed to four rows
+        mDeviceNameLabels = new TextView[] {
+                (TextView) findViewById(R.id.deviceNameRow1),
+                (TextView) findViewById(R.id.deviceNameRow2),
+                (TextView) findViewById(R.id.deviceNameRow3),
+                (TextView) findViewById(R.id.deviceNameRow4)
+        };
+
+        mStatusIcons = new View[] {
+                findViewById(R.id.statusRow1),
+                findViewById(R.id.statusRow2),
+                findViewById(R.id.statusRow3),
+                findViewById(R.id.statusRow4)
+        };
+
+        mTemperatureLabels = new TextView[] {
+                (TextView) findViewById(R.id.temperatureRow1),
+                (TextView) findViewById(R.id.temperatureRow2),
+                (TextView) findViewById(R.id.temperatureRow3),
+                (TextView) findViewById(R.id.temperatureRow4)
+        };
+
+        mBatteryLabels = new TextView[] {
+                (TextView) findViewById(R.id.batteryRow1),
+                (TextView) findViewById(R.id.batteryRow2),
+                (TextView) findViewById(R.id.batteryRow3),
+                (TextView) findViewById(R.id.batteryRow4)
+        };
+
     }
+
+    public void addDeviceName(String deviceName, int row) {
+        // TODO: restrict n_characters of deviceName
+        mDeviceNameLabels[row].setText(deviceName);
+    }
+
+    /**
+     * Updates a row with the deviceData
+     * @param deviceData
+     * @param row           Row number
+     */
+    public void updateRow(E4DeviceStatus deviceData, int row ) {
+        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+        final DecimalFormat noDecimals = new DecimalFormat("0");
+
+        // Connection status. Change icon used.
+        switch (deviceData.getStatus()) {
+            case CONNECTED:
+                mStatusIcons[row].setBackgroundResource(R.drawable.status_connected);
+                break;
+            case DISCONNECTED:
+                mStatusIcons[row].setBackgroundResource(R.drawable.status_disconnected);
+                break;
+            case READY:
+            case CONNECTING:
+                mStatusIcons[row].setBackgroundResource(R.drawable.status_searching);
+                break;
+            default:
+                mStatusIcons[row].setBackgroundResource(R.drawable.status_searching);
+        }
+
+        // Temperature
+        setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
+
+        // Battery
+        setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
+
+    }
+
+    private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+        if (Float.isNaN(value)) {
+            // em dash
+            label.setText("\u2014");
+        } else {
+            label.setText(formatter.format(value) + " " + suffix);
+        }
+    }
+
+
 
     /** Called when the user clicks the Send button */
     /*

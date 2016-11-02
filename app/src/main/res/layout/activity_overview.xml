@@ -33,7 +33,7 @@
 
             <TextView
                 style="@style/Header"
-                android:text="@string/header_connect" />
+                android:text="@string/header_details" />
         </TableRow>
 
         <TableRow
@@ -69,7 +69,7 @@
                 android:id="@+id/detailsButtonRow1"
                 style="@style/ButtonColumn"
                 android:text="@string/button_details"
-                android:onClick="sendMessage" />
+                android:onClick="" />
 
         </TableRow>
 
@@ -106,7 +106,7 @@
                 android:id="@+id/detailsButtonRow2"
                 style="@style/ButtonColumn"
                 android:text="@string/button_details"
-                android:onClick="sendMessage" />
+                android:onClick="" />
 
         </TableRow>
 
@@ -143,7 +143,44 @@
                 android:id="@+id/detailsButtonRow3"
                 style="@style/ButtonColumn"
                 android:text="@string/button_details"
-                android:onClick="sendMessage" />
+                android:onClick="" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/row4">
+
+            <TextView
+                android:id="@+id/deviceNameRow4"
+                style="@style/DeviceNameColumn"
+                android:text="Angel Sensor" />
+
+            <View
+                android:id="@+id/statusRow4"
+                style="@style/StatusCircle"
+                android:background="@drawable/status_searching" />
+
+            <TextView
+                android:id="@+id/batteryRow4"
+                style="@style/NumberColumn"
+                android:text="55.5%" />
+
+            <TextView
+                android:id="@+id/temperatureRow4"
+                style="@style/NumberColumn"
+                android:text="-11.1 \u2103" />
+
+            <Button
+                android:id="@+id/refreshButtonRow4"
+                style="@style/ButtonColumn"
+                android:text="@string/button_connect"
+                android:onClick="" />
+
+            <Button
+                android:id="@+id/detailsButtonRow4"
+                style="@style/ButtonColumn"
+                android:text="@string/button_details"
+                android:onClick="" />
 
         </TableRow>
     </TableLayout>
