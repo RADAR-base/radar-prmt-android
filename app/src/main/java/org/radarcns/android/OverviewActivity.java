@@ -2,29 +2,30 @@ package org.radarcns.android;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
 import org.radarcns.R;
 import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.empaticaE4.E4Service1;
+import org.radarcns.empaticaE4.E4ServiceConnection;
 import org.radarcns.empaticaE4.MainActivity;
 
 import java.text.DecimalFormat;
 import java.util.Random;
 
-import org.radarcns.android.DeviceStatusListener;
-
-import static org.radarcns.android.DeviceStatusListener.*;
 import static org.radarcns.android.DeviceStatusListener.Status.*;
 
-public class OverviewActivity extends AppCompatActivity {
+public class OverviewActivity extends MainActivity {
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
     private TextView[] mTemperatureLabels;
     private TextView[] mBatteryLabels;
 
+    private DeviceUIUpdater mUIUpdater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,25 +61,53 @@ public class OverviewActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.batteryRow4)
         };
 
+        mConnections = new E4ServiceConnection[] {
+                new E4ServiceConnection(this, 0), new E4ServiceConnection(this, 1), new E4ServiceConnection(this, 2), new E4ServiceConnection(this, 3)
+        };
+
+        uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
+        mHandler = new Handler();
+
+        mUIUpdater = new DeviceUIUpdater();
+        mUIScheduler = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    E4ServiceConnection connection = getActiveConnection();
+                    if (connection != null) {
+                        mUIUpdater.updateWithData(connection);
+                    }
+                } catch (RemoteException e) {
+                    logger.warn("Failed to update device data", e);
+                } finally {
+                    mHandler.postDelayed(mUIScheduler, uiRefreshRate);
+                }
+            }
+        };
+
+        isForcedDisconnected = false;
+        checkBluetoothPermissions();
+
     }
 
     public void connectDevice(View v) {
         int rowIndex = getRowIndexFromView(v);
 
-        // some test code
-        updateDeviceName(String.valueOf( this.hashCode() ), rowIndex);
+        // some test code, updating with random data
+        Random generator = new Random();
+        updateDeviceName(String.valueOf( generator.hashCode() ), rowIndex);
     }
 
     public void showDetails(View v) {
         int rowIndex = getRowIndexFromView(v);
 
-        // some test code
+        // some test code, updating with random data
         E4DeviceStatus deviceData = new E4DeviceStatus();
 
         Random generator = new Random();
         deviceData.setTemperature(  generator.nextFloat()*100 );
         deviceData.setBatteryLevel( generator.nextFloat() );
-        deviceData.setStatus(DISCONNECTED);
+        deviceData.setStatus( new DeviceStatusListener.Status[] {CONNECTED,DISCONNECTED,READY,CONNECTING}[generator.nextInt(4)] );
 
         updateRow(deviceData, rowIndex);
     }
@@ -153,7 +182,24 @@ public class OverviewActivity extends AppCompatActivity {
         }
     }
 
+    public class DeviceUIUpdater implements Runnable {
+        E4DeviceStatus deviceData = null;
 
+        public void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
+            deviceData = connection.getDeviceData();
+            runOnUiThread(this);
+        }
+
+        @Override
+        public void run() {
+            if (deviceData == null) {
+                return;
+            }
+            updateRow(deviceData, 0);
+        }
+
+
+    }
 
     /** Called when the user clicks the Send button */
     /*

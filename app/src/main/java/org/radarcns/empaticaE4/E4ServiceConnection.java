@@ -32,7 +32,7 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-class E4ServiceConnection implements ServiceConnection {
+public class E4ServiceConnection implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(E4ServiceConnection.class);
     private final MainActivity mainActivity;
     private boolean isRemote;
@@ -54,7 +54,8 @@ class E4ServiceConnection implements ServiceConnection {
         }
     };
 
-    E4ServiceConnection(MainActivity mainActivity) {
+
+    public E4ServiceConnection(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
         this.serviceBinder = null;
         this.deviceName = null;

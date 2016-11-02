@@ -38,7 +38,7 @@ import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
 
 public class MainActivity extends AppCompatActivity {
-    private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
+    protected final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
     private TextView accel_xLabel;
@@ -58,15 +58,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView deviceLabel;
     private Map<E4ServiceConnection, Button> deviceButtons;
 
-    private long uiRefreshRate;
-    private Handler mHandler;
-    private Runnable mUIScheduler;
+    protected long uiRefreshRate;
+    protected Handler mHandler;
+    protected Runnable mUIScheduler;
     private DeviceUIUpdater mUIUpdater;
-    private boolean isForcedDisconnected = false;
+    protected boolean isForcedDisconnected = false;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private E4ServiceConnection mConnection;
-    private E4ServiceConnection activeConnection;
+    protected E4ServiceConnection mConnection;
+    protected E4ServiceConnection activeConnection;
+    
     private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -277,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    synchronized E4ServiceConnection getActiveConnection() {
+    protected synchronized E4ServiceConnection getActiveConnection() {
         return activeConnection;
     }
 
@@ -409,7 +410,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void checkBluetoothPermissions() {
+    protected void checkBluetoothPermissions() {
         String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
 
         boolean waitingForPermission = false;
@@ -438,14 +439,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class DeviceUIUpdater implements Runnable {
+    public class DeviceUIUpdater implements Runnable {
         final DecimalFormat singleDecimal = new DecimalFormat("0.0");
         final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
         final DecimalFormat noDecimals = new DecimalFormat("0");
         E4DeviceStatus deviceData = null;
         String deviceName = null;
 
-        void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
+        public void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
             deviceData = connection.getDeviceData();
             deviceName = connection.getDeviceName();
             runOnUiThread(this);
