@@ -21,12 +21,13 @@ public class BatchedKafkaSender<K, V> implements KafkaSender<K, V> {
     }
 
     @Override
-    public KafkaTopicSender<K, V> sender(final AvroTopic topic) throws IOException {
-        return new KafkaTopicSender<K, V>() {
-            List<Record<K, V>> cache = new ArrayList<>();
-            KafkaTopicSender<K, V> topicSender = sender.sender(topic);
+    public <L extends K, W extends V> KafkaTopicSender<L, W> sender(final AvroTopic<L, W> topic) throws IOException {
+        return new KafkaTopicSender<L, W>() {
+            List<Record<L, W>> cache = new ArrayList<>();
+            KafkaTopicSender<L, W> topicSender = sender.sender(topic);
 
-            public void send(long offset, K key, V value) throws IOException {
+            @Override
+            public void send(long offset, L key, W value) throws IOException {
                 if (!isConnected()) {
                     throw new IOException("Cannot send records to unconnected producer.");
                 }
@@ -39,7 +40,7 @@ public class BatchedKafkaSender<K, V> implements KafkaSender<K, V> {
             }
 
             @Override
-            public void send(List<Record<K, V>> records) throws IOException {
+            public void send(List<Record<L, W>> records) throws IOException {
                 if (records.isEmpty()) {
                     return;
                 }
@@ -87,11 +88,11 @@ public class BatchedKafkaSender<K, V> implements KafkaSender<K, V> {
                     sender.close();
                 }
             }
-        };
-    }
 
-    private boolean exceedsBuffer(List<Record<K, V>> records) {
-        return records.size() >= maxBatchSize || System.currentTimeMillis() - records.get(0).milliTimeAdded >= ageMillis;
+            private boolean exceedsBuffer(List<Record<L, W>> records) {
+                return records.size() >= maxBatchSize || System.currentTimeMillis() - records.get(0).milliTimeAdded >= ageMillis;
+            }
+        };
     }
 
     @Override

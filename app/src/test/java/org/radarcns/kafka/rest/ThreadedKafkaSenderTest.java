@@ -32,6 +32,7 @@ public class ThreadedKafkaSenderTest extends TestCase {
 
         KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
         KafkaSender<String, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);
+        kafkaThread.resetConnection();
 
         try (KafkaSender<String, SpecificRecord> sender = new BatchedKafkaSender<>(kafkaThread, 1000, 250)) {
             Schema stringSchema = Schema.create(Schema.Type.STRING);

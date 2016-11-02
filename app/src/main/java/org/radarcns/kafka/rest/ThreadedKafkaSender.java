@@ -68,7 +68,7 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
 
                 boolean success = sendHeartbeat();
                 if (success) {
-                    lastConnection = System.currentTimeMillis();
+                    updateLastConnection();
                 } else {
                     logger.error("Failed to send message");
                     disconnect();
@@ -191,9 +191,7 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
                 }
 
                 if (exception == null) {
-                    synchronized (ThreadedKafkaSender.this) {
-                        lastConnection = System.currentTimeMillis();
-                    }
+                    updateLastConnection();
                 } else {
                     logger.error("Failed to send message");
                     disconnect();
@@ -209,6 +207,10 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
             success = sender.isConnected();
         }
         return success;
+    }
+
+    private synchronized void updateLastConnection() {
+        lastConnection = System.currentTimeMillis();
     }
 
     private synchronized void disconnect() {
