@@ -12,6 +12,7 @@ import org.radarcns.empaticaE4.E4Service1;
 import org.radarcns.empaticaE4.MainActivity;
 
 import java.text.DecimalFormat;
+import java.util.Random;
 
 import org.radarcns.android.DeviceStatusListener;
 
@@ -61,7 +62,50 @@ public class OverviewActivity extends AppCompatActivity {
 
     }
 
-    public void addDeviceName(String deviceName, int row) {
+    public void connectDevice(View v) {
+        int rowIndex = getRowIndexFromView(v);
+
+        // some test code
+        updateDeviceName(String.valueOf( this.hashCode() ), rowIndex);
+    }
+
+    public void showDetails(View v) {
+        int rowIndex = getRowIndexFromView(v);
+
+        // some test code
+        E4DeviceStatus deviceData = new E4DeviceStatus();
+
+        Random generator = new Random();
+        deviceData.setTemperature(  generator.nextFloat()*100 );
+        deviceData.setBatteryLevel( generator.nextFloat() );
+        deviceData.setStatus(DISCONNECTED);
+
+        updateRow(deviceData, rowIndex);
+    }
+
+    private int getRowIndexFromView(View v) {
+        // Assume all elements are direct descendants from the TableRow
+        View parent = (View) v.getParent();
+        switch ( parent.getId() ) {
+
+            case R.id.row1:
+                return 0;
+
+            case R.id.row2:
+                return 1;
+
+            case R.id.row3:
+                return 2;
+
+            case R.id.row4:
+                return 3;
+
+            default:
+                return -1; // TODO: throw exception
+        }
+    }
+
+    public void updateDeviceName(String deviceName, int row) {
         // TODO: restrict n_characters of deviceName
         mDeviceNameLabels[row].setText(deviceName);
     }
