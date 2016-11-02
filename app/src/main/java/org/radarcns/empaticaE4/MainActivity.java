@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isForcedDisconnected = false;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private E4ServiceConnection[] mConnections;
+    private E4ServiceConnection mConnection;
     private E4ServiceConnection activeConnection;
     private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
         @Override
@@ -106,9 +106,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mConnections = new E4ServiceConnection[] {
-            new E4ServiceConnection(this, 0), new E4ServiceConnection(this, 1), new E4ServiceConnection(this, 2), new E4ServiceConnection(this, 3)
-        };
+        mConnection = new E4ServiceConnection(this);
 
         setContentView(R.layout.activity_main);
 
@@ -175,9 +173,7 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(serverStatusListener, serverFilter);
         IntentFilter failedFilter = new IntentFilter(E4Service.DEVICE_CONNECT_FAILED);
         registerReceiver(deviceFailedReceiver, failedFilter);
-        for (E4ServiceConnection mConnection : mConnections) {
-            bindToEmpatica(mConnection);
-        }
+        bindToEmpatica(mConnection);
     }
 
     @Override
@@ -186,20 +182,16 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(serverStatusListener);
         unregisterReceiver(deviceFailedReceiver);
         unregisterReceiver(bluetoothReceiver);
-        for (E4ServiceConnection mConnection : mConnections) {
-            unbindService(mConnection);
-            mConnection.close();
-        }
+        unbindService(mConnection);
+        mConnection.close();
     }
 
     private void disconnect() {
-        for (E4ServiceConnection mConnection : mConnections) {
-            if (mConnection.isRecording()) {
-                try {
-                    mConnection.stopRecording();
-                } catch (RemoteException e) {
-                    // it cannot be reached so it already stopped recording
-                }
+        if (mConnection.isRecording()) {
+            try {
+                mConnection.stopRecording();
+            } catch (RemoteException e) {
+                // it cannot be reached so it already stopped recording
             }
         }
     }
@@ -214,29 +206,23 @@ public class MainActivity extends AppCompatActivity {
             enableBt();
             return;
         }
-        for (E4ServiceConnection mConnection : mConnections) {
-            if (mConnection.isScanning()) {
-                return;
-            }
+        if (mConnection.isScanning()) {
+            return;
         }
-        for (E4ServiceConnection mConnection : mConnections) {
-            if (mConnection.hasService() && !mConnection.isRecording()) {
-                try {
-                    mConnection.startRecording();
-                    return;
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
+        if (mConnection.hasService() && !mConnection.isRecording()) {
+            try {
+                mConnection.startRecording();
+            } catch (RemoteException e) {
+                logger.error("Failed to start recording", e);
             }
         }
     }
 
     void bindToEmpatica(E4ServiceConnection connection) {
-        Class<? extends E4Service> serviceCls = connection.serviceClass();
         logger.info("Intending to start E4 service");
-        startService(new Intent(this, serviceCls));
+        startService(new Intent(this, E4Service.class));
 
-        Intent e4serviceIntent = new Intent(this, serviceCls);
+        Intent e4serviceIntent = new Intent(this, E4Service.class);
         e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
         e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
         e4serviceIntent.putExtra("group_id", getString(R.string.group_id));

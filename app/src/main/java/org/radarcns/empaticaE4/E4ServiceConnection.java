@@ -27,7 +27,6 @@ import java.util.List;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
-import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_SERVICE_CLASS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
@@ -37,14 +36,13 @@ class E4ServiceConnection implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(E4ServiceConnection.class);
     private final MainActivity mainActivity;
     private DeviceStatusListener.Status deviceStatus;
-    private final int clsNumber;
     public String deviceName;
     private IBinder serviceBinder;
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(DEVICE_STATUS_CHANGED) && intent.getStringExtra(DEVICE_STATUS_SERVICE_CLASS).endsWith(String.valueOf(clsNumber))) {
+            if (intent.getAction().equals(DEVICE_STATUS_CHANGED)) {
                 if (intent.hasExtra(DEVICE_STATUS_NAME)) {
                     deviceName = intent.getStringExtra(DEVICE_STATUS_NAME);
                 }
@@ -54,9 +52,8 @@ class E4ServiceConnection implements ServiceConnection {
         }
     };
 
-    E4ServiceConnection(MainActivity mainActivity, int clsNumber) {
+    E4ServiceConnection(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
-        this.clsNumber = clsNumber;
         this.serviceBinder = null;
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
@@ -155,21 +152,6 @@ class E4ServiceConnection implements ServiceConnection {
         serviceBinder = null;
         deviceName = null;
         deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
-    }
-
-    Class<? extends E4Service> serviceClass() {
-        switch (clsNumber) {
-            case 0:
-                return E4Service0.class;
-            case 1:
-                return E4Service1.class;
-            case 2:
-                return E4Service2.class;
-            case 3:
-                return E4Service3.class;
-            default:
-                return null;
-        }
     }
 
     public void close() {
