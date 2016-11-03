@@ -12,25 +12,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/deviceName"
-        android:layout_below="@id/status"
+    <RelativeLayout
+        android:id="@+id/deviceNames"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/status">
+        <TextView
+            android:id="@+id/emptyDevices"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_devices_connected"/>
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/controlPanel"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_below="@id/deviceName"
+        android:layout_below="@id/deviceNames"
         android:layout_marginTop="50dp">
 
         <Button
             android:id="@+id/stopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Stop recording"/>
+            android:text="@string/stop_recording"/>
 
         <Button
             android:id="@+id/showButton"
@@ -39,23 +44,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="invisible"
-            android:text="Show heart rate"/>
-
+            android:text="@string/show_heart_rate"/>
 
         <TextView
             android:id="@+id/serverStatus"
             android:layout_below="@id/showButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/reconnectButton"
-            android:layout_below="@id/serverStatus"
-            android:layout_marginTop="50dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            android:text="Reconnect to server"/>
     </RelativeLayout>
 
     <RelativeLayout
@@ -64,14 +59,29 @@
         android:visibility="invisible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/deviceName"
+        android:layout_below="@id/deviceNames"
         android:layout_toEndOf="@id/controlPanel">
 
         <TextView
-            android:id="@+id/accel_label"
+            android:id="@+id/activeDevice"
             android:layout_alignParentStart="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/active_device" />
+
+        <TextView
+            android:id="@+id/activeDeviceLabel"
+            android:layout_below="@id/activeDevice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/emptyText" />
+
+        <TextView
+            android:id="@+id/accel_label"
+            android:layout_below="@id/activeDeviceLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="@string/accel" />
 
         <LinearLayout
@@ -195,4 +205,79 @@
             android:layout_height="wrap_content"
             android:text="@string/emptyText"/>
      </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/sensorStatus"
+        android:layout_marginStart="20dp"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/deviceNames"
+        android:layout_toEndOf="@id/dataArea">
+
+
+    <TextView
+        android:id="@+id/acceleration_sensor_label"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Acceleration sensor" />
+
+    <TextView
+        android:id="@+id/acceleration_sensor"
+        android:layout_below="@id/acceleration_sensor_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/emptyText"/>
+
+    <TextView
+        android:id="@+id/bvp_sensor_label"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/acceleration_sensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="BVP sensor" />
+
+    <TextView
+        android:id="@+id/bvp_sensor"
+        android:layout_below="@id/bvp_sensor_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/emptyText"/>
+
+
+    <TextView
+        android:id="@+id/eda_sensor_label"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/bvp_sensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="EDA sensor" />
+
+    <TextView
+        android:id="@+id/eda_sensor"
+        android:layout_below="@id/eda_sensor_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/emptyText"/>
+
+
+        <TextView
+        android:id="@+id/temperature_sensor_label"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/eda_sensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temperature sensor" />
+
+    <TextView
+        android:id="@+id/temperature_sensor"
+        android:layout_below="@id/temperature_sensor_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/emptyText"/>
+
+    </RelativeLayout>
 </RelativeLayout>

@@ -1,18 +1,15 @@
 package org.radarcns.empaticaE4;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.PendingIntent;
-import android.content.ComponentName;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -23,21 +20,23 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.radarcns.android.MeasurementIterator;
-import org.radarcns.android.MeasurementTable;
-import org.radarcns.android.ServerStatusListener;
+import com.empatica.empalink.config.EmpaSensorStatus;
+import com.empatica.empalink.config.EmpaSensorType;
+
+import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements ServerStatusListener, E4DeviceStatusListener {
+import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
+import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
+import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
+
+public class MainActivity extends AppCompatActivity {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
@@ -50,88 +49,73 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     private TextView temperatureLabel;
     private TextView batteryLabel;
     private TextView statusLabel;
-    private TextView deviceNameLabel;
     private TextView serverStatusLabel;
+    private TextView emptyDevices;
     private Button stopButton;
-    private Button reconnectButton;
     private RelativeLayout dataCnt;
+    private RelativeLayout deviceView;
+    private TextView deviceLabel;
+    private Map<E4ServiceConnection, Button> deviceButtons;
 
     private long uiRefreshRate;
     private Handler mHandler;
     private Runnable mUIScheduler;
-    private Runnable mUIUpdater;
-    private E4Topics topics;
-    private E4Service e4Service;
-    private boolean mBound;
-    private boolean waitingForPermission;
-    private boolean waitingForBind;
+    private DeviceUIUpdater mUIUpdater;
+    private boolean isForcedDisconnected = false;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private E4ServiceConnection mConnection;
+    private E4ServiceConnection activeConnection;
+    private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
         @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            // We've bound to the running Service, cast the IBinder and get instance
-            E4Service.LocalBinder binder = (E4Service.LocalBinder) service;
-            e4Service = binder.getService();
-            e4Service.getDataHandler().addStatusListener(MainActivity.this);
-            updateServerStatus(e4Service.getDataHandler().getStatus());
-            e4Service.getDataHandler().checkConnection();
-            e4Service.addStatusListener(MainActivity.this);
-            if (e4Service.isRecording()) {
-                deviceStatusUpdated(null, E4DeviceStatusListener.Status.READY);
-                for (E4DeviceManager device : e4Service.getDevices()) {
-                    deviceStatusUpdated(device, device.getStatus());
-                }
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
+                final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
+                updateServerStatus(status);
             }
-            for (E4DeviceManager device : e4Service.getDevices()) {
-                deviceStatusUpdated(device, E4DeviceStatusListener.Status.CONNECTED);
-            }
-            mBound = true;
-
-            Button showButton = (Button) findViewById(R.id.showButton);
-            showButton.setVisibility(View.VISIBLE);
-            showButton.setOnClickListener(new View.OnClickListener() {
-                final DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-                final LinkedList<MeasurementTable.Measurement> reversedMeasurements = new LinkedList<>();
-                final MeasurementTable table = e4Service.getDataHandler().getTable(topics.getInterBeatIntervalTopic());
-
-                public void onClick(View v) {
-                    reversedMeasurements.clear();
-                    try (MeasurementIterator measurements = table.getMeasurements(25)) {
-                        for (MeasurementTable.Measurement measurement : measurements) {
-                            reversedMeasurements.addFirst(measurement);
-                        }
-                    }
-
-                    if (!reversedMeasurements.isEmpty()) {
-                        StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                        for (MeasurementTable.Measurement measurement : reversedMeasurements) {
-                            sb.append(timeFormat.format(1000d * (Double)measurement.value.get(0)));
-                            sb.append(": ");
-                            sb.append(String.valueOf((int)(60d/((Number)measurement.value.get(2)).doubleValue())));
-                            sb.append('\n');
-                        }
-                        String view = sb.toString();
-                        Toast.makeText(MainActivity.this, view, Toast.LENGTH_LONG).show();
-                        logger.info("Data:\n{}", view);
-                    } else {
-                        Toast.makeText(MainActivity.this, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
         }
     };
+
+    private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                if (state == BluetoothAdapter.STATE_ON) {
+                    logger.info("Bluetooth has turned on");
+                } else if (state == BluetoothAdapter.STATE_OFF) {
+                    logger.warn("Bluetooth is off");
+                }
+                startScanning();
+            }
+        }
+    };
+
+    private final BroadcastReceiver deviceFailedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, final Intent intent) {
+            if (intent.getAction().equals(DEVICE_CONNECT_FAILED)) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+    };
+    private TextView accelSensorLabel;
+    private TextView bvpSensorLabel;
+    private TextView edaSensorLabel;
+    private TextView temperatureSensorLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBound = false;
+        mConnection = new E4ServiceConnection(this);
+
         setContentView(R.layout.activity_main);
 
         // Initialize vars that reference UI components
@@ -143,91 +127,44 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         bvpLabel = (TextView) findViewById(R.id.bvp);
         edaLabel = (TextView) findViewById(R.id.eda);
         ibiLabel = (TextView) findViewById(R.id.ibi);
+        deviceView = (RelativeLayout) findViewById(R.id.deviceNames);
+        emptyDevices = (TextView) findViewById(R.id.emptyDevices);
         serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
         temperatureLabel = (TextView) findViewById(R.id.temperature);
         batteryLabel = (TextView) findViewById(R.id.battery);
-        deviceNameLabel = (TextView) findViewById(R.id.deviceName);
+        deviceLabel = (TextView) findViewById(R.id.activeDeviceLabel);
+        deviceButtons = new HashMap<>();
         stopButton = (Button) findViewById(R.id.stopButton);
         stopButton.setVisibility(View.INVISIBLE);
-        reconnectButton = (Button) findViewById(R.id.reconnectButton);
-        reconnectButton.setVisibility(View.INVISIBLE);
 
-        reconnectButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if (mBound) {
-                    e4Service.getDataHandler().checkConnection();
-                }
-            }
-        });
-
-        try {
-            topics = E4Topics.getInstance();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        accelSensorLabel = (TextView) findViewById(R.id.acceleration_sensor);
+        bvpSensorLabel = (TextView) findViewById(R.id.bvp_sensor);
+        edaSensorLabel = (TextView) findViewById(R.id.eda_sensor);
+        temperatureSensorLabel = (TextView) findViewById(R.id.temperature_sensor);
 
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
         mHandler = new Handler();
-        mUIUpdater = new Runnable() {
-            final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-            final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
-            final DecimalFormat noDecimals = new DecimalFormat("0");
-            @Override
-            public void run() {
-                if (!mBound) {
-                    return;
-                }
-                Iterator<E4DeviceManager> devices = e4Service.getDevices().iterator();
-                if (devices.hasNext()) {
-                    E4DeviceManager e4DeviceManager = devices.next();
-                    float[] acceleration = e4DeviceManager.getLatestAcceleration();
-                    setText(accel_xLabel, acceleration[0], "g", singleDecimal);
-                    setText(accel_yLabel, acceleration[1], "g", singleDecimal);
-                    setText(accel_zLabel, acceleration[2], "g", singleDecimal);
-                    setText(bvpLabel, e4DeviceManager.getLatestBloodVolumePulse(), "\u00B5W", singleDecimal);
-                    setText(edaLabel, e4DeviceManager.getLatestElectroDermalActivity(), "\u00B5S", doubleDecimal);
-                    setText(ibiLabel, e4DeviceManager.getLatestInterBeatInterval(), "s", doubleDecimal);
-                    setText(temperatureLabel, e4DeviceManager.getLatestTemperature(), "\u2103", singleDecimal);
-                    setText(batteryLabel, 100*e4DeviceManager.getLatestBatteryLevel(), "%", noDecimals);
-                }
-            }
 
-            void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
-                if (Float.isNaN(value)) {
-                    // em dash
-                    label.setText("\u2014");
-                } else {
-                    label.setText(formatter.format(value) + " " + suffix);
-                }
-            }
-        };
+        mUIUpdater = new DeviceUIUpdater();
         mUIScheduler = new Runnable() {
             @Override
             public void run() {
                 try {
-                    runOnUiThread(mUIUpdater);
+                    E4ServiceConnection connection = getActiveConnection();
+                    if (connection != null) {
+                        mUIUpdater.updateWithData(connection);
+                    }
+                } catch (RemoteException e) {
+                    logger.warn("Failed to update device data", e);
                 } finally {
                     mHandler.postDelayed(mUIScheduler, uiRefreshRate);
                 }
             }
         };
 
-        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
-
-        waitingForPermission = false;
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                waitingForPermission = true;
-                break;
-            }
-        }
-        if (waitingForPermission) {
-            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
-        } else {
-            enableEmpatica();
-        }
+        isForcedDisconnected = false;
+        checkBluetoothPermissions();
     }
-
 
     @Override
     protected void onResume() {
@@ -244,58 +181,67 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
     @Override
     protected void onStart() {
         super.onStart();
-        this.waitingForBind = true;
-        bindToEmpatica();
+        IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(bluetoothReceiver, bluetoothFilter);
+        IntentFilter serverFilter = new IntentFilter(E4Service.SERVER_STATUS_CHANGED);
+        registerReceiver(serverStatusListener, serverFilter);
+        IntentFilter failedFilter = new IntentFilter(E4Service.DEVICE_CONNECT_FAILED);
+        registerReceiver(deviceFailedReceiver, failedFilter);
+        bindToEmpatica(mConnection);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        this.waitingForBind = false;
-        if (mBound) {
-            e4Service.getDataHandler().removeStatusListener(this);
-            e4Service.removeStatusListener(this);
-            unbindService(mConnection);
-            mBound = false;
-        }
+        unregisterReceiver(serverStatusListener);
+        unregisterReceiver(deviceFailedReceiver);
+        unregisterReceiver(bluetoothReceiver);
+        unbindService(mConnection);
+        mConnection.close();
     }
 
-
-    @Override
-    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted.
-                waitingForPermission = false;
-                enableEmpatica();
-                this.bindToEmpatica();
-            } else {
-                // User refused to grant permission.
-                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
+    private void disconnect() {
+        if (mConnection.isRecording()) {
+            try {
+                mConnection.stopRecording();
+            } catch (RemoteException e) {
+                // it cannot be reached so it already stopped recording
             }
         }
     }
 
-    private void enableEmpatica() {
-        if (!waitingForPermission) {
-            logger.info("Intending to start E4 service");
-            Intent e4serviceIntent = new Intent(this, E4Service.class);
-            e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-            e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-            e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-            e4serviceIntent.putExtra("api_key", getString(R.string.apikey));
-            startService(e4serviceIntent);
+    /**
+     * If no E4Service is scanning, and ask one to start scanning.
+     */
+    private void startScanning() {
+        if (isForcedDisconnected) {
+            return;
+        } else if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            enableBt();
+            return;
+        }
+        if (mConnection.isScanning()) {
+            return;
+        }
+        if (mConnection.hasService() && !mConnection.isRecording()) {
+            try {
+                mConnection.startRecording();
+            } catch (RemoteException e) {
+                logger.error("Failed to start recording", e);
+            }
         }
     }
 
-    private void bindToEmpatica() {
-        if (waitingForBind && !waitingForPermission) {
-            logger.info("Intending to bind to E4 service");
-            Intent intent = new Intent(this, E4Service.class);
-            bindService(intent, mConnection, Context.BIND_ABOVE_CLIENT);
-            waitingForBind = false;
-        }
+    void bindToEmpatica(E4ServiceConnection connection) {
+        logger.info("Intending to start E4 service");
+
+        Intent e4serviceIntent = new Intent(this, E4Service.class);
+        e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+        e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+        e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
+        e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+        startService(e4serviceIntent);
+        bindService(e4serviceIntent, connection, Context.BIND_ABOVE_CLIENT);
     }
 
     // Update a label with some text, making sure this is run in the UI thread
@@ -308,95 +254,140 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         });
     }
 
-    @Override
-    public void updateServerStatus(final ServerStatusListener.Status status) {
+    void addDeviceButton(final E4ServiceConnection connection) {
+        String name = connection.getDeviceName();
+        if (name != null) {
+            emptyDevices.setVisibility(View.INVISIBLE);
+            Button btn = new Button(this);
+            btn.setLayoutParams(new RelativeLayout.LayoutParams(
+                    RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
+            btn.setText(name);
+            btn.setId(View.NO_ID);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    synchronized (MainActivity.this) {
+                        activeConnection = connection;
+                    }
+                }
+            });
+            deviceView.addView(btn);
+            deviceButtons.put(connection, btn);
+        }
+    }
+
+    synchronized E4ServiceConnection getActiveConnection() {
+        return activeConnection;
+    }
+
+    void serviceConnected(final E4ServiceConnection connection) {
+        synchronized (this) {
+            if (activeConnection == null) {
+                activeConnection = connection;
+            }
+        }
+        try {
+            ServerStatusListener.Status status = connection.getServerStatus();
+            logger.info("Initial server status: {}", status);
+            updateServerStatus(status);
+        } catch (RemoteException e) {
+            logger.warn("Failed to update UI server status");
+        }
+        runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                  Button showButton = (Button) findViewById(R.id.showButton);
+                  showButton.setVisibility(View.VISIBLE);
+                  showButton.setOnClickListener(new View.OnClickListener() {
+                      public void onClick(View v) {
+                          E4ServiceConnection active = getActiveConnection();
+                          if (active != null) {
+                              new E4HeartbeatToast(MainActivity.this).execute(active);
+                          }
+                      }
+                  });
+              }
+        });
+        startScanning();
+    }
+
+    void updateServerStatus(final ServerStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 switch (status) {
-                    case INACTIVE:
+                    case READY:
+                    case DISABLED:
                         serverStatusLabel.setVisibility(View.INVISIBLE);
-                        reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                     case CONNECTED:
                         serverStatusLabel.setText("Server connected");
                         serverStatusLabel.setVisibility(View.VISIBLE);
-                        reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                     case DISCONNECTED:
                         serverStatusLabel.setText("Server disconnected");
                         serverStatusLabel.setVisibility(View.VISIBLE);
-                        reconnectButton.setVisibility(View.VISIBLE);
                         break;
                     case CONNECTING:
                         serverStatusLabel.setText("Connecting to server");
                         serverStatusLabel.setVisibility(View.VISIBLE);
-                        reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                     case UPLOADING:
                         serverStatusLabel.setText("Uploading");
                         serverStatusLabel.setVisibility(View.VISIBLE);
-                        reconnectButton.setVisibility(View.INVISIBLE);
                         break;
                 }
             }
         });
     }
 
-    @Override
-    public void deviceStatusUpdated(final E4DeviceManager deviceManager, final E4DeviceStatusListener.Status status) {
+    public void deviceStatusUpdated(final E4ServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String deviceName = deviceManager != null ? deviceManager.getDeviceName() : null;
                 switch (status) {
                     case CONNECTED:
-                        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+                        addDeviceButton(connection);
 
-                        Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
-                        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
-                                R.mipmap.ic_launcher);
-                        notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
-                        notificationBuilder.setLargeIcon(largeIcon);
-                        notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
-                        notificationBuilder.setWhen(System.currentTimeMillis());
-                        notificationBuilder.setContentIntent(pendingIntent);
-                        notificationBuilder.setContentText(getText(R.string.service_notification_text));
-                        notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
-                        Notification notification = notificationBuilder.build();
-                        e4Service.startBackgroundListener(notification);
-
+                        synchronized (MainActivity.this) {
+                            if (activeConnection == null) {
+                                activeConnection = connection;
+                            }
+                        }
                         updateLabel(stopButton, "Stop Recording");
                         dataCnt.setVisibility(View.VISIBLE);
                         statusLabel.setText("CONNECTED");
-                        deviceNameLabel.setText(deviceName);
+                        startScanning();
                         break;
                     case CONNECTING:
                         updateLabel(stopButton, "Stop Recording");
                         statusLabel.setText("CONNECTING");
-                        if (deviceName == null) {
-                            deviceNameLabel.setText("\u2014");
-                        } else {
-                            deviceNameLabel.setText(deviceName);
-                        }
                         break;
                     case DISCONNECTED:
+                        Button btn = deviceButtons.remove(connection);
+                        deviceView.removeView(btn);
+                        synchronized (MainActivity.this) {
+                            if (connection.equals(activeConnection)) {
+                                activeConnection = null;
+                            }
+                        }
+                        if (deviceButtons.isEmpty()) {
+                            emptyDevices.setVisibility(View.VISIBLE);
+                        }
                         dataCnt.setVisibility(View.INVISIBLE);
                         statusLabel.setText("DISCONNECTED");
-                        deviceNameLabel.setText("\u2014");
-                        e4Service.stopBackgroundListener();
-                        updateLabel(stopButton, "Record");
                         break;
                     case READY:
                         statusLabel.setText("Scanning...");
-                        deviceNameLabel.setText("\u2014");
                         stopButton.setOnClickListener(new View.OnClickListener() {
                             public void onClick(View v) {
-                                if (e4Service.isRecording()) {
-                                    e4Service.disconnect();
+                                isForcedDisconnected = !isForcedDisconnected;
+                                if (isForcedDisconnected) {
+                                    disconnect();
+                                    stopButton.setText("Start Recording");
                                 } else {
-                                    e4Service.connect();
+                                    startScanning();
+                                    stopButton.setText("Stop Recording");
                                 }
                             }
                         });
@@ -408,8 +399,95 @@ public class MainActivity extends AppCompatActivity implements ServerStatusListe
         });
     }
 
+    void enableBt() {
+        BluetoothAdapter btAdaptor = BluetoothAdapter.getDefaultAdapter();
+        if (!btAdaptor.isEnabled() && btAdaptor.getState() != BluetoothAdapter.STATE_TURNING_ON) {
+            Intent btIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            btIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getApplicationContext().startActivity(btIntent);
+        }
+    }
+
+    private void checkBluetoothPermissions() {
+        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
+
+        boolean waitingForPermission = false;
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                waitingForPermission = true;
+                break;
+            }
+        }
+        if (waitingForPermission) {
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
+        }
+    }
+
     @Override
-    public void deviceFailedToConnect(String name) {
-        Toast.makeText(this, "Cannot connect to device " + name, Toast.LENGTH_SHORT).show();
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_ENABLE_PERMISSIONS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted.
+                startScanning();
+            } else {
+                // User refused to grant permission.
+                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
+            }
+        }
+    }
+
+    private class DeviceUIUpdater implements Runnable {
+        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+        final DecimalFormat noDecimals = new DecimalFormat("0");
+        E4DeviceStatus deviceData = null;
+        String deviceName = null;
+
+        void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
+            deviceData = connection.getDeviceData();
+            deviceName = connection.getDeviceName();
+            runOnUiThread(this);
+        }
+
+        @Override
+        public void run() {
+            if (deviceData == null) {
+                return;
+            }
+            deviceLabel.setText(deviceName);
+            float[] acceleration = deviceData.getAcceleration();
+            setText(accel_xLabel, acceleration[0], "g", doubleDecimal);
+            setText(accel_yLabel, acceleration[1], "g", doubleDecimal);
+            setText(accel_zLabel, acceleration[2], "g", doubleDecimal);
+            setText(bvpLabel, deviceData.getBloodVolumePulse(), "\u00B5W", singleDecimal);
+            setText(edaLabel, deviceData.getElectroDermalActivity(), "\u00B5S", doubleDecimal);
+            setText(ibiLabel, deviceData.getInterBeatInterval(), "s", doubleDecimal);
+            setText(temperatureLabel, deviceData.getTemperature(), "\u2103", singleDecimal);
+            setText(batteryLabel, 100*deviceData.getBatteryLevel(), "%", noDecimals);
+
+            Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = deviceData.getSensorStatus();
+            if (sensorStatus.containsKey(EmpaSensorType.ACC)) {
+                accelSensorLabel.setText(EmpaSensorType.ACC.name());
+            }
+            if (sensorStatus.containsKey(EmpaSensorType.TEMP)) {
+                temperatureLabel.setText(EmpaSensorType.TEMP.name());
+            }
+            if (sensorStatus.containsKey(EmpaSensorType.BVP)) {
+                bvpSensorLabel.setText(EmpaSensorType.BVP.name());
+            }
+            if (sensorStatus.containsKey(EmpaSensorType.GSR)) {
+                edaSensorLabel.setText(EmpaSensorType.GSR.name());
+            }
+        }
+
+        void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+            if (Float.isNaN(value)) {
+                // em dash
+                label.setText("\u2014");
+            } else {
+                label.setText(formatter.format(value) + " " + suffix);
+            }
+        }
     }
 }

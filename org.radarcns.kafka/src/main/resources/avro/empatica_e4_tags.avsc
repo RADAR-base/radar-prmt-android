@@ -1,9 +1,0 @@
-{
-  "type": "record",
-  "name": "empatica_e4_tags",
-  "doc": "Event mark corresponding to a physical button press on the device; the same time as the status LED is first illuminated. The time is synchronized with initial time of the session indicated in the related data files from the corresponding session.",
-  "fields": [
-    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
-    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"}
-  ]
-}

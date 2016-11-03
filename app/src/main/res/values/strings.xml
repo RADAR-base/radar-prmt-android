@@ -13,4 +13,9 @@
     <string name="service_notification_ticker">Empatica E4 data collection</string>
     <string name="service_notification_text">Collecting data from your wearable bluetooth device.</string>
     <string name="service_notification_title">Empatica E4 data collection</string>
+    <string name="stop_recording">Stop recording</string>
+    <string name="show_heart_rate">Show heart rate</string>
+    <string name="reconnect_to_server">Reconnect to server</string>
+    <string name="no_devices_connected">No devices connected</string>
+    <string name="active_device">Device</string>
 </resources>
