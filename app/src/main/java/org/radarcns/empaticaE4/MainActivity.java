@@ -20,6 +20,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.empatica.empalink.config.EmpaSensorStatus;
+import com.empatica.empalink.config.EmpaSensorType;
+
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
@@ -103,6 +106,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    private TextView accelSensorLabel;
+    private TextView bvpSensorLabel;
+    private TextView edaSensorLabel;
+    private TextView temperatureSensorLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +136,11 @@ public class MainActivity extends AppCompatActivity {
         deviceButtons = new HashMap<>();
         stopButton = (Button) findViewById(R.id.stopButton);
         stopButton.setVisibility(View.INVISIBLE);
+
+        accelSensorLabel = (TextView) findViewById(R.id.acceleration_sensor);
+        bvpSensorLabel = (TextView) findViewById(R.id.bvp_sensor);
+        edaSensorLabel = (TextView) findViewById(R.id.eda_sensor);
+        temperatureSensorLabel = (TextView) findViewById(R.id.temperature_sensor);
 
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
         mHandler = new Handler();
@@ -453,6 +465,20 @@ public class MainActivity extends AppCompatActivity {
             setText(ibiLabel, deviceData.getInterBeatInterval(), "s", doubleDecimal);
             setText(temperatureLabel, deviceData.getTemperature(), "\u2103", singleDecimal);
             setText(batteryLabel, 100*deviceData.getBatteryLevel(), "%", noDecimals);
+
+            Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = deviceData.getSensorStatus();
+            if (sensorStatus.containsKey(EmpaSensorType.ACC)) {
+                accelSensorLabel.setText(EmpaSensorType.ACC.name());
+            }
+            if (sensorStatus.containsKey(EmpaSensorType.TEMP)) {
+                temperatureLabel.setText(EmpaSensorType.TEMP.name());
+            }
+            if (sensorStatus.containsKey(EmpaSensorType.BVP)) {
+                bvpSensorLabel.setText(EmpaSensorType.BVP.name());
+            }
+            if (sensorStatus.containsKey(EmpaSensorType.GSR)) {
+                edaSensorLabel.setText(EmpaSensorType.GSR.name());
+            }
         }
 
         void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
