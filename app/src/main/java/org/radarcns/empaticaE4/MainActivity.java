@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private Button stopButton;
     private RelativeLayout dataCnt;
     private RelativeLayout deviceView;
+    private TextView deviceLabel;
     private Map<E4ServiceConnection, Button> deviceButtons;
 
     private long uiRefreshRate;
@@ -124,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
         temperatureLabel = (TextView) findViewById(R.id.temperature);
         batteryLabel = (TextView) findViewById(R.id.battery);
+        deviceLabel = (TextView) findViewById(R.id.activeDeviceLabel);
         deviceButtons = new HashMap<>();
         stopButton = (Button) findViewById(R.id.stopButton);
         stopButton.setVisibility(View.INVISIBLE);
@@ -220,13 +222,13 @@ public class MainActivity extends AppCompatActivity {
 
     void bindToEmpatica(E4ServiceConnection connection) {
         logger.info("Intending to start E4 service");
-        startService(new Intent(this, E4Service.class));
 
         Intent e4serviceIntent = new Intent(this, E4Service.class);
         e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
         e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
         e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
         e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+        startService(e4serviceIntent);
         bindService(e4serviceIntent, connection, Context.BIND_ABOVE_CLIENT);
     }
 
@@ -285,11 +287,10 @@ public class MainActivity extends AppCompatActivity {
                   Button showButton = (Button) findViewById(R.id.showButton);
                   showButton.setVisibility(View.VISIBLE);
                   showButton.setOnClickListener(new View.OnClickListener() {
-                      final E4HeartbeatToast toaster = new E4HeartbeatToast(MainActivity.this);
                       public void onClick(View v) {
                           E4ServiceConnection active = getActiveConnection();
                           if (active != null) {
-                              toaster.execute(active);
+                              new E4HeartbeatToast(MainActivity.this).execute(active);
                           }
                       }
                   });
@@ -371,8 +372,10 @@ public class MainActivity extends AppCompatActivity {
                                 isForcedDisconnected = !isForcedDisconnected;
                                 if (isForcedDisconnected) {
                                     disconnect();
+                                    stopButton.setText("Start Recording");
                                 } else {
                                     startScanning();
+                                    stopButton.setText("Stop Recording");
                                 }
                             }
                         });
@@ -427,9 +430,11 @@ public class MainActivity extends AppCompatActivity {
         final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
         final DecimalFormat noDecimals = new DecimalFormat("0");
         E4DeviceStatus deviceData = null;
+        String deviceName = null;
 
         void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
             deviceData = connection.getDeviceData();
+            deviceName = connection.getDeviceName();
             runOnUiThread(this);
         }
 
@@ -438,10 +443,11 @@ public class MainActivity extends AppCompatActivity {
             if (deviceData == null) {
                 return;
             }
+            deviceLabel.setText(deviceName);
             float[] acceleration = deviceData.getAcceleration();
-            setText(accel_xLabel, acceleration[0], "g", singleDecimal);
-            setText(accel_yLabel, acceleration[1], "g", singleDecimal);
-            setText(accel_zLabel, acceleration[2], "g", singleDecimal);
+            setText(accel_xLabel, acceleration[0], "g", doubleDecimal);
+            setText(accel_yLabel, acceleration[1], "g", doubleDecimal);
+            setText(accel_zLabel, acceleration[2], "g", doubleDecimal);
             setText(bvpLabel, deviceData.getBloodVolumePulse(), "\u00B5W", singleDecimal);
             setText(edaLabel, deviceData.getElectroDermalActivity(), "\u00B5S", doubleDecimal);
             setText(ibiLabel, deviceData.getInterBeatInterval(), "s", doubleDecimal);

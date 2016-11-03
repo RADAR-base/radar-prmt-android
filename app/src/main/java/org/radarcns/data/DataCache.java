@@ -47,4 +47,7 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      * Write the latest records in the cache to a parcel, from new to old.
      */
     void writeRecordsToParcel(Parcel dest, int limit) throws IOException;
+
+    /** Return a list to cache. It will be cleared immediately and should not be used again. */
+    void returnList(List list);
 }

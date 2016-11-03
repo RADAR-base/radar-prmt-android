@@ -13,6 +13,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.DataCache;
+import org.radarcns.data.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
@@ -43,6 +44,8 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
     private final MeasurementDBHelper dbHelper;
     private final AvroTopic<MeasurementKey, V> topic;
     private final long window;
+    private long lastOffsetSent;
+    private final Object lastOffsetSentSync = new Object();
     private SubmitThread submitThread;
     private final static NumberFormat decimalFormat = new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.US));
     private final ThreadFactory threadFactory;
@@ -50,6 +53,8 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         decimalFormat.setMaximumIntegerDigits(Integer.MAX_VALUE);
         decimalFormat.setMaximumFractionDigits(24);
     }
+
+    private final static ListPool listPool = new ListPool(10);
 
     public MeasurementTable(Context context, AvroTopic<MeasurementKey, V> topic, long timeWindowMillis) {
         if (timeWindowMillis > System.currentTimeMillis()) {
@@ -59,6 +64,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         this.topic = topic;
         this.window = timeWindowMillis;
         this.submitThread = null;
+        this.lastOffsetSent = -1L;
         this.threadFactory = new AndroidThreadFactory(
                 "MeasurementTable-" + MeasurementTable.this.topic.getName(),
                 Process.THREAD_PRIORITY_BACKGROUND);
@@ -132,7 +138,8 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                     if (queue.isEmpty()) {
                         return;
                     }
-                    localQueue = new ArrayList<>(queue);
+                    localQueue = listPool.get();
+                    localQueue.addAll(queue);
                     queue.clear();
                 }
 
@@ -150,6 +157,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                     logger.error("Failed to add record", ex);
                     throw ex;
                 } finally {
+                    returnList(localQueue);
                     db.endTransaction();
                 }
                 logger.info("Committing {} records per second to topic {}", Math.round(average.getAverage()), topic.getName());
@@ -157,29 +165,30 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
 
             private void insertRecord(MeasurementKey key, SpecificRecord record, Schema.Type[] fieldTypes) {
                 statement.clearBindings();
-                statement.bindString(0, key.getUserId());
-                statement.bindString(1, key.getDeviceId());
+                // bindings are 1-indexed
+                statement.bindString(1, key.getUserId());
+                statement.bindString(2, key.getSourceId());
                 for (int i = 0; i < fieldTypes.length; i++) {
                     Object value = record.get(i);
                     if (value == null) {
-                        statement.bindNull(i + 1);
+                        statement.bindNull(i + 3);
                     } else switch (fieldTypes[i]) {
                         case DOUBLE:
                         case FLOAT:
-                            statement.bindDouble(i + 2, ((Number) value).doubleValue());
+                            statement.bindDouble(i + 3, ((Number) value).doubleValue());
                             break;
                         case LONG:
                         case INT:
-                            statement.bindLong(i + 2, ((Number) value).longValue());
+                            statement.bindLong(i + 3, ((Number) value).longValue());
                             break;
                         case STRING:
-                            statement.bindLong(i + 2, ((Number) value).longValue());
+                            statement.bindLong(i + 3, ((Number) value).longValue());
                             break;
                         case BOOLEAN:
-                            statement.bindLong(i + 2, value.equals(Boolean.TRUE) ? 1L : 0L);
+                            statement.bindLong(i + 3, value.equals(Boolean.TRUE) ? 1L : 0L);
                             break;
                         case BYTES:
-                            statement.bindBlob(i + 2, (byte[]) value);
+                            statement.bindBlob(i + 3, (byte[]) value);
                             break;
                         default:
                             throw new IllegalArgumentException("Field type " + fieldTypes[i] + " cannot be processed");
@@ -220,6 +229,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
             this.submitThread.close();
             this.submitThread = null;
         }
+        listPool.clear();
     }
 
     /**
@@ -259,7 +269,14 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
      * @param offset offset (inclusive) to remove.
      * @return number of rows removed
      */
+    @Override
     public int markSent(long offset) {
+        synchronized (lastOffsetSentSync) {
+            if (offset <= lastOffsetSent) {
+                return 0;
+            }
+            lastOffsetSent = offset;
+        }
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
         content.put("sent", Boolean.TRUE);
@@ -286,7 +303,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
      * Converts a database rows into a measurement.
      */
     private List<Record<MeasurementKey, V>> cursorToRecords(Cursor cursor) {
-        List<Record<MeasurementKey, V>> records = new ArrayList<>(cursor.getCount());
+        List<Record<MeasurementKey, V>> records = listPool.get();
         Schema.Type[] fieldTypes = topic.getValueFieldTypes();
 
         while (cursor.moveToNext()) {
@@ -376,8 +393,9 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
 
     public void writeRecordsToParcel(Parcel dest, int limit) throws IOException {
         List<Record<MeasurementKey, V>> records = getRecords(limit);
-        AvroEncoder.AvroWriter<MeasurementKey> keyWriter = new SpecificRecordEncoder(true).writer(topic.getKeySchema(), MeasurementKey.class);
-        AvroEncoder.AvroWriter<V> valueWriter = new SpecificRecordEncoder(true).writer(topic.getValueSchema(), topic.getValueClass());
+        SpecificRecordEncoder specificEncoder = new SpecificRecordEncoder(true);
+        AvroEncoder.AvroWriter<MeasurementKey> keyWriter = specificEncoder.writer(topic.getKeySchema(), MeasurementKey.class);
+        AvroEncoder.AvroWriter<V> valueWriter = specificEncoder.writer(topic.getValueSchema(), topic.getValueClass());
 
         dest.writeInt(records.size());
         for (Record<MeasurementKey, V> record : records) {
@@ -385,5 +403,11 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
             dest.writeByteArray(keyWriter.encode(record.key));
             dest.writeByteArray(valueWriter.encode(record.value));
         }
+        returnList(records);
+    }
+
+    @Override
+    public void returnList(List list) {
+        listPool.add(list);
     }
 }

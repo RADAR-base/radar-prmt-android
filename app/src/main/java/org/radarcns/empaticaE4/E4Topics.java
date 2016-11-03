@@ -27,30 +27,30 @@ public class E4Topics {
     }
 
     private E4Topics() {
-        accelerationTopic = new AvroTopic<>("empatica_e4_acceleration", MeasurementKey.getClassSchema(), EmpaticaE4Acceleration.getClassSchema(), MeasurementKey.class, EmpaticaE4Acceleration.class);
-        batteryLevelTopic = new AvroTopic<>("empatica_e4_battery_level", MeasurementKey.getClassSchema(), EmpaticaE4BatteryLevel.getClassSchema(), MeasurementKey.class, EmpaticaE4BatteryLevel.class);
-        bloodVolumePulseTopic = new AvroTopic<>("empatica_e4_blood_volume_pulse", MeasurementKey.getClassSchema(), EmpaticaE4BloodVolumePulse.getClassSchema(), MeasurementKey.class, EmpaticaE4BloodVolumePulse.class);
-        electroDermalActivityTopic = new AvroTopic<>("empatica_e4_electrodermal_activity", MeasurementKey.getClassSchema(), EmpaticaE4ElectroDermalActivity.getClassSchema(), MeasurementKey.class, EmpaticaE4ElectroDermalActivity.class);
-        interBeatIntervalTopic = new AvroTopic<>("empatica_e4_inter_beat_interval", MeasurementKey.getClassSchema(), EmpaticaE4InterBeatInterval.getClassSchema(), MeasurementKey.class, EmpaticaE4InterBeatInterval.class);
-        temperatureTopic = new AvroTopic<>("empatica_e4_temperature", MeasurementKey.getClassSchema(), EmpaticaE4Temperature.getClassSchema(), MeasurementKey.class, EmpaticaE4Temperature.class);
-        sensorStatusTopic = new AvroTopic<>("empatica_e4_sensor_status", MeasurementKey.getClassSchema(), EmpaticaE4SensorStatus.getClassSchema(), MeasurementKey.class, EmpaticaE4SensorStatus.class);
+        accelerationTopic = new AvroTopic<>("android_empatica_e4_acceleration", MeasurementKey.getClassSchema(), EmpaticaE4Acceleration.getClassSchema(), MeasurementKey.class, EmpaticaE4Acceleration.class);
+        batteryLevelTopic = new AvroTopic<>("android_empatica_e4_battery_level", MeasurementKey.getClassSchema(), EmpaticaE4BatteryLevel.getClassSchema(), MeasurementKey.class, EmpaticaE4BatteryLevel.class);
+        bloodVolumePulseTopic = new AvroTopic<>("android_empatica_e4_blood_volume_pulse", MeasurementKey.getClassSchema(), EmpaticaE4BloodVolumePulse.getClassSchema(), MeasurementKey.class, EmpaticaE4BloodVolumePulse.class);
+        electroDermalActivityTopic = new AvroTopic<>("android_empatica_e4_electrodermal_activity", MeasurementKey.getClassSchema(), EmpaticaE4ElectroDermalActivity.getClassSchema(), MeasurementKey.class, EmpaticaE4ElectroDermalActivity.class);
+        interBeatIntervalTopic = new AvroTopic<>("android_empatica_e4_inter_beat_interval", MeasurementKey.getClassSchema(), EmpaticaE4InterBeatInterval.getClassSchema(), MeasurementKey.class, EmpaticaE4InterBeatInterval.class);
+        temperatureTopic = new AvroTopic<>("android_empatica_e4_temperature", MeasurementKey.getClassSchema(), EmpaticaE4Temperature.getClassSchema(), MeasurementKey.class, EmpaticaE4Temperature.class);
+        sensorStatusTopic = new AvroTopic<>("android_empatica_e4_sensor_status", MeasurementKey.getClassSchema(), EmpaticaE4SensorStatus.getClassSchema(), MeasurementKey.class, EmpaticaE4SensorStatus.class);
     }
 
     public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
         switch (name) {
-            case "empatica_e4_acceleration":
+            case "android_empatica_e4_acceleration":
                 return accelerationTopic;
-            case "empatica_e4_battery_level":
+            case "android_empatica_e4_battery_level":
                 return batteryLevelTopic;
-            case "empatica_e4_blood_volume_pulse":
+            case "android_empatica_e4_blood_volume_pulse":
                 return bloodVolumePulseTopic;
-            case "empatica_e4_electrodermal_activity":
+            case "android_empatica_e4_electrodermal_activity":
                 return electroDermalActivityTopic;
-            case "empatica_e4_inter_beat_interval":
+            case "android_empatica_e4_inter_beat_interval":
                 return interBeatIntervalTopic;
-            case "empatica_e4_temperature":
+            case "android_empatica_e4_temperature":
                 return temperatureTopic;
-            case "empatica_e4_sensor_status":
+            case "android_empatica_e4_sensor_status":
                 return sensorStatusTopic;
             default:
                 throw new IllegalArgumentException("Topic " + name + " unknown");

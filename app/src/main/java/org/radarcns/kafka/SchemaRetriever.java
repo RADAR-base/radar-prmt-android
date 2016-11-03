@@ -78,19 +78,19 @@ public class SchemaRetriever {
     /**
      * Get schema metadata, and if none is found, add a new schema.
      */
-    public ParsedSchemaMetadata getOrSetSchemaMetadata(String topic, boolean ofValue, Schema schema) {
+    public ParsedSchemaMetadata getOrSetSchemaMetadata(String topic, boolean ofValue, Schema schema) throws IOException {
+        ParsedSchemaMetadata metadata;
         try {
-            return getSchemaMetadata(topic, ofValue);
+            metadata = getSchemaMetadata(topic, ofValue);
+            if (metadata.getSchema().equals(schema)) {
+                return metadata;
+            }
         } catch (IOException ex) {
             logger.warn("Schema for {} value was not yet added to the schema registry.", topic);
         }
 
-        ParsedSchemaMetadata metadata = new ParsedSchemaMetadata(null, null, schema);
-        try {
-            addSchemaMetadata(topic, ofValue, metadata);
-        } catch (IOException ex) {
-            logger.error("Failed to add schema for {} value", topic, ex);
-        }
+        metadata = new ParsedSchemaMetadata(null, null, schema);
+        addSchemaMetadata(topic, ofValue, metadata);
         return metadata;
     }
 }

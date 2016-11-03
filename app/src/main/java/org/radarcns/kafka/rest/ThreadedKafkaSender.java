@@ -3,7 +3,6 @@ package org.radarcns.kafka.rest;
 import android.support.annotation.NonNull;
 
 import org.radarcns.data.Record;
-import org.radarcns.data.RecordList;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.KafkaTopicSender;
@@ -12,10 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
     private final static Logger logger = LoggerFactory.getLogger(ThreadedKafkaSender.class);
     private final static int RETRIES = 3;
-    private final static int QUEUE_CAPACITY = 100;
     private final static long HEARTBEAT_TIMEOUT_MILLIS = 60_000L;
     private final static long HEARTBEAT_TIMEOUT_MARGIN = 10_000L;
 
@@ -38,7 +34,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
     private final ScheduledExecutorService executor;
     private final RollingTimeAverage opsSent;
     private final RollingTimeAverage opsRequests;
-    private final Queue<RecordList<K, V>> recordQueue;
     private long lastConnection;
     private boolean wasDisconnected;
 
@@ -49,7 +44,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
      */
     public ThreadedKafkaSender(KafkaSender<K, V> sender) {
         this.sender = sender;
-        this.recordQueue = new ArrayDeque<>(QUEUE_CAPACITY);
         this.wasDisconnected = true;
         this.lastConnection = 0L;
         this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
@@ -86,11 +80,13 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
     private class ThreadedTopicSender<L extends K, W extends V> implements KafkaTopicSender<L, W>, Runnable {
         final KafkaTopicSender<L, W> topicSender;
         final List<List<Record<L, W>>> topicQueue;
+        final List<List<Record<L, W>>> threadLocalQueue;
         Future<?> topicFuture;
 
         private ThreadedTopicSender(AvroTopic<L, W> topic) throws IOException {
             topicSender = sender.sender(topic);
             topicQueue = new ArrayList<>();
+            threadLocalQueue = new ArrayList<>();
             topicFuture = null;
         }
 
@@ -102,7 +98,7 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
          */
         @Override
         public void send(long offset, L key, W value) throws IOException {
-            List<Record<L, W>> recordList = new ArrayList<>();
+            List<Record<L, W>> recordList = new ArrayList<>(1);
             recordList.add(new Record<>(offset, key, value));
             send(recordList);
         }
@@ -121,8 +117,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
                     topicFuture = executor.submit(this);
                 }
             }
-
-            logger.debug("Queue size: {}", recordQueue.size());
             notifyAll();
         }
 
@@ -168,16 +162,15 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
 
         @Override
         public void run() {
-            List<List<Record<L, W>>> localQueue;
             synchronized (this) {
-                localQueue = new ArrayList<>(topicQueue);
+                threadLocalQueue.addAll(topicQueue);
                 topicQueue.clear();
                 topicFuture = null;
             }
 
             opsRequests.add(1);
 
-            for (List<Record<L, W>> records : localQueue) {
+            for (List<Record<L, W>> records : threadLocalQueue) {
                 opsSent.add(records.size());
 
                 IOException exception = null;
@@ -198,6 +191,8 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
                     break;
                 }
             }
+
+            threadLocalQueue.clear();
         }
     }
 
@@ -215,7 +210,6 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
 
     private synchronized void disconnect() {
         this.wasDisconnected = true;
-        this.recordQueue.clear();
         this.lastConnection = 0L;
         notifyAll();
     }

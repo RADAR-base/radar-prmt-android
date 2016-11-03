@@ -1,5 +1,7 @@
 package org.radarcns.kafka;
 
+import android.support.annotation.NonNull;
+
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificData;
 
@@ -14,10 +16,7 @@ public class AvroTopic<K, V> {
     private final Class<V> valueClass;
     private final Class<K> keyClass;
 
-    public AvroTopic(String name, Schema keySchema, Schema valueSchema, Class<K> keyClass, Class<V> valueClass) {
-        if (name == null) {
-            throw new IllegalArgumentException("Name may not be null");
-        }
+    public AvroTopic(@NonNull String name, @NonNull Schema keySchema, @NonNull Schema valueSchema, @NonNull Class<K> keyClass, @NonNull Class<V> valueClass) {
         this.name = name;
         this.keySchema = keySchema;
         this.valueSchema = valueSchema;
@@ -77,7 +76,7 @@ public class AvroTopic<K, V> {
 
         AvroTopic topic = (AvroTopic) o;
 
-        return name.equals(topic.name);
+        return name.equals(topic.name) && keyClass == topic.getKeyClass() && valueClass == topic.getValueClass();
     }
 
     @Override

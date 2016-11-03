@@ -1,12 +1,10 @@
 package org.radarcns.kafka;
 
 import org.radarcns.data.Record;
-import org.radarcns.data.RecordList;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 
 public interface KafkaTopicSender<K, V> extends Closeable {
     /**

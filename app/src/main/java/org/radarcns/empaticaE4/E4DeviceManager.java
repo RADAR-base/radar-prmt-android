@@ -67,7 +67,8 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         this.apiKey = apiKey;
         deviceManager = null;
         // Initialize the Device Manager using your API key. You need to have Internet access at this point.
-        this.deviceId = new MeasurementKey(groupId, null);
+        this.deviceId = new MeasurementKey();
+        this.deviceId.setUserId(groupId);
         this.deviceName = null;
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
         this.isDisconnected = false;
@@ -78,6 +79,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
 
     public void start() {
         this.mHandlerThread.start();
+        logger.info("Started scanning");
         synchronized (this) {
             this.mHandler = new Handler(this.mHandlerThread.getLooper());
         }
@@ -88,12 +90,14 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                 deviceManager = new EmpaDeviceManager(context, E4DeviceManager.this, E4DeviceManager.this);
                 // Initialize the Device Manager using your API key. You need to have Internet access at this point.
                 deviceManager.authenticateWithAPIKey(apiKey);
+                logger.info("Authenticated device manager");
             }
         });
     }
 
     @Override
     public void didUpdateStatus(EmpaStatus empaStatus) {
+        logger.info("Updated E4 status to {}", empaStatus);
         switch (empaStatus) {
             case READY:
                 // The device manager is ready for use
@@ -114,14 +118,14 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
             case CONNECTED:
                 // The device manager has established a connection
                 this.deviceManager.stopScanning();
-                this.updateStatus(DeviceStatusListener.Status.CONNECTED);
+                updateStatus(DeviceStatusListener.Status.CONNECTED);
                 break;
             case DISCONNECTING:
             case DISCONNECTED:
                 // The device manager disconnected from a device. Before it ever makes a connection,
                 // it also calls this, so check if we have a connected device first.
                 if (!isDisconnected && deviceName != null) {
-                    this.updateStatus(DeviceStatusListener.Status.DISCONNECTED);
+                    updateStatus(DeviceStatusListener.Status.DISCONNECTED);
                     isDisconnected = true;
                 }
                 break;
@@ -133,6 +137,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         // Check if the discovered device can be used with your API key. If allowed is always false,
         // the device is not linked with your API key. Please check your developer area at
         // https://www.empatica.com/connect/developer.php
+        logger.info("Bluetooth address: {}", bluetoothDevice.getAddress());
         if (allowed) {
             this.deviceName = deviceName;
             Handler localHandler = getHandler();
@@ -144,7 +149,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                             // Connect to the device
                             updateStatus(DeviceStatusListener.Status.CONNECTING);
                             deviceManager.connectDevice(bluetoothDevice);
-                            deviceId.setDeviceId(bluetoothDevice.getAddress());
+                            deviceId.setSourceId(bluetoothDevice.getAddress());
                         } catch (ConnectionNotAllowedException e) {
                             // This should happen only if you try to connect when allowed == false.
                             e4service.deviceFailedToConnect(deviceName);
@@ -178,6 +183,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         localHandler.post(new Runnable() {
             @Override
             public void run() {
+                logger.info("Initiated device {} stop-sequence", deviceName);
                 if (isScanning) {
                     deviceManager.stopScanning();
                 }
@@ -185,6 +191,10 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                     deviceManager.disconnect();
                 }
                 deviceManager.cleanUp();
+                if (!isDisconnected) {
+                    updateStatus(DeviceStatusListener.Status.DISCONNECTED);
+                    isDisconnected = true;
+                }
             }
         });
         this.mHandlerThread.quitSafely();
@@ -260,7 +270,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
     public boolean equals(Object other) {
         return other == this ||
                 other != null && getClass().equals(other.getClass()) &&
-                deviceId.getDeviceId() != null && deviceId.equals(((E4DeviceManager) other).deviceId);
+                deviceId.getSourceId() != null && deviceId.equals(((E4DeviceManager) other).deviceId);
     }
 
     private synchronized void updateStatus(DeviceStatusListener.Status status) {

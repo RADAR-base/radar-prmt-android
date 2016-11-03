@@ -18,8 +18,10 @@ import android.support.annotation.Nullable;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.android.DeviceManager;
+import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.TableDataHandler;
+import org.radarcns.data.Record;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class E4Service extends Service implements DeviceStatusListener, ServerStatusListener {
@@ -123,7 +126,7 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         logger.info("Starting E4 service {}", this);
-        onRebind(intent);
+        onInvocation(intent);
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
@@ -137,33 +140,8 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
 
     @Override
     public synchronized void onRebind(Intent intent) {
-        if (dataHandler == null) {
-            apiKey = intent.getStringExtra("empatica_api_key");
-            groupId = intent.getStringExtra("group_id");
-            URL kafkaUrl = null;
-            SchemaRetriever remoteSchemaRetriever = null;
-            if (intent.hasExtra("kafka_rest_proxy_url")) {
-                String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
-                if (!kafkaUrlString.isEmpty()) {
-                    remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
-                    try {
-                        kafkaUrl = new URL(kafkaUrlString);
-                    } catch (MalformedURLException e) {
-                        logger.error("Malformed Kafka server URL {}", kafkaUrlString);
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-            long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
-            //noinspection unchecked
-            dataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
-                    dataRetentionMs, topics.getAccelerationTopic(),
-                    topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
-                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic(),
-                    topics.getSensorStatusTopic());
-            dataHandler.addStatusListener(this);
-            dataHandler.start();
-        }
+        numberOfActivitiesBound.incrementAndGet();
+        onInvocation(intent);
     }
 
     @Override
@@ -186,10 +164,6 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
 
     @Override
     public synchronized void deviceStatusUpdated(DeviceManager e4DeviceManager, DeviceStatusListener.Status status) {
-        if (e4DeviceManager != deviceScanner) {
-            return;
-        }
-
         Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
         statusChanged.putExtra(DEVICE_STATUS_CHANGED, status.ordinal());
         statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
@@ -257,6 +231,46 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
     }
 
     class LocalBinder extends Binder {
+        <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic<MeasurementKey, V> topic, int limit) {
+            return dataHandler.getCache(topic).getRecords(limit);
+        }
+
+        DeviceState getDeviceStatus() {
+            if (deviceScanner == null) {
+                E4DeviceStatus newStatus = new E4DeviceStatus();
+                newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
+                return newStatus;
+            } else {
+                return deviceScanner.getState();
+            }
+        }
+
+        DeviceState startRecording() {
+            if (deviceScanner == null) {
+                logger.info("Starting recording");
+                deviceScanner = new E4DeviceManager(E4Service.this, E4Service.this, apiKey, groupId, dataHandler, topics);
+                deviceScanner.start();
+            }
+            return deviceScanner.getState();
+        }
+
+        void stopRecording() {
+            if (deviceScanner != null) {
+                if (!deviceScanner.isClosed()) {
+                    try {
+                        deviceScanner.close();
+                    } catch (IOException e) {
+                        logger.warn("Failed to close device scanner", e);
+                    }
+                }
+                deviceScanner = null;
+            }
+        }
+
+        ServerStatusListener.Status getServerStatus() {
+            return dataHandler.getStatus();
+        }
+
         @Override
         public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
             try {
@@ -267,31 +281,16 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
                         dataHandler.getCache(topic).writeRecordsToParcel(reply, limit);
                         break;
                     case TRANSACT_GET_DEVICE_STATUS:
-                        if (deviceScanner == null) {
-                            E4DeviceStatus newStatus = new E4DeviceStatus();
-                            newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
-                            newStatus.writeToParcel(reply, 0);
-                        } else {
-                            deviceScanner.getState().writeToParcel(reply, 0);
-                        }
+                        getDeviceStatus().writeToParcel(reply, 0);
                         break;
                     case TRANSACT_START_RECORDING:
-                        if (deviceScanner == null) {
-                            deviceScanner = new E4DeviceManager(E4Service.this, E4Service.this, apiKey, groupId, dataHandler, topics);
-                            deviceScanner.start();
-                        }
-                        deviceScanner.getState().writeToParcel(reply, 0);
+                        startRecording().writeToParcel(reply, 0);
                         break;
                     case TRANSACT_STOP_RECORDING:
-                        if (deviceScanner != null) {
-                            if (!deviceScanner.isClosed()) {
-                                deviceScanner.close();
-                            }
-                            deviceScanner = null;
-                        }
+                        stopRecording();
                         break;
                     case TRANSACT_GET_SERVER_STATUS:
-                        reply.writeInt(dataHandler.getStatus().ordinal());
+                        reply.writeInt(getServerStatus().ordinal());
                         break;
                     default:
                         return false;
@@ -300,6 +299,37 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
             } catch (IOException e) {
                 throw new RemoteException("IOException: " + e.getMessage());
             }
+        }
+    }
+
+    private void onInvocation(Intent intent) {
+        if (dataHandler == null) {
+            apiKey = intent.getStringExtra("empatica_api_key");
+            logger.info("Using API key {}", apiKey);
+            groupId = intent.getStringExtra("group_id");
+            URL kafkaUrl = null;
+            SchemaRetriever remoteSchemaRetriever = null;
+            if (intent.hasExtra("kafka_rest_proxy_url")) {
+                String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
+                if (!kafkaUrlString.isEmpty()) {
+                    remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
+                    try {
+                        kafkaUrl = new URL(kafkaUrlString);
+                    } catch (MalformedURLException e) {
+                        logger.error("Malformed Kafka server URL {}", kafkaUrlString);
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
+            //noinspection unchecked
+            dataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
+                    dataRetentionMs, topics.getAccelerationTopic(),
+                    topics.getBloodVolumePulseTopic(), topics.getElectroDermalActivityTopic(),
+                    topics.getInterBeatIntervalTopic(), topics.getTemperatureTopic(),
+                    topics.getSensorStatusTopic());
+            dataHandler.addStatusListener(this);
+            dataHandler.start();
         }
     }
 }
