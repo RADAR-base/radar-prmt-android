@@ -2,9 +2,9 @@
   "namespace": "org.radarcns.key",
   "type": "record",
   "name": "MeasurementKey",
-  "doc": "Measurement key",
+  "doc": "Measurement key in the RADAR-CNS project",
   "fields": [
-    {"name": "deviceId", "type": "string", "doc": "device timestamp ID"},
-    {"name": "userId", "type": "string", "doc": "user ID"}
+    {"name": "userId", "type": "string", "doc": "user ID"},
+    {"name": "sourceId", "type": "string", "doc": "device source ID"}
   ]
 }

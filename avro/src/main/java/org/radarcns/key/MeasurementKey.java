@@ -5,15 +5,15 @@
  */
 package org.radarcns.key;  
 @SuppressWarnings("all")
-/** Measurement key */
+/** Measurement key in the RADAR-CNS project */
 @org.apache.avro.specific.AvroGenerated
 public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"MeasurementKey\",\"namespace\":\"org.radarcns.key\",\"doc\":\"Measurement key\",\"fields\":[{\"name\":\"deviceId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"device timestamp ID\"},{\"name\":\"userId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"user ID\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"MeasurementKey\",\"namespace\":\"org.radarcns.key\",\"doc\":\"Measurement key in the RADAR-CNS project\",\"fields\":[{\"name\":\"userId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"user ID\"},{\"name\":\"sourceId\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"device source ID\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
-  /** device timestamp ID */
-  @Deprecated public java.lang.String deviceId;
   /** user ID */
   @Deprecated public java.lang.String userId;
+  /** device source ID */
+  @Deprecated public java.lang.String sourceId;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -25,17 +25,17 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * All-args constructor.
    */
-  public MeasurementKey(java.lang.String deviceId, java.lang.String userId) {
-    this.deviceId = deviceId;
+  public MeasurementKey(java.lang.String userId, java.lang.String sourceId) {
     this.userId = userId;
+    this.sourceId = sourceId;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call. 
   public java.lang.Object get(int field$) {
     switch (field$) {
-    case 0: return deviceId;
-    case 1: return userId;
+    case 0: return userId;
+    case 1: return sourceId;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -43,25 +43,10 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: deviceId = (java.lang.String)value$; break;
-    case 1: userId = (java.lang.String)value$; break;
+    case 0: userId = (java.lang.String)value$; break;
+    case 1: sourceId = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
-  }
-
-  /**
-   * Gets the value of the 'deviceId' field.
-   * device timestamp ID   */
-  public java.lang.String getDeviceId() {
-    return deviceId;
-  }
-
-  /**
-   * Sets the value of the 'deviceId' field.
-   * device timestamp ID   * @param value the value to set.
-   */
-  public void setDeviceId(java.lang.String value) {
-    this.deviceId = value;
   }
 
   /**
@@ -77,6 +62,21 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
    */
   public void setUserId(java.lang.String value) {
     this.userId = value;
+  }
+
+  /**
+   * Gets the value of the 'sourceId' field.
+   * device source ID   */
+  public java.lang.String getSourceId() {
+    return sourceId;
+  }
+
+  /**
+   * Sets the value of the 'sourceId' field.
+   * device source ID   * @param value the value to set.
+   */
+  public void setSourceId(java.lang.String value) {
+    this.sourceId = value;
   }
 
   /** Creates a new MeasurementKey RecordBuilder */
@@ -100,8 +100,8 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<MeasurementKey>
     implements org.apache.avro.data.RecordBuilder<MeasurementKey> {
 
-    private java.lang.String deviceId;
     private java.lang.String userId;
+    private java.lang.String sourceId;
 
     /** Creates a new Builder */
     private Builder() {
@@ -111,12 +111,12 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
     /** Creates a Builder by copying an existing Builder */
     private Builder(org.radarcns.key.MeasurementKey.Builder other) {
       super(other);
-      if (isValidValue(fields()[0], other.deviceId)) {
-        this.deviceId = data().deepCopy(fields()[0].schema(), other.deviceId);
+      if (isValidValue(fields()[0], other.userId)) {
+        this.userId = data().deepCopy(fields()[0].schema(), other.userId);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.userId)) {
-        this.userId = data().deepCopy(fields()[1].schema(), other.userId);
+      if (isValidValue(fields()[1], other.sourceId)) {
+        this.sourceId = data().deepCopy(fields()[1].schema(), other.sourceId);
         fieldSetFlags()[1] = true;
       }
     }
@@ -124,39 +124,14 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
     /** Creates a Builder by copying an existing MeasurementKey instance */
     private Builder(org.radarcns.key.MeasurementKey other) {
             super(org.radarcns.key.MeasurementKey.SCHEMA$);
-      if (isValidValue(fields()[0], other.deviceId)) {
-        this.deviceId = data().deepCopy(fields()[0].schema(), other.deviceId);
+      if (isValidValue(fields()[0], other.userId)) {
+        this.userId = data().deepCopy(fields()[0].schema(), other.userId);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.userId)) {
-        this.userId = data().deepCopy(fields()[1].schema(), other.userId);
+      if (isValidValue(fields()[1], other.sourceId)) {
+        this.sourceId = data().deepCopy(fields()[1].schema(), other.sourceId);
         fieldSetFlags()[1] = true;
       }
-    }
-
-    /** Gets the value of the 'deviceId' field */
-    public java.lang.String getDeviceId() {
-      return deviceId;
-    }
-    
-    /** Sets the value of the 'deviceId' field */
-    public org.radarcns.key.MeasurementKey.Builder setDeviceId(java.lang.String value) {
-      validate(fields()[0], value);
-      this.deviceId = value;
-      fieldSetFlags()[0] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'deviceId' field has been set */
-    public boolean hasDeviceId() {
-      return fieldSetFlags()[0];
-    }
-    
-    /** Clears the value of the 'deviceId' field */
-    public org.radarcns.key.MeasurementKey.Builder clearDeviceId() {
-      deviceId = null;
-      fieldSetFlags()[0] = false;
-      return this;
     }
 
     /** Gets the value of the 'userId' field */
@@ -166,20 +141,45 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
     
     /** Sets the value of the 'userId' field */
     public org.radarcns.key.MeasurementKey.Builder setUserId(java.lang.String value) {
-      validate(fields()[1], value);
+      validate(fields()[0], value);
       this.userId = value;
-      fieldSetFlags()[1] = true;
+      fieldSetFlags()[0] = true;
       return this; 
     }
     
     /** Checks whether the 'userId' field has been set */
     public boolean hasUserId() {
-      return fieldSetFlags()[1];
+      return fieldSetFlags()[0];
     }
     
     /** Clears the value of the 'userId' field */
     public org.radarcns.key.MeasurementKey.Builder clearUserId() {
       userId = null;
+      fieldSetFlags()[0] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'sourceId' field */
+    public java.lang.String getSourceId() {
+      return sourceId;
+    }
+    
+    /** Sets the value of the 'sourceId' field */
+    public org.radarcns.key.MeasurementKey.Builder setSourceId(java.lang.String value) {
+      validate(fields()[1], value);
+      this.sourceId = value;
+      fieldSetFlags()[1] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'sourceId' field has been set */
+    public boolean hasSourceId() {
+      return fieldSetFlags()[1];
+    }
+    
+    /** Clears the value of the 'sourceId' field */
+    public org.radarcns.key.MeasurementKey.Builder clearSourceId() {
+      sourceId = null;
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -188,8 +188,8 @@ public class MeasurementKey extends org.apache.avro.specific.SpecificRecordBase 
     public MeasurementKey build() {
       try {
         MeasurementKey record = new MeasurementKey();
-        record.deviceId = fieldSetFlags()[0] ? this.deviceId : (java.lang.String) defaultValue(fields()[0]);
-        record.userId = fieldSetFlags()[1] ? this.userId : (java.lang.String) defaultValue(fields()[1]);
+        record.userId = fieldSetFlags()[0] ? this.userId : (java.lang.String) defaultValue(fields()[0]);
+        record.sourceId = fieldSetFlags()[1] ? this.sourceId : (java.lang.String) defaultValue(fields()[1]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
