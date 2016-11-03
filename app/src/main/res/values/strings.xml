@@ -23,10 +23,12 @@
     <string name="button_connect">Connect</string>
     <string name="button_details">Details</string>
     <string name="header_battery">Battery</string>
-    <string name="header_status">Status</string>
+    <string name="header_device_status">Status</string>
+    <string name="header_server_status">Server</string>
     <string name="header_device">Device</string>
     <string name="header_temp">Temperature</string>
-    <string name="header_connect">TODO:</string>
-    <string name="header_details">Server Status</string>
+    <string name="header_connect"></string>
+    <string name="header_details"></string>
+    <string name="default_col_value">—</string>
 
 </resources>

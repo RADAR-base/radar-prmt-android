@@ -22,6 +22,7 @@ import static org.radarcns.android.DeviceStatusListener.Status.*;
 public class OverviewActivity extends MainActivity {
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
+    private View[] mServerStatusIcons;
     private TextView[] mTemperatureLabels;
     private TextView[] mBatteryLabels;
 
@@ -45,6 +46,13 @@ public class OverviewActivity extends MainActivity {
                 findViewById(R.id.statusRow2),
                 findViewById(R.id.statusRow3),
                 findViewById(R.id.statusRow4)
+        };
+
+        mServerStatusIcons = new View[] {
+                findViewById(R.id.statusServerRow1),
+                findViewById(R.id.statusServerRow2),
+                findViewById(R.id.statusServerRow3),
+                findViewById(R.id.statusServerRow4)
         };
 
         mTemperatureLabels = new TextView[] {
@@ -152,17 +160,17 @@ public class OverviewActivity extends MainActivity {
         // Connection status. Change icon used.
         switch (deviceData.getStatus()) {
             case CONNECTED:
-                mStatusIcons[row].setBackgroundResource(R.drawable.status_connected);
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
                 break;
             case DISCONNECTED:
-                mStatusIcons[row].setBackgroundResource(R.drawable.status_disconnected);
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
                 break;
             case READY:
             case CONNECTING:
-                mStatusIcons[row].setBackgroundResource(R.drawable.status_searching);
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
                 break;
             default:
-                mStatusIcons[row].setBackgroundResource(R.drawable.status_searching);
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
         }
 
         // Temperature
@@ -179,6 +187,31 @@ public class OverviewActivity extends MainActivity {
             label.setText("\u2014");
         } else {
             label.setText(formatter.format(value) + " " + suffix);
+        }
+    }
+
+    public void updateServerStatus( E4ServiceConnection connection, int row ) {
+        // Connection status. Change icon used.
+        try {
+            switch (connection.getServerStatus()) {
+                case CONNECTED:
+                    mServerStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
+                    break;
+                case DISCONNECTED:
+                case DISABLED:
+                    mServerStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
+                    break;
+                case READY:
+                case CONNECTING:
+                    mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                    break;
+                case UPLOADING:
+                    break;
+                default:
+                    mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+            }
+        } catch (RemoteException e) {
+            mServerStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
         }
     }
 

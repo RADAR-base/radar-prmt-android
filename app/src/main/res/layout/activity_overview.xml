@@ -21,7 +21,11 @@
 
                 <TextView
                     style="@style/Header"
-                    android:text="@string/header_status" />
+                    android:text="@string/header_device_status" />
+
+                <TextView
+                    style="@style/Header"
+                    android:text="@string/header_server_status" />
 
                 <TextView
                     style="@style/Header"
@@ -46,10 +50,15 @@
                 <TextView
                     android:id="@+id/deviceNameRow1"
                     style="@style/DeviceNameColumn"
-                    android:text="Empatica E4 - 1" />
+                    android:text="@string/default_col_value" />
 
                 <View
                     android:id="@+id/statusRow1"
+                    style="@style/StatusCircle"
+                    android:background="@drawable/status_disconnected"/>
+
+                <View
+                    android:id="@+id/statusServerRow1"
                     style="@style/StatusCircle"
                     android:background="@drawable/status_disconnected"/>
 
@@ -83,12 +92,17 @@
                 <TextView
                     android:id="@+id/deviceNameRow2"
                     style="@style/DeviceNameColumn"
-                    android:text="Empatica E4 - 2" />
+                    android:text="@string/default_col_value" />
 
                 <View
                     android:id="@+id/statusRow2"
                     style="@style/StatusCircle"
-                    android:background="@drawable/status_connected" />
+                    android:background="@drawable/status_disconnected" />
+
+                <View
+                    android:id="@+id/statusServerRow2"
+                    style="@style/StatusCircle"
+                    android:background="@drawable/status_disconnected"/>
 
                 <TextView
                     android:id="@+id/batteryRow2"
@@ -120,12 +134,17 @@
                 <TextView
                     android:id="@+id/deviceNameRow3"
                     style="@style/DeviceNameColumn"
-                    android:text="Angel Sensor" />
+                    android:text="@string/default_col_value" />
 
                 <View
                     android:id="@+id/statusRow3"
                     style="@style/StatusCircle"
-                    android:background="@drawable/status_searching" />
+                    android:background="@drawable/status_disconnected" />
+
+                <View
+                    android:id="@+id/statusServerRow3"
+                    style="@style/StatusCircle"
+                    android:background="@drawable/status_disconnected"/>
 
                 <TextView
                     android:id="@+id/batteryRow3"
@@ -157,22 +176,27 @@
                 <TextView
                     android:id="@+id/deviceNameRow4"
                     style="@style/DeviceNameColumn"
-                    android:text="Angel Sensor" />
+                    android:text="@string/default_col_value" />
 
                 <View
                     android:id="@+id/statusRow4"
                     style="@style/StatusCircle"
-                    android:background="@drawable/status_searching" />
+                    android:background="@drawable/status_disconnected" />
+
+                <View
+                    android:id="@+id/statusServerRow4"
+                    style="@style/StatusCircle"
+                    android:background="@drawable/status_searching"/>
 
                 <TextView
                     android:id="@+id/batteryRow4"
                     style="@style/NumberColumn"
-                    android:text="55.5%" />
+                    android:text="@string/default_col_value" />
 
                 <TextView
                     android:id="@+id/temperatureRow4"
                     style="@style/NumberColumn"
-                    android:text="-11.1 \u2103" />
+                    android:text="@string/default_col_value" />
 
                 <Button
                     android:id="@+id/refreshButtonRow4"
