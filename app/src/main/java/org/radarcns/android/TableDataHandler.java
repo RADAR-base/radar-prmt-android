@@ -1,20 +1,22 @@
 package org.radarcns.android;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
-import org.radarcns.data.ListPool;
-import org.radarcns.data.ObjectPool;
+import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaDataSubmitter;
 import org.radarcns.kafka.KafkaSender;
-import org.radarcns.key.MeasurementKey;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.RestSender;
 import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.data.SpecificRecordEncoder;
+import org.radarcns.key.MeasurementKey;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,11 +31,13 @@ import java.util.concurrent.ThreadFactory;
  */
 public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRecord> {
     private final long dataRetention;
+    private final Context context;
     private final URL kafkaUrl;
     private final SchemaRetriever schemaRetriever;
     private final ThreadFactory threadFactory;
     private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> tables;
     private final Collection<ServerStatusListener> statusListeners;
+    private final BroadcastReceiver connectivityReceiver;
     private ServerStatusListener.Status status;
 
     private KafkaDataSubmitter<MeasurementKey, SpecificRecord> submitter;
@@ -43,6 +47,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      */
     @SafeVarargs
     public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
+        this.context = context;
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         tables = new HashMap<>(topics.length * 2);
@@ -63,6 +68,24 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         } else {
             updateServerStatus(Status.DISABLED);
         }
+
+        connectivityReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                    if (intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
+                        stop();
+                    } else if (!isStarted()) {
+                        start();
+                    }
+                }
+            }
+        };
+        context.registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    private boolean isDataConnected() {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     /**
@@ -74,7 +97,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         if (isStarted()) {
             throw new IllegalStateException("Cannot start submitter, it is already started");
         }
-        if (status != Status.DISABLED) {
+        if (status != Status.DISABLED && isDataConnected()) {
             updateServerStatus(Status.CONNECTING);
             KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false));
             this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
@@ -104,6 +127,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * @throws IOException if the tables cannot be flushed
      */
     public void close() throws IOException {
+        context.unregisterReceiver(connectivityReceiver);
         if (this.submitter != null) {
             try {
                 this.submitter.close();

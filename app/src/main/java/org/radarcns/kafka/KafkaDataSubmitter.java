@@ -26,7 +26,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Separate thread to read from the database and send it to the Kafka server. It cleans the
@@ -43,8 +42,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     private final ConcurrentMap<AvroTopic<K, V>, Queue<Record<K, V>>> trySendCache;
     private final Map<AvroTopic<K, V>, ScheduledFuture<?>> trySendFuture;
     private final Map<AvroTopic<K, V>, KafkaTopicSender<K, V>> topicSenders;
-    private final AtomicBoolean isConnected;
-    private long lastConnection;
+    private final KafkaConnectionChecker connection;
     private final static ListPool listPool = new ListPool(1);
 
     public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory) {
@@ -58,24 +56,20 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
         logger.info("Started executor");
 
+        connection = new KafkaConnectionChecker(sender, executor, dataHandler);
+
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 if (KafkaDataSubmitter.this.sender.isConnected()) {
                     KafkaDataSubmitter.this.dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
+                    connection.didConnect();
                 } else {
                     KafkaDataSubmitter.this.dataHandler.updateServerStatus(ServerStatusListener.Status.DISCONNECTED);
+                    connection.didDisconnect(null);
                 }
             }
         });
-
-        // Remove old data from tables infrequently
-        executor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                KafkaDataSubmitter.this.dataHandler.clean();
-            }
-        }, 0L, 1L, TimeUnit.HOURS);
 
         // Upload very frequently.
         executor.scheduleAtFixedRate(new Runnable() {
@@ -93,36 +87,13 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             }
         }, 10L, 10L, TimeUnit.SECONDS);
 
-        // If the connection was closed, check whether it can be opened again. Long random
-        // timeout to prevent the server from overloading after a failure.
-        // (expected value: 10 minutes)
+        // Remove old data from tables infrequently
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                checkClosed();
+                KafkaDataSubmitter.this.dataHandler.clean();
             }
-        }, 0L, 5L + Math.round(10d * Math.random()), TimeUnit.MINUTES);
-
-        // Run a heartbeat so the server is detected as being disconnected even if no data is being
-        // uploaded
-        executor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                if (isConnected.get()) {
-                    long now = System.currentTimeMillis();
-                    if (now - lastConnection > 15_000L) {
-                        if (KafkaDataSubmitter.this.sender.isConnected()) {
-                            lastConnection = now;
-                        } else {
-                            senderDisconnected(null);
-                        }
-                    }
-                }
-            }
-        }, 0L, 60L, TimeUnit.SECONDS);
-
-        isConnected = new AtomicBoolean(true);
-        lastConnection = 0L;
+        }, 0L, 1L, TimeUnit.HOURS);
     }
 
     /**
@@ -143,7 +114,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                     }
                 }
                 uploadCaches(new HashSet<>(caches.keySet()));
-                if (isConnected.get()) {
+                if (connection.isConnected()) {
                     try {
                         synchronized (trySendFuture) {
                             for (ScheduledFuture<?> future : trySendFuture.values()) {
@@ -202,12 +173,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * Check the connection status eventually.
      */
     public void checkConnection() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                checkClosed();
-            }
-        });
+        connection.check();
     }
 
     /**
@@ -229,10 +195,10 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             }
             if (uploadingNotified) {
                 dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
-                lastConnection = System.currentTimeMillis();
+                connection.didConnect();
             }
         } catch (IOException ex) {
-            senderDisconnected(ex);
+            connection.didDisconnect(ex);
         }
     }
 
@@ -266,49 +232,12 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     }
 
     /**
-     * Check whether the connection was closed and try to reconnect.
-     */
-    private void checkClosed() {
-        if (!isConnected.get() && (sender.isConnected() || sender.resetConnection())) {
-            isConnected.set(true);
-            lastConnection = System.currentTimeMillis();
-            dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
-            logger.info("Sender reconnected");
-        }
-    }
-
-    /**
-     * Signal that the Kafka REST sender has disconnected.
-     * @param ex exception the sender disconnected with
-     */
-    private void senderDisconnected(IOException ex) {
-        logger.warn("Sender is disconnected", ex);
-        if (isConnected.compareAndSet(true, false)) {
-            logger.warn("Sender is newly disconnected", ex);
-            dataHandler.updateServerStatus(ServerStatusListener.Status.DISCONNECTED);
-            if (sender.resetConnection()) {
-                isConnected.set(true);
-                logger.info("Sender reconnected");
-                dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
-            } else {
-                synchronized (trySendFuture) {
-                    for (ScheduledFuture<?> future : trySendFuture.values()) {
-                        future.cancel(false);
-                    }
-                    trySendFuture.clear();
-                    trySendCache.clear();
-                }
-            }
-        }
-    }
-
-    /**
      * Try to addMeasurement a message, without putting it in any permanent storage. Any failure may cause
      * messages to be lost. If the sender is disconnected, messages are immediately discarded.
      * @return whether the message was queued for sending.
      */
     public <W extends V> boolean trySend(final AvroTopic<K, W> topic, final long offset, final K deviceId, final W record) {
-        if (!isConnected.get()) {
+        if (!connection.isConnected()) {
             return false;
         }
         @SuppressWarnings("unchecked")
@@ -326,7 +255,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 trySendFuture.put(castTopic, executor.schedule(new Runnable() {
                     @Override
                     public void run() {
-                        if (!isConnected.get()) {
+                        if (!connection.isConnected()) {
                             return;
                         }
 
@@ -340,12 +269,12 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                         try {
                             KafkaTopicSender<K, V> localSender = sender(castTopic);
                             localSender.send(localRecords);
-                            lastConnection = System.currentTimeMillis();
+                            connection.didConnect();
                             if (localSender.getLastSentOffset() == localRecords.get(localRecords.size() - 1).offset) {
                                 listPool.add(localRecords);
                             }
                         } catch (IOException e) {
-                            senderDisconnected(e);
+                            connection.didDisconnect(e);
                         }
                     }
                 }, 5L, TimeUnit.SECONDS));
