@@ -81,6 +81,12 @@
                         android:text="@string/emptyText" />
 
                     <Button
+                        android:id="@+id/inputDeviceNameButtonRow1"
+                        style="@style/ButtonColumn"
+                        android:text="@string/button_input"
+                        android:onClick="dialogInputDeviceName" />
+
+                    <Button
                         android:id="@+id/refreshButtonRow1"
                         style="@style/ButtonColumn"
                         android:text="@string/button_connect"
@@ -123,6 +129,12 @@
                         android:text="@string/emptyText" />
 
                     <Button
+                        android:id="@+id/inputDeviceNameButtonRow2"
+                        style="@style/ButtonColumn"
+                        android:text="@string/button_input"
+                        android:onClick="dialogInputDeviceName" />
+
+                    <Button
                         android:id="@+id/refreshButtonRow2"
                         style="@style/ButtonColumn"
                         android:text="@string/button_connect"
@@ -133,7 +145,6 @@
                         style="@style/ButtonColumn"
                         android:text="@string/button_details"
                         android:onClick="showDetails" />
-
                 </TableRow>
 
                 <TableRow
@@ -165,6 +176,12 @@
                         android:text="@string/emptyText" />
 
                     <Button
+                        android:id="@+id/inputDeviceNameButtonRow3"
+                        style="@style/ButtonColumn"
+                        android:text="@string/button_input"
+                        android:onClick="dialogInputDeviceName" />
+
+                    <Button
                         android:id="@+id/refreshButtonRow3"
                         style="@style/ButtonColumn"
                         android:text="@string/button_connect"
@@ -175,7 +192,6 @@
                         style="@style/ButtonColumn"
                         android:text="@string/button_details"
                         android:onClick="showDetails" />
-
                 </TableRow>
 
                 <TableRow
@@ -207,6 +223,12 @@
                         android:text="@string/emptyText" />
 
                     <Button
+                        android:id="@+id/inputDeviceNameButtonRow4"
+                        style="@style/ButtonColumn"
+                        android:text="@string/button_input"
+                        android:onClick="dialogInputDeviceName" />
+
+                    <Button
                         android:id="@+id/refreshButtonRow4"
                         style="@style/ButtonColumn"
                         android:text="@string/button_connect"
@@ -217,7 +239,6 @@
                         style="@style/ButtonColumn"
                         android:text="@string/button_details"
                         android:onClick="showDetails" />
-
                 </TableRow>
             </TableLayout>
 

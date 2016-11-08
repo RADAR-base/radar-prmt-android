@@ -22,6 +22,7 @@
     <!--Overview activity-->
     <string name="button_connect">Scan</string>
     <string name="button_details">Details</string>
+    <string name="button_input"><i>Enter Device Key</i></string>
     <string name="header_battery">Battery</string>
     <string name="header_device_status">Status</string>
     <string name="header_server_status">Server</string>
