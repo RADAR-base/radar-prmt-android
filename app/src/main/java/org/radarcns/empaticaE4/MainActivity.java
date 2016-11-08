@@ -15,13 +15,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.empatica.empalink.config.EmpaSensorStatus;
-import com.empatica.empalink.config.EmpaSensorType;
 
 import org.radarcns.R;
 import org.radarcns.android.DeviceStatusListener;
@@ -30,51 +25,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.radarcns.empaticaE4.OverviewActivity;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
 
 public class MainActivity extends AppCompatActivity {
-    protected final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
+    private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
-    private TextView accel_xLabel;
-    private TextView accel_yLabel;
-    private TextView accel_zLabel;
-    private TextView bvpLabel;
-    private TextView edaLabel;
-    private TextView ibiLabel;
-    private TextView temperatureLabel;
-    private TextView batteryLabel;
-    private TextView statusLabel;
-    private TextView serverStatusLabel;
-    private TextView emptyDevices;
-    private Button stopButton;
-    private RelativeLayout dataCnt;
-    private RelativeLayout deviceView;
-    private TextView deviceLabel;
-    private Map<E4ServiceConnection, Button> deviceButtons;
 
-    protected long uiRefreshRate;
-    protected Handler mHandler;
-    protected Runnable mUIScheduler;
+    private long uiRefreshRate;
+    private Handler mHandler;
+    private Runnable mUIScheduler;
     private DeviceUIUpdater mUIUpdater;
-    protected boolean isForcedDisconnected = false;
+    private boolean isForcedDisconnected = false;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    protected E4ServiceConnection mConnection;
-    protected E4ServiceConnection activeConnection;
-    
+    private E4ServiceConnection mConnection;
+    private E4ServiceConnection activeConnection;
+
+    /** New UI **/
+    private TextView[] mDeviceNameLabels;
+    private View[] mStatusIcons;
+    private View[] mServerStatusIcons;
+    private TextView[] mTemperatureLabels;
+    private TextView[] mBatteryLabels;
+
+
     private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                 final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
-                updateServerStatus(status);
+                updateServerStatus(status, 0);
             }
         }
     };
@@ -109,42 +93,49 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-    private TextView accelSensorLabel;
-    private TextView bvpSensorLabel;
-    private TextView edaSensorLabel;
-    private TextView temperatureSensorLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mConnection = new E4ServiceConnection( new OverviewActivity() ); //MM: hack to not throw exception
-        // mConnection = new E4ServiceConnection( this );
+        mConnection = new E4ServiceConnection(this);
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_overview);
 
-        // Initialize vars that reference UI components
-        statusLabel = (TextView) findViewById(R.id.status);
-        dataCnt = (RelativeLayout) findViewById(R.id.dataArea);
-        accel_xLabel = (TextView) findViewById(R.id.accel_x);
-        accel_yLabel = (TextView) findViewById(R.id.accel_y);
-        accel_zLabel = (TextView) findViewById(R.id.accel_z);
-        bvpLabel = (TextView) findViewById(R.id.bvp);
-        edaLabel = (TextView) findViewById(R.id.eda);
-        ibiLabel = (TextView) findViewById(R.id.ibi);
-        deviceView = (RelativeLayout) findViewById(R.id.deviceNames);
-        emptyDevices = (TextView) findViewById(R.id.emptyDevices);
-        serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
-        temperatureLabel = (TextView) findViewById(R.id.temperature);
-        batteryLabel = (TextView) findViewById(R.id.battery);
-        deviceLabel = (TextView) findViewById(R.id.activeDeviceLabel);
-        deviceButtons = new HashMap<>();
-        stopButton = (Button) findViewById(R.id.stopButton);
-        stopButton.setVisibility(View.INVISIBLE);
+        // Create arrays of labels. Fixed to four rows
+        mDeviceNameLabels = new TextView[] {
+                (TextView) findViewById(R.id.deviceNameRow1),
+                (TextView) findViewById(R.id.deviceNameRow2),
+                (TextView) findViewById(R.id.deviceNameRow3),
+                (TextView) findViewById(R.id.deviceNameRow4)
+        };
 
-        accelSensorLabel = (TextView) findViewById(R.id.acceleration_sensor);
-        bvpSensorLabel = (TextView) findViewById(R.id.bvp_sensor);
-        edaSensorLabel = (TextView) findViewById(R.id.eda_sensor);
-        temperatureSensorLabel = (TextView) findViewById(R.id.temperature_sensor);
+        mStatusIcons = new View[] {
+                findViewById(R.id.statusRow1),
+                findViewById(R.id.statusRow2),
+                findViewById(R.id.statusRow3),
+                findViewById(R.id.statusRow4)
+        };
+
+        mServerStatusIcons = new View[] {
+                findViewById(R.id.statusServerRow1),
+                findViewById(R.id.statusServerRow2),
+                findViewById(R.id.statusServerRow3),
+                findViewById(R.id.statusServerRow4)
+        };
+
+        mTemperatureLabels = new TextView[] {
+                (TextView) findViewById(R.id.temperatureRow1),
+                (TextView) findViewById(R.id.temperatureRow2),
+                (TextView) findViewById(R.id.temperatureRow3),
+                (TextView) findViewById(R.id.temperatureRow4)
+        };
+
+        mBatteryLabels = new TextView[] {
+                (TextView) findViewById(R.id.batteryRow1),
+                (TextView) findViewById(R.id.batteryRow2),
+                (TextView) findViewById(R.id.batteryRow3),
+                (TextView) findViewById(R.id.batteryRow4)
+        };
 
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
         mHandler = new Handler();
@@ -236,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void bindToEmpatica(E4ServiceConnection connection) {
+    public void bindToEmpatica(E4ServiceConnection connection) {
         logger.info("Intending to start E4 service");
 
         Intent e4serviceIntent = new Intent(this, E4Service.class);
@@ -258,33 +249,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void addDeviceButton(final E4ServiceConnection connection) {
-        String name = connection.getDeviceName();
-        if (name != null) {
-            emptyDevices.setVisibility(View.INVISIBLE);
-            Button btn = new Button(this);
-            btn.setLayoutParams(new RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-            btn.setText(name);
-            btn.setId(View.NO_ID);
-            btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    synchronized (MainActivity.this) {
-                        activeConnection = connection;
-                    }
-                }
-            });
-            deviceView.addView(btn);
-            deviceButtons.put(connection, btn);
-        }
-    }
-
-    protected synchronized E4ServiceConnection getActiveConnection() {
+    private synchronized E4ServiceConnection getActiveConnection() {
         return activeConnection;
     }
 
-    void serviceConnected(final E4ServiceConnection connection) {
+    public void serviceConnected(final E4ServiceConnection connection) {
         synchronized (this) {
             if (activeConnection == null) {
                 activeConnection = connection;
@@ -293,110 +262,46 @@ public class MainActivity extends AppCompatActivity {
         try {
             ServerStatusListener.Status status = connection.getServerStatus();
             logger.info("Initial server status: {}", status);
-            updateServerStatus(status);
+            updateServerStatus(status, 0);
         } catch (RemoteException e) {
             logger.warn("Failed to update UI server status");
         }
-        runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  Button showButton = (Button) findViewById(R.id.showButton);
-                  showButton.setVisibility(View.VISIBLE);
-                  showButton.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) {
-                          E4ServiceConnection active = getActiveConnection();
-                          if (active != null) {
-                              new E4HeartbeatToast(MainActivity.this).execute(active);
-                          }
-                      }
-                  });
-              }
-        });
-        startScanning();
-    }
 
-    void updateServerStatus(final ServerStatusListener.Status status) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                switch (status) {
-                    case READY:
-                    case DISABLED:
-                        serverStatusLabel.setVisibility(View.INVISIBLE);
-                        break;
-                    case CONNECTED:
-                        serverStatusLabel.setText("Server connected");
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                    case DISCONNECTED:
-                        serverStatusLabel.setText("Server disconnected");
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                    case CONNECTING:
-                        serverStatusLabel.setText("Connecting to server");
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                    case UPLOADING:
-                        serverStatusLabel.setText("Uploading");
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                }
-            }
-        });
+        startScanning();
     }
 
     public void deviceStatusUpdated(final E4ServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Toast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
                 switch (status) {
                     case CONNECTED:
-                        addDeviceButton(connection);
+//                        addDeviceButton(connection);
 
                         synchronized (MainActivity.this) {
                             if (activeConnection == null) {
                                 activeConnection = connection;
                             }
                         }
-                        updateLabel(stopButton, "Stop Recording");
-                        dataCnt.setVisibility(View.VISIBLE);
-                        statusLabel.setText("CONNECTED");
+//                        statusLabel.setText("CONNECTED");
                         startScanning();
                         break;
                     case CONNECTING:
-                        updateLabel(stopButton, "Stop Recording");
-                        statusLabel.setText("CONNECTING");
+//                        statusLabel.setText("CONNECTING");
                         break;
                     case DISCONNECTED:
-                        Button btn = deviceButtons.remove(connection);
-                        deviceView.removeView(btn);
+
                         synchronized (MainActivity.this) {
                             if (connection.equals(activeConnection)) {
                                 activeConnection = null;
                             }
                         }
-                        if (deviceButtons.isEmpty()) {
-                            emptyDevices.setVisibility(View.VISIBLE);
-                        }
-                        dataCnt.setVisibility(View.INVISIBLE);
-                        statusLabel.setText("DISCONNECTED");
+
+//                        statusLabel.setText("DISCONNECTED");
                         break;
                     case READY:
-                        statusLabel.setText("Scanning...");
-                        stopButton.setOnClickListener(new View.OnClickListener() {
-                            public void onClick(View v) {
-                                isForcedDisconnected = !isForcedDisconnected;
-                                if (isForcedDisconnected) {
-                                    disconnect();
-                                    stopButton.setText("Start Recording");
-                                } else {
-                                    startScanning();
-                                    stopButton.setText("Stop Recording");
-                                }
-                            }
-                        });
-                        updateLabel(stopButton, "Stop Recording");
-                        stopButton.setVisibility(View.VISIBLE);
+//                        statusLabel.setText("Scanning...");
                         break;
                 }
             }
@@ -412,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected void checkBluetoothPermissions() {
+    private void checkBluetoothPermissions() {
         String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
 
         boolean waitingForPermission = false;
@@ -436,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                 startScanning();
             } else {
                 // User refused to grant permission.
-                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
+                Toast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -459,30 +364,8 @@ public class MainActivity extends AppCompatActivity {
             if (deviceData == null) {
                 return;
             }
-            deviceLabel.setText(deviceName);
-            float[] acceleration = deviceData.getAcceleration();
-            setText(accel_xLabel, acceleration[0], "g", doubleDecimal);
-            setText(accel_yLabel, acceleration[1], "g", doubleDecimal);
-            setText(accel_zLabel, acceleration[2], "g", doubleDecimal);
-            setText(bvpLabel, deviceData.getBloodVolumePulse(), "\u00B5W", singleDecimal);
-            setText(edaLabel, deviceData.getElectroDermalActivity(), "\u00B5S", doubleDecimal);
-            setText(ibiLabel, deviceData.getInterBeatInterval(), "s", doubleDecimal);
-            setText(temperatureLabel, deviceData.getTemperature(), "\u2103", singleDecimal);
-            setText(batteryLabel, 100*deviceData.getBatteryLevel(), "%", noDecimals);
-
-            Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = deviceData.getSensorStatus();
-            if (sensorStatus.containsKey(EmpaSensorType.ACC)) {
-                accelSensorLabel.setText(EmpaSensorType.ACC.name());
-            }
-            if (sensorStatus.containsKey(EmpaSensorType.TEMP)) {
-                temperatureLabel.setText(EmpaSensorType.TEMP.name());
-            }
-            if (sensorStatus.containsKey(EmpaSensorType.BVP)) {
-                bvpSensorLabel.setText(EmpaSensorType.BVP.name());
-            }
-            if (sensorStatus.containsKey(EmpaSensorType.GSR)) {
-                edaSensorLabel.setText(EmpaSensorType.GSR.name());
-            }
+            updateRow(deviceData, 0);
+            updateDeviceName(deviceName, 0);
         }
 
         void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
@@ -493,5 +376,126 @@ public class MainActivity extends AppCompatActivity {
                 label.setText(formatter.format(value) + " " + suffix);
             }
         }
+    }
+
+
+    public void connectDevice(View v) {
+        int rowIndex = getRowIndexFromView(v);
+
+        // some test code, updating with random data
+//        Random generator = new Random();
+//        updateDeviceName(String.valueOf( generator.hashCode() ), rowIndex);
+    }
+
+    public void showDetails(View v) {
+        int rowIndex = getRowIndexFromView(v);
+
+        // some test code, updating with random data
+//        E4DeviceStatus deviceData = new E4DeviceStatus();
+//
+//        Random generator = new Random();
+//        deviceData.setTemperature(  generator.nextFloat()*100 );
+//        deviceData.setBatteryLevel( generator.nextFloat() );
+//        deviceData.setStatus( new DeviceStatusListener.Status[] {CONNECTED,DISCONNECTED,READY,CONNECTING}[generator.nextInt(4)] );
+//
+//        updateRow(deviceData, rowIndex);
+    }
+
+    private int getRowIndexFromView(View v) {
+        // Assume all elements are direct descendants from the TableRow
+        View parent = (View) v.getParent();
+        switch ( parent.getId() ) {
+
+            case R.id.row1:
+                return 0;
+
+            case R.id.row2:
+                return 1;
+
+            case R.id.row3:
+                return 2;
+
+            case R.id.row4:
+                return 3;
+
+            default:
+                return -1; // TODO: throw exception
+        }
+    }
+
+    public void updateDeviceName(String deviceName, int row) {
+        // TODO: restrict n_characters of deviceName
+        mDeviceNameLabels[row].setText(deviceName);
+    }
+
+    /**
+     * Updates a row with the deviceData
+     * @param deviceData
+     * @param row           Row number
+     */
+    public void updateRow(E4DeviceStatus deviceData, int row ) {
+        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+        final DecimalFormat noDecimals = new DecimalFormat("0");
+
+        // Connection status. Change icon used.
+        switch (deviceData.getStatus()) {
+            case CONNECTED:
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
+                break;
+            case DISCONNECTED:
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
+                break;
+            case READY:
+            case CONNECTING:
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                break;
+            default:
+                mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+        }
+
+        // Temperature
+        setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
+
+        // Battery
+        setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
+
+    }
+
+    private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+        if (Float.isNaN(value)) {
+            // em dash
+            label.setText("\u2014");
+        } else {
+            label.setText(formatter.format(value) + " " + suffix);
+        }
+    }
+
+    public void updateServerStatus( final ServerStatusListener.Status status, final int row ) {
+        // Connection status. Change icon used.\
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (status) {
+                    case CONNECTED:
+                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
+                        break;
+                    case DISCONNECTED:
+                    case DISABLED:
+                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
+                        break;
+                    case READY:
+                    case CONNECTING:
+                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                        break;
+                    case UPLOADING:
+                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                        break;
+                    default:
+                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                }
+            }
+        });
     }
 }
