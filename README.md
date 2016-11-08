@@ -12,6 +12,7 @@ First, request an Empatica API key for your Empatica Connect account from our [D
 - Edit the `apikey.xml` file and enter your Empatica API key in the apikey xml element.
 - Edit the `server.xml` file and add the URLs of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.
 - Move the `apikey.xml` and `server.xml` files to the `app/src/main/res/values/` directory.
+- Edit the `app/src/main/res/values/device.xml` file by setting the `group_id` string to a suitable user ID.
 - Compile the project with `./gradlew build`.
 - Open the project in Android Studio.
 - Launch the application. Note that the application only runs on an ARM architecture
@@ -21,4 +22,4 @@ First, request an Empatica API key for your Empatica Connect account from our [D
 
 ## Usage
 
-To send some mock data to the `radar-test.thehyve.net` server, run `./gradlew :org.radarcns.kafka:cleanTest :org.radarcns.kafka:test`.
+To send some mock data to the `radar-test.thehyve.net` server, run `./gradlew :app:cleanTest :app:test`.
