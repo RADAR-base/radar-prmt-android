@@ -83,6 +83,7 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
     private String groupId;
     private boolean isInForeground;
     private boolean isConnected;
+    private int latestStartId;
 
     @Override
     public void onCreate() {
@@ -122,10 +123,12 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
         }
     }
 
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         logger.info("Starting E4 service {}", this);
+        synchronized (this) {
+            latestStartId = startId;
+        }
         onInvocation(intent);
         // If we get killed, after returning from here, restart
         return START_STICKY;
@@ -148,7 +151,7 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
     public synchronized boolean onUnbind(Intent intent) {
         if (numberOfActivitiesBound.decrementAndGet() == 0) {
             if (!isConnected) {
-                stopSelf();
+                stopSelf(latestStartId);
             }
         }
         return true;
@@ -188,7 +191,7 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
                     }
                 }
                 if (this.numberOfActivitiesBound.get() == 0) {
-                    stopSelf();
+                    stopSelf(latestStartId);
                 }
                 break;
         }

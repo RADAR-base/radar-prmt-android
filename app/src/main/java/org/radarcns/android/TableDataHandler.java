@@ -17,26 +17,32 @@ import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.RestSender;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 
 /**
  * Stores data in databases and sends it to the server.
  */
 public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRecord> {
+    private final static Logger logger = LoggerFactory.getLogger(TableDataHandler.class);
+
     private final long dataRetention;
     private final Context context;
     private final URL kafkaUrl;
     private final SchemaRetriever schemaRetriever;
     private final ThreadFactory threadFactory;
     private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> tables;
-    private final Collection<ServerStatusListener> statusListeners;
+    private final Set<ServerStatusListener> statusListeners;
     private final BroadcastReceiver connectivityReceiver;
     private ServerStatusListener.Status status;
 
@@ -57,7 +63,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         dataRetention = dataRetentionMillis;
 
         submitter = null;
-        statusListeners = new ArrayList<>();
+        statusListeners = new HashSet<>();
         if (kafkaUrl != null) {
             this.threadFactory = new AndroidThreadFactory("DataHandler", android.os.Process.THREAD_PRIORITY_BACKGROUND);
         } else {
@@ -73,8 +79,10 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
                     if (intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
+                        logger.info("Network disconnected, stopping data sender.");
                         stop();
                     } else if (!isStarted()) {
+                        logger.info("Network connected, starting data sender.");
                         start();
                     }
                 }
