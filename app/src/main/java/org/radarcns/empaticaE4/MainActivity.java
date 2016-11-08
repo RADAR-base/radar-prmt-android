@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setContentView(R.layout.activity_overview);
 
         // Create arrays of labels. Fixed to four rows
         mDeviceNameLabels = new TextView[] {
@@ -152,8 +152,6 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.batteryRow3),
                 (TextView) findViewById(R.id.batteryRow4)
         };
-
-        setContentView(R.layout.activity_overview);
 
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
 
@@ -215,12 +213,7 @@ public class MainActivity extends AppCompatActivity {
         synchronized (this) {
             mHandler = new Handler(mHandlerThread.getLooper());
         }
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mConnectionIsBound = false;
-            }
-        });
+        mHandler.post(mUIScheduler);
     }
 
     @Override
@@ -449,15 +442,15 @@ public class MainActivity extends AppCompatActivity {
     public void showDetails(View v) {
         int rowIndex = getRowIndexFromView(v);
 
-        // some test code, updating with random data
-//        E4DeviceStatus deviceData = new E4DeviceStatus();
-//
-//        Random generator = new Random();
-//        deviceData.setTemperature(  generator.nextFloat()*100 );
-//        deviceData.setBatteryLevel( generator.nextFloat() );
-//        deviceData.setStatus( new DeviceStatusListener.Status[] {CONNECTED,DISCONNECTED,READY,CONNECTING}[generator.nextInt(4)] );
-//
-//        updateRow(deviceData, rowIndex);
+        try {
+            E4DeviceStatus deviceData = mConnection.getDeviceData();
+            String deviceName = mConnection.getDeviceName();
+            updateRow(deviceData, rowIndex);
+            updateDeviceName(deviceName, rowIndex);
+        } catch(RemoteException e) {
+            logger.info("Not connected " + e.toString() );
+        }
+
     }
 
     private int getRowIndexFromView(View v) {
