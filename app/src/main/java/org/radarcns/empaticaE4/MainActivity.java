@@ -9,6 +9,8 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Process;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -36,70 +38,84 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
 
     private long uiRefreshRate;
+
+    private HandlerThread mHandlerThread;
     private Handler mHandler;
+
     private Runnable mUIScheduler;
     private DeviceUIUpdater mUIUpdater;
-    private boolean isForcedDisconnected = false;
+    private boolean isForcedDisconnected;
+    private boolean mConnectionIsBound;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private E4ServiceConnection mConnection;
+    private final E4ServiceConnection mConnection;
+    private final BroadcastReceiver serverStatusListener;
+    private final BroadcastReceiver bluetoothReceiver;
+    private final BroadcastReceiver deviceFailedReceiver;
+
     private E4ServiceConnection activeConnection;
 
-    /** New UI **/
+    /** Overview UI **/
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
     private View[] mServerStatusIcons;
     private TextView[] mTemperatureLabels;
     private TextView[] mBatteryLabels;
 
+    public MainActivity() {
+        super();
+        isForcedDisconnected = false;
+        mConnection = new E4ServiceConnection(this);
 
-    private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
-                final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
-                updateServerStatus(status, 0);
-            }
-        }
-    };
-
-    private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                if (state == BluetoothAdapter.STATE_ON) {
-                    logger.info("Bluetooth has turned on");
-                } else if (state == BluetoothAdapter.STATE_OFF) {
-                    logger.warn("Bluetooth is off");
+        serverStatusListener = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
+                    final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
+                    updateServerStatus(status, 0);
                 }
-                startScanning();
             }
-        }
-    };
+        };
 
-    private final BroadcastReceiver deviceFailedReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, final Intent intent) {
-            if (intent.getAction().equals(DEVICE_CONNECT_FAILED)) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+        bluetoothReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+
+                if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                    logger.info("Bluetooth state {}", state);
+                    if (state == BluetoothAdapter.STATE_ON) {
+                        logger.info("Bluetooth has turned on");
+                        startScanning();
+                    } else if (state == BluetoothAdapter.STATE_OFF) {
+                        logger.warn("Bluetooth is off");
+                        startScanning();
                     }
-                });
+                }
             }
-        }
-    };
+        };
+
+        deviceFailedReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, final Intent intent) {
+                if (intent.getAction().equals(DEVICE_CONNECT_FAILED)) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+        };
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mConnection = new E4ServiceConnection(this);
 
-        setContentView(R.layout.activity_overview);
 
         // Create arrays of labels. Fixed to four rows
         mDeviceNameLabels = new TextView[] {
@@ -137,8 +153,9 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.batteryRow4)
         };
 
+        setContentView(R.layout.activity_overview);
+
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
-        mHandler = new Handler();
 
         mUIUpdater = new DeviceUIUpdater();
         mUIScheduler = new Runnable() {
@@ -152,47 +169,81 @@ public class MainActivity extends AppCompatActivity {
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
                 } finally {
-                    mHandler.postDelayed(mUIScheduler, uiRefreshRate);
+                    getHandler().postDelayed(mUIScheduler, uiRefreshRate);
                 }
             }
         };
 
-        isForcedDisconnected = false;
         checkBluetoothPermissions();
     }
 
     @Override
     protected void onResume() {
+        logger.info("mainActivity onResume");
         super.onResume();
-        mHandler.post(mUIScheduler);
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!mConnectionIsBound) {
+                    mConnection.bind(
+                            getString(R.string.kafka_rest_proxy_url), getString(R.string.schema_registry_url),
+                            getString(R.string.group_id), getString(R.string.apikey));
+                    mConnectionIsBound = true;
+                }
+            }
+        }, 250L);
     }
 
     @Override
     protected void onPause() {
+        logger.info("mainActivity onPause");
         super.onPause();
         mHandler.removeCallbacks(mUIScheduler);
     }
 
     @Override
     protected void onStart() {
+        logger.info("mainActivity onStart");
         super.onStart();
-        IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        registerReceiver(bluetoothReceiver, bluetoothFilter);
-        IntentFilter serverFilter = new IntentFilter(E4Service.SERVER_STATUS_CHANGED);
-        registerReceiver(serverStatusListener, serverFilter);
-        IntentFilter failedFilter = new IntentFilter(E4Service.DEVICE_CONNECT_FAILED);
-        registerReceiver(deviceFailedReceiver, failedFilter);
-        bindToEmpatica(mConnection);
+        registerReceiver(bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_STATUS_CHANGED));
+        registerReceiver(deviceFailedReceiver, new IntentFilter(E4Service.DEVICE_CONNECT_FAILED));
+
+        mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
+        mHandlerThread.start();
+        synchronized (this) {
+            mHandler = new Handler(mHandlerThread.getLooper());
+        }
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mConnectionIsBound = false;
+            }
+        });
     }
 
     @Override
     protected void onStop() {
+        logger.info("mainActivity onStop");
         super.onStop();
         unregisterReceiver(serverStatusListener);
         unregisterReceiver(deviceFailedReceiver);
         unregisterReceiver(bluetoothReceiver);
-        unbindService(mConnection);
-        mConnection.close();
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mConnectionIsBound) {
+                    mConnection.unbind();
+                    mConnectionIsBound = false;
+                }
+            }
+        });
+        mHandlerThread.quitSafely();
+    }
+
+    private synchronized Handler getHandler() {
+        return mHandler;
     }
 
     private void disconnect() {
@@ -249,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private synchronized E4ServiceConnection getActiveConnection() {
+    synchronized E4ServiceConnection getActiveConnection() {
         return activeConnection;
     }
 
@@ -269,6 +320,13 @@ public class MainActivity extends AppCompatActivity {
 
         startScanning();
     }
+
+    synchronized void serviceDisconnected(final E4ServiceConnection connection) {
+        if (connection == activeConnection) {
+            activeConnection = null;
+        }
+    }
+
 
     public void deviceStatusUpdated(final E4ServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
@@ -302,6 +360,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case READY:
 //                        statusLabel.setText("Scanning...");
+
                         break;
                 }
             }

@@ -53,6 +53,10 @@ public class E4ServiceConnection implements ServiceConnection {
             }
         }
     };
+    private String apiKey;
+    private String groupId;
+    private String schemaRegistryUrl;
+    private String kafkaUrl;
 
 
     public E4ServiceConnection(MainActivity mainActivity) {
@@ -61,37 +65,41 @@ public class E4ServiceConnection implements ServiceConnection {
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         this.isRemote = false;
-        IntentFilter filter = new IntentFilter(DEVICE_STATUS_CHANGED);
-        mainActivity.registerReceiver(statusReceiver, filter);
     }
 
     @Override
     public void onServiceConnected(final ComponentName className,
                                    IBinder service) {
-        logger.info("Bound to service {}", className);
-        serviceBinder = service;
+        mainActivity.registerReceiver(statusReceiver, new IntentFilter(DEVICE_STATUS_CHANGED));
 
-        // We've bound to the running Service, cast the IBinder and get instance
-        mainActivity.serviceConnected(this);
-        if (!(serviceBinder instanceof E4Service.LocalBinder)) {
-            isRemote = true;
-            try {
-                this.serviceBinder.linkToDeath(new IBinder.DeathRecipient() {
-                    @Override
-                    public void binderDied() {
-                        onServiceDisconnected(className);
-                        mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
-                        mainActivity.bindToEmpatica(E4ServiceConnection.this);
-                    }
-                }, 0);
-            } catch (RemoteException e) {
-                logger.error("Failed to link to death", e);
+        if (serviceBinder == null) {
+            logger.info("Bound to service {}", className);
+            serviceBinder = service;
+
+            // We've bound to the running Service, cast the IBinder and get instance
+            mainActivity.serviceConnected(this);
+            if (!(serviceBinder instanceof E4Service.LocalBinder)) {
+                isRemote = true;
+                try {
+                    this.serviceBinder.linkToDeath(new IBinder.DeathRecipient() {
+                        @Override
+                        public void binderDied() {
+                            onServiceDisconnected(className);
+                            mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
+                            bind(kafkaUrl, schemaRegistryUrl, groupId, apiKey);
+                        }
+                    }, 0);
+                } catch (RemoteException e) {
+                    logger.error("Failed to link to death", e);
+                }
             }
-        }
-        try {
-            deviceStatus = getDeviceData().getStatus();
-        } catch (RemoteException e) {
-            logger.error("Failed to get device status", e);
+            try {
+                deviceStatus = getDeviceData().getStatus();
+            } catch (RemoteException e) {
+                logger.error("Failed to get device status", e);
+            }
+        } else {
+            logger.info("Trying to re-bind service, from {} to {}", serviceBinder, service);
         }
     }
 
@@ -182,10 +190,29 @@ public class E4ServiceConnection implements ServiceConnection {
         serviceBinder = null;
         deviceName = null;
         deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
+        mainActivity.serviceDisconnected(this);
+        mainActivity.unregisterReceiver(statusReceiver);
     }
 
-    public void close() {
-        mainActivity.unregisterReceiver(statusReceiver);
+    void bind(String kafkaUrl, String schemaRegistryUrl, String groupId, String apiKey) {
+        this.kafkaUrl = kafkaUrl;
+        this.schemaRegistryUrl = schemaRegistryUrl;
+        this.groupId = groupId;
+        this.apiKey = apiKey;
+        logger.info("Intending to start E4 service");
+
+        Intent e4serviceIntent = new Intent(mainActivity, E4Service.class);
+        e4serviceIntent.putExtra("kafka_rest_proxy_url", kafkaUrl);
+        e4serviceIntent.putExtra("schema_registry_url", schemaRegistryUrl);
+        e4serviceIntent.putExtra("group_id", groupId);
+        e4serviceIntent.putExtra("empatica_api_key", apiKey);
+        mainActivity.startService(e4serviceIntent);
+        mainActivity.bindService(e4serviceIntent, this, Context.BIND_ABOVE_CLIENT);
+    }
+
+    public void unbind() {
+        mainActivity.unbindService(this);
+        onServiceDisconnected(null);
     }
 
     public String getDeviceName() {

@@ -83,6 +83,7 @@ captures/
 .idea/gradle.xml
 .gradle/
 .idea/libraries
+.gradletasknamecache
 
 # Mongo Explorer plugin:
 .idea/mongoSettings.xml
@@ -111,3 +112,4 @@ fabric.properties
 modules.xml
 .idea/misc.xml
 *.ipr
+.idea/runConfigurations.xml

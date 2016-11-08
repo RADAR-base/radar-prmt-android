@@ -30,4 +30,15 @@
     <string name="header_connect"></string>
     <string name="header_details"></string>
 
+    <!--Status texts-->
+    <string name="server_connected">Server connected</string>
+    <string name="server_disconnected">Server disconnected</string>
+    <string name="server_connecting">Connecting to server</string>
+    <string name="server_uploading">Uploading</string>
+    <string name="device_connected">CONNECTED</string>
+    <string name="device_connecting">CONNECTING</string>
+    <string name="device_disconnected">DISCONNECTED</string>
+    <string name="device_scanning">Scanning...</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="bluetooth_permission_failure">Cannot connect to Empatica E4DeviceManager without location permissions</string>
 </resources>
