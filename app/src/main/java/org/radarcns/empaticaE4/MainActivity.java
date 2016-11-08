@@ -321,19 +321,19 @@ public class MainActivity extends AppCompatActivity {
                         serverStatusLabel.setVisibility(View.INVISIBLE);
                         break;
                     case CONNECTED:
-                        serverStatusLabel.setText("Server connected");
+                        serverStatusLabel.setText(R.string.server_connected);
                         serverStatusLabel.setVisibility(View.VISIBLE);
                         break;
                     case DISCONNECTED:
-                        serverStatusLabel.setText("Server disconnected");
+                        serverStatusLabel.setText(R.string.server_disconnected);
                         serverStatusLabel.setVisibility(View.VISIBLE);
                         break;
                     case CONNECTING:
-                        serverStatusLabel.setText("Connecting to server");
+                        serverStatusLabel.setText(R.string.server_connecting);
                         serverStatusLabel.setVisibility(View.VISIBLE);
                         break;
                     case UPLOADING:
-                        serverStatusLabel.setText("Uploading");
+                        serverStatusLabel.setText(R.string.server_uploading);
                         serverStatusLabel.setVisibility(View.VISIBLE);
                         break;
                 }
@@ -354,14 +354,14 @@ public class MainActivity extends AppCompatActivity {
                                 activeConnection = connection;
                             }
                         }
-                        updateLabel(stopButton, "Stop Recording");
+                        stopButton.setText(R.string.stop_recording);
                         dataCnt.setVisibility(View.VISIBLE);
-                        statusLabel.setText("CONNECTED");
+                        statusLabel.setText(R.string.device_connected);
                         startScanning();
                         break;
                     case CONNECTING:
-                        updateLabel(stopButton, "Stop Recording");
-                        statusLabel.setText("CONNECTING");
+                        stopButton.setText(R.string.stop_recording);
+                        statusLabel.setText(R.string.device_connecting);
                         break;
                     case DISCONNECTED:
                         Button btn = deviceButtons.remove(connection);
@@ -375,23 +375,23 @@ public class MainActivity extends AppCompatActivity {
                             emptyDevices.setVisibility(View.VISIBLE);
                         }
                         dataCnt.setVisibility(View.INVISIBLE);
-                        statusLabel.setText("DISCONNECTED");
+                        statusLabel.setText(R.string.device_disconnected);
                         break;
                     case READY:
-                        statusLabel.setText("Scanning...");
+                        statusLabel.setText(R.string.device_scanning);
                         stopButton.setOnClickListener(new View.OnClickListener() {
                             public void onClick(View v) {
                                 isForcedDisconnected = !isForcedDisconnected;
                                 if (isForcedDisconnected) {
                                     disconnect();
-                                    stopButton.setText("Start Recording");
+                                    stopButton.setText(R.string.start_recording);
                                 } else {
                                     startScanning();
-                                    stopButton.setText("Stop Recording");
+                                    stopButton.setText(R.string.stop_recording);
                                 }
                             }
                         });
-                        updateLabel(stopButton, "Stop Recording");
+                        stopButton.setText(R.string.stop_recording);
                         stopButton.setVisibility(View.VISIBLE);
                         break;
                 }
@@ -432,7 +432,12 @@ public class MainActivity extends AppCompatActivity {
                 startScanning();
             } else {
                 // User refused to grant permission.
-                updateLabel(statusLabel, "Cannot connect to Empatica E4DeviceManager without location permissions");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        statusLabel.setText(R.string.bluetooth_permission_failure);
+                    }
+                });
             }
         }
     }
@@ -471,7 +476,7 @@ public class MainActivity extends AppCompatActivity {
                 accelSensorLabel.setText(EmpaSensorType.ACC.name());
             }
             if (sensorStatus.containsKey(EmpaSensorType.TEMP)) {
-                temperatureLabel.setText(EmpaSensorType.TEMP.name());
+                temperatureSensorLabel.setText(EmpaSensorType.TEMP.name());
             }
             if (sensorStatus.containsKey(EmpaSensorType.BVP)) {
                 bvpSensorLabel.setText(EmpaSensorType.BVP.name());
