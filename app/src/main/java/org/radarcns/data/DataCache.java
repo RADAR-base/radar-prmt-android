@@ -32,6 +32,7 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      */
     int markSent(long offset);
 
+    /** Add a new measurement to the cache. */
     void addMeasurement(K key, V value);
 
     /**
@@ -41,6 +42,7 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      */
     int removeBeforeTimestamp(long millis);
 
+    /** Get the topic the cache stores. */
     AvroTopic<K, V> getTopic();
 
     /**

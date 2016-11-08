@@ -6,6 +6,7 @@ import org.codehaus.jackson.map.ObjectWriter;
 
 import java.io.IOException;
 
+/** Encodes a String as Avro */
 public class StringEncoder implements AvroEncoder, AvroEncoder.AvroWriter<String> {
     private final static ObjectWriter jsonEncoder = new ObjectMapper().writer();
 

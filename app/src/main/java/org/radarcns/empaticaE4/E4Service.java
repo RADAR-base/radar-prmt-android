@@ -35,6 +35,10 @@ import java.net.URL;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * A service that manages a E4DeviceManager and a TableDataHandler to send store the data of an
+ * Empatica E4 and send it to a Kafka REST proxy.
+ */
 public class E4Service extends Service implements DeviceStatusListener, ServerStatusListener {
     private final static int ONGOING_NOTIFICATION_ID = 11;
     public final static int TRANSACT_GET_RECORDS = 12;

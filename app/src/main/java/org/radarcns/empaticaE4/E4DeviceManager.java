@@ -24,6 +24,7 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Manages scanning for an Empatica E4 wearable and connecting to it */
 class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceManager {
     private final static Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
 
@@ -77,6 +78,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         this.deviceStatus = new E4DeviceStatus();
     }
 
+    @Override
     public void start() {
         this.mHandlerThread.start();
         logger.info("Started scanning");
@@ -166,10 +168,12 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         return this.mHandler;
     }
 
+    @Override
     public boolean isClosed() {
         return getHandler() == null;
     }
 
+    @Override
     public void close() {
         logger.info("Closing device {}", deviceName);
         Handler localHandler;
@@ -262,6 +266,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         dataHandler.addMeasurement(sensorStatusTable, deviceId, value);
     }
 
+    @Override
     public String getName() {
         return deviceName;
     }
@@ -278,6 +283,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         this.e4service.deviceStatusUpdated(this, status);
     }
 
+    @Override
     public E4DeviceStatus getState() {
         return deviceStatus;
     }

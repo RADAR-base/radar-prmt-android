@@ -10,10 +10,15 @@ import org.apache.avro.specific.SpecificRecord;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+/** An AvroEncoder to encode known SpecificRecord classes */
 public class SpecificRecordEncoder implements AvroEncoder {
     private final EncoderFactory encoderFactory;
     private final boolean binary;
 
+    /**
+     * Create a SpecificRecordEncoder.
+     * @param binary whether to use binary encoding or JSON.
+     */
     public SpecificRecordEncoder(boolean binary) {
         this.encoderFactory = EncoderFactory.get();
         this.binary = binary;

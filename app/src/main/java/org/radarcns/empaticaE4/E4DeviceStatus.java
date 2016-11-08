@@ -13,9 +13,8 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * Created by joris on 27/10/2016.
+ * The status on a single point in time of an Empatica E4 device.
  */
-
 public class E4DeviceStatus implements DeviceState {
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
