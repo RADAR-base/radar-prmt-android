@@ -34,7 +34,7 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
 public class E4ServiceConnection implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(E4ServiceConnection.class);
-    private final MainActivity mainActivity;
+    private final OverviewActivity overviewActivity;
     private boolean isRemote;
     private DeviceStatusListener.Status deviceStatus;
     public String deviceName;
@@ -49,20 +49,20 @@ public class E4ServiceConnection implements ServiceConnection {
                 }
                 deviceStatus = DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
                 logger.info("Updated device status to {}", deviceStatus);
-                mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
+                overviewActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
             }
         }
     };
 
 
-    public E4ServiceConnection(MainActivity mainActivity) {
-        this.mainActivity = mainActivity;
+    public E4ServiceConnection(OverviewActivity overviewActivity) {
+        this.overviewActivity = overviewActivity;
         this.serviceBinder = null;
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         this.isRemote = false;
         IntentFilter filter = new IntentFilter(DEVICE_STATUS_CHANGED);
-        mainActivity.registerReceiver(statusReceiver, filter);
+        overviewActivity.registerReceiver(statusReceiver, filter);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class E4ServiceConnection implements ServiceConnection {
         serviceBinder = service;
 
         // We've bound to the running Service, cast the IBinder and get instance
-        mainActivity.serviceConnected(this);
+        overviewActivity.serviceConnected(this);
         if (!(serviceBinder instanceof E4Service.LocalBinder)) {
             isRemote = true;
             try {
@@ -80,8 +80,8 @@ public class E4ServiceConnection implements ServiceConnection {
                     @Override
                     public void binderDied() {
                         onServiceDisconnected(className);
-                        mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
-                        mainActivity.bindToEmpatica(E4ServiceConnection.this);
+                        overviewActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
+                        overviewActivity.bindToEmpatica(E4ServiceConnection.this);
                     }
                 }, 0);
             } catch (RemoteException e) {
@@ -185,7 +185,7 @@ public class E4ServiceConnection implements ServiceConnection {
     }
 
     public void close() {
-        mainActivity.unregisterReceiver(statusReceiver);
+        overviewActivity.unregisterReceiver(statusReceiver);
     }
 
     public String getDeviceName() {

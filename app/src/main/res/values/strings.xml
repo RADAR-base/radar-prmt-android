@@ -7,7 +7,7 @@
     <string name="bvp_label">BVP</string>
     <string name="eda_label">EDA</string>
     <string name="ibi_label">IBI</string>
-    <string name="emptyText">-</string>
+    <string name="emptyText">—</string>
     <string name="temp_label">Temperature</string>
     <string name="battery_label">Battery</string>
     <string name="service_notification_ticker">Empatica E4 data collection</string>
@@ -29,6 +29,5 @@
     <string name="header_temp">Temperature</string>
     <string name="header_connect"></string>
     <string name="header_details"></string>
-    <string name="default_col_value">—</string>
 
 </resources>

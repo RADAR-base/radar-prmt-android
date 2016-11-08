@@ -16,15 +16,15 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:screenOrientation="unspecified"
-            android:name=".empaticaE4.MainActivity"
+            android:screenOrientation="landscape"
+            android:name=".empaticaE4.OverviewActivity"
             android:label="@string/app_name" >
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
-        <service android:name=".E4Service"/>
+        <service android:name=".empaticaE4.E4Service"/>
 
         <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
@@ -32,17 +32,16 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <!--This is now actually the main activity-->
-        <activity
-            android:name=".android.OverviewActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="landscape">
+        <!--<activity-->
+            <!--android:name=".empaticaE4.OverviewActivity"-->
+            <!--android:label="@string/app_name"-->
+            <!--android:screenOrientation="landscape">-->
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            <!--&lt;!&ndash;<intent-filter>&ndash;&gt;-->
+                <!--&lt;!&ndash;<action android:name="android.intent.action.MAIN" />&ndash;&gt;-->
+                <!--&lt;!&ndash;<category android:name="android.intent.category.LAUNCHER" />&ndash;&gt;-->
+            <!--&lt;!&ndash;</intent-filter>&ndash;&gt;-->
+        <!--</activity>-->
 
     </application>
 </manifest>
