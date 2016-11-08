@@ -76,13 +76,17 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
             @Override
             public void run() {
-                if (topicsToSend.isEmpty()) {
-                    topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getCaches().keySet());
-                }
-                uploadCaches(topicsToSend);
-                // still more data to send, do that immediately
-                if (!topicsToSend.isEmpty()) {
-                    executor.execute(this);
+                if (connection.isConnected()) {
+                    if (topicsToSend.isEmpty()) {
+                        topicsToSend = new HashSet<>(KafkaDataSubmitter.this.dataHandler.getCaches().keySet());
+                    }
+                    uploadCaches(topicsToSend);
+                    // still more data to send, do that immediately
+                    if (!topicsToSend.isEmpty()) {
+                        executor.execute(this);
+                    }
+                } else {
+                    topicsToSend.clear();
                 }
             }
         }, 10L, 10L, TimeUnit.SECONDS);
@@ -113,8 +117,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                         logger.error("Cannot flush cache", ex);
                     }
                 }
-                uploadCaches(new HashSet<>(caches.keySet()));
                 if (connection.isConnected()) {
+                    uploadCaches(new HashSet<>(caches.keySet()));
                     try {
                         synchronized (trySendFuture) {
                             for (ScheduledFuture<?> future : trySendFuture.values()) {
