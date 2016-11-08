@@ -46,6 +46,7 @@ public class E4ServiceConnection implements ServiceConnection {
             if (intent.getAction().equals(DEVICE_STATUS_CHANGED)) {
                 if (intent.hasExtra(DEVICE_STATUS_NAME)) {
                     deviceName = intent.getStringExtra(DEVICE_STATUS_NAME);
+                    logger.info(deviceName);
                 }
                 deviceStatus = DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
                 logger.info("Updated device status to {}", deviceStatus);

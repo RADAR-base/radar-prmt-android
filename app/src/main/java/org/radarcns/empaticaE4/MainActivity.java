@@ -62,6 +62,11 @@ public class MainActivity extends AppCompatActivity {
     private TextView[] mTemperatureLabels;
     private TextView[] mBatteryLabels;
 
+    /** Data formats **/
+    final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+    final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+    final DecimalFormat noDecimals = new DecimalFormat("0");
+
     public MainActivity() {
         super();
         isForcedDisconnected = false;
@@ -163,6 +168,8 @@ public class MainActivity extends AppCompatActivity {
                     E4ServiceConnection connection = getActiveConnection();
                     if (connection != null) {
                         mUIUpdater.updateWithData(connection);
+                    } else if( mConnection.hasService() ) {
+                        mUIUpdater.updateWithData(mConnection);
                     }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
@@ -433,6 +440,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void connectDevice(View v) {
         int rowIndex = getRowIndexFromView(v);
+        startScanning();
 
         // some test code, updating with random data
 //        Random generator = new Random();
@@ -475,21 +483,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void updateDeviceName(String deviceName, int row) {
-        // TODO: restrict n_characters of deviceName
-        mDeviceNameLabels[row].setText(deviceName);
-    }
-
     /**
      * Updates a row with the deviceData
      * @param deviceData
      * @param row           Row number
      */
     public void updateRow(E4DeviceStatus deviceData, int row ) {
-        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
-        final DecimalFormat noDecimals = new DecimalFormat("0");
+        updateDeviceStatus(deviceData, row);
+        updateTemperature(deviceData, row);
+        updateBattery(deviceData, row);
+    }
 
+    public void updateDeviceStatus(E4DeviceStatus deviceData, int row ) {
         // Connection status. Change icon used.
         switch (deviceData.getStatus()) {
             case CONNECTED:
@@ -505,13 +510,19 @@ public class MainActivity extends AppCompatActivity {
             default:
                 mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
         }
+    }
 
-        // Temperature
+    public void updateTemperature(E4DeviceStatus deviceData, int row ) {
         setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
+    }
 
-        // Battery
+    public void updateBattery(E4DeviceStatus deviceData, int row ) {
         setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
+    }
 
+    public void updateDeviceName(String deviceName, int row) {
+        // TODO: restrict n_characters of deviceName
+        mDeviceNameLabels[row].setText(deviceName);
     }
 
     private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {

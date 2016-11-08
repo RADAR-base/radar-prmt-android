@@ -20,7 +20,7 @@
     <string name="active_device">Device</string>
 
     <!--Overview activity-->
-    <string name="button_connect">Connect</string>
+    <string name="button_connect">Scan</string>
     <string name="button_details">Details</string>
     <string name="header_battery">Battery</string>
     <string name="header_device_status">Status</string>
