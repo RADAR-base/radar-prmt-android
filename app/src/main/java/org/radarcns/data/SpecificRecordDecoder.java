@@ -12,6 +12,7 @@ import org.apache.avro.specific.SpecificRecord;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+/** An AvroDecoder to decode known SpecificRecord classes */
 public class SpecificRecordDecoder implements AvroDecoder {
     private final DecoderFactory decoderFactory;
     private final boolean binary;

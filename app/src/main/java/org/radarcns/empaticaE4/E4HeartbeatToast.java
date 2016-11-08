@@ -19,7 +19,6 @@ import java.util.Locale;
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-
 class E4HeartbeatToast extends AsyncTask<E4ServiceConnection, Void, String[]> {
     private final Context context;
     final static DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);

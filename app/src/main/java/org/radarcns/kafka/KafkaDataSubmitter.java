@@ -2,7 +2,7 @@ package org.radarcns.kafka;
 
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
-import org.radarcns.data.ListPool;
+import org.radarcns.util.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;

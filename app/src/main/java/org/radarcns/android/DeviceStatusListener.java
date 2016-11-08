@@ -1,6 +1,6 @@
 package org.radarcns.android;
 
-/** Listen for updates of Empatica E4 devices. */
+/** Listen for updates of wearable devices. */
 public interface DeviceStatusListener {
     enum Status {
         /** A device is found and the device manager is trying to connect to it. No data is yet received. */

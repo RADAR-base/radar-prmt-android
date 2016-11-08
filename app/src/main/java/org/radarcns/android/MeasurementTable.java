@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Parcel;
 import android.os.Process;
@@ -13,7 +14,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.DataCache;
-import org.radarcns.data.ListPool;
+import org.radarcns.util.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
@@ -41,7 +42,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class MeasurementTable<V extends SpecificRecord> implements DataCache<MeasurementKey, V> {
     private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
-    private final MeasurementDBHelper dbHelper;
+    private final static int DATABASE_VERSION = 2;
+
+    private final SQLiteOpenHelper dbHelper;
     private final AvroTopic<MeasurementKey, V> topic;
     private final long window;
     private long lastOffsetSent;
@@ -60,7 +63,19 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         if (timeWindowMillis > System.currentTimeMillis()) {
             throw new IllegalArgumentException("Time window must be smaller than current absolute time");
         }
-        this.dbHelper = new MeasurementDBHelper(this, context, topic.getName() + ".db");
+        this.dbHelper = new SQLiteOpenHelper(context, topic.getName() + ".db", null, DATABASE_VERSION) {
+            @Override
+            public void onCreate(SQLiteDatabase db) {
+                createTable(db);
+            }
+
+            @Override
+            public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+                dropTable(db);
+                onCreate(db);
+            }
+        };
+
         this.topic = topic;
         this.window = timeWindowMillis;
         this.submitThread = null;
@@ -84,6 +99,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         }
     }
 
+    /** Start submitting data to the table. */
     private void start() {
         if (this.submitThread != null) {
             throw new IllegalStateException("Submit thread already started");
@@ -218,12 +234,14 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         }
     }
 
+    /** Flush all pending measurements to the table */
     public void flush() {
         if (submitThread != null) {
             submitThread.flush();
         }
     }
 
+    /** Close the data submission thread. */
     public void close() {
         if (submitThread != null) {
             this.submitThread.close();
@@ -234,6 +252,8 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
 
     /**
      * Add a measurement to the table.
+     *
+     * This data is is written in a separate thread.
      *
      * @param value values of the measurement. These must match the fieldTypes passed to the
      *              constructor.
@@ -391,6 +411,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         db.execSQL("DROP TABLE IF EXISTS " + topic.getName());
     }
 
+    @Override
     public void writeRecordsToParcel(Parcel dest, int limit) throws IOException {
         List<Record<MeasurementKey, V>> records = getRecords(limit);
         SpecificRecordEncoder specificEncoder = new SpecificRecordEncoder(true);
