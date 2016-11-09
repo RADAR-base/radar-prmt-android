@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
-import java.util.concurrent.TimeUnit;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
@@ -62,9 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    private DeviceServiceConnection activeConnection;
-
-    private DeviceServiceConnection[] mServiceConnections; // Either E4ServiceConnection or other.
+    /** Connections. 1 = Empatica, 2 = Angel sensor **/
+    private DeviceServiceConnection[] mActiveConnections;
 
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
@@ -73,18 +70,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView[] mTemperatureLabels;
     private TextView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
-    private String[] mInputDeviceNames = new String[4];
-
-    /** Data formats **/
-    final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
-    final DecimalFormat noDecimals = new DecimalFormat("0");
+    private String[] mInputDeviceKeys = new String[4];
 
     public MainActivity() {
         super();
         isForcedDisconnected = false;
         mConnection = new DeviceServiceConnection(this);
-        mServiceConnections = new DeviceServiceConnection[4];
+        mActiveConnections = new DeviceServiceConnection[4];
 
         serverStatusListener = new BroadcastReceiver() {
             @Override
@@ -187,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 try {
                     // Update all rows in the UI with the data from the connections
-                    mUIUpdater.updateWithData( mServiceConnections );
+                    mUIUpdater.updateWithData(mActiveConnections);
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
                 } finally {
@@ -311,8 +303,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void serviceConnected(final DeviceServiceConnection connection) {
         synchronized (this) {
-            if (mServiceConnections[0] == null) {
-                mServiceConnections[0] = connection;
+            if (mActiveConnections[0] == null) {
+                mActiveConnections[0] = connection;
             }
         }
         try {
@@ -327,8 +319,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
-//        if (connection == mServiceConnections[0]) {
-//            mServiceConnections[0] = null;
+//        if (connection == mActiveConnections[0]) {
+//            mActiveConnections[0] = null;
 //        }
     }
 
@@ -343,8 +335,8 @@ public class MainActivity extends AppCompatActivity {
 //                        addDeviceButton(connection);
 
                         synchronized (MainActivity.this) {
-                            if (mServiceConnections[0] == null) {
-                                mServiceConnections[0] = connection;
+                            if (mActiveConnections[0] == null) {
+                                mActiveConnections[0] = connection;
                             }
                         }
 //                        statusLabel.setText("CONNECTED");
@@ -354,8 +346,8 @@ public class MainActivity extends AppCompatActivity {
 //                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
                         // Reject if device name inputted does not equal device name
-                        if ( mInputDeviceNames[0] != null && ! connection.equalsDeviceName( mInputDeviceNames[0] ) ) {
-                            logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceNames[0]);
+                        if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
+                            logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
                             Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
                             // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
                             disconnect();
@@ -364,8 +356,8 @@ public class MainActivity extends AppCompatActivity {
                     case DISCONNECTED:
 
                         synchronized (MainActivity.this) {
-                            if (connection.equals(mServiceConnections[0])) {
-                                mServiceConnections[0] = null;
+                            if (connection.equals(mActiveConnections[0])) {
+                                mActiveConnections[0] = null;
                             }
                         }
 
@@ -419,6 +411,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public class DeviceUIUpdater implements Runnable {
+        /** Data formats **/
+        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+        final DecimalFormat noDecimals = new DecimalFormat("0");
+
         E4DeviceStatus deviceData = null;
         String deviceName = null;
         int rowIndex;
@@ -515,7 +512,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    mUIUpdater.updateWithData( mServiceConnections );
+                    mUIUpdater.updateWithData(mActiveConnections);
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
                 }
@@ -548,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateServerStatus( ServerStatusListener.Status status ) {
         // Update all server statuses (server status is independent of device. Check.
-        for (int i=0; i < mServiceConnections.length; i++ ) {
+        for (int i = 0; i < mActiveConnections.length; i++ ) {
             updateServerStatus( status, i );
         }
     }
@@ -596,8 +593,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 int row = getRowIndexFromView( v );
-                mInputDeviceNames[row] = input.getText().toString();
-                mDeviceInputButtons[row].setText( mInputDeviceNames[row] );
+                mInputDeviceKeys[row] = input.getText().toString();
+                mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

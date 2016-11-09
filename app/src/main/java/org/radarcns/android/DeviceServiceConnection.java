@@ -214,7 +214,7 @@ public class DeviceServiceConnection implements ServiceConnection {
      * @param value
      * @return
      */
-    public boolean equalsDeviceName(String value) {
+    public boolean isAllowedDevice(String value) {
         return getDeviceName().contains(value);
     }
 
