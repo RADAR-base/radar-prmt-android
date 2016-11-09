@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
@@ -353,6 +354,14 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case CONNECTING:
 //                        statusLabel.setText("CONNECTING");
+                        logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
+                        // Reject if device name inputted does not equal device name
+                        if ( mInputDeviceNames[0] != null && ! connection.equalsDeviceName( mInputDeviceNames[0] ) ) {
+                            logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceNames[0]);
+                            Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
+                            // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
+                            disconnect();
+                        }
                         break;
                     case DISCONNECTED:
 

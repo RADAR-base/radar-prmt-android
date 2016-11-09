@@ -209,6 +209,15 @@ public class DeviceServiceConnection implements ServiceConnection {
         return deviceName;
     }
 
+    /**
+     * True if given string is a substring of the device name.
+     * @param value
+     * @return
+     */
+    public boolean equalsDeviceName(String value) {
+        return getDeviceName().contains(value);
+    }
+
     public DeviceStatusListener.Status getDeviceStatus() {
         return deviceStatus;
     }

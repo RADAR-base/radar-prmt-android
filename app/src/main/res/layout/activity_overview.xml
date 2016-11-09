@@ -82,7 +82,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow1"
-                        style="@style/ButtonColumn"
+                        style="@style/ButtonDeviceKeyColumn"
                         android:text="@string/button_input"
                         android:onClick="dialogInputDeviceName" />
 
@@ -130,7 +130,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow2"
-                        style="@style/ButtonColumn"
+                        style="@style/ButtonDeviceKeyColumn"
                         android:text="@string/button_input"
                         android:onClick="dialogInputDeviceName" />
 
@@ -177,7 +177,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow3"
-                        style="@style/ButtonColumn"
+                        style="@style/ButtonDeviceKeyColumn"
                         android:text="@string/button_input"
                         android:onClick="dialogInputDeviceName" />
 
@@ -224,7 +224,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow4"
-                        style="@style/ButtonColumn"
+                        style="@style/ButtonDeviceKeyColumn"
                         android:text="@string/button_input"
                         android:onClick="dialogInputDeviceName" />
 
