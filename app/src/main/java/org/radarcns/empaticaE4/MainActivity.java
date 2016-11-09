@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -63,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
 
     private DeviceServiceConnection activeConnection;
 
+    private DeviceServiceConnection[] mServiceConnections; // Either E4ServiceConnection or other.
+
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
@@ -81,13 +84,14 @@ public class MainActivity extends AppCompatActivity {
         super();
         isForcedDisconnected = false;
         mConnection = new DeviceServiceConnection(this);
+        mServiceConnections = new DeviceServiceConnection[4];
 
         serverStatusListener = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                     final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
-                    updateServerStatus(status, 0);
+                    updateServerStatus(status);
                 }
             }
         };
@@ -182,15 +186,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    DeviceServiceConnection connection;
-                    synchronized (MainActivity.this) {
-                        connection = activeConnection;
-                    }
-                    if (connection != null) {
-                        mUIUpdater.updateWithData(connection, 0);
-                    } else if( mConnection.hasService() ) {
-                        mUIUpdater.updateWithData(mConnection, 0);
-                    }
+                    // Update all rows in the UI with the data from the connections
+                    mUIUpdater.updateWithData( mServiceConnections );
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
                 } finally {
@@ -314,24 +311,25 @@ public class MainActivity extends AppCompatActivity {
 
     public void serviceConnected(final DeviceServiceConnection connection) {
         synchronized (this) {
-            if (activeConnection == null) {
-                activeConnection = connection;
+            if (mServiceConnections[0] == null) {
+                mServiceConnections[0] = connection;
             }
         }
         try {
             ServerStatusListener.Status status = connection.getServerStatus();
             logger.info("Initial server status: {}", status);
-            updateServerStatus(status, 0);
+            updateServerStatus(status);
         } catch (RemoteException e) {
             logger.warn("Failed to update UI server status");
         }
         startScanning();
     }
 
+
     public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
-        if (connection == activeConnection) {
-            activeConnection = null;
-        }
+//        if (connection == mServiceConnections[0]) {
+//            mServiceConnections[0] = null;
+//        }
     }
 
 
@@ -345,8 +343,8 @@ public class MainActivity extends AppCompatActivity {
 //                        addDeviceButton(connection);
 
                         synchronized (MainActivity.this) {
-                            if (activeConnection == null) {
-                                activeConnection = connection;
+                            if (mServiceConnections[0] == null) {
+                                mServiceConnections[0] = connection;
                             }
                         }
 //                        statusLabel.setText("CONNECTED");
@@ -366,8 +364,8 @@ public class MainActivity extends AppCompatActivity {
                     case DISCONNECTED:
 
                         synchronized (MainActivity.this) {
-                            if (connection.equals(activeConnection)) {
-                                activeConnection = null;
+                            if (connection.equals(mServiceConnections[0])) {
+                                mServiceConnections[0] = null;
                             }
                         }
 
@@ -423,13 +421,21 @@ public class MainActivity extends AppCompatActivity {
     public class DeviceUIUpdater implements Runnable {
         E4DeviceStatus deviceData = null;
         String deviceName = null;
-        int row;
+        int rowIndex;
 
-        void updateWithData(@NonNull DeviceServiceConnection connection, int row) throws RemoteException {
-            deviceData = (E4DeviceStatus)connection.getDeviceData();
-            deviceName = connection.getDeviceName();
-            this.row = row;
-            runOnUiThread(this);
+        public void updateWithData(@NonNull DeviceServiceConnection[] connections) throws RemoteException {
+            int i = 0;
+            for (DeviceServiceConnection connection : connections ) {
+                if (connection !=  null) {
+                    logger.info("Updating row {} with data", i);
+                    deviceData = (E4DeviceStatus) connection.getDeviceData();
+                    deviceName = connection.getDeviceName();
+                    rowIndex = i;
+                    runOnUiThread(this);
+                }
+                // TODO: handle disconnect (reset fields with mConnection?)
+                i++;
+            }
         }
 
         @Override
@@ -437,9 +443,61 @@ public class MainActivity extends AppCompatActivity {
             if (deviceData == null) {
                 return;
             }
-            updateRow(deviceData, row);
-            updateDeviceName(deviceName, row);
+            updateRow(deviceData, rowIndex);
+            updateDeviceName(deviceName, rowIndex);
         }
+
+        /**
+         * Updates a row with the deviceData
+         * @param deviceData
+         * @param row           Row number
+         */
+        public void updateRow(E4DeviceStatus deviceData, int row ) {
+            updateDeviceStatus(deviceData, row);
+            updateTemperature(deviceData, row);
+            updateBattery(deviceData, row);
+        }
+
+        public void updateDeviceStatus(E4DeviceStatus deviceData, int row ) {
+            // Connection status. Change icon used.
+            switch (deviceData.getStatus()) {
+                case CONNECTED:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
+                    break;
+                case DISCONNECTED:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
+                    break;
+                case READY:
+                case CONNECTING:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                    break;
+                default:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+            }
+        }
+
+        public void updateTemperature(E4DeviceStatus deviceData, int row ) {
+            setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
+        }
+
+        public void updateBattery(E4DeviceStatus deviceData, int row ) {
+            setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
+        }
+
+        public void updateDeviceName(String deviceName, int row) {
+            // TODO: restrict n_characters of deviceName
+            mDeviceNameLabels[row].setText(deviceName);
+        }
+
+        private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+            if (Float.isNaN(value)) {
+                // em dash
+                label.setText("\u2014");
+            } else {
+                label.setText(formatter.format(value) + " " + suffix);
+            }
+        }
+
     }
 
 
@@ -453,13 +511,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showDetails(View v) {
-        final int rowIndex = getRowIndexFromView(v);
-
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 try {
-                    mUIUpdater.updateWithData(mConnection, rowIndex);
+                    mUIUpdater.updateWithData( mServiceConnections );
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
                 }
@@ -489,54 +545,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Updates a row with the deviceData
-     * @param deviceData
-     * @param row           Row number
-     */
-    public void updateRow(E4DeviceStatus deviceData, int row ) {
-        updateDeviceStatus(deviceData, row);
-        updateTemperature(deviceData, row);
-        updateBattery(deviceData, row);
-    }
 
-    public void updateDeviceStatus(E4DeviceStatus deviceData, int row ) {
-        // Connection status. Change icon used.
-        switch (deviceData.getStatus()) {
-            case CONNECTED:
-                mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
-                break;
-            case DISCONNECTED:
-                mStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
-                break;
-            case READY:
-            case CONNECTING:
-                mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
-                break;
-            default:
-                mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
-        }
-    }
-
-    public void updateTemperature(E4DeviceStatus deviceData, int row ) {
-        setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
-    }
-
-    public void updateBattery(E4DeviceStatus deviceData, int row ) {
-        setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
-    }
-
-    public void updateDeviceName(String deviceName, int row) {
-        // TODO: restrict n_characters of deviceName
-        mDeviceNameLabels[row].setText(deviceName);
-    }
-
-    private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
-        if (Float.isNaN(value)) {
-            // em dash
-            label.setText("\u2014");
-        } else {
-            label.setText(formatter.format(value) + " " + suffix);
+    public void updateServerStatus( ServerStatusListener.Status status ) {
+        // Update all server statuses (server status is independent of device. Check.
+        for (int i=0; i < mServiceConnections.length; i++ ) {
+            updateServerStatus( status, i );
         }
     }
 
