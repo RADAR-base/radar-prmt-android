@@ -1,4 +1,4 @@
-package org.radarcns.empaticaE4;
+package org.radarcns.android;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,10 +11,12 @@ import android.os.Parcel;
 import android.os.RemoteException;
 
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
+import org.radarcns.empaticaE4.E4DeviceStatus;
+import org.radarcns.empaticaE4.E4Service;
+import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
@@ -32,13 +34,14 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-class E4ServiceConnection implements ServiceConnection {
-    private final static Logger logger = LoggerFactory.getLogger(E4ServiceConnection.class);
+public class DeviceServiceConnection implements ServiceConnection {
+    private final static Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
     private boolean isRemote;
     private DeviceStatusListener.Status deviceStatus;
     public String deviceName;
     private IBinder serviceBinder;
+    private Intent serviceIntent;
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
@@ -49,16 +52,12 @@ class E4ServiceConnection implements ServiceConnection {
                 }
                 deviceStatus = DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
                 logger.info("Updated device status to {}", deviceStatus);
-                mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
+                mainActivity.deviceStatusUpdated(DeviceServiceConnection.this, deviceStatus);
             }
         }
     };
-    private String apiKey;
-    private String groupId;
-    private String schemaRegistryUrl;
-    private String kafkaUrl;
 
-    E4ServiceConnection(MainActivity mainActivity) {
+    public DeviceServiceConnection(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
         this.serviceBinder = null;
         this.deviceName = null;
@@ -77,15 +76,15 @@ class E4ServiceConnection implements ServiceConnection {
 
             // We've bound to the running Service, cast the IBinder and get instance
             mainActivity.serviceConnected(this);
-            if (!(serviceBinder instanceof E4Service.LocalBinder)) {
+            if (!(serviceBinder instanceof DeviceServiceBinder)) {
                 isRemote = true;
                 try {
                     this.serviceBinder.linkToDeath(new IBinder.DeathRecipient() {
                         @Override
                         public void binderDied() {
                             onServiceDisconnected(className);
-                            mainActivity.deviceStatusUpdated(E4ServiceConnection.this, deviceStatus);
-                            bind(kafkaUrl, schemaRegistryUrl, groupId, apiKey);
+                            mainActivity.deviceStatusUpdated(DeviceServiceConnection.this, deviceStatus);
+                            bind(serviceIntent);
                         }
                     }, 0);
                 } catch (RemoteException e) {
@@ -122,7 +121,7 @@ class E4ServiceConnection implements ServiceConnection {
                 result.addFirst(new Record<>(offset, key, value));
             }
         } else {
-            for (Record<MeasurementKey, V> record : ((E4Service.LocalBinder)serviceBinder).getRecords(topic, limit)) {
+            for (Record<MeasurementKey, V> record : ((DeviceServiceBinder)serviceBinder).getRecords(topic, limit)) {
                 result.addFirst(record);
             }
         }
@@ -137,7 +136,7 @@ class E4ServiceConnection implements ServiceConnection {
             serviceBinder.transact(TRANSACT_START_RECORDING, data, reply, 0);
             deviceStatus = E4DeviceStatus.CREATOR.createFromParcel(reply).getStatus();
         } else {
-            deviceStatus = ((E4Service.LocalBinder)serviceBinder).startRecording().getStatus();
+            deviceStatus = ((DeviceServiceBinder)serviceBinder).startRecording().getStatus();
         }
     }
 
@@ -146,7 +145,7 @@ class E4ServiceConnection implements ServiceConnection {
             Parcel data = Parcel.obtain();
             serviceBinder.transact(TRANSACT_START_RECORDING, data, null, 0);
         } else {
-            ((E4Service.LocalBinder)serviceBinder).stopRecording();
+            ((DeviceServiceBinder)serviceBinder).stopRecording();
         }
     }
 
@@ -168,11 +167,11 @@ class E4ServiceConnection implements ServiceConnection {
             serviceBinder.transact(TRANSACT_GET_SERVER_STATUS, Parcel.obtain(), reply, 0);
             return ServerStatusListener.Status.values()[reply.readInt()];
         } else {
-            return ((E4Service.LocalBinder)serviceBinder).getServerStatus();
+            return ((DeviceServiceBinder)serviceBinder).getServerStatus();
         }
     }
 
-    public E4DeviceStatus getDeviceData() throws RemoteException {
+    public DeviceState getDeviceData() throws RemoteException {
         if (isRemote) {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
@@ -180,7 +179,7 @@ class E4ServiceConnection implements ServiceConnection {
 
             return E4DeviceStatus.CREATOR.createFromParcel(reply);
         } else {
-            return (E4DeviceStatus)((E4Service.LocalBinder)serviceBinder).getDeviceStatus();
+            return ((DeviceServiceBinder)serviceBinder).getDeviceStatus();
         }
     }
 
@@ -193,20 +192,12 @@ class E4ServiceConnection implements ServiceConnection {
         mainActivity.unregisterReceiver(statusReceiver);
     }
 
-    void bind(String kafkaUrl, String schemaRegistryUrl, String groupId, String apiKey) {
-        this.kafkaUrl = kafkaUrl;
-        this.schemaRegistryUrl = schemaRegistryUrl;
-        this.groupId = groupId;
-        this.apiKey = apiKey;
+    void bind(Intent intent) {
+        serviceIntent = intent;
         logger.info("Intending to start E4 service");
 
-        Intent e4serviceIntent = new Intent(mainActivity, E4Service.class);
-        e4serviceIntent.putExtra("kafka_rest_proxy_url", kafkaUrl);
-        e4serviceIntent.putExtra("schema_registry_url", schemaRegistryUrl);
-        e4serviceIntent.putExtra("group_id", groupId);
-        e4serviceIntent.putExtra("empatica_api_key", apiKey);
-        mainActivity.startService(e4serviceIntent);
-        mainActivity.bindService(e4serviceIntent, this, Context.BIND_ABOVE_CLIENT);
+        mainActivity.startService(intent);
+        mainActivity.bindService(intent, this, Context.BIND_ABOVE_CLIENT);
     }
 
     public void unbind() {

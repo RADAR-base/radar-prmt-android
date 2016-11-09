@@ -22,9 +22,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.empatica.empalink.config.EmpaSensorStatus;
-import com.empatica.empalink.config.EmpaSensorType;
-
+import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
@@ -61,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout dataCnt;
     private RelativeLayout deviceView;
     private TextView deviceLabel;
-    private Map<E4ServiceConnection, Button> deviceButtons;
+    private Map<DeviceServiceConnection, Button> deviceButtons;
 
     private long uiRefreshRate;
 
@@ -74,17 +72,17 @@ public class MainActivity extends AppCompatActivity {
     private boolean mConnectionIsBound;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private final E4ServiceConnection mConnection;
+    private final DeviceServiceConnection mConnection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    private E4ServiceConnection activeConnection;
+    private DeviceServiceConnection activeConnection;
 
     public MainActivity() {
         super();
         isForcedDisconnected = false;
-        mConnection = new E4ServiceConnection(this);
+        mConnection = new DeviceServiceConnection(this);
         serverStatusListener = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -164,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    E4ServiceConnection connection = getActiveConnection();
+                    DeviceServiceConnection connection = getActiveConnection();
                     if (connection != null) {
                         mUIUpdater.updateWithData(connection);
                     }
@@ -188,9 +186,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (!mConnectionIsBound) {
-                    mConnection.bind(
-                            getString(R.string.kafka_rest_proxy_url), getString(R.string.schema_registry_url),
-                            getString(R.string.group_id), getString(R.string.apikey));
+                    Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                    e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+                    e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+                    e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
+                    e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+
+                    mConnection.bind(e4serviceIntent);
                     mConnectionIsBound = true;
                 }
             }
@@ -280,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void addDeviceButton(final E4ServiceConnection connection) {
+    void addDeviceButton(final DeviceServiceConnection connection) {
         String name = connection.getDeviceName();
         if (name != null) {
             emptyDevices.setVisibility(View.INVISIBLE);
@@ -302,11 +304,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    synchronized E4ServiceConnection getActiveConnection() {
+    synchronized DeviceServiceConnection getActiveConnection() {
         return activeConnection;
     }
 
-    void serviceConnected(final E4ServiceConnection connection) {
+    public void serviceConnected(final DeviceServiceConnection connection) {
         synchronized (this) {
             if (activeConnection == null) {
                 activeConnection = connection;
@@ -326,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
                   showButton.setVisibility(View.VISIBLE);
                   showButton.setOnClickListener(new View.OnClickListener() {
                       public void onClick(View v) {
-                          E4ServiceConnection active = getActiveConnection();
+                          DeviceServiceConnection active = getActiveConnection();
                           if (active != null) {
                               new E4HeartbeatToast(MainActivity.this).execute(active);
                           }
@@ -337,7 +339,7 @@ public class MainActivity extends AppCompatActivity {
         startScanning();
     }
 
-    synchronized void serviceDisconnected(final E4ServiceConnection connection) {
+    public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
         if (connection == activeConnection) {
             activeConnection = null;
         }
@@ -373,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void deviceStatusUpdated(final E4ServiceConnection connection, final DeviceStatusListener.Status status) {
+    public void deviceStatusUpdated(final DeviceServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -481,8 +483,8 @@ public class MainActivity extends AppCompatActivity {
         E4DeviceStatus deviceData = null;
         String deviceName = null;
 
-        void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
-            deviceData = connection.getDeviceData();
+        void updateWithData(@NonNull DeviceServiceConnection connection) throws RemoteException {
+            deviceData = (E4DeviceStatus)connection.getDeviceData();
             deviceName = connection.getDeviceName();
             runOnUiThread(this);
         }
@@ -502,20 +504,6 @@ public class MainActivity extends AppCompatActivity {
             setText(ibiLabel, deviceData.getInterBeatInterval(), "s", doubleDecimal);
             setText(temperatureLabel, deviceData.getTemperature(), "\u2103", singleDecimal);
             setText(batteryLabel, 100*deviceData.getBatteryLevel(), "%", noDecimals);
-
-            Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = deviceData.getSensorStatus();
-            if (sensorStatus.containsKey(EmpaSensorType.ACC)) {
-                accelSensorLabel.setText(EmpaSensorType.ACC.name());
-            }
-            if (sensorStatus.containsKey(EmpaSensorType.TEMP)) {
-                temperatureSensorLabel.setText(EmpaSensorType.TEMP.name());
-            }
-            if (sensorStatus.containsKey(EmpaSensorType.BVP)) {
-                bvpSensorLabel.setText(EmpaSensorType.BVP.name());
-            }
-            if (sensorStatus.containsKey(EmpaSensorType.GSR)) {
-                edaSensorLabel.setText(EmpaSensorType.GSR.name());
-            }
         }
 
         void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
