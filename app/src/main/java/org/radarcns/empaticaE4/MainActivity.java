@@ -21,6 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.radarcns.R;
+import org.radarcns.android.DeviceServiceConnection;
+
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
@@ -48,12 +50,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean mConnectionIsBound;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private final E4ServiceConnection mConnection;
+    private final DeviceServiceConnection mConnection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    private E4ServiceConnection activeConnection;
+    private DeviceServiceConnection activeConnection;
 
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
@@ -70,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     public MainActivity() {
         super();
         isForcedDisconnected = false;
-        mConnection = new E4ServiceConnection(this);
+        mConnection = new DeviceServiceConnection(this);
 
         serverStatusListener = new BroadcastReceiver() {
             @Override
@@ -165,11 +167,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    E4ServiceConnection connection = getActiveConnection();
+                    DeviceServiceConnection connection;
+                    synchronized (MainActivity.this) {
+                        connection = activeConnection;
+                    }
                     if (connection != null) {
-                        mUIUpdater.updateWithData(connection);
+                        mUIUpdater.updateWithData(connection, 0);
                     } else if( mConnection.hasService() ) {
-                        mUIUpdater.updateWithData(mConnection);
+                        mUIUpdater.updateWithData(mConnection, 0);
                     }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
@@ -191,9 +196,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (!mConnectionIsBound) {
-                    mConnection.bind(
-                            getString(R.string.kafka_rest_proxy_url), getString(R.string.schema_registry_url),
-                            getString(R.string.group_id), getString(R.string.apikey));
+                    Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                    e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+                    e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+                    e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
+                    e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+
+                    mConnection.bind(e4serviceIntent);
                     mConnectionIsBound = true;
                 }
             }
@@ -278,18 +287,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void bindToEmpatica(E4ServiceConnection connection) {
-        logger.info("Intending to start E4 service");
-
-        Intent e4serviceIntent = new Intent(this, E4Service.class);
-        e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-        e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-        e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-        e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
-        startService(e4serviceIntent);
-        bindService(e4serviceIntent, connection, Context.BIND_ABOVE_CLIENT);
-    }
-
     // Update a label with some text, making sure this is run in the UI thread
     private void updateLabel(final TextView label, final String text) {
         runOnUiThread(new Runnable() {
@@ -300,11 +297,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    synchronized E4ServiceConnection getActiveConnection() {
-        return activeConnection;
-    }
-
-    public void serviceConnected(final E4ServiceConnection connection) {
+    public void serviceConnected(final DeviceServiceConnection connection) {
         synchronized (this) {
             if (activeConnection == null) {
                 activeConnection = connection;
@@ -317,18 +310,17 @@ public class MainActivity extends AppCompatActivity {
         } catch (RemoteException e) {
             logger.warn("Failed to update UI server status");
         }
-
         startScanning();
     }
 
-    synchronized void serviceDisconnected(final E4ServiceConnection connection) {
+    public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
         if (connection == activeConnection) {
             activeConnection = null;
         }
     }
 
 
-    public void deviceStatusUpdated(final E4ServiceConnection connection, final DeviceStatusListener.Status status) {
+    public void deviceStatusUpdated(final DeviceServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -406,15 +398,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public class DeviceUIUpdater implements Runnable {
-        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
-        final DecimalFormat noDecimals = new DecimalFormat("0");
         E4DeviceStatus deviceData = null;
         String deviceName = null;
+        int row;
 
-        public void updateWithData(@NonNull E4ServiceConnection connection) throws RemoteException {
-            deviceData = connection.getDeviceData();
+        void updateWithData(@NonNull DeviceServiceConnection connection, int row) throws RemoteException {
+            deviceData = (E4DeviceStatus)connection.getDeviceData();
             deviceName = connection.getDeviceName();
+            this.row = row;
             runOnUiThread(this);
         }
 
@@ -423,17 +414,8 @@ public class MainActivity extends AppCompatActivity {
             if (deviceData == null) {
                 return;
             }
-            updateRow(deviceData, 0);
-            updateDeviceName(deviceName, 0);
-        }
-
-        void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
-            if (Float.isNaN(value)) {
-                // em dash
-                label.setText("\u2014");
-            } else {
-                label.setText(formatter.format(value) + " " + suffix);
-            }
+            updateRow(deviceData, row);
+            updateDeviceName(deviceName, row);
         }
     }
 
@@ -448,17 +430,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showDetails(View v) {
-        int rowIndex = getRowIndexFromView(v);
+        final int rowIndex = getRowIndexFromView(v);
 
-        try {
-            E4DeviceStatus deviceData = mConnection.getDeviceData();
-            String deviceName = mConnection.getDeviceName();
-            updateRow(deviceData, rowIndex);
-            updateDeviceName(deviceName, rowIndex);
-        } catch(RemoteException e) {
-            logger.info("Not connected " + e.toString() );
-        }
-
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mUIUpdater.updateWithData(mConnection, rowIndex);
+                } catch (RemoteException e) {
+                    logger.warn("Failed to update view with device data");
+                }
+            }
+        });
     }
 
     private int getRowIndexFromView(View v) {

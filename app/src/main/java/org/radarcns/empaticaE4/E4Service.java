@@ -19,6 +19,7 @@ import android.support.annotation.Nullable;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
 import org.radarcns.android.DeviceManager;
+import org.radarcns.android.DeviceServiceBinder;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.TableDataHandler;
@@ -238,12 +239,14 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
         sendBroadcast(statusIntent);
     }
 
-    class LocalBinder extends Binder {
-        <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic<MeasurementKey, V> topic, int limit) {
+    class LocalBinder extends Binder implements DeviceServiceBinder {
+        @Override
+        public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic<MeasurementKey, V> topic, int limit) {
             return dataHandler.getCache(topic).getRecords(limit);
         }
 
-        DeviceState getDeviceStatus() {
+        @Override
+        public DeviceState getDeviceStatus() {
             if (deviceScanner == null) {
                 E4DeviceStatus newStatus = new E4DeviceStatus();
                 newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
@@ -253,7 +256,8 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
             }
         }
 
-        DeviceState startRecording() {
+        @Override
+        public DeviceState startRecording() {
             if (deviceScanner == null) {
                 logger.info("Starting recording");
                 deviceScanner = new E4DeviceManager(E4Service.this, E4Service.this, apiKey, groupId, dataHandler, topics);
@@ -262,7 +266,8 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
             return deviceScanner.getState();
         }
 
-        void stopRecording() {
+        @Override
+        public void stopRecording() {
             if (deviceScanner != null) {
                 if (!deviceScanner.isClosed()) {
                     try {
@@ -275,7 +280,8 @@ public class E4Service extends Service implements DeviceStatusListener, ServerSt
             }
         }
 
-        ServerStatusListener.Status getServerStatus() {
+        @Override
+        public ServerStatusListener.Status getServerStatus() {
             return dataHandler.getStatus();
         }
 

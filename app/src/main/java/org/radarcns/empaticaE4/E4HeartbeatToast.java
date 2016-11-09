@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.widget.Toast;
 
+import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
@@ -19,7 +20,7 @@ import java.util.Locale;
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-class E4HeartbeatToast extends AsyncTask<E4ServiceConnection, Void, String[]> {
+class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, String[]> {
     private final Context context;
     final static DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
     final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
@@ -30,7 +31,7 @@ class E4HeartbeatToast extends AsyncTask<E4ServiceConnection, Void, String[]> {
     }
 
     @Override
-    protected String[] doInBackground(E4ServiceConnection... params) {
+    protected String[] doInBackground(DeviceServiceConnection... params) {
         String[] results = new String[params.length];
         for (int i = 0; i < params.length; i++) {
             try {
