@@ -60,13 +60,13 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    /** Connections. 1 = Empatica, 2 = Angel sensor **/
+    /** Connections. 0 = Empatica, 1 = Angel sensor **/
     private DeviceServiceConnection[] mActiveConnections;
 
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
-    private View[] mServerStatusIcons;
+    private View mServerStatusIcon;
     private TextView[] mTemperatureLabels;
     private TextView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
@@ -143,12 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.statusRow4)
         };
 
-        mServerStatusIcons = new View[] {
-                findViewById(R.id.statusServerRow1),
-                findViewById(R.id.statusServerRow2),
-                findViewById(R.id.statusServerRow3),
-                findViewById(R.id.statusServerRow4)
-        };
+        mServerStatusIcon = findViewById(R.id.statusServer);
 
         mTemperatureLabels = new TextView[] {
                 (TextView) findViewById(R.id.temperatureRow1),
@@ -543,36 +538,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void updateServerStatus( ServerStatusListener.Status status ) {
-        // Update all server statuses (server status is independent of device. Check.
-        for (int i = 0; i < mActiveConnections.length; i++ ) {
-            updateServerStatus( status, i );
-        }
-    }
-
-    public void updateServerStatus( final ServerStatusListener.Status status, final int row ) {
-        // Connection status. Change icon used.\
-
+    public void updateServerStatus( final ServerStatusListener.Status status ) {
+        // Update server status
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 switch (status) {
                     case CONNECTED:
-                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_connected );
                         break;
                     case DISCONNECTED:
                     case DISABLED:
-                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
                         break;
                     case READY:
                     case CONNECTING:
-                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
                         break;
                     case UPLOADING:
-                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
                         break;
                     default:
-                        mServerStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
                 }
             }
         });

@@ -30,6 +30,10 @@
     <string name="header_temp">Temperature</string>
     <string name="header_connect"></string>
     <string name="header_details"></string>
+    <string name="empaticaTypeLabel">E4</string>
+    <string name="angelTypeLabel">Angel</string>
+    <string name="deviceTypeLabel3">-</string>
+    <string name="deviceTypeLabel4">-</string>
 
     <!--Status texts-->
     <string name="server_connected">Server connected</string>
