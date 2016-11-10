@@ -87,9 +87,8 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
                     this.serviceBinder.linkToDeath(new IBinder.DeathRecipient() {
                         @Override
                         public void binderDied() {
-                            onServiceDisconnected(className);
                             mainActivity.deviceStatusUpdated(DeviceServiceConnection.this, deviceStatus);
-                            bind(serviceIntent);
+                            onServiceDisconnected(className);
                         }
                     }, 0);
                 } catch (RemoteException e) {
@@ -162,10 +161,6 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
         return deviceStatus != DeviceStatusListener.Status.DISCONNECTED;
     }
 
-    public boolean isScanning() {
-        return deviceStatus == DeviceStatusListener.Status.READY;
-    }
-
     public boolean hasService() {
         return serviceBinder != null;
     }
@@ -230,5 +225,9 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
 
     public DeviceStatusListener.Status getDeviceStatus() {
         return deviceStatus;
+    }
+
+    public Intent getServiceIntent() {
+        return serviceIntent;
     }
 }

@@ -54,7 +54,6 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
     private EmpaDeviceManager deviceManager;
     private String deviceName;
     private boolean isScanning;
-    private boolean isDisconnected;
     private Set<String> acceptableIds;
 
     public E4DeviceManager(Context context, DeviceStatusListener e4Service, String apiKey, String groupId, TableDataHandler dataHandler, E4Topics topics) {
@@ -77,7 +76,6 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         this.deviceId.setUserId(groupId);
         this.deviceName = null;
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
-        this.isDisconnected = false;
         this.isScanning = false;
         this.acceptableIds = null;
         this.deviceStatus = new E4DeviceStatus();
@@ -136,9 +134,8 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
             case DISCONNECTED:
                 // The device manager disconnected from a device. Before it ever makes a connection,
                 // it also calls this, so check if we have a connected device first.
-                if (!isDisconnected && deviceName != null) {
+                if (deviceStatus.getStatus() != DeviceStatusListener.Status.DISCONNECTED && deviceName != null) {
                     updateStatus(DeviceStatusListener.Status.DISCONNECTED);
-                    isDisconnected = true;
                 }
                 break;
         }
@@ -162,6 +159,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
             if (!isAcceptable) {
                 logger.info("Device {} with ID {} is not listed in acceptable device IDs", deviceName, sourceId);
                 e4service.deviceFailedToConnect(deviceName);
+                return;
             }
             this.deviceName = deviceName;
             Handler localHandler = getHandler();
@@ -217,9 +215,8 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                     deviceManager.disconnect(); //TODO MM: this sometimes invokes nullpointer exception in EmpaLinkBLE (getService)
                 }
                 deviceManager.cleanUp();
-                if (!isDisconnected) {
+                if (deviceStatus.getStatus() != DeviceStatusListener.Status.DISCONNECTED) {
                     updateStatus(DeviceStatusListener.Status.DISCONNECTED);
-                    isDisconnected = true;
                 }
             }
         });

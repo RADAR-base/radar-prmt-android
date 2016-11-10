@@ -65,14 +65,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                 switch (state) {
                     case BluetoothAdapter.STATE_TURNING_OFF: case BluetoothAdapter.STATE_OFF:
                         logger.warn("Bluetooth is off");
-                        if (deviceScanner != null) {
-                            try {
-                                deviceScanner.close();
-                            } catch (IOException e) {
-                                // do nothing
-                            }
-                            deviceScanner = null;
-                        }
+                        mBinder.stopRecording();
                         break;
                 }
             }
@@ -249,7 +242,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public DeviceState getDeviceStatus() {
+        public synchronized DeviceState getDeviceStatus() {
             if (deviceScanner == null) {
                 return getDefaultState();
             } else {
@@ -258,7 +251,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public DeviceState startRecording(@NonNull Set<String> acceptableIds) {
+        public synchronized DeviceState startRecording(@NonNull Set<String> acceptableIds) {
             if (deviceScanner == null) {
                 logger.info("Starting recording");
                 deviceScanner = createDeviceManager();
@@ -268,7 +261,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public void stopRecording() {
+        public synchronized void stopRecording() {
             if (deviceScanner != null) {
                 if (!deviceScanner.isClosed()) {
                     try {
@@ -276,6 +269,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                     } catch (IOException e) {
                         logger.warn("Failed to close device scanner", e);
                     }
+                }
+                if (deviceScanner.getState().getStatus() != DeviceStatusListener.Status.DISCONNECTED) {
+                    deviceStatusUpdated(deviceScanner, DeviceStatusListener.Status.DISCONNECTED);
                 }
                 deviceScanner = null;
             }
@@ -327,7 +323,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
      * Also call the superclass.
      * @param intent intent that the activity provided.
      */
-    protected void onInvocation(Intent intent) {
+    protected synchronized void onInvocation(Intent intent) {
         if (dataHandler == null) {
             URL kafkaUrl = null;
             SchemaRetriever remoteSchemaRetriever = null;

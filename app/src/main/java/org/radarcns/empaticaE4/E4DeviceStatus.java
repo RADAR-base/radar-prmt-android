@@ -82,6 +82,7 @@ public class E4DeviceStatus implements DeviceState {
         this.acceleration[2] = z;
     }
 
+    @Override
     public float getBatteryLevel() {
         return batteryLevel;
     }
@@ -114,6 +115,7 @@ public class E4DeviceStatus implements DeviceState {
         this.interBeatInterval = interBeatInterval;
     }
 
+    @Override
     public float getTemperature() {
         return temperature;
     }
@@ -122,6 +124,7 @@ public class E4DeviceStatus implements DeviceState {
         this.temperature = temperature;
     }
 
+    @Override
     public DeviceStatusListener.Status getStatus() {
         return status;
     }

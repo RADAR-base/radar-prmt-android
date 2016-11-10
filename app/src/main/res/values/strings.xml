@@ -46,4 +46,6 @@
     <string name="device_scanning">Scanning...</string>
     <string name="start_recording">Start Recording</string>
     <string name="bluetooth_permission_failure">Cannot connect to Empatica E4DeviceManager without location permissions</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
 </resources>
