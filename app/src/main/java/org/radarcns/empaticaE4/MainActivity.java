@@ -28,12 +28,15 @@ import android.widget.Toast;
 import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
 
+import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
+import java.util.Collections;
+import java.util.Set;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
@@ -52,16 +55,16 @@ public class MainActivity extends AppCompatActivity {
     private Runnable mUIScheduler;
     private DeviceUIUpdater mUIUpdater;
     private boolean isForcedDisconnected;
-    private boolean mConnectionIsBound;
+    private final boolean[] mConnectionIsBound;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private final DeviceServiceConnection mConnection;
+    private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
     /** Connections. 0 = Empatica, 1 = Angel sensor **/
-    private DeviceServiceConnection[] mActiveConnections;
+    private DeviceServiceConnection[] mConnections;
 
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
@@ -72,11 +75,28 @@ public class MainActivity extends AppCompatActivity {
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
 
+    private final Runnable bindServicesRunner = new Runnable() {
+        @Override
+        public void run() {
+            if (!mConnectionIsBound[0]) {
+                Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+                e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+                e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
+                e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+
+                mE4Connection.bind(e4serviceIntent);
+                mConnectionIsBound[0] = true;
+            }
+        }
+    };
+
     public MainActivity() {
         super();
         isForcedDisconnected = false;
-        mConnection = new DeviceServiceConnection(this);
-        mActiveConnections = new DeviceServiceConnection[4];
+        mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR);
+        mConnections = new DeviceServiceConnection[] {mE4Connection, null, null, null};
+        mConnectionIsBound = new boolean[] {false, false, false, false};
 
         serverStatusListener = new BroadcastReceiver() {
             @Override
@@ -121,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 try {
                     // Update all rows in the UI with the data from the connections
-                    mUIUpdater.updateWithData(mActiveConnections);
+                    mUIUpdater.update();
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
                 } finally {
@@ -190,22 +209,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         logger.info("mainActivity onResume");
         super.onResume();
-
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!mConnectionIsBound) {
-                    Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                    e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-                    e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-                    e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-                    e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
-
-                    mConnection.bind(e4serviceIntent);
-                    mConnectionIsBound = true;
-                }
-            }
-        }, 250L);
+        mHandler.postDelayed(bindServicesRunner, 300L);
     }
 
     @Override
@@ -229,6 +233,14 @@ public class MainActivity extends AppCompatActivity {
             mHandler = new Handler(mHandlerThread.getLooper());
         }
         mHandler.post(mUIScheduler);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < mConnections.length; i++) {
+                    mConnectionIsBound[i] = false;
+                }
+            }
+        });
     }
 
     @Override
@@ -241,9 +253,11 @@ public class MainActivity extends AppCompatActivity {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mConnectionIsBound) {
-                    mConnection.unbind();
-                    mConnectionIsBound = false;
+                for (int i = 0; i < mConnections.length; i++) {
+                    if (mConnectionIsBound[i]) {
+                        mConnectionIsBound[i] = false;
+                        mConnections[i].unbind();
+                    }
                 }
             }
         });
@@ -255,9 +269,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void disconnect() {
-        if (mConnection.isRecording()) {
+        for (int i = 0; i < mConnections.length; i++) {
+            disconnect(i);
+        }
+    }
+
+
+    private void disconnect(int row) {
+        DeviceServiceConnection connection = mConnections[row];
+        if (connection != null && connection.isRecording()) {
             try {
-                mConnection.stopRecording();
+                connection.stopRecording();
             } catch (RemoteException e) {
                 // it cannot be reached so it already stopped recording
             }
@@ -274,34 +296,26 @@ public class MainActivity extends AppCompatActivity {
             enableBt();
             return;
         }
-        if (mConnection.isScanning()) {
-            return;
-        }
-        if (mConnection.hasService() && !mConnection.isRecording()) {
+        for (int i = 0; i < mConnections.length; i++) {
+            DeviceServiceConnection connection = mConnections[i];
+            if (connection == null || !connection.hasService() || connection.isRecording()) {
+                return;
+            }
+            Set<String> acceptableIds;
+            if (mInputDeviceKeys[i] != null && !mInputDeviceKeys[i].isEmpty()) {
+                acceptableIds = Collections.singleton(mInputDeviceKeys[i]);
+            } else {
+                acceptableIds = Collections.emptySet();
+            }
             try {
-                mConnection.startRecording();
+                connection.startRecording(acceptableIds);
             } catch (RemoteException e) {
-                logger.error("Failed to start recording", e);
+                logger.error("Failed to start recording for device {}", i, e);
             }
         }
-    }
-
-    // Update a label with some text, making sure this is run in the UI thread
-    private void updateLabel(final TextView label, final String text) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                label.setText(text);
-            }
-        });
     }
 
     public void serviceConnected(final DeviceServiceConnection connection) {
-        synchronized (this) {
-            if (mActiveConnections[0] == null) {
-                mActiveConnections[0] = connection;
-            }
-        }
         try {
             ServerStatusListener.Status status = connection.getServerStatus();
             logger.info("Initial server status: {}", status);
@@ -312,13 +326,9 @@ public class MainActivity extends AppCompatActivity {
         startScanning();
     }
 
-
     public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
-//        if (connection == mActiveConnections[0]) {
-//            mActiveConnections[0] = null;
-//        }
+        mHandler.post(bindServicesRunner);
     }
-
 
     public void deviceStatusUpdated(final DeviceServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
@@ -327,20 +337,11 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
                 switch (status) {
                     case CONNECTED:
-//                        addDeviceButton(connection);
-
-                        synchronized (MainActivity.this) {
-                            if (mActiveConnections[0] == null) {
-                                mActiveConnections[0] = connection;
-                            }
-                        }
-//                        statusLabel.setText("CONNECTED");
-                        startScanning();
                         break;
                     case CONNECTING:
 //                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
-                        // Reject if device name inputted does not equal device name
+                        // Reject if device name inputted does not equal device nameA
                         if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
                             logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
                             Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
@@ -349,18 +350,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                     case DISCONNECTED:
-
-                        synchronized (MainActivity.this) {
-                            if (connection.equals(mActiveConnections[0])) {
-                                mActiveConnections[0] = null;
-                            }
-                        }
-
-//                        statusLabel.setText("DISCONNECTED");
+                        startScanning();
                         break;
                     case READY:
-//                        statusLabel.setText("Scanning...");
-
                         break;
                 }
             }
@@ -408,51 +400,57 @@ public class MainActivity extends AppCompatActivity {
     public class DeviceUIUpdater implements Runnable {
         /** Data formats **/
         final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
         final DecimalFormat noDecimals = new DecimalFormat("0");
+        final DeviceState[] deviceData;
+        final String[] deviceNames;
 
-        E4DeviceStatus deviceData = null;
-        String deviceName = null;
-        int rowIndex;
+        DeviceUIUpdater() {
+            deviceData = new DeviceState[mConnections.length];
+            deviceNames = new String[mConnections.length];
+        }
 
-        public void updateWithData(@NonNull DeviceServiceConnection[] connections) throws RemoteException {
-            int i = 0;
-            for (DeviceServiceConnection connection : connections ) {
-                if (connection !=  null) {
-                    logger.info("Updating row {} with data", i);
-                    deviceData = (E4DeviceStatus) connection.getDeviceData();
-                    deviceName = connection.getDeviceName();
-                    rowIndex = i;
-                    runOnUiThread(this);
+        public void update() throws RemoteException {
+            for (int i = 0; i < mConnections.length; i++) {
+                if (mConnections[i] != null && mConnections[i].hasService()) {
+                    deviceData[i] = mConnections[i].getDeviceData();
+                    switch (deviceData[i].getStatus()) {
+                        case CONNECTED: case CONNECTING:
+                            deviceNames[i] = mConnections[i].getDeviceName();
+                            break;
+                        default:
+                            deviceNames[i] = null;
+                            break;
+                    }
+                } else {
+                    deviceData[i] = null;
+                    deviceNames[i] = null;
                 }
-                // TODO: handle disconnect (reset fields with mConnection?)
-                i++;
             }
+            runOnUiThread(this);
         }
 
         @Override
         public void run() {
-            if (deviceData == null) {
-                return;
+            for (int i = 0; i < mConnections.length; i++) {
+                updateRow(deviceData[i], i);
+                updateDeviceName(deviceNames[i], i);
             }
-            updateRow(deviceData, rowIndex);
-            updateDeviceName(deviceName, rowIndex);
         }
 
         /**
          * Updates a row with the deviceData
-         * @param deviceData
+         * @param deviceData    data to update with
          * @param row           Row number
          */
-        public void updateRow(E4DeviceStatus deviceData, int row ) {
+        public void updateRow(DeviceState deviceData, int row ) {
             updateDeviceStatus(deviceData, row);
             updateTemperature(deviceData, row);
             updateBattery(deviceData, row);
         }
 
-        public void updateDeviceStatus(E4DeviceStatus deviceData, int row ) {
+        public void updateDeviceStatus(DeviceState deviceData, int row ) {
             // Connection status. Change icon used.
-            switch (deviceData.getStatus()) {
+            switch (deviceData == null ? DeviceStatusListener.Status.DISCONNECTED : deviceData.getStatus()) {
                 case CONNECTED:
                     mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
                     break;
@@ -468,17 +466,23 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        public void updateTemperature(E4DeviceStatus deviceData, int row ) {
-            setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
+        public void updateTemperature(DeviceState deviceData, int row ) {
+            // \u2103 == ℃
+            setText(mTemperatureLabels[row], deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
         }
 
-        public void updateBattery(E4DeviceStatus deviceData, int row ) {
-            setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
+        public void updateBattery(DeviceState deviceData, int row ) {
+            setText(mBatteryLabels[row], deviceData == null ? Float.NaN : 100 * deviceData.getBatteryLevel(), "%", noDecimals);
         }
 
         public void updateDeviceName(String deviceName, int row) {
             // TODO: restrict n_characters of deviceName
-            mDeviceNameLabels[row].setText(deviceName);
+            if (deviceName == null) {
+                // \u2014 == —
+                mDeviceNameLabels[row].setText("\u2014");
+            } else {
+                mDeviceNameLabels[row].setText(deviceName);
+            }
         }
 
         private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
@@ -495,19 +499,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void connectDevice(View v) {
         int rowIndex = getRowIndexFromView(v);
-        startScanning();
-
-        // some test code, updating with random data
-//        Random generator = new Random();
-//        updateDeviceName(String.valueOf( generator.hashCode() ), rowIndex);
+        // will restart scanning after disconnect
+        disconnect(rowIndex);
     }
 
-    public void showDetails(View v) {
+    public void showDetails(final View v) {
+        final int row = getRowIndexFromView(v);
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 try {
-                    mUIUpdater.updateWithData(mActiveConnections);
+                    mUIUpdater.update();
+                    DeviceServiceConnection connection = mConnections[row];
+                    if (connection == mE4Connection) {
+                        new E4HeartbeatToast(MainActivity.this).execute(connection);
+                    }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
                 }
@@ -576,15 +582,31 @@ public class MainActivity extends AppCompatActivity {
         builder.setView(input);
 
         // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                int row = getRowIndexFromView( v );
+                final int row = getRowIndexFromView( v );
+                String oldValue = mInputDeviceKeys[row];
                 mInputDeviceKeys[row] = input.getText().toString();
                 mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
+                if (!mInputDeviceKeys[row].equals(oldValue) && !mInputDeviceKeys[row].isEmpty()) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (mConnections[row].isRecording()) {
+                                    mConnections[row].stopRecording();
+                                    // will restart recording once the status is set to disconnected.
+                                }
+                            } catch (RemoteException e) {
+                                logger.error("Cannot restart scanning");
+                            }
+                        }
+                    });
+                }
             }
         });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();

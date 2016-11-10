@@ -1,12 +1,17 @@
 package org.radarcns.android;
 
+import android.support.annotation.NonNull;
+
 import java.io.Closeable;
+import java.util.Set;
 
 /** Device manager of a wearable device. */
 public interface DeviceManager extends Closeable {
 
-    /** Start scanning and try to connect */
-    void start();
+    /** Start scanning and try to connect
+     * @param acceptableIds IDs that are acceptable to connect to. If empty, no selection is made.
+     */
+    void start(@NonNull Set<String> acceptableIds);
 
     /** Whether the device manager was already closed. */
     boolean isClosed();
