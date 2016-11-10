@@ -1,11 +1,12 @@
 package org.radarcns.empaticaE4;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
 /** Topic manager for topics concerning the Empatica E4. */
-public class E4Topics {
+public class E4Topics implements DeviceTopics {
     private final AvroTopic<MeasurementKey, EmpaticaE4Acceleration> accelerationTopic;
     private final AvroTopic<MeasurementKey, EmpaticaE4BatteryLevel> batteryLevelTopic;
     private final AvroTopic<MeasurementKey, EmpaticaE4BloodVolumePulse> bloodVolumePulseTopic;
@@ -36,6 +37,7 @@ public class E4Topics {
         sensorStatusTopic = new AvroTopic<>("android_empatica_e4_sensor_status", MeasurementKey.getClassSchema(), EmpaticaE4SensorStatus.getClassSchema(), MeasurementKey.class, EmpaticaE4SensorStatus.class);
     }
 
+    @Override
     public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
         switch (name) {
             case "android_empatica_e4_acceleration":

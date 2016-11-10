@@ -26,15 +26,14 @@ To send some mock data to the `radar-test.thehyve.net` server, run `./gradlew :a
 
 ## Contributing
 
-To add additional device types to this application, make the following steps:
+To add additional device types to this application, make the following steps (see the `org.radarcns.empaticaE4` package as an example):
 
-- Create a new package `org.radarcns.mydevicetype`
-- In that package, create classes that
-  - implement `org.radarcns.android.DeviceManager`
-  - implement `org.radarcns.android.DeviceState`
-  - subclass `android.os.Service` with a binder that implements `org.radarcns.android.DeviceServiceBinder`, and sends its data using a TableDataHandler.
-  - implement a singleton like `org.radarcns.empaticaE4.E4Topics` that contains all Kafka topics that the wearable will generate.
 - In the `avro/src/main/resources/avro` directory, create the Avro schemas for your record values. Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
+- Create a new package `org.radarcns.mydevicetype`. In that package, create classes that:
+  - implement `org.radarcns.android.DeviceManager` to connect to a device and collect its data.
+  - implement `org.radarcns.android.DeviceState` to keep the current state of the device.
+  - subclass `org.radarcns.android.DeviceService` to run the device manager in.
+  - implement a singleton `org.radarcns.android.DeviceTopics` that contains all Kafka topics that the wearable will generate.
 - Finally, extend the main activity to run a service for showing the device data and for controlling the recording.
 
 Make a pull request once the code is working.

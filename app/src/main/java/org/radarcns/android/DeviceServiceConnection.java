@@ -8,7 +8,9 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroDecoder;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
@@ -33,9 +36,10 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-public class DeviceServiceConnection implements ServiceConnection {
+public class DeviceServiceConnection<S extends DeviceState>implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
+    private final Parcelable.Creator<S> deviceStateCreator;
     private boolean isRemote;
     private DeviceStatusListener.Status deviceStatus;
     public String deviceName;
@@ -57,12 +61,13 @@ public class DeviceServiceConnection implements ServiceConnection {
         }
     };
 
-    public DeviceServiceConnection(MainActivity mainActivity) {
+    public DeviceServiceConnection(@NonNull MainActivity mainActivity, @NonNull Parcelable.Creator<S> deviceStateCreator) {
         this.mainActivity = mainActivity;
         this.serviceBinder = null;
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         this.isRemote = false;
+        this.deviceStateCreator = deviceStateCreator;
     }
 
     @Override
@@ -101,7 +106,7 @@ public class DeviceServiceConnection implements ServiceConnection {
         }
     }
 
-    public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(AvroTopic<MeasurementKey, V> topic, int limit) throws RemoteException, IOException {
+    public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit) throws RemoteException, IOException {
         LinkedList<Record<MeasurementKey, V>> result = new LinkedList<>();
 
         if (isRemote) {
@@ -129,14 +134,18 @@ public class DeviceServiceConnection implements ServiceConnection {
         return result;
     }
 
-    public void startRecording() throws RemoteException {
+    public void startRecording(@NonNull Set<String> acceptableIds) throws RemoteException {
         if (isRemote) {
             Parcel data = Parcel.obtain();
+            data.writeInt(acceptableIds.size());
+            for (String acceptableId : acceptableIds) {
+                data.writeString(acceptableId);
+            }
             Parcel reply = Parcel.obtain();
             serviceBinder.transact(TRANSACT_START_RECORDING, data, reply, 0);
             deviceStatus = E4DeviceStatus.CREATOR.createFromParcel(reply).getStatus();
         } else {
-            deviceStatus = ((DeviceServiceBinder)serviceBinder).startRecording().getStatus();
+            deviceStatus = ((DeviceServiceBinder)serviceBinder).startRecording(acceptableIds).getStatus();
         }
     }
 
@@ -171,15 +180,16 @@ public class DeviceServiceConnection implements ServiceConnection {
         }
     }
 
-    public DeviceState getDeviceData() throws RemoteException {
+    public S getDeviceData() throws RemoteException {
         if (isRemote) {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
             serviceBinder.transact(TRANSACT_GET_DEVICE_STATUS, data, reply, 0);
 
-            return E4DeviceStatus.CREATOR.createFromParcel(reply);
+            return deviceStateCreator.createFromParcel(reply);
         } else {
-            return ((DeviceServiceBinder)serviceBinder).getDeviceStatus();
+            //noinspection unchecked
+            return (S)((DeviceServiceBinder)serviceBinder).getDeviceStatus();
         }
     }
 
@@ -192,7 +202,7 @@ public class DeviceServiceConnection implements ServiceConnection {
         mainActivity.unregisterReceiver(statusReceiver);
     }
 
-    public void bind(Intent intent) {
+    public void bind(@NonNull Intent intent) {
         serviceIntent = intent;
         logger.info("Intending to start E4 service");
 

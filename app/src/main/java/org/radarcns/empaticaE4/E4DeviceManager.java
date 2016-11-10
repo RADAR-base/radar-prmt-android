@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
+import android.support.annotation.NonNull;
 
 import com.empatica.empalink.ConnectionNotAllowedException;
 import com.empatica.empalink.EmpaDeviceManager;
@@ -23,6 +24,9 @@ import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /** Manages scanning for an Empatica E4 wearable and connecting to it */
 class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceManager {
@@ -51,6 +55,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
     private String deviceName;
     private boolean isScanning;
     private boolean isDisconnected;
+    private Set<String> acceptableIds;
 
     public E4DeviceManager(Context context, DeviceStatusListener e4Service, String apiKey, String groupId, TableDataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
@@ -74,12 +79,12 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         this.mHandlerThread = new HandlerThread("E4-device-handler", Process.THREAD_PRIORITY_AUDIO);
         this.isDisconnected = false;
         this.isScanning = false;
-
+        this.acceptableIds = null;
         this.deviceStatus = new E4DeviceStatus();
     }
 
     @Override
-    public void start() {
+    public void start(@NonNull final Set<String> acceptableIds) {
         this.mHandlerThread.start();
         logger.info("Started scanning");
         synchronized (this) {
@@ -92,6 +97,11 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                 deviceManager = new EmpaDeviceManager(context, E4DeviceManager.this, E4DeviceManager.this);
                 // Initialize the Device Manager using your API key. You need to have Internet access at this point.
                 deviceManager.authenticateWithAPIKey(apiKey);
+
+                E4DeviceManager.this.acceptableIds = new HashSet<>();
+                for (String s : acceptableIds) {
+                    E4DeviceManager.this.acceptableIds.add(s.toLowerCase());
+                }
                 logger.info("Authenticated device manager");
             }
         });
@@ -141,6 +151,18 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         // https://www.empatica.com/connect/developer.php
         logger.info("Bluetooth address: {}", bluetoothDevice.getAddress());
         if (allowed) {
+            final String sourceId = bluetoothDevice.getAddress();
+            boolean isAcceptable = acceptableIds.isEmpty();
+            for (String s : acceptableIds) {
+                if (deviceName.toLowerCase().contains(s) || sourceId.toLowerCase().contains(s)) {
+                    isAcceptable = true;
+                    break;
+                }
+            }
+            if (!isAcceptable) {
+                logger.info("Device {} with ID {} is not listed in acceptable device IDs", deviceName, sourceId);
+                e4service.deviceFailedToConnect(deviceName);
+            }
             this.deviceName = deviceName;
             Handler localHandler = getHandler();
             if (localHandler != null) {
@@ -151,7 +173,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                             // Connect to the device
                             updateStatus(DeviceStatusListener.Status.CONNECTING);
                             deviceManager.connectDevice(bluetoothDevice);
-                            deviceId.setSourceId(bluetoothDevice.getAddress());
+                            deviceId.setSourceId(sourceId);
                         } catch (ConnectionNotAllowedException e) {
                             // This should happen only if you try to connect when allowed == false.
                             e4service.deviceFailedToConnect(deviceName);
