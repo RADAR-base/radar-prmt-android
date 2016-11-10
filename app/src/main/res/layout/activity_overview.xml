@@ -50,15 +50,15 @@
 
                         <TextView
                             style="@style/Header"
-                            android:text="@string/emptyText" />
+                            android:text="" />
 
                         <TextView
                             style="@style/Header"
-                            android:text="@string/emptyText" />
+                            android:text="" />
 
                         <TextView
                             style="@style/Header"
-                            android:text="@string/emptyText" />
+                            android:text="" />
                     </TableRow>
 
                     <TableRow
@@ -69,7 +69,7 @@
                         <TextView
                             android:id="@+id/deviceTypeRow1"
                             style="@style/DeviceTypeLabel"
-                            android:text="@string/empaticaTypeLabel" />
+                            android:text="@string/deviceTypeLabel1" />
 
                         <TextView
                             android:id="@+id/deviceNameRow1"
@@ -100,7 +100,7 @@
                         <Button
                             android:id="@+id/inputDeviceNameButtonRow1"
                             style="@style/ButtonDeviceKeyColumn"
-                            android:text="@string/button_input"
+                            android:text="@string/request_E4_key"
                             android:onClick="dialogInputDeviceName" />
 
                         <Button
@@ -125,7 +125,7 @@
                         <TextView
                             android:id="@+id/deviceTypeRow2"
                             style="@style/DeviceTypeLabel"
-                            android:text="@string/angelTypeLabel" />
+                            android:text="@string/deviceTypeLabel2" />
 
                         <TextView
                             android:id="@+id/deviceNameRow2"
