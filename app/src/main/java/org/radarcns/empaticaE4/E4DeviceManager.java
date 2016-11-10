@@ -192,7 +192,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                     deviceManager.stopScanning();
                 }
                 if (deviceName != null) {
-                    deviceManager.disconnect();
+                    deviceManager.disconnect(); //TODO MM: this sometimes invokes nullpointer exception in EmpaLinkBLE (getService)
                 }
                 deviceManager.cleanUp();
                 if (!isDisconnected) {

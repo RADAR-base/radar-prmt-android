@@ -4,6 +4,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -15,22 +16,24 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
-import android.widget.RelativeLayout;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
+
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
@@ -40,26 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
-    private TextView accel_xLabel;
-    private TextView accel_yLabel;
-    private TextView accel_zLabel;
-    private TextView bvpLabel;
-    private TextView edaLabel;
-    private TextView ibiLabel;
-    private TextView temperatureLabel;
-    private TextView batteryLabel;
-    private TextView statusLabel;
-    private TextView serverStatusLabel;
-    private TextView emptyDevices;
-    private TextView accelSensorLabel;
-    private TextView bvpSensorLabel;
-    private TextView edaSensorLabel;
-    private TextView temperatureSensorLabel;
-    private Button stopButton;
-    private RelativeLayout dataCnt;
-    private RelativeLayout deviceView;
-    private TextView deviceLabel;
-    private Map<DeviceServiceConnection, Button> deviceButtons;
 
     private long uiRefreshRate;
 
@@ -77,12 +60,24 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    private DeviceServiceConnection activeConnection;
+    /** Connections. 0 = Empatica, 1 = Angel sensor **/
+    private DeviceServiceConnection[] mActiveConnections;
+
+    /** Overview UI **/
+    private TextView[] mDeviceNameLabels;
+    private View[] mStatusIcons;
+    private View mServerStatusIcon;
+    private TextView[] mTemperatureLabels;
+    private TextView[] mBatteryLabels;
+    private Button[] mDeviceInputButtons;
+    private String[] mInputDeviceKeys = new String[4];
 
     public MainActivity() {
         super();
         isForcedDisconnected = false;
         mConnection = new DeviceServiceConnection(this);
+        mActiveConnections = new DeviceServiceConnection[4];
+
         serverStatusListener = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -127,33 +122,49 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_overview);
 
-        // Initialize vars that reference UI components
-        statusLabel = (TextView) findViewById(R.id.status);
-        dataCnt = (RelativeLayout) findViewById(R.id.dataArea);
-        accel_xLabel = (TextView) findViewById(R.id.accel_x);
-        accel_yLabel = (TextView) findViewById(R.id.accel_y);
-        accel_zLabel = (TextView) findViewById(R.id.accel_z);
-        bvpLabel = (TextView) findViewById(R.id.bvp);
-        edaLabel = (TextView) findViewById(R.id.eda);
-        ibiLabel = (TextView) findViewById(R.id.ibi);
-        deviceView = (RelativeLayout) findViewById(R.id.deviceNames);
-        emptyDevices = (TextView) findViewById(R.id.emptyDevices);
-        serverStatusLabel = (TextView) findViewById(R.id.serverStatus);
-        temperatureLabel = (TextView) findViewById(R.id.temperature);
-        batteryLabel = (TextView) findViewById(R.id.battery);
-        deviceLabel = (TextView) findViewById(R.id.activeDeviceLabel);
-        deviceButtons = new HashMap<>();
-        stopButton = (Button) findViewById(R.id.stopButton);
+        // Create arrays of labels. Fixed to four rows
+        mDeviceNameLabels = new TextView[] {
+                (TextView) findViewById(R.id.deviceNameRow1),
+                (TextView) findViewById(R.id.deviceNameRow2),
+                (TextView) findViewById(R.id.deviceNameRow3),
+                (TextView) findViewById(R.id.deviceNameRow4)
+        };
 
-        accelSensorLabel = (TextView) findViewById(R.id.acceleration_sensor);
-        bvpSensorLabel = (TextView) findViewById(R.id.bvp_sensor);
-        edaSensorLabel = (TextView) findViewById(R.id.eda_sensor);
-        temperatureSensorLabel = (TextView) findViewById(R.id.temperature_sensor);
+        mStatusIcons = new View[] {
+                findViewById(R.id.statusRow1),
+                findViewById(R.id.statusRow2),
+                findViewById(R.id.statusRow3),
+                findViewById(R.id.statusRow4)
+        };
+
+        mServerStatusIcon = findViewById(R.id.statusServer);
+
+        mTemperatureLabels = new TextView[] {
+                (TextView) findViewById(R.id.temperatureRow1),
+                (TextView) findViewById(R.id.temperatureRow2),
+                (TextView) findViewById(R.id.temperatureRow3),
+                (TextView) findViewById(R.id.temperatureRow4)
+        };
+
+        mBatteryLabels = new TextView[] {
+                (TextView) findViewById(R.id.batteryRow1),
+                (TextView) findViewById(R.id.batteryRow2),
+                (TextView) findViewById(R.id.batteryRow3),
+                (TextView) findViewById(R.id.batteryRow4)
+        };
+
+        mDeviceInputButtons = new Button[] {
+                (Button) findViewById(R.id.inputDeviceNameButtonRow1),
+                (Button) findViewById(R.id.inputDeviceNameButtonRow2),
+                (Button) findViewById(R.id.inputDeviceNameButtonRow3),
+                (Button) findViewById(R.id.inputDeviceNameButtonRow4)
+        };
 
         uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
 
@@ -162,10 +173,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    DeviceServiceConnection connection = getActiveConnection();
-                    if (connection != null) {
-                        mUIUpdater.updateWithData(connection);
-                    }
+                    // Update all rows in the UI with the data from the connections
+                    mUIUpdater.updateWithData(mActiveConnections);
                 } catch (RemoteException e) {
                     logger.warn("Failed to update device data", e);
                 } finally {
@@ -219,12 +228,7 @@ public class MainActivity extends AppCompatActivity {
         synchronized (this) {
             mHandler = new Handler(mHandlerThread.getLooper());
         }
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mConnectionIsBound = false;
-            }
-        });
+        mHandler.post(mUIScheduler);
     }
 
     @Override
@@ -282,36 +286,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void addDeviceButton(final DeviceServiceConnection connection) {
-        String name = connection.getDeviceName();
-        if (name != null) {
-            emptyDevices.setVisibility(View.INVISIBLE);
-            Button btn = new Button(this);
-            btn.setLayoutParams(new RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-            btn.setText(name);
-            btn.setId(View.NO_ID);
-            btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    synchronized (MainActivity.this) {
-                        activeConnection = connection;
-                    }
-                }
-            });
-            deviceView.addView(btn);
-            deviceButtons.put(connection, btn);
-        }
-    }
-
-    synchronized DeviceServiceConnection getActiveConnection() {
-        return activeConnection;
+    // Update a label with some text, making sure this is run in the UI thread
+    private void updateLabel(final TextView label, final String text) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                label.setText(text);
+            }
+        });
     }
 
     public void serviceConnected(final DeviceServiceConnection connection) {
         synchronized (this) {
-            if (activeConnection == null) {
-                activeConnection = connection;
+            if (mActiveConnections[0] == null) {
+                mActiveConnections[0] = connection;
             }
         }
         try {
@@ -321,112 +309,58 @@ public class MainActivity extends AppCompatActivity {
         } catch (RemoteException e) {
             logger.warn("Failed to update UI server status");
         }
-        runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  Button showButton = (Button) findViewById(R.id.showButton);
-                  showButton.setVisibility(View.VISIBLE);
-                  showButton.setOnClickListener(new View.OnClickListener() {
-                      public void onClick(View v) {
-                          DeviceServiceConnection active = getActiveConnection();
-                          if (active != null) {
-                              new E4HeartbeatToast(MainActivity.this).execute(active);
-                          }
-                      }
-                  });
-              }
-        });
         startScanning();
     }
 
+
     public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
-        if (connection == activeConnection) {
-            activeConnection = null;
-        }
+//        if (connection == mActiveConnections[0]) {
+//            mActiveConnections[0] = null;
+//        }
     }
 
-    void updateServerStatus(final ServerStatusListener.Status status) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                switch (status) {
-                    case READY:
-                    case DISABLED:
-                        serverStatusLabel.setVisibility(View.INVISIBLE);
-                        break;
-                    case CONNECTED:
-                        serverStatusLabel.setText(R.string.server_connected);
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                    case DISCONNECTED:
-                        serverStatusLabel.setText(R.string.server_disconnected);
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                    case CONNECTING:
-                        serverStatusLabel.setText(R.string.server_connecting);
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                    case UPLOADING:
-                        serverStatusLabel.setText(R.string.server_uploading);
-                        serverStatusLabel.setVisibility(View.VISIBLE);
-                        break;
-                }
-            }
-        });
-    }
 
     public void deviceStatusUpdated(final DeviceServiceConnection connection, final DeviceStatusListener.Status status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Toast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
                 switch (status) {
                     case CONNECTED:
-                        addDeviceButton(connection);
+//                        addDeviceButton(connection);
 
                         synchronized (MainActivity.this) {
-                            if (activeConnection == null) {
-                                activeConnection = connection;
+                            if (mActiveConnections[0] == null) {
+                                mActiveConnections[0] = connection;
                             }
                         }
-                        stopButton.setText(R.string.stop_recording);
-                        dataCnt.setVisibility(View.VISIBLE);
-                        statusLabel.setText(R.string.device_connected);
+//                        statusLabel.setText("CONNECTED");
                         startScanning();
                         break;
                     case CONNECTING:
-                        stopButton.setText(R.string.stop_recording);
-                        statusLabel.setText(R.string.device_connecting);
+//                        statusLabel.setText("CONNECTING");
+                        logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
+                        // Reject if device name inputted does not equal device name
+                        if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
+                            logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
+                            Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
+                            // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
+                            disconnect();
+                        }
                         break;
                     case DISCONNECTED:
-                        Button btn = deviceButtons.remove(connection);
-                        deviceView.removeView(btn);
+
                         synchronized (MainActivity.this) {
-                            if (connection.equals(activeConnection)) {
-                                activeConnection = null;
+                            if (connection.equals(mActiveConnections[0])) {
+                                mActiveConnections[0] = null;
                             }
                         }
-                        if (deviceButtons.isEmpty()) {
-                            emptyDevices.setVisibility(View.VISIBLE);
-                        }
-                        dataCnt.setVisibility(View.INVISIBLE);
-                        statusLabel.setText(R.string.device_disconnected);
+
+//                        statusLabel.setText("DISCONNECTED");
                         break;
                     case READY:
-                        statusLabel.setText(R.string.device_scanning);
-                        stopButton.setOnClickListener(new View.OnClickListener() {
-                            public void onClick(View v) {
-                                isForcedDisconnected = !isForcedDisconnected;
-                                if (isForcedDisconnected) {
-                                    disconnect();
-                                    stopButton.setText(R.string.start_recording);
-                                } else {
-                                    startScanning();
-                                    stopButton.setText(R.string.stop_recording);
-                                }
-                            }
-                        });
-                        stopButton.setText(R.string.stop_recording);
-                        stopButton.setVisibility(View.VISIBLE);
+//                        statusLabel.setText("Scanning...");
+
                         break;
                 }
             }
@@ -466,27 +400,34 @@ public class MainActivity extends AppCompatActivity {
                 startScanning();
             } else {
                 // User refused to grant permission.
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        statusLabel.setText(R.string.bluetooth_permission_failure);
-                    }
-                });
+                Toast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    private class DeviceUIUpdater implements Runnable {
+    public class DeviceUIUpdater implements Runnable {
+        /** Data formats **/
         final DecimalFormat singleDecimal = new DecimalFormat("0.0");
         final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
         final DecimalFormat noDecimals = new DecimalFormat("0");
+
         E4DeviceStatus deviceData = null;
         String deviceName = null;
+        int rowIndex;
 
-        void updateWithData(@NonNull DeviceServiceConnection connection) throws RemoteException {
-            deviceData = (E4DeviceStatus)connection.getDeviceData();
-            deviceName = connection.getDeviceName();
-            runOnUiThread(this);
+        public void updateWithData(@NonNull DeviceServiceConnection[] connections) throws RemoteException {
+            int i = 0;
+            for (DeviceServiceConnection connection : connections ) {
+                if (connection !=  null) {
+                    logger.info("Updating row {} with data", i);
+                    deviceData = (E4DeviceStatus) connection.getDeviceData();
+                    deviceName = connection.getDeviceName();
+                    rowIndex = i;
+                    runOnUiThread(this);
+                }
+                // TODO: handle disconnect (reset fields with mConnection?)
+                i++;
+            }
         }
 
         @Override
@@ -494,19 +435,53 @@ public class MainActivity extends AppCompatActivity {
             if (deviceData == null) {
                 return;
             }
-            deviceLabel.setText(deviceName);
-            float[] acceleration = deviceData.getAcceleration();
-            setText(accel_xLabel, acceleration[0], "g", doubleDecimal);
-            setText(accel_yLabel, acceleration[1], "g", doubleDecimal);
-            setText(accel_zLabel, acceleration[2], "g", doubleDecimal);
-            setText(bvpLabel, deviceData.getBloodVolumePulse(), "\u00B5W", singleDecimal);
-            setText(edaLabel, deviceData.getElectroDermalActivity(), "\u00B5S", doubleDecimal);
-            setText(ibiLabel, deviceData.getInterBeatInterval(), "s", doubleDecimal);
-            setText(temperatureLabel, deviceData.getTemperature(), "\u2103", singleDecimal);
-            setText(batteryLabel, 100*deviceData.getBatteryLevel(), "%", noDecimals);
+            updateRow(deviceData, rowIndex);
+            updateDeviceName(deviceName, rowIndex);
         }
 
-        void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+        /**
+         * Updates a row with the deviceData
+         * @param deviceData
+         * @param row           Row number
+         */
+        public void updateRow(E4DeviceStatus deviceData, int row ) {
+            updateDeviceStatus(deviceData, row);
+            updateTemperature(deviceData, row);
+            updateBattery(deviceData, row);
+        }
+
+        public void updateDeviceStatus(E4DeviceStatus deviceData, int row ) {
+            // Connection status. Change icon used.
+            switch (deviceData.getStatus()) {
+                case CONNECTED:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
+                    break;
+                case DISCONNECTED:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
+                    break;
+                case READY:
+                case CONNECTING:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+                    break;
+                default:
+                    mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+            }
+        }
+
+        public void updateTemperature(E4DeviceStatus deviceData, int row ) {
+            setText(mTemperatureLabels[row], deviceData.getTemperature(), "\u2103", singleDecimal);
+        }
+
+        public void updateBattery(E4DeviceStatus deviceData, int row ) {
+            setText(mBatteryLabels[row], 100*deviceData.getBatteryLevel(), "%", noDecimals);
+        }
+
+        public void updateDeviceName(String deviceName, int row) {
+            // TODO: restrict n_characters of deviceName
+            mDeviceNameLabels[row].setText(deviceName);
+        }
+
+        private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
             if (Float.isNaN(value)) {
                 // em dash
                 label.setText("\u2014");
@@ -514,5 +489,108 @@ public class MainActivity extends AppCompatActivity {
                 label.setText(formatter.format(value) + " " + suffix);
             }
         }
+
+    }
+
+
+    public void connectDevice(View v) {
+        int rowIndex = getRowIndexFromView(v);
+        startScanning();
+
+        // some test code, updating with random data
+//        Random generator = new Random();
+//        updateDeviceName(String.valueOf( generator.hashCode() ), rowIndex);
+    }
+
+    public void showDetails(View v) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mUIUpdater.updateWithData(mActiveConnections);
+                } catch (RemoteException e) {
+                    logger.warn("Failed to update view with device data");
+                }
+            }
+        });
+    }
+
+    private int getRowIndexFromView(View v) {
+        // Assume all elements are direct descendants from the TableRow
+        View parent = (View) v.getParent();
+        switch ( parent.getId() ) {
+
+            case R.id.row1:
+                return 0;
+
+            case R.id.row2:
+                return 1;
+
+            case R.id.row3:
+                return 2;
+
+            case R.id.row4:
+                return 3;
+
+            default:
+                return -1; // TODO: throw exception
+        }
+    }
+
+
+    public void updateServerStatus( final ServerStatusListener.Status status ) {
+        // Update server status
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (status) {
+                    case CONNECTED:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_connected );
+                        break;
+                    case DISCONNECTED:
+                    case DISABLED:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
+                        break;
+                    case READY:
+                    case CONNECTING:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
+                        break;
+                    case UPLOADING:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
+                        break;
+                    default:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
+                }
+            }
+        });
+    }
+
+    public void dialogInputDeviceName(final View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Device Serial Number:");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int row = getRowIndexFromView( v );
+                mInputDeviceKeys[row] = input.getText().toString();
+                mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
     }
 }

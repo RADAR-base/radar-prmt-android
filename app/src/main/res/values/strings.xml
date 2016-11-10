@@ -7,7 +7,7 @@
     <string name="bvp_label">BVP</string>
     <string name="eda_label">EDA</string>
     <string name="ibi_label">IBI</string>
-    <string name="emptyText">-</string>
+    <string name="emptyText">—</string>
     <string name="temp_label">Temperature</string>
     <string name="battery_label">Battery</string>
     <string name="service_notification_ticker">Empatica E4 data collection</string>
@@ -18,6 +18,24 @@
     <string name="reconnect_to_server">Reconnect to server</string>
     <string name="no_devices_connected">No devices connected</string>
     <string name="active_device">Device</string>
+
+    <!--Overview activity-->
+    <string name="button_connect">Scan</string>
+    <string name="button_details">Details</string>
+    <string name="button_input"><i>Enter Device Key</i></string>
+    <string name="header_battery">Battery</string>
+    <string name="header_device_status">Status</string>
+    <string name="header_server_status">Server</string>
+    <string name="header_device">Device</string>
+    <string name="header_temp">Temperature</string>
+    <string name="header_connect"></string>
+    <string name="header_details"></string>
+    <string name="empaticaTypeLabel">E4</string>
+    <string name="angelTypeLabel">Angel</string>
+    <string name="deviceTypeLabel3">-</string>
+    <string name="deviceTypeLabel4">-</string>
+
+    <!--Status texts-->
     <string name="server_connected">Server connected</string>
     <string name="server_disconnected">Server disconnected</string>
     <string name="server_connecting">Connecting to server</string>

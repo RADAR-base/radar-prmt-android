@@ -17,6 +17,7 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.R;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceServiceBinder;
 import org.radarcns.android.DeviceState;
