@@ -84,10 +84,13 @@
                                 android:background="@drawable/status_disconnected" />
                         </FrameLayout>
 
-                        <TextView
-                            android:id="@+id/batteryRow1"
-                            style="@style/NumberColumn"
-                            android:text="@string/emptyText" />
+                        <FrameLayout android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <ImageView
+                                android:id="@+id/batteryRow1"
+                                style="@style/BatteryColumn"
+                                android:src="@drawable/ic_battery_unknown" />
+                        </FrameLayout>
 
                         <TextView
                             android:id="@+id/temperatureRow1"
@@ -137,10 +140,13 @@
                                 android:background="@drawable/status_disconnected" />
                         </FrameLayout>
 
-                        <TextView
-                            android:id="@+id/batteryRow2"
-                            style="@style/NumberColumn"
-                            android:text="@string/emptyText" />
+                        <FrameLayout android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <ImageView
+                                android:id="@+id/batteryRow2"
+                                style="@style/BatteryColumn"
+                                android:src="@drawable/ic_battery_unknown" />
+                        </FrameLayout>
 
                         <TextView
                             android:id="@+id/temperatureRow2"
@@ -189,10 +195,13 @@
                                 android:background="@drawable/status_disconnected" />
                         </FrameLayout>
 
-                        <TextView
-                            android:id="@+id/batteryRow3"
-                            style="@style/NumberColumn"
-                            android:text="@string/emptyText" />
+                        <FrameLayout android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <ImageView
+                                android:id="@+id/batteryRow3"
+                                style="@style/BatteryColumn"
+                                android:src="@drawable/ic_battery_unknown" />
+                        </FrameLayout>
 
                         <TextView
                             android:id="@+id/temperatureRow3"
@@ -241,10 +250,13 @@
                                 android:background="@drawable/status_disconnected" />
                         </FrameLayout>
 
-                        <TextView
-                            android:id="@+id/batteryRow4"
-                            style="@style/NumberColumn"
-                            android:text="@string/emptyText" />
+                        <FrameLayout android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+                            <ImageView
+                                android:id="@+id/batteryRow4"
+                                style="@style/BatteryColumn"
+                                android:src="@drawable/ic_battery_unknown" />
+                        </FrameLayout>
 
                         <TextView
                             android:id="@+id/temperatureRow4"
