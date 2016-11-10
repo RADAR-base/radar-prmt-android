@@ -65,7 +65,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                 switch (state) {
                     case BluetoothAdapter.STATE_TURNING_OFF: case BluetoothAdapter.STATE_OFF:
                         logger.warn("Bluetooth is off");
-                        mBinder.stopRecording();
+                        stopDeviceManager(unsetDeviceManager());
                         break;
                 }
             }
@@ -79,7 +79,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     private final AtomicInteger numberOfActivitiesBound = new AtomicInteger(0);
     private boolean isInForeground;
     private boolean isConnected;
-    private int latestStartId;
+    private int latestStartId = -1;
 
     @Override
     public void onCreate() {
@@ -102,14 +102,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         super.onDestroy();
         // Unregister broadcast listeners
         unregisterReceiver(mBluetoothReceiver);
+        stopDeviceManager(unsetDeviceManager());
 
-        if (deviceScanner != null) {
-            try {
-                deviceScanner.close();
-            } catch (IOException e) {
-                // do nothing
-            }
-        }
         try {
             dataHandler.close();
         } catch (IOException e) {
@@ -136,23 +130,27 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     }
 
     @Override
-    public synchronized void onRebind(Intent intent) {
+    public void onRebind(Intent intent) {
         numberOfActivitiesBound.incrementAndGet();
         onInvocation(intent);
     }
 
     @Override
-    public synchronized boolean onUnbind(Intent intent) {
-        if (numberOfActivitiesBound.decrementAndGet() == 0) {
-            if (!isConnected) {
-                stopSelf(latestStartId);
+    public boolean onUnbind(Intent intent) {
+        int startId = -1;
+        synchronized (this) {
+            if (numberOfActivitiesBound.decrementAndGet() == 0 && !isConnected) {
+                startId = latestStartId;
             }
+        }
+        if (startId != -1) {
+            stopSelf(latestStartId);
         }
         return true;
     }
 
     @Override
-    public synchronized void deviceFailedToConnect(String deviceName) {
+    public void deviceFailedToConnect(String deviceName) {
         Intent statusChanged = new Intent(DEVICE_CONNECT_FAILED);
         statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
         statusChanged.putExtra(DEVICE_STATUS_NAME, deviceName);
@@ -160,63 +158,95 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     }
 
     @Override
-    public synchronized void deviceStatusUpdated(DeviceManager e4DeviceManager, DeviceStatusListener.Status status) {
+    public void deviceStatusUpdated(DeviceManager deviceManager, DeviceStatusListener.Status status) {
         Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
         statusChanged.putExtra(DEVICE_STATUS_CHANGED, status.ordinal());
         statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
-        if (e4DeviceManager.getName() != null) {
-            statusChanged.putExtra(DEVICE_STATUS_NAME, e4DeviceManager.getName());
+        if (deviceManager.getName() != null) {
+            statusChanged.putExtra(DEVICE_STATUS_NAME, deviceManager.getName());
         }
         sendBroadcast(statusChanged);
 
         switch (status) {
             case CONNECTED:
-                isConnected = true;
+                synchronized (this) {
+                    isConnected = true;
+                }
                 startBackgroundListener();
                 break;
             case DISCONNECTED:
-                deviceScanner = null;
+                synchronized (this) {
+                    deviceScanner = null;
+                    isConnected = false;
+                }
                 stopBackgroundListener();
-                if (!e4DeviceManager.isClosed()) {
-                    try {
-                        e4DeviceManager.close();
-                    } catch (IOException e) {
-                        // do nothing
+                stopDeviceManager(deviceManager);
+                int startId = -1;
+                synchronized (this) {
+                    if (numberOfActivitiesBound.get() == 0) {
+                        startId = latestStartId;
                     }
                 }
-                if (this.numberOfActivitiesBound.get() == 0) {
+                if (startId != -1) {
                     stopSelf(latestStartId);
                 }
                 break;
         }
     }
 
-    public synchronized void startBackgroundListener() {
-        if (!isInForeground) {
-            Context context = getApplicationContext();
-            Intent notificationIntent = new Intent(context, DeviceService.class);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
-
-            Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
-            Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-            notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
-            notificationBuilder.setLargeIcon(largeIcon);
-            notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
-            notificationBuilder.setWhen(System.currentTimeMillis());
-            notificationBuilder.setContentIntent(pendingIntent);
-            notificationBuilder.setContentText(getText(R.string.service_notification_text));
-            notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
-            Notification notification = notificationBuilder.build();
-
-            startForeground(ONGOING_NOTIFICATION_ID, notification);
+    public void startBackgroundListener() {
+        synchronized (this) {
+            if (isInForeground) {
+                return;
+            }
             isInForeground = true;
         }
+        Context context = getApplicationContext();
+        Intent notificationIntent = new Intent(context, DeviceService.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
+
+        Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
+        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+        notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
+        notificationBuilder.setLargeIcon(largeIcon);
+        notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
+        notificationBuilder.setWhen(System.currentTimeMillis());
+        notificationBuilder.setContentIntent(pendingIntent);
+        notificationBuilder.setContentText(getText(R.string.service_notification_text));
+        notificationBuilder.setContentTitle(getText(R.string.service_notification_title));
+        Notification notification = notificationBuilder.build();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
     }
 
-    public synchronized void stopBackgroundListener() {
-        if (isInForeground) {
-            stopForeground(true);
+    public void stopBackgroundListener() {
+        synchronized (this) {
+            if (!isInForeground) {
+                return;
+            }
             isInForeground = false;
+        }
+        stopForeground(true);
+    }
+
+    private synchronized DeviceManager unsetDeviceManager() {
+        DeviceManager tmpManager = deviceScanner;
+        deviceScanner = null;
+        return tmpManager;
+    }
+
+    private void stopDeviceManager(DeviceManager deviceManager) {
+        if (deviceManager != null) {
+            if (!deviceManager.isClosed()) {
+                try {
+                    deviceManager.close();
+                } catch (IOException e) {
+                    logger.warn("Failed to close device scanner", e);
+                }
+            }
+            if (deviceManager.getState().getStatus() != DeviceStatusListener.Status.DISCONNECTED) {
+                deviceStatusUpdated(deviceManager, DeviceStatusListener.Status.DISCONNECTED);
+            }
         }
     }
 
@@ -238,48 +268,49 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
         public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit) {
-            return dataHandler.getCache(topic).getRecords(limit);
+            return getDataHandler().getCache(topic).getRecords(limit);
         }
 
         @Override
-        public synchronized DeviceState getDeviceStatus() {
-            if (deviceScanner == null) {
+        public DeviceState getDeviceStatus() {
+            DeviceManager localManager = getDeviceManager();
+            if (localManager == null) {
                 return getDefaultState();
             } else {
-                return deviceScanner.getState();
+                return localManager.getState();
             }
         }
 
         @Override
-        public synchronized DeviceState startRecording(@NonNull Set<String> acceptableIds) {
-            if (deviceScanner == null) {
+        public DeviceState startRecording(@NonNull Set<String> acceptableIds) {
+            DeviceManager localManager = getDeviceManager();
+            if (localManager == null) {
                 logger.info("Starting recording");
-                deviceScanner = createDeviceManager();
-                deviceScanner.start(acceptableIds);
-            }
-            return deviceScanner.getState();
-        }
-
-        @Override
-        public synchronized void stopRecording() {
-            if (deviceScanner != null) {
-                if (!deviceScanner.isClosed()) {
-                    try {
-                        deviceScanner.close();
-                    } catch (IOException e) {
-                        logger.warn("Failed to close device scanner", e);
+                localManager = createDeviceManager();
+                boolean didSet;
+                synchronized (this) {
+                    if (deviceScanner == null) {
+                        deviceScanner = localManager;
+                        didSet = true;
+                    } else {
+                        didSet = false;
                     }
                 }
-                if (deviceScanner.getState().getStatus() != DeviceStatusListener.Status.DISCONNECTED) {
-                    deviceStatusUpdated(deviceScanner, DeviceStatusListener.Status.DISCONNECTED);
+                if (didSet) {
+                    localManager.start(acceptableIds);
                 }
-                deviceScanner = null;
             }
+            return getDeviceManager().getState();
+        }
+
+        @Override
+        public void stopRecording() {
+            stopDeviceManager(unsetDeviceManager());
         }
 
         @Override
         public ServerStatusListener.Status getServerStatus() {
-            return dataHandler.getStatus();
+            return getDataHandler().getStatus();
         }
 
         @Override
@@ -323,32 +354,59 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
      * Also call the superclass.
      * @param intent intent that the activity provided.
      */
-    protected synchronized void onInvocation(Intent intent) {
-        if (dataHandler == null) {
-            URL kafkaUrl = null;
-            SchemaRetriever remoteSchemaRetriever = null;
-            if (intent.hasExtra("kafka_rest_proxy_url")) {
-                String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
-                if (!kafkaUrlString.isEmpty()) {
-                    remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
-                    try {
-                        kafkaUrl = new URL(kafkaUrlString);
-                    } catch (MalformedURLException e) {
-                        logger.error("Malformed Kafka server URL {}", kafkaUrlString);
-                        throw new RuntimeException(e);
-                    }
+    protected void onInvocation(Intent intent) {
+        TableDataHandler localDataHandler;
+        synchronized (this) {
+            if (dataHandler != null) {
+                return;
+            }
+        }
+        URL kafkaUrl = null;
+        SchemaRetriever remoteSchemaRetriever = null;
+        if (intent.hasExtra("kafka_rest_proxy_url")) {
+            String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
+            if (!kafkaUrlString.isEmpty()) {
+                remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
+                try {
+                    kafkaUrl = new URL(kafkaUrlString);
+                } catch (MalformedURLException e) {
+                    logger.error("Malformed Kafka server URL {}", kafkaUrlString);
+                    throw new RuntimeException(e);
                 }
             }
-            long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
-            //noinspection unchecked
-            dataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
-                    dataRetentionMs, getCachedTopics());
-            dataHandler.addStatusListener(this);
-            dataHandler.start();
+        }
+        long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
+        //noinspection unchecked
+        boolean didUpdate;
+        localDataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
+                dataRetentionMs, getCachedTopics());
+
+        synchronized (this) {
+            if (dataHandler == null) {
+                dataHandler = localDataHandler;
+                didUpdate = true;
+            } else {
+                didUpdate = false;
+            }
+        }
+
+        if (didUpdate) {
+            localDataHandler.addStatusListener(this);
+            localDataHandler.start();
+        } else {
+            try {
+                localDataHandler.close();
+            } catch (IOException e) {
+                logger.warn("Failed to close unnecessary data handler");
+            }
         }
     }
 
-    public TableDataHandler getDataHandler() {
+    public synchronized TableDataHandler getDataHandler() {
         return dataHandler;
+    }
+
+    public synchronized DeviceManager getDeviceManager() {
+        return deviceScanner;
     }
 }

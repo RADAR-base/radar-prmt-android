@@ -193,8 +193,8 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
         serviceBinder = null;
         deviceName = null;
         deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
-        mainActivity.serviceDisconnected(this);
         mainActivity.unregisterReceiver(statusReceiver);
+        mainActivity.serviceDisconnected(this);
     }
 
     public void bind(@NonNull Intent intent) {

@@ -69,24 +69,24 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         }
         if (kafkaUrl != null) {
             updateServerStatus(Status.READY);
-        } else {
-            updateServerStatus(Status.DISABLED);
-        }
-
-        connectivityReceiver = new BroadcastReceiver() {
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                    if (intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
-                        logger.info("Network disconnected, stopping data sender.");
-                        stop();
-                    } else if (!isStarted()) {
-                        logger.info("Network connected, starting data sender.");
-                        start();
+            connectivityReceiver = new BroadcastReceiver() {
+                public void onReceive(Context context, Intent intent) {
+                    if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                        if (intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
+                            logger.info("Network disconnected, stopping data sender.");
+                            stop();
+                        } else if (!isStarted()) {
+                            logger.info("Network connected, starting data sender.");
+                            start();
+                        }
                     }
                 }
-            }
-        };
-        context.registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+            };
+            context.registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        } else {
+            connectivityReceiver = null;
+            updateServerStatus(Status.DISABLED);
+        }
     }
 
     private boolean isDataConnected() {
@@ -103,11 +103,13 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         if (isStarted()) {
             throw new IllegalStateException("Cannot start submitter, it is already started");
         }
-        if (status != Status.DISABLED && isDataConnected()) {
-            updateServerStatus(Status.CONNECTING);
-            KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false));
-            this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
+        if (status == Status.DISABLED || !isDataConnected()) {
+            return;
         }
+
+        updateServerStatus(Status.CONNECTING);
+        KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false));
+        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
     }
 
     public boolean isStarted() {
@@ -123,9 +125,10 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             this.submitter.close();
             this.submitter = null;
         }
-        if (status != Status.DISABLED) {
-            updateServerStatus(Status.READY);
+        if (status == Status.DISABLED) {
+            return;
         }
+        updateServerStatus(Status.READY);
     }
 
     /**
@@ -133,7 +136,9 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * @throws IOException if the tables cannot be flushed
      */
     public void close() throws IOException {
-        context.unregisterReceiver(connectivityReceiver);
+        if (status != Status.DISABLED) {
+            context.unregisterReceiver(connectivityReceiver);
+        }
         if (this.submitter != null) {
             try {
                 this.submitter.close();

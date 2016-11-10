@@ -75,6 +75,22 @@ public class MainActivity extends AppCompatActivity {
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
 
+    private final Runnable bindServicesRunner = new Runnable() {
+        @Override
+        public void run() {
+            if (!mConnectionIsBound[0]) {
+                Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+                e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+                e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
+                e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+
+                mE4Connection.bind(e4serviceIntent);
+                mConnectionIsBound[0] = true;
+            }
+        }
+    };
+
     public MainActivity() {
         super();
         isForcedDisconnected = false;
@@ -125,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,22 +209,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         logger.info("mainActivity onResume");
         super.onResume();
-
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (!mConnectionIsBound[0]) {
-                    Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                    e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-                    e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-                    e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-                    e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
-
-                    mE4Connection.bind(e4serviceIntent);
-                    mConnectionIsBound[0] = true;
-                }
-            }
-        }, 250L);
+        mHandler.postDelayed(bindServicesRunner, 300L);
     }
 
     @Override
@@ -236,7 +236,9 @@ public class MainActivity extends AppCompatActivity {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                mConnectionIsBound[0] = false;
+                for (int i = 0; i < mConnections.length; i++) {
+                    mConnectionIsBound[i] = false;
+                }
             }
         });
     }
@@ -251,9 +253,11 @@ public class MainActivity extends AppCompatActivity {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mConnectionIsBound[0]) {
-                    mConnectionIsBound[0] = false;
-                    mE4Connection.unbind();
+                for (int i = 0; i < mConnections.length; i++) {
+                    if (mConnectionIsBound[i]) {
+                        mConnectionIsBound[i] = false;
+                        mConnections[i].unbind();
+                    }
                 }
             }
         });
@@ -323,17 +327,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public synchronized void serviceDisconnected(final DeviceServiceConnection connection) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < mConnections.length; i++) {
-                    // Rebind, if the intent was not to unbind.
-                    if (mConnectionIsBound[i] && connection == mConnections[i]) {
-                        mConnections[i].bind(mConnections[i].getServiceIntent());
-                    }
-                }
-            }
-        });
+        mHandler.post(bindServicesRunner);
     }
 
     public void deviceStatusUpdated(final DeviceServiceConnection connection, final DeviceStatusListener.Status status) {
@@ -509,12 +503,17 @@ public class MainActivity extends AppCompatActivity {
         disconnect(rowIndex);
     }
 
-    public void showDetails(View v) {
+    public void showDetails(final View v) {
+        final int row = getRowIndexFromView(v);
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 try {
                     mUIUpdater.update();
+                    DeviceServiceConnection connection = mConnections[row];
+                    if (connection == mE4Connection) {
+                        new E4HeartbeatToast(MainActivity.this).execute(connection);
+                    }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
                 }
