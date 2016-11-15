@@ -581,10 +581,10 @@ public class MainActivity extends AppCompatActivity {
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
                         break;
                     case UPLOADING:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading );
                         break;
                     default:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
                 }
             }
         });
