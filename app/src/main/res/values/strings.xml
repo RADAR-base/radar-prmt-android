@@ -22,7 +22,8 @@
     <!--Overview activity-->
     <string name="button_connect">Scan</string>
     <string name="button_details">Details</string>
-    <string name="button_input"><i>Enter Device Key</i></string>
+    <string name="request_E4_key">Enter E4 S/N</string>
+    <string name="button_input">Enter Device Key</string>
     <string name="header_battery">Battery</string>
     <string name="header_device_status">Status</string>
     <string name="header_server_status">Server</string>
@@ -30,10 +31,10 @@
     <string name="header_temp">Temperature</string>
     <string name="header_connect"></string>
     <string name="header_details"></string>
-    <string name="empaticaTypeLabel">E4</string>
-    <string name="angelTypeLabel">Angel</string>
-    <string name="deviceTypeLabel3">-</string>
-    <string name="deviceTypeLabel4">-</string>
+    <string name="deviceTypeLabel1">E4</string>
+    <string name="deviceTypeLabel2">Angel</string>
+    <string name="deviceTypeLabel3">Pebble</string>
+    <string name="deviceTypeLabel4">Platyp.</string>
 
     <!--Status texts-->
     <string name="server_connected">Server connected</string>

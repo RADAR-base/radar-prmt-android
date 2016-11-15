@@ -22,6 +22,7 @@ import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private View[] mStatusIcons;
     private View mServerStatusIcon;
     private TextView[] mTemperatureLabels;
-    private TextView[] mBatteryLabels;
+    private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
 
@@ -171,11 +172,11 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.temperatureRow4)
         };
 
-        mBatteryLabels = new TextView[] {
-                (TextView) findViewById(R.id.batteryRow1),
-                (TextView) findViewById(R.id.batteryRow2),
-                (TextView) findViewById(R.id.batteryRow3),
-                (TextView) findViewById(R.id.batteryRow4)
+        mBatteryLabels = new ImageView[] {
+                (ImageView) findViewById(R.id.batteryRow1),
+                (ImageView) findViewById(R.id.batteryRow2),
+                (ImageView) findViewById(R.id.batteryRow3),
+                (ImageView) findViewById(R.id.batteryRow4)
         };
 
         mDeviceInputButtons = new Button[] {
@@ -472,7 +473,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
-            setText(mBatteryLabels[row], deviceData == null ? Float.NaN : 100 * deviceData.getBatteryLevel(), "%", noDecimals);
+            // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
+            Float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
+//            if ( row == 0 ) {logger.info("Battery: {}", batteryLevel);}
+
+            if ( batteryLevel.isNaN() ) {
+                mBatteryLabels[row].setImageResource( R.drawable.ic_battery_unknown );
+            // up to 100%
+            } else if ( batteryLevel > 0.5 ) {
+                mBatteryLabels[row].setImageResource( R.drawable.ic_battery_full );
+            // up to 45%
+            } else if ( batteryLevel > 0.2 ) {
+                mBatteryLabels[row].setImageResource( R.drawable.ic_battery_50 );
+            // up to 10%
+            } else if ( batteryLevel > 0.1 ) {
+                mBatteryLabels[row].setImageResource( R.drawable.ic_battery_low );
+            // up to 5% [what are possible values below 10%?]
+            } else {
+                mBatteryLabels[row].setImageResource( R.drawable.ic_battery_empty );
+            }
         }
 
         public void updateDeviceName(String deviceName, int row) {
