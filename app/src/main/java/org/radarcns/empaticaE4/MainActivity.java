@@ -473,19 +473,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
-            // Battery levels observed for E4 are 10, 45 or 100%
+            // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
             Float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
+//            if ( row == 0 ) {logger.info("Battery: {}", batteryLevel);}
 
             if ( batteryLevel.isNaN() ) {
                 mBatteryLabels[row].setImageResource( R.drawable.ic_battery_unknown );
             // up to 100%
-            } else if ( batteryLevel > 0.45 ) {
+            } else if ( batteryLevel > 0.5 ) {
                 mBatteryLabels[row].setImageResource( R.drawable.ic_battery_full );
             // up to 45%
-            } else if ( batteryLevel > 0.10 ) {
+            } else if ( batteryLevel > 0.2 ) {
                 mBatteryLabels[row].setImageResource( R.drawable.ic_battery_50 );
             // up to 10%
-            } else if ( batteryLevel > 0.05 ) {
+            } else if ( batteryLevel > 0.1 ) {
                 mBatteryLabels[row].setImageResource( R.drawable.ic_battery_low );
             // up to 5% [what are possible values below 10%?]
             } else {
