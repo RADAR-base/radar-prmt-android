@@ -584,6 +584,10 @@ public class MainActivity extends AppCompatActivity {
                     case UPLOADING:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading );
                         break;
+                    case UPLOADING_FAILED:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading_failed );
+                        logger.info("Uploading failed status");
+                        break;
                     default:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
                 }

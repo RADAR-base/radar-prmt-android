@@ -67,5 +67,13 @@
         <item name="android:layout_height">30dp</item>
     </style>
 
+    <style name="ServerStatusLabel">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">normal|bold</item>
+        <item name="android:gravity">top</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
 
 </resources>
