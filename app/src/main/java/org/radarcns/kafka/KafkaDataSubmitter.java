@@ -1,5 +1,6 @@
 package org.radarcns.kafka;
 
+import org.radarcns.android.TableDataHandler;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.util.ListPool;
@@ -216,14 +217,30 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
 
         if (numberOfRecords > 0) {
             KafkaTopicSender<K, V> cacheSender = sender(topic);
+
             if (!uploadingNotified) {
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
             }
-            cacheSender.send(measurements);
+
+            try {
+                cacheSender.send(measurements);
+            } catch (IOException ioe) {
+                dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING_FAILED);
+                logger.info("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
+                throw ioe;
+            }
+
+
             long lastOffset = cacheSender.getLastSentOffset();
             cache.markSent(lastOffset);
 
+            dataHandler.updateRecordsSent(topic.getName(), numberOfRecords);
+
             logger.debug("uploaded {} {} records", numberOfRecords, topic.getName());
+            if( topic.getName().equals( "android_empatica_e4_blood_volume_pulse" ) ){
+                Record<K,V> lastMeasurement = measurements.get( numberOfRecords-1 );
+                logger.info("UPF: {} sec. - {}", (int) lastMeasurement.milliTimeAdded/1000, lastMeasurement.value );
+            }
 
             if (lastOffset == measurements.get(numberOfRecords - 1).offset) {
                 cache.returnList(measurements);

@@ -37,8 +37,10 @@ import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
@@ -105,6 +107,9 @@ public class MainActivity extends AppCompatActivity {
                 if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                     final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
                     updateServerStatus(status);
+                } else if (intent.getAction().equals(SERVER_RECORDS_SENT_CHANGED)) {
+                    final String lastNumberOfRecordsSent = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED);
+                    updateServerSent(lastNumberOfRecordsSent);
                 }
             }
         };
@@ -226,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         registerReceiver(bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_STATUS_CHANGED));
+        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_CHANGED));
         registerReceiver(deviceFailedReceiver, new IntentFilter(E4Service.DEVICE_CONNECT_FAILED));
 
         mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
@@ -569,6 +575,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                logger.info("UPF - New Server Status {}", status);
                 switch (status) {
                     case CONNECTED:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_connected );
@@ -586,13 +593,17 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case UPLOADING_FAILED:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading_failed );
-                        logger.info("Uploading failed status");
                         break;
                     default:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
                 }
             }
         });
+    }
+
+    public void updateServerSent( final String numberOfRecordsSent )
+    {
+        logger.info("UPF - updateServerSent - {}", numberOfRecordsSent);
     }
 
     public void dialogInputDeviceName(final View v) {
