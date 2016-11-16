@@ -191,7 +191,7 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     @Override
     public void onServiceDisconnected(ComponentName className) {
         serviceBinder = null;
-        deviceName = null;
+//        deviceName = null; // Do NOT set deviceName to null. This causes loss of the name if application loses focus [MM 2016-11-16]
         deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         mainActivity.unregisterReceiver(statusReceiver);
         mainActivity.serviceDisconnected(this);

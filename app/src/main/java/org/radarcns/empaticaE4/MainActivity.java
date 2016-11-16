@@ -415,7 +415,8 @@ public class MainActivity extends AppCompatActivity {
                 if (mConnections[i] != null && mConnections[i].hasService()) {
                     deviceData[i] = mConnections[i].getDeviceData();
                     switch (deviceData[i].getStatus()) {
-                        case CONNECTED: case CONNECTING:
+                        case CONNECTED:
+                        case CONNECTING:
                             deviceNames[i] = mConnections[i].getDeviceName();
                             break;
                         default:
@@ -608,7 +609,12 @@ public class MainActivity extends AppCompatActivity {
                 String oldValue = mInputDeviceKeys[row];
                 mInputDeviceKeys[row] = input.getText().toString();
                 mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
-                if (!mInputDeviceKeys[row].equals(oldValue) && !mInputDeviceKeys[row].isEmpty()) {
+
+                // Do NOT disconnect if input has not changed, is empty or equals the connected device.
+                if (!mInputDeviceKeys[row].equals(oldValue) &&
+                    !mInputDeviceKeys[row].isEmpty()        &&
+                    !mConnections[row].isAllowedDevice( mInputDeviceKeys[row] ) )
+                {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
