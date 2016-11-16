@@ -108,8 +108,14 @@ public class MainActivity extends AppCompatActivity {
                     final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
                     updateServerStatus(status);
                 } else if (intent.getAction().equals(SERVER_RECORDS_SENT_CHANGED)) {
-                    final String lastNumberOfRecordsSent = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED);
-                    updateServerSent(lastNumberOfRecordsSent);
+//                    final String lastNumberOfRecordsSent = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED);
+                    try {
+                        final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
+                        String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
+                        updateServerSent( triggerKey, lastNumberOfRecordsSent);
+                    } catch (RemoteException re) {
+                        logger.warn( "Could not update the server records sent: {}", re.getMessage() );
+                    }
                 }
             }
         };
@@ -575,6 +581,8 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                // TODO: make the uploading failed stick (by persisting in KafkaDataSubmitter)
+                // Now immediately overwritten by Connected/Disconnected.
                 logger.info("UPF - New Server Status {}", status);
                 switch (status) {
                     case CONNECTED:
@@ -601,8 +609,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateServerSent( final String numberOfRecordsSent )
+    public void updateServerSent( String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
     {
+        // TODO: Process the map. Display one or all activity of the topics in the TextView
         logger.info("UPF - updateServerSent - {}", numberOfRecordsSent);
     }
 

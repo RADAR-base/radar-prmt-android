@@ -262,8 +262,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     @Override
     public void updateRecordsSent(String topicName, int numberOfRecords) {
         Intent recordsIntent = new Intent(SERVER_RECORDS_SENT_CHANGED);
-        recordsIntent.putExtra(SERVER_RECORDS_SENT_CHANGED, String.format("%s - %s", topicName, numberOfRecords));
-        logger.info("UPF - intermediate - {}", String.format("%s - %s", topicName, numberOfRecords));
+        // Signal that a certain topic changed, the key of the map retrieved by getRecordsSent().
+        recordsIntent.putExtra(SERVER_RECORDS_SENT_CHANGED, topicName);
         sendBroadcast(recordsIntent);
     }
 
