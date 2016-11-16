@@ -61,11 +61,11 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         }
         jsonFactory = new JsonFactory();
 
-        // Prolonged write timeout for large batches of data
+        // Default timeout is 10 seconds.
         httpClient = new OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
                 .build();
 
         isConnectedRequest = new Request.Builder().url(kafkaUrl).head().build();
