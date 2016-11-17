@@ -35,8 +35,11 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
+
+    final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -611,22 +616,21 @@ public class MainActivity extends AppCompatActivity {
     public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
     {
         int numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
+
+        // Condensing the message
+        keyNameTrigger = keyNameTrigger.replaceFirst("_?android_?","");
+        keyNameTrigger = keyNameTrigger.replaceFirst("_?empatica_?(e4)?","E4");
+
         String message;
+        String messageTimeStamp = timeFormat.format( System.currentTimeMillis() );
         if ( numberOfRecordsTrigger < 0 ) {
-            message = String.format("'%s' has failed uploading", keyNameTrigger);
+            message = String.format("%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
         } else {
-            message = String.format("'%s' updated with %d records", keyNameTrigger, numberOfRecordsTrigger);
+            message = String.format("%1$25s uploaded %2$4d records (%3$s)", keyNameTrigger, numberOfRecordsTrigger, messageTimeStamp);
         }
 
         mServerMessage.setText( message );
         logger.info(message);
-
-        int totalNumberOfRecords = 0;
-        for(int numberOfRecords : lastNumberOfRecordsSent.values() ) {
-            totalNumberOfRecords += numberOfRecords;
-        }
-
-        logger.info("UPF - total last number of records over every topic = {}", totalNumberOfRecords);
     }
 
     public void dialogInputDeviceName(final View v) {

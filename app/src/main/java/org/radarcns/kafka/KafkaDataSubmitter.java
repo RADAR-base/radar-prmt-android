@@ -238,7 +238,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 throw ioe;
             }
 
-
             long lastOffset = cacheSender.getLastSentOffset();
             cache.markSent(lastOffset);
 

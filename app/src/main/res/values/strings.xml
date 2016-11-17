@@ -26,7 +26,7 @@
     <string name="button_input">Enter Device Key</string>
     <string name="header_battery">Battery</string>
     <string name="header_device_status">Status</string>
-    <string name="header_server_status">Server status</string>
+    <string name="header_server_status">Server</string>
     <string name="header_device">Device</string>
     <string name="header_temp">Temperature</string>
     <string name="header_connect"></string>

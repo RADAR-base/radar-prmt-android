@@ -290,8 +290,7 @@
                     android:id="@+id/serverLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_below="@id/horizontalScroll"
-                    android:gravity="center_horizontal">
+                    android:layout_below="@id/horizontalScroll">
 
                     <TextView
                         android:id="@+id/statusServerLabel"
@@ -313,9 +312,11 @@
                         android:text="@string/emptyText"
                         android:layout_toEndOf="@id/statusServer"
                         android:layout_alignParentBottom="true"
-                        android:textSize="18sp"
+                        android:textSize="14sp"
                         android:textStyle="italic"
-                        android:paddingStart="15dp" />
+                        android:paddingStart="5dp"
+                        android:paddingEnd="0dp"
+                        android:fontFamily="monospace" />
 
                 </RelativeLayout>
 
