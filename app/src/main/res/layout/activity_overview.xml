@@ -297,24 +297,26 @@
                         android:id="@+id/statusServerLabel"
                         style="@style/ServerStatusLabel"
                         android:text="@string/header_server_status"
-                        android:textColor="@android:color/background_dark"
-                        />
+                        android:layout_alignParentBottom="true"
+                        android:textColor="@android:color/background_dark" />
 
                     <View
                         android:id="@+id/statusServer"
                         style="@style/StatusCircle"
+                        android:layout_alignParentBottom="true"
                         android:layout_toEndOf="@id/statusServerLabel"
                         android:background="@drawable/status_disconnected"/>
 
                     <TextView
                         android:id="@+id/statusServerMessage"
                         style="@style/ServerStatusLabel"
+                        android:text="@string/emptyText"
                         android:layout_toEndOf="@id/statusServer"
-                        android:layout_alignBottom="@id/statusServer"
-                        android:text="TODO: warning message"
+                        android:layout_alignParentBottom="true"
                         android:textSize="18sp"
                         android:textStyle="italic"
-                        android:paddingLeft="15dp"/>
+                        android:paddingStart="15dp"
+                        />
 
                 </RelativeLayout>
 

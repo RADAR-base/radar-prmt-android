@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
     private View mServerStatusIcon;
+    private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
@@ -112,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
                         String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
-                        updateServerSent( triggerKey, lastNumberOfRecordsSent);
+                        updateServerRecordsSent( triggerKey, lastNumberOfRecordsSent);
                     } catch (RemoteException re) {
                         logger.warn( "Could not update the server records sent: {}", re.getMessage() );
                     }
@@ -175,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mServerStatusIcon = findViewById(R.id.statusServer);
+        mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
 
         mTemperatureLabels = new TextView[] {
                 (TextView) findViewById(R.id.temperatureRow1),
@@ -609,10 +611,18 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateServerSent( String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
+    public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
     {
-        // TODO: Process the map. Display one or all activity of the topics in the TextView
-        logger.info("UPF - updateServerSent - {}", numberOfRecordsSent);
+        String message = String.format("'%s' updated with %d records", keyNameTrigger, lastNumberOfRecordsSent.get(keyNameTrigger) );
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+        mServerMessage.setText( message ); //String.format("Records sent since last update: %d", totalNumberOfRecords) );
+
+        int totalNumberOfRecords = 0;
+        for(int numberOfRecords : lastNumberOfRecordsSent.values() ) {
+            totalNumberOfRecords += numberOfRecords;
+        }
+        logger.info("UPF - total records sent - {}", totalNumberOfRecords);
     }
 
     public void dialogInputDeviceName(final View v) {
