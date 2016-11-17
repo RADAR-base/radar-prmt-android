@@ -9,6 +9,7 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface DeviceServiceBinder {
@@ -24,4 +25,6 @@ public interface DeviceServiceBinder {
     DeviceState getDeviceStatus();
     /** Get the current server status */
     ServerStatusListener.Status getServerStatus();
+    /** Get the last number of records sent */
+    Map<String, Integer> getServerRecordsSent();
 }

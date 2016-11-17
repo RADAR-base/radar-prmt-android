@@ -32,6 +32,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,6 +50,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public final static int TRANSACT_STOP_RECORDING = 15;
     public final static int TRANSACT_GET_SERVER_STATUS = 16;
     public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
+    public final static String SERVER_RECORDS_SENT_CHANGED = "org.radarcns.android.ServerStatusListener.lastNumberOfRecordsSent";
     public final static String DEVICE_STATUS_SERVICE_CLASS = "org.radarcns.android.DeviceService.getClass";
     public final static String DEVICE_STATUS_CHANGED = "org.radarcns.android.DeviceStatusListener.Status";
     public final static String DEVICE_STATUS_NAME = "org.radarcns.android.Devicemanager.getName";
@@ -257,6 +259,14 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         sendBroadcast(statusIntent);
     }
 
+    @Override
+    public void updateRecordsSent(String topicName, int numberOfRecords) {
+        Intent recordsIntent = new Intent(SERVER_RECORDS_SENT_CHANGED);
+        // Signal that a certain topic changed, the key of the map retrieved by getRecordsSent().
+        recordsIntent.putExtra(SERVER_RECORDS_SENT_CHANGED, topicName);
+        sendBroadcast(recordsIntent);
+    }
+
     protected abstract DeviceManager createDeviceManager();
 
     protected abstract DeviceState getDefaultState();
@@ -311,6 +321,11 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         @Override
         public ServerStatusListener.Status getServerStatus() {
             return getDataHandler().getStatus();
+        }
+
+        @Override
+        public Map<String,Integer> getServerRecordsSent() {
+            return getDataHandler().getRecordsSent();
         }
 
         @Override

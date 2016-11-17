@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
@@ -175,6 +176,10 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
         }
     }
 
+    public Map<String, Integer> getServerSent() throws RemoteException {
+        return ((DeviceServiceBinder)serviceBinder).getServerRecordsSent();
+    }
+
     public S getDeviceData() throws RemoteException {
         if (isRemote) {
             Parcel data = Parcel.obtain();
@@ -191,7 +196,7 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     @Override
     public void onServiceDisconnected(ComponentName className) {
         serviceBinder = null;
-        deviceName = null;
+//        deviceName = null; // Do NOT set deviceName to null. This causes loss of the name if application loses focus [MM 2016-11-16]
         deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         mainActivity.unregisterReceiver(statusReceiver);
         mainActivity.serviceDisconnected(this);

@@ -35,10 +35,15 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
@@ -71,10 +76,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
     private View mServerStatusIcon;
+    private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
+
+    final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -105,6 +113,15 @@ public class MainActivity extends AppCompatActivity {
                 if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                     final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
                     updateServerStatus(status);
+                } else if (intent.getAction().equals(SERVER_RECORDS_SENT_CHANGED)) {
+//                    final String lastNumberOfRecordsSent = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED);
+                    try {
+                        final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
+                        String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
+                        updateServerRecordsSent( triggerKey, lastNumberOfRecordsSent);
+                    } catch (RemoteException re) {
+                        logger.warn( "Could not update the server records sent: {}", re.getMessage() );
+                    }
                 }
             }
         };
@@ -164,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mServerStatusIcon = findViewById(R.id.statusServer);
+        mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
 
         mTemperatureLabels = new TextView[] {
                 (TextView) findViewById(R.id.temperatureRow1),
@@ -226,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         registerReceiver(bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_STATUS_CHANGED));
+        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_CHANGED));
         registerReceiver(deviceFailedReceiver, new IntentFilter(E4Service.DEVICE_CONNECT_FAILED));
 
         mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
@@ -415,7 +434,8 @@ public class MainActivity extends AppCompatActivity {
                 if (mConnections[i] != null && mConnections[i].hasService()) {
                     deviceData[i] = mConnections[i].getDeviceData();
                     switch (deviceData[i].getStatus()) {
-                        case CONNECTED: case CONNECTING:
+                        case CONNECTED:
+                        case CONNECTING:
                             deviceNames[i] = mConnections[i].getDeviceName();
                             break;
                         default:
@@ -583,11 +603,34 @@ public class MainActivity extends AppCompatActivity {
                     case UPLOADING:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading );
                         break;
+                    case UPLOADING_FAILED:
+                        mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading_failed );
+                        break;
                     default:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
                 }
             }
         });
+    }
+
+    public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
+    {
+        int numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
+
+        // Condensing the message
+        keyNameTrigger = keyNameTrigger.replaceFirst("_?android_?","");
+        keyNameTrigger = keyNameTrigger.replaceFirst("_?empatica_?(e4)?","E4");
+
+        String message;
+        String messageTimeStamp = timeFormat.format( System.currentTimeMillis() );
+        if ( numberOfRecordsTrigger < 0 ) {
+            message = String.format("%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
+        } else {
+            message = String.format("%1$25s uploaded %2$4d records (%3$s)", keyNameTrigger, numberOfRecordsTrigger, messageTimeStamp);
+        }
+
+        mServerMessage.setText( message );
+        logger.info(message);
     }
 
     public void dialogInputDeviceName(final View v) {
@@ -608,7 +651,12 @@ public class MainActivity extends AppCompatActivity {
                 String oldValue = mInputDeviceKeys[row];
                 mInputDeviceKeys[row] = input.getText().toString();
                 mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
-                if (!mInputDeviceKeys[row].equals(oldValue) && !mInputDeviceKeys[row].isEmpty()) {
+
+                // Do NOT disconnect if input has not changed, is empty or equals the connected device.
+                if (!mInputDeviceKeys[row].equals(oldValue) &&
+                    !mInputDeviceKeys[row].isEmpty()        &&
+                    !mConnections[row].isAllowedDevice( mInputDeviceKeys[row] ) )
+                {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
