@@ -583,9 +583,6 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // TODO: make the uploading failed stick (by persisting in KafkaDataSubmitter)
-                // Now immediately overwritten by Connected/Disconnected.
-                logger.info("UPF - New Server Status {}", status);
                 switch (status) {
                     case CONNECTED:
                         mServerStatusIcon.setBackgroundResource( R.drawable.status_connected );
@@ -613,16 +610,23 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
     {
-        String message = String.format("'%s' updated with %d records", keyNameTrigger, lastNumberOfRecordsSent.get(keyNameTrigger) );
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        int numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
+        String message;
+        if ( numberOfRecordsTrigger < 0 ) {
+            message = String.format("'%s' has failed uploading", keyNameTrigger);
+        } else {
+            message = String.format("'%s' updated with %d records", keyNameTrigger, numberOfRecordsTrigger);
+        }
 
-        mServerMessage.setText( message ); //String.format("Records sent since last update: %d", totalNumberOfRecords) );
+        mServerMessage.setText( message );
+        logger.info(message);
 
         int totalNumberOfRecords = 0;
         for(int numberOfRecords : lastNumberOfRecordsSent.values() ) {
             totalNumberOfRecords += numberOfRecords;
         }
-        logger.info("UPF - total records sent - {}", totalNumberOfRecords);
+
+        logger.info("UPF - total last number of records over every topic = {}", totalNumberOfRecords);
     }
 
     public void dialogInputDeviceName(final View v) {

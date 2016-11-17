@@ -8,7 +8,7 @@ public interface ServerStatusListener {
         CONNECTING, CONNECTED, DISCONNECTED, UPLOADING, DISABLED, READY, UPLOADING_FAILED
     }
 
-    // Besides status, also store the actual sent data.
+    // Besides status, also store the actual number of records send. -1 if failed to send records
     Map<String, Integer> lastNumberOfRecordsSent = new TreeMap<>();
 
     void updateServerStatus(Status status);

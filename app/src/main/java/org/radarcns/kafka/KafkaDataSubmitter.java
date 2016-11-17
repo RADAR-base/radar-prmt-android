@@ -39,6 +39,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
 
     // Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records
     private final static int SEND_LIMIT = 1000;
+    private boolean lastUploadFailed = false;
     private DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
     private final ScheduledExecutorService executor;
@@ -205,7 +206,9 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 connection.didConnect();
             }
         } catch (IOException ex) {
-            connection.didDisconnect(ex);
+            if (!lastUploadFailed) {
+                connection.didDisconnect(ex);
+            }
         }
     }
 
@@ -220,14 +223,17 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         if (numberOfRecords > 0) {
             KafkaTopicSender<K, V> cacheSender = sender(topic);
 
-            if (!uploadingNotified) {
+            if (! uploadingNotified ) {
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
             }
 
+            lastUploadFailed = false;
             try {
                 cacheSender.send(measurements);
             } catch (IOException ioe) {
+                lastUploadFailed = true;
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING_FAILED);
+                dataHandler.updateRecordsSent(topic.getName(), -1);
                 logger.info("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
                 throw ioe;
             }

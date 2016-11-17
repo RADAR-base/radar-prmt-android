@@ -315,8 +315,7 @@
                         android:layout_alignParentBottom="true"
                         android:textSize="18sp"
                         android:textStyle="italic"
-                        android:paddingStart="15dp"
-                        />
+                        android:paddingStart="15dp" />
 
                 </RelativeLayout>
 
