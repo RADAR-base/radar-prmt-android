@@ -290,31 +290,33 @@
                     android:id="@+id/serverLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_below="@id/horizontalScroll"
-                    android:gravity="center_horizontal">
+                    android:layout_below="@id/horizontalScroll">
 
                     <TextView
                         android:id="@+id/statusServerLabel"
                         style="@style/ServerStatusLabel"
                         android:text="@string/header_server_status"
-                        android:textColor="@android:color/background_dark"
-                        />
+                        android:layout_alignParentBottom="true"
+                        android:textColor="@android:color/background_dark" />
 
                     <View
                         android:id="@+id/statusServer"
                         style="@style/StatusCircle"
+                        android:layout_alignParentBottom="true"
                         android:layout_toEndOf="@id/statusServerLabel"
                         android:background="@drawable/status_disconnected"/>
 
                     <TextView
                         android:id="@+id/statusServerMessage"
                         style="@style/ServerStatusLabel"
+                        android:text="@string/emptyText"
                         android:layout_toEndOf="@id/statusServer"
-                        android:layout_alignBottom="@id/statusServer"
-                        android:text="TODO: warning message"
-                        android:textSize="18sp"
+                        android:layout_alignParentBottom="true"
+                        android:textSize="14sp"
                         android:textStyle="italic"
-                        android:paddingLeft="15dp"/>
+                        android:paddingStart="5dp"
+                        android:paddingEnd="0dp"
+                        android:fontFamily="monospace" />
 
                 </RelativeLayout>
 

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -43,6 +44,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     private final Set<ServerStatusListener> statusListeners;
     private final BroadcastReceiver connectivityReceiver;
     private ServerStatusListener.Status status;
+    private Map<String, Integer> lastNumberOfRecordsSent = new TreeMap<>();
 
     private KafkaDataSubmitter<MeasurementKey, SpecificRecord> submitter;
 
@@ -227,6 +229,23 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     public ServerStatusListener.Status getStatus() {
         synchronized (statusListeners) {
             return this.status;
+        }
+    }
+
+    @Override
+    public void updateRecordsSent(String topicName, int numberOfRecords) {
+        synchronized (statusListeners) {
+            for (ServerStatusListener listener : statusListeners) {
+                listener.updateRecordsSent(topicName, numberOfRecords);
+            }
+            // Overwrite key-value if exists. Only stores the last
+            this.lastNumberOfRecordsSent.put(topicName, numberOfRecords );
+        }
+    }
+
+    public Map<String, Integer> getRecordsSent() {
+        synchronized (statusListeners) {
+            return this.lastNumberOfRecordsSent;
         }
     }
 }

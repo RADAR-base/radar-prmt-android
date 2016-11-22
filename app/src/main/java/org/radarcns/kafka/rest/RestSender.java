@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -40,7 +41,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     private final AvroEncoder keyEncoder;
     private final AvroEncoder valueEncoder;
     private final JsonFactory jsonFactory;
-    private final OkHttpClient httpClient;
+    private OkHttpClient httpClient;
     public final static String KAFKA_REST_ACCEPT_ENCODING = "application/vnd.kafka.v1+json, application/vnd.kafka+json, application/json";
     public final static MediaType KAFKA_REST_AVRO_ENCODING = MediaType.parse("application/vnd.kafka.avro.v1+json; charset=utf-8");
     private final Request isConnectedRequest;
@@ -59,7 +60,14 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
             throw new IllegalArgumentException("Schemaless topics do not have a valid URL");
         }
         jsonFactory = new JsonFactory();
-        httpClient = new OkHttpClient();
+
+        // Default timeout is 10 seconds.
+        httpClient = new OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .build();
+
         isConnectedRequest = new Request.Builder().url(kafkaUrl).head().build();
     }
 

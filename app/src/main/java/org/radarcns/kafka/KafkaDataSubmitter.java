@@ -1,5 +1,6 @@
 package org.radarcns.kafka;
 
+import org.radarcns.android.TableDataHandler;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.util.ListPool;
@@ -35,7 +36,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
-    private final static int SEND_LIMIT = 5000;
+
+    // Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records
+    private final static int SEND_LIMIT = 1000;
+    private boolean lastUploadFailed = false;
     private DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
     private final ScheduledExecutorService executor;
@@ -202,7 +206,9 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 connection.didConnect();
             }
         } catch (IOException ex) {
-            connection.didDisconnect(ex);
+            if (!lastUploadFailed) {
+                connection.didDisconnect(ex);
+            }
         }
     }
 
@@ -216,14 +222,32 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
 
         if (numberOfRecords > 0) {
             KafkaTopicSender<K, V> cacheSender = sender(topic);
-            if (!uploadingNotified) {
+
+            if (! uploadingNotified ) {
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING);
             }
-            cacheSender.send(measurements);
+
+            lastUploadFailed = false;
+            try {
+                cacheSender.send(measurements);
+            } catch (IOException ioe) {
+                lastUploadFailed = true;
+                dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING_FAILED);
+                dataHandler.updateRecordsSent(topic.getName(), -1);
+                logger.info("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
+                throw ioe;
+            }
+
             long lastOffset = cacheSender.getLastSentOffset();
             cache.markSent(lastOffset);
 
+            dataHandler.updateRecordsSent(topic.getName(), numberOfRecords);
+
             logger.debug("uploaded {} {} records", numberOfRecords, topic.getName());
+            if( topic.getName().equals( "android_empatica_e4_blood_volume_pulse" ) ){
+                Record<K,V> lastMeasurement = measurements.get( numberOfRecords-1 );
+                logger.info("UPF: {} sec. - {}", (int) lastMeasurement.milliTimeAdded/1000, lastMeasurement.value );
+            }
 
             if (lastOffset == measurements.get(numberOfRecords - 1).offset) {
                 cache.returnList(measurements);

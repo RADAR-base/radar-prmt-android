@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
@@ -173,6 +174,10 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
         } else {
             return ((DeviceServiceBinder)serviceBinder).getServerStatus();
         }
+    }
+
+    public Map<String, Integer> getServerSent() throws RemoteException {
+        return ((DeviceServiceBinder)serviceBinder).getServerRecordsSent();
     }
 
     public S getDeviceData() throws RemoteException {
