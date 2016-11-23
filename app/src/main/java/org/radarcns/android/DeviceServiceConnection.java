@@ -225,6 +225,9 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
      * @return
      */
     public boolean isAllowedDevice(String value) {
+        if ( getDeviceName() == null ) {
+            return false;
+        }
         return getDeviceName().contains(value);
     }
 
