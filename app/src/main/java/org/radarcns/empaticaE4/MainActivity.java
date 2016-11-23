@@ -615,7 +615,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
     {
-        int numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
+        // Default to 0 if number of records cannot be retrieved
+        int numberOfRecordsTrigger;
+        try {
+            numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
+        } catch ( NullPointerException npe) {
+            numberOfRecordsTrigger = 0;
+        }
 
         // Condensing the message
         keyNameTrigger = keyNameTrigger.replaceFirst("_?android_?","");
