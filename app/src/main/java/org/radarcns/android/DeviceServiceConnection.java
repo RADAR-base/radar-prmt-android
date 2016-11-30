@@ -219,7 +219,12 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     }
 
     public String getDeviceName() {
-        return deviceName;
+        if (isRemote) {
+            // return initial deviceName
+            return deviceName;
+        } else {
+            return ((DeviceServiceBinder)serviceBinder).getDeviceName();
+        }
     }
 
     /**
