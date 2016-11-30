@@ -177,6 +177,9 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     }
 
     public Map<String, Integer> getServerSent() throws RemoteException {
+        if (serviceBinder == null) {
+            return null;
+        }
         return ((DeviceServiceBinder)serviceBinder).getServerRecordsSent();
     }
 

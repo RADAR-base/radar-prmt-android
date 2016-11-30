@@ -35,14 +35,13 @@ class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, String[]
         String[] results = new String[params.length];
         for (int i = 0; i < params.length; i++) {
             try {
-                List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = params[i].getRecords(topic, 25);
+                List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = params[i].getRecords(topic, 2);
                 if (!measurements.isEmpty()) {
                     StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
                     for (Record<MeasurementKey, EmpaticaE4InterBeatInterval> measurement : measurements) {
-                        sb.append(timeFormat.format(1000d * measurement.value.getTime()));
-                        sb.append(": ");
-                        sb.append(singleDecimal.format(60d / measurement.value.getInterBeatInterval()));
-                        sb.append('\n');
+                        long diffTimeMillis = System.currentTimeMillis() - (long) (1000d * measurement.value.getTimeReceived());
+                        String hr = singleDecimal.format(60d / measurement.value.getInterBeatInterval());
+                        sb.append( String.format("%.1f sec. ago: %s bpm%n", (double) diffTimeMillis/1000, hr) );
                     }
                     results[i] = sb.toString();
                 } else {

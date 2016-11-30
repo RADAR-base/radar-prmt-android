@@ -119,7 +119,9 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
                         String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
-                        updateServerRecordsSent( triggerKey, lastNumberOfRecordsSent);
+                        if ( lastNumberOfRecordsSent != null ) {
+                            updateServerRecordsSent(triggerKey, lastNumberOfRecordsSent);
+                        }
                     } catch (RemoteException re) {
                         logger.warn( "Could not update the server records sent: {}", re.getMessage() );
                     }
@@ -494,7 +496,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void updateHeartRate(DeviceState deviceData, int row ) {
-            setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", singleDecimal);
+            setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
