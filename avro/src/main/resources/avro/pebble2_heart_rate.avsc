@@ -1,0 +1,11 @@
+{
+  "namespace": "org.radarcns.pebble2",
+  "type": "record",
+  "name": "Pebble2HeartRate",
+  "doc": "Raw heart rate from the Pebble 2 Heart Monitor. You can compute the inter beat interval rate as (60 / heartRate).",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "heartRate", "type": "float", "doc": "heart rate (bpm)"}
+  ]
+}
