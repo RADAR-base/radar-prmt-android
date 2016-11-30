@@ -9,6 +9,7 @@ import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.Boast;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -58,9 +59,9 @@ class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, String[]
     protected void onPostExecute(String[] strings) {
         for (String s : strings) {
             if (s == null) {
-                Toast.makeText(context, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
+                Boast.makeText(context, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, s, Toast.LENGTH_LONG).show();
+                Boast.makeText(context, s, Toast.LENGTH_LONG).show();
             }
         }
     }

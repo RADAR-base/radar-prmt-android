@@ -32,6 +32,7 @@ import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+                            Boast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -364,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
+                Boast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
                 switch (status) {
                     case CONNECTED:
                         break;
@@ -374,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
                         // Reject if device name inputted does not equal device nameA
                         if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
                             logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
-                            Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
+                            Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
                             // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
                             disconnect();
                         }
@@ -422,7 +423,7 @@ public class MainActivity extends AppCompatActivity {
                 startScanning();
             } else {
                 // User refused to grant permission.
-                Toast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
+                Boast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
             }
         }
     }
