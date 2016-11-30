@@ -49,6 +49,10 @@
                             <TextView
                                 style="@style/Header"
                                 android:text="@string/header_temp" />
+                            
+                            <TextView
+                                style="@style/Header"
+                                android:text="@string/header_hr" />
 
                             <TextView
                                 style="@style/Header"
@@ -96,6 +100,11 @@
 
                             <TextView
                                 android:id="@+id/temperatureRow1"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
+                            <TextView
+                                android:id="@+id/heartRateRow1"
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
 
@@ -155,6 +164,11 @@
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
 
+                            <TextView
+                                android:id="@+id/heartRateRow2"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow2"
                                 style="@style/ButtonDeviceKeyColumn"
@@ -210,6 +224,11 @@
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
 
+                            <TextView
+                                android:id="@+id/heartRateRow3"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow3"
                                 style="@style/ButtonDeviceKeyColumn"
@@ -265,6 +284,11 @@
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
 
+                            <TextView
+                                android:id="@+id/heartRateRow4"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow4"
                                 style="@style/ButtonDeviceKeyColumn"
@@ -295,6 +319,7 @@
                         <TextView
                             android:id="@+id/statusServerLabel"
                             style="@style/ServerStatusLabel"
+                            android:layout_marginEnd="11dp"
                             android:text="@string/header_server_status"
                             android:layout_alignParentBottom="true"
                             android:textColor="@android:color/background_dark" />
@@ -302,6 +327,7 @@
                         <View
                             android:id="@+id/statusServer"
                             style="@style/StatusCircle"
+                            android:layout_margin="0dp"
                             android:layout_alignParentBottom="true"
                             android:layout_toEndOf="@id/statusServerLabel"
                             android:background="@drawable/status_disconnected"/>
@@ -310,6 +336,7 @@
                             android:id="@+id/statusServerMessage"
                             style="@style/ServerStatusLabel"
                             android:text="@string/emptyText"
+                            android:layout_marginStart="11dp"
                             android:layout_toEndOf="@id/statusServer"
                             android:layout_alignParentBottom="true"
                             android:textSize="14sp"

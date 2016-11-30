@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private View mServerStatusIcon;
     private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
+    private TextView[] mHeartRateLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
@@ -188,6 +189,13 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.temperatureRow2),
                 (TextView) findViewById(R.id.temperatureRow3),
                 (TextView) findViewById(R.id.temperatureRow4)
+        };
+
+        mHeartRateLabels = new TextView[] {
+                (TextView) findViewById(R.id.heartRateRow1),
+                (TextView) findViewById(R.id.heartRateRow2),
+                (TextView) findViewById(R.id.heartRateRow3),
+                (TextView) findViewById(R.id.heartRateRow4)
         };
 
         mBatteryLabels = new ImageView[] {
@@ -453,20 +461,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             for (int i = 0; i < mConnections.length; i++) {
-                updateRow(deviceData[i], i);
+                // Update all fields
+                updateDeviceStatus(deviceData[i], i);
+                updateTemperature(deviceData[i], i);
+                updateHeartRate(deviceData[i], i);
+                updateBattery(deviceData[i], i);
                 updateDeviceName(deviceNames[i], i);
             }
-        }
-
-        /**
-         * Updates a row with the deviceData
-         * @param deviceData    data to update with
-         * @param row           Row number
-         */
-        public void updateRow(DeviceState deviceData, int row ) {
-            updateDeviceStatus(deviceData, row);
-            updateTemperature(deviceData, row);
-            updateBattery(deviceData, row);
         }
 
         public void updateDeviceStatus(DeviceState deviceData, int row ) {
@@ -490,6 +491,10 @@ public class MainActivity extends AppCompatActivity {
         public void updateTemperature(DeviceState deviceData, int row ) {
             // \u2103 == ℃
             setText(mTemperatureLabels[row], deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
+        }
+
+        public void updateHeartRate(DeviceState deviceData, int row ) {
+            setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", singleDecimal);
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
@@ -516,12 +521,8 @@ public class MainActivity extends AppCompatActivity {
 
         public void updateDeviceName(String deviceName, int row) {
             // TODO: restrict n_characters of deviceName
-            if (deviceName == null) {
-                // \u2014 == —
-                mDeviceNameLabels[row].setText("\u2014");
-            } else {
-                mDeviceNameLabels[row].setText(deviceName);
-            }
+            // \u2014 == —
+            mDeviceNameLabels[row].setText(deviceName == null ? "\u2014" : deviceName);
         }
 
         private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
@@ -534,7 +535,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
 
     public void connectDevice(View v) {
         int rowIndex = getRowIndexFromView(v);
