@@ -119,7 +119,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         synchronized (this) {
             latestStartId = startId;
         }
-        onInvocation(intent);
+        if (intent != null) {
+            onInvocation(intent);
+        }
         // If we get killed, after returning from here, restart
         return START_STICKY;
     }
