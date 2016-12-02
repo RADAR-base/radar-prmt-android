@@ -18,7 +18,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.appcompat.BuildConfig;
 import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
@@ -27,6 +26,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
+    long remoteConfigCacheExpiration = 3600; // expire cache every hour by default
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -183,8 +185,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_overview);
+        initializeViews();
+        initializeRemoteConfig();
 
-        // Create arrays of labels. Fixed to four rows
+        // Start the UI thread
+        uiRefreshRate = mFirebaseRemoteConfig.getLong("ui_refresh_rate");
+        mUIUpdater = new DeviceUIUpdater();
+        mUIScheduler = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Update all rows in the UI with the data from the connections
+                    mUIUpdater.update();
+                } catch (RemoteException e) {
+                    logger.warn("Failed to update device data", e);
+                } finally {
+                    getHandler().postDelayed(mUIScheduler, uiRefreshRate);
+                }
+            }
+        };
+
+        checkBluetoothPermissions();
+
+    }
+
+    private void initializeViews() {
+        // The columns, fixed to four rows.
         mDeviceNameLabels = new TextView[] {
                 (TextView) findViewById(R.id.deviceNameRow1),
                 (TextView) findViewById(R.id.deviceNameRow2),
@@ -198,9 +224,6 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.statusRow3),
                 findViewById(R.id.statusRow4)
         };
-
-        mServerStatusIcon = findViewById(R.id.statusServer);
-        mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
 
         mTemperatureLabels = new TextView[] {
                 (TextView) findViewById(R.id.temperatureRow1),
@@ -230,33 +253,45 @@ public class MainActivity extends AppCompatActivity {
                 (Button) findViewById(R.id.inputDeviceNameButtonRow4)
         };
 
-        uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
+        // Server
+        mServerStatusIcon = findViewById(R.id.statusServer);
+        mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
+    }
 
-        mUIUpdater = new DeviceUIUpdater();
-        mUIScheduler = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Update all rows in the UI with the data from the connections
-                    mUIUpdater.update();
-                } catch (RemoteException e) {
-                    logger.warn("Failed to update device data", e);
-                } finally {
-                    getHandler().postDelayed(mUIScheduler, uiRefreshRate);
-                }
-            }
-        };
-
-        checkBluetoothPermissions();
-
+    private void initializeRemoteConfig() {
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
         FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(true)
+                .setDeveloperModeEnabled(true) // TODO: disable developer mode in production
                 .build();
         mFirebaseRemoteConfig.setConfigSettings(configSettings);
 
         mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
+    }
+
+    public void fetchAndActivateRemoteConfig() {
+        // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
+        // the server.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            remoteConfigCacheExpiration = 0;
+        }
+
+        // Fetch and activate if fetch completed successfully
+        mFirebaseRemoteConfig.fetch(remoteConfigCacheExpiration)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Once the config is successfully fetched it must be
+                            // activated before newly fetched values are returned.
+                            mFirebaseRemoteConfig.activateFetched();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Remote Config Fetch Failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                });
     }
 
     @Override
@@ -590,12 +625,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /** START Firebase Remote Config testing **/
-        logger.info( "Before fetching: {}", mFirebaseRemoteConfig.getLong("price") );
+        logger.info( "Remote Config will be fetched and activated. ui_refresh_rate = {}", mFirebaseRemoteConfig.getLong("ui_refresh_rate") );
 
-        mFirebaseRemoteConfig.fetch();
-        mFirebaseRemoteConfig.activateFetched();
+        fetchAndActivateRemoteConfig();
 
-        logger.info( "After fetching: {}", mFirebaseRemoteConfig.getLong("price") );
         /** END Firebase Remote Config testing **/
     }
 

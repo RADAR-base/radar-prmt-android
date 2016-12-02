@@ -1,6 +1,7 @@
-# Ignore the file with the api key
+# Ignore the file with the default settings key
 app/src/main/res/values/apikey.xml
 app/src/main/res/values/server.xml
+app/src/main/res/xml/remote_config_defaults.xml
 
 # Local configuration file
 local.properties
