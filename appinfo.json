@@ -1,0 +1,21 @@
+{
+  "uuid": "3aa643c5-acd4-4897-9213-5e6812da3857",
+  "shortName": "RADAR-CNS",
+  "longName": "RADAR-CNS",
+  "companyName": "The Hyve",
+  "versionCode": 1,
+  "versionLabel": "0.1",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {},
+  "resources": {
+    "media": []
+  },
+  "targetPlatforms": [
+    "aplite",
+    "basalt",
+    "chalk"
+  ],
+  "sdkVersion": "3"
+}
