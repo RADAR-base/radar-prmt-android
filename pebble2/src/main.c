@@ -12,6 +12,37 @@ static DataLoggingSessionRef acceleration_session_ref;
 
 static Acceleration *accel_data;
 
+static void prv_on_health_data(HealthEventType type, void *context) {
+  // If the update was from the Heart Rate Monitor, query it
+  if (type == HealthEventHeartRateUpdate) {
+    HeartRate heartRate;
+
+    time_t t_s;
+    uint16_t t_ms;
+    time_ms(&t_s, &t_ms);
+    heartRate.time = 1000L * t_s + t_ms; // milliseconds
+
+    heartRate.heartRate = health_service_peek_current_value(HealthMetricHeartRateBPM);
+    data_logging_log(heart_rate_filtered_session_ref, &heartRate, 1);
+
+    heartRate.heartRate = health_service_peek_current_value(HealthMetricHeartRateRawBPM);
+    data_logging_log(heart_rate_session_ref, &heartRate, 1);
+  }
+}
+
+static void handle_battery(BatteryChargeState charge_state) {
+  BatteryLevel level;
+  time_t t_s;
+  uint16_t t_ms;
+  time_ms(&t_s, &t_ms);
+  level.time = 1000L * t_s + t_ms; // milliseconds
+
+  level.batteryLevel = charge_state.charge_percent;
+  level.isCharging = charge_state.is_charging;
+  level.isPlugged = charge_state.is_plugged;
+  data_logging_log(battery_level_session_ref, &level, 1);
+}
+
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
   // copy a variable-length acceleration data batch to our own data structure with fixed length
   for (uint32_t i = 0; i < num_samples; i++) {
@@ -65,11 +96,15 @@ static void init(void) {
   window_stack_push(s_main_window, true);
 
   accel_data_service_subscribe(25, accel_data_handler);
+  health_service_events_subscribe(prv_on_health_data, NULL);
+  handle_battery(battery_state_service_peek());
+  battery_state_service_subscribe(handle_battery);
 }
 
 static void deinit(void) {
   accel_data_service_unsubscribe();
-
+  health_service_events_unsubscribe();
+  battery_state_service_unsubscribe();
   window_destroy(s_main_window);
 }
 

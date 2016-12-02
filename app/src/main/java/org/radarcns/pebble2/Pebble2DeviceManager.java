@@ -93,7 +93,7 @@ class Pebble2DeviceManager implements DeviceManager {
                         }
                         break;
                     case HEART_RATE_LOG:
-                        float heartRate = Serialization.bytesToShort(data, 8);
+                        float heartRate = Serialization.bytesToInt(data, 8);
                         dataHandler.addMeasurement(heartRateTable, deviceId, new Pebble2HeartRate(time, timeReceived, heartRate));
                         break;
                     case HEART_RATE_FILTERED_LOG:

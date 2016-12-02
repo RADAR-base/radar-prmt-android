@@ -25,5 +25,5 @@ typedef struct BatteryLevel {
 
 typedef struct HeartRate {
   uint64_t time;
-  uint16_t heartRate;
+  uint32_t heartRate;
 } HeartRate;
