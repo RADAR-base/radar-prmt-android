@@ -3,6 +3,7 @@ package org.radarcns.kafka;
 import org.radarcns.android.TableDataHandler;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
+import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.util.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -75,7 +76,9 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             }
         });
 
-        // Upload very frequently.
+        // Get upload frequency from system property
+        long uploadPeriod = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_PERIOD ) );
+        logger.info("Upload period is '{}'", uploadPeriod);
         executor.scheduleAtFixedRate(new Runnable() {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
             @Override
@@ -93,7 +96,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                     topicsToSend.clear();
                 }
             }
-        }, 10L, 10L, TimeUnit.SECONDS);
+        }, uploadPeriod, uploadPeriod, TimeUnit.SECONDS);
 
         // Remove old data from tables infrequently
         executor.scheduleAtFixedRate(new Runnable() {

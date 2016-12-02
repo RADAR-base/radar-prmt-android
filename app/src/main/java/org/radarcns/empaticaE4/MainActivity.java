@@ -94,13 +94,14 @@ public class MainActivity extends AppCompatActivity {
 
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
-    private FirebaseRemoteConfig mFirebaseRemoteConfig;
-    long remoteConfigCacheExpiration = 3600; // expire cache every hour by default
-    private static final String KAFKA_REST_PROXY_KEY = "kafka_rest_proxy_url";
-    private static final String SCHEMA_REGISTRY_KEY = "schema_registry_url";
-    private static final String DEVICE_GROUP_ID = "device_group_id";
-    private static final String EMPATICA_API_KEY = "empatica_api_key";
-    private static final String UI_REFRESH_RATE = "ui_refresh_rate";
+    public FirebaseRemoteConfig mFirebaseRemoteConfig;
+    private long remoteConfigCacheExpiration = 3600; // expire cache every hour by default
+    public static final String KAFKA_REST_PROXY_KEY = "kafka_rest_proxy_url";
+    public static final String SCHEMA_REGISTRY_KEY = "schema_registry_url";
+    public static final String DEVICE_GROUP_ID = "device_group_id";
+    public static final String EMPATICA_API_KEY = "empatica_api_key";
+    public static final String UI_REFRESH_RATE = "ui_refresh_rate";
+    public static final String KAFKA_UPLOAD_PERIOD = "kafka_upload_period";
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -192,6 +193,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_overview);
         initializeViews();
         initializeRemoteConfig();
+
+        // Update remote config and set system property.
+        fetchAndActivateRemoteConfig();
+        System.setProperty( KAFKA_UPLOAD_PERIOD, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_UPLOAD_PERIOD) ) );
 
         // Start the UI thread
         uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE);
@@ -628,13 +633,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        /** START Firebase Remote Config testing **/
-        logger.info( "Remote Config will be fetched and activated. ui_refresh_rate = {}", mFirebaseRemoteConfig.getLong("ui_refresh_rate") );
-
-        fetchAndActivateRemoteConfig();
-
-        /** END Firebase Remote Config testing **/
     }
 
     private int getRowIndexFromView(View v) {
