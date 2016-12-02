@@ -29,24 +29,27 @@ android {
 
 dependencies {
     // logging
-    compile 'org.slf4j:slf4j-android:1.7.21'
-    compile 'com.loopj.android:android-async-http:1.4.6'
-    compile 'com.google.android.gms:play-services-appindexing:9.6.1'
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.squareup.okhttp3:okhttp:3.4.1'
-    compile 'org.apache.avro:avro:1.7.7'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
-    compile ('io.confluent:kafka-avro-serializer:3.0.1') {
+    compile('io.confluent:kafka-avro-serializer:3.0.1') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
         exclude group: 'log4j'
         exclude group: 'jline'
     }
     // needed to work with testCompile -> kafka-clients
-    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
     compile 'com.getpebble:pebblekit:4.0.0'
     compile project(':empalink-2.0')
     compile project(':avro')
+    compile 'org.slf4j:slf4j-android:1.7.21'
+    compile 'com.loopj.android:android-async-http:1.4.6'
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.squareup.okhttp3:okhttp:3.4.1'
+    compile 'org.apache.avro:avro:1.7.7'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
+    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
+    compile 'com.google.firebase:firebase-config:10.0.1'
     testCompile 'org.apache.kafka:kafka-clients:0.10.0.1'
     testCompile 'junit:junit:4.12'
     testCompile 'org.slf4j:slf4j-simple:1.7.21'
 }
+
+
+apply plugin: 'com.google.gms.google-services'

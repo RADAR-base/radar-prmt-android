@@ -18,6 +18,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.appcompat.BuildConfig;
 import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
@@ -25,6 +26,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
@@ -88,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
     private String[] mInputDeviceKeys = new String[4];
 
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
+
+    private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -242,6 +248,15 @@ public class MainActivity extends AppCompatActivity {
         };
 
         checkBluetoothPermissions();
+
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(true)
+                .build();
+        mFirebaseRemoteConfig.setConfigSettings(configSettings);
+
+        mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
     }
 
     @Override
@@ -573,6 +588,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        /** START Firebase Remote Config testing **/
+        logger.info( "Before fetching: {}", mFirebaseRemoteConfig.getLong("price") );
+
+        mFirebaseRemoteConfig.fetch();
+        mFirebaseRemoteConfig.activateFetched();
+
+        logger.info( "After fetching: {}", mFirebaseRemoteConfig.getLong("price") );
+        /** END Firebase Remote Config testing **/
     }
 
     private int getRowIndexFromView(View v) {
