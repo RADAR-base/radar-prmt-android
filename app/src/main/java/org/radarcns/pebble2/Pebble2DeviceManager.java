@@ -80,13 +80,20 @@ class Pebble2DeviceManager implements DeviceManager {
                 double timeReceived = System.currentTimeMillis() / 1000d;
                 switch (tag.intValue()) {
                     case ACCELERATION_LOG:
-                        float x = Serialization.bytesToShort(data, 8);
-                        float y = Serialization.bytesToShort(data, 10);
-                        float z = Serialization.bytesToShort(data, 12);
-                        dataHandler.addMeasurement(accelerationTable, deviceId, new Pebble2Acceleration(time, timeReceived, x, y, z));
+                        for (int i = 0; i < 25; i++) {
+                            long timeLong = Serialization.bytesToLong(data, i*14);
+                            if (timeLong == 0) {
+                                continue;
+                            }
+                            time = timeLong / 1000d;
+                            float x = Serialization.bytesToShort(data, i*14 + 8);
+                            float y = Serialization.bytesToShort(data, i*14 + 10);
+                            float z = Serialization.bytesToShort(data, i*14 + 12);
+                            dataHandler.addMeasurement(accelerationTable, deviceId, new Pebble2Acceleration(time, timeReceived, x, y, z));
+                        }
                         break;
                     case HEART_RATE_LOG:
-                        float heartRate = Serialization.bytesToInt(data, 8);
+                        float heartRate = Serialization.bytesToShort(data, 8);
                         dataHandler.addMeasurement(heartRateTable, deviceId, new Pebble2HeartRate(time, timeReceived, heartRate));
                         break;
                     case HEART_RATE_FILTERED_LOG:
