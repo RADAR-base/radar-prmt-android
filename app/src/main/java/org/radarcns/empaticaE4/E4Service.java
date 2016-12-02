@@ -64,7 +64,7 @@ public class E4Service extends DeviceService {
         if (apiKey == null) {
             apiKey = intent.getStringExtra("empatica_api_key");
             logger.info("Using API key {}", apiKey);
-            groupId = intent.getStringExtra("group_id");
+            groupId = intent.getStringExtra("device_group_id");
         }
     }
 }

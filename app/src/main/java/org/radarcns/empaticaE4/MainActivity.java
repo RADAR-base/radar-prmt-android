@@ -96,16 +96,21 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     long remoteConfigCacheExpiration = 3600; // expire cache every hour by default
+    private static final String KAFKA_REST_PROXY_KEY = "kafka_rest_proxy_url";
+    private static final String SCHEMA_REGISTRY_KEY = "schema_registry_url";
+    private static final String DEVICE_GROUP_ID = "device_group_id";
+    private static final String EMPATICA_API_KEY = "empatica_api_key";
+    private static final String UI_REFRESH_RATE = "ui_refresh_rate";
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
         public void run() {
             if (!mConnectionIsBound[0]) {
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-                e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-                e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-                e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+                e4serviceIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
+                e4serviceIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
+                e4serviceIntent.putExtra( DEVICE_GROUP_ID, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID) );
+                e4serviceIntent.putExtra( EMPATICA_API_KEY, mFirebaseRemoteConfig.getString(EMPATICA_API_KEY) ); // getString(R.string.apikey) );//
 
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
@@ -189,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
         initializeRemoteConfig();
 
         // Start the UI thread
-        uiRefreshRate = mFirebaseRemoteConfig.getLong("ui_refresh_rate");
+        uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE);
         mUIUpdater = new DeviceUIUpdater();
         mUIScheduler = new Runnable() {
             @Override

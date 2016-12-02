@@ -9,10 +9,12 @@ First, request an Empatica API key for your Empatica Connect account from our [D
 
 - Clone / download this repository.
 - Copy the empalink-2.0.aar from the Empatica Android SDK package to the `empalink-2.0` directory.
-- Edit the `apikey.xml` file and enter your Empatica API key in the apikey xml element.
-- Edit the `server.xml` file and add the URLs of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.
-- Move the `apikey.xml` and `server.xml` files to the `app/src/main/res/values/` directory.
-- Edit the `app/src/main/res/values/device.xml` file by setting the `group_id` string to a suitable user ID.
+- Connect Firebase Remote Config #TODO
+- Edit the app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml file
+	- Set your Empatica API key in the empatica_api_key xml element.
+ 	- Set the URLS of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.
+	- Set the device_group_id string to a suitable user ID.
+- Rename the file to remote_config_defaults.xml to use this as the default.
 - Compile the project with `./gradlew build`.
 - Open the project in Android Studio.
 - Launch the application. Note that the application only runs on an ARM architecture

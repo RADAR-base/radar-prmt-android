@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="kafka_rest_proxy_url"></string>
-    <string name="schema_registry_url"></string>
-</resources>

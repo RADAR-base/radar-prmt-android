@@ -2,7 +2,7 @@
 <!-- START xml_defaults -->
 <defaultsMap>
     <entry>
-        <key>api_key</key>
+        <key>empatica_api_key</key>
         <value></value>
     </entry>
     <entry>
@@ -11,6 +11,10 @@
     </entry>
     <entry>
         <key>schema_registry_url</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>device_group_id</key>
         <value></value>
     </entry>
     <entry>
