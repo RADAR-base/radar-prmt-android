@@ -8,7 +8,7 @@ package org.radarcns.pebble2;
 /** Device battery level. */
 @org.apache.avro.specific.AvroGenerated
 public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2BatteryLevel\",\"namespace\":\"org.radarcns.pebble2\",\"doc\":\"Device battery level.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"batteryLevel\",\"type\":\"float\",\"doc\":\"battery level from 0 to 1\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2BatteryLevel\",\"namespace\":\"org.radarcns.pebble2\",\"doc\":\"Device battery level.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"batteryLevel\",\"type\":\"float\",\"doc\":\"battery level from 0 to 1\"},{\"name\":\"batteryIsCharging\",\"type\":\"boolean\",\"doc\":\"whether the battery is being charged\"},{\"name\":\"batteryIsPlugged\",\"type\":\"boolean\",\"doc\":\"whether the battery charger cable is plugged in\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -16,6 +16,10 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
   @Deprecated public double timeReceived;
   /** battery level from 0 to 1 */
   @Deprecated public float batteryLevel;
+  /** whether the battery is being charged */
+  @Deprecated public boolean batteryIsCharging;
+  /** whether the battery charger cable is plugged in */
+  @Deprecated public boolean batteryIsPlugged;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -27,10 +31,12 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
   /**
    * All-args constructor.
    */
-  public Pebble2BatteryLevel(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float batteryLevel) {
+  public Pebble2BatteryLevel(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float batteryLevel, java.lang.Boolean batteryIsCharging, java.lang.Boolean batteryIsPlugged) {
     this.time = time;
     this.timeReceived = timeReceived;
     this.batteryLevel = batteryLevel;
+    this.batteryIsCharging = batteryIsCharging;
+    this.batteryIsPlugged = batteryIsPlugged;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -40,6 +46,8 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     case 0: return time;
     case 1: return timeReceived;
     case 2: return batteryLevel;
+    case 3: return batteryIsCharging;
+    case 4: return batteryIsPlugged;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -50,6 +58,8 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
     case 2: batteryLevel = (java.lang.Float)value$; break;
+    case 3: batteryIsCharging = (java.lang.Boolean)value$; break;
+    case 4: batteryIsPlugged = (java.lang.Boolean)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -99,6 +109,36 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     this.batteryLevel = value;
   }
 
+  /**
+   * Gets the value of the 'batteryIsCharging' field.
+   * whether the battery is being charged   */
+  public java.lang.Boolean getBatteryIsCharging() {
+    return batteryIsCharging;
+  }
+
+  /**
+   * Sets the value of the 'batteryIsCharging' field.
+   * whether the battery is being charged   * @param value the value to set.
+   */
+  public void setBatteryIsCharging(java.lang.Boolean value) {
+    this.batteryIsCharging = value;
+  }
+
+  /**
+   * Gets the value of the 'batteryIsPlugged' field.
+   * whether the battery charger cable is plugged in   */
+  public java.lang.Boolean getBatteryIsPlugged() {
+    return batteryIsPlugged;
+  }
+
+  /**
+   * Sets the value of the 'batteryIsPlugged' field.
+   * whether the battery charger cable is plugged in   * @param value the value to set.
+   */
+  public void setBatteryIsPlugged(java.lang.Boolean value) {
+    this.batteryIsPlugged = value;
+  }
+
   /** Creates a new Pebble2BatteryLevel RecordBuilder */
   public static org.radarcns.pebble2.Pebble2BatteryLevel.Builder newBuilder() {
     return new org.radarcns.pebble2.Pebble2BatteryLevel.Builder();
@@ -123,6 +163,8 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     private double time;
     private double timeReceived;
     private float batteryLevel;
+    private boolean batteryIsCharging;
+    private boolean batteryIsPlugged;
 
     /** Creates a new Builder */
     private Builder() {
@@ -144,6 +186,14 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
         this.batteryLevel = data().deepCopy(fields()[2].schema(), other.batteryLevel);
         fieldSetFlags()[2] = true;
       }
+      if (isValidValue(fields()[3], other.batteryIsCharging)) {
+        this.batteryIsCharging = data().deepCopy(fields()[3].schema(), other.batteryIsCharging);
+        fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.batteryIsPlugged)) {
+        this.batteryIsPlugged = data().deepCopy(fields()[4].schema(), other.batteryIsPlugged);
+        fieldSetFlags()[4] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing Pebble2BatteryLevel instance */
@@ -160,6 +210,14 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
       if (isValidValue(fields()[2], other.batteryLevel)) {
         this.batteryLevel = data().deepCopy(fields()[2].schema(), other.batteryLevel);
         fieldSetFlags()[2] = true;
+      }
+      if (isValidValue(fields()[3], other.batteryIsCharging)) {
+        this.batteryIsCharging = data().deepCopy(fields()[3].schema(), other.batteryIsCharging);
+        fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.batteryIsPlugged)) {
+        this.batteryIsPlugged = data().deepCopy(fields()[4].schema(), other.batteryIsPlugged);
+        fieldSetFlags()[4] = true;
       }
     }
 
@@ -235,6 +293,54 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
       return this;
     }
 
+    /** Gets the value of the 'batteryIsCharging' field */
+    public java.lang.Boolean getBatteryIsCharging() {
+      return batteryIsCharging;
+    }
+    
+    /** Sets the value of the 'batteryIsCharging' field */
+    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setBatteryIsCharging(boolean value) {
+      validate(fields()[3], value);
+      this.batteryIsCharging = value;
+      fieldSetFlags()[3] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'batteryIsCharging' field has been set */
+    public boolean hasBatteryIsCharging() {
+      return fieldSetFlags()[3];
+    }
+    
+    /** Clears the value of the 'batteryIsCharging' field */
+    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearBatteryIsCharging() {
+      fieldSetFlags()[3] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'batteryIsPlugged' field */
+    public java.lang.Boolean getBatteryIsPlugged() {
+      return batteryIsPlugged;
+    }
+    
+    /** Sets the value of the 'batteryIsPlugged' field */
+    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setBatteryIsPlugged(boolean value) {
+      validate(fields()[4], value);
+      this.batteryIsPlugged = value;
+      fieldSetFlags()[4] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'batteryIsPlugged' field has been set */
+    public boolean hasBatteryIsPlugged() {
+      return fieldSetFlags()[4];
+    }
+    
+    /** Clears the value of the 'batteryIsPlugged' field */
+    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearBatteryIsPlugged() {
+      fieldSetFlags()[4] = false;
+      return this;
+    }
+
     @Override
     public Pebble2BatteryLevel build() {
       try {
@@ -242,6 +348,8 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
         record.batteryLevel = fieldSetFlags()[2] ? this.batteryLevel : (java.lang.Float) defaultValue(fields()[2]);
+        record.batteryIsCharging = fieldSetFlags()[3] ? this.batteryIsCharging : (java.lang.Boolean) defaultValue(fields()[3]);
+        record.batteryIsPlugged = fieldSetFlags()[4] ? this.batteryIsPlugged : (java.lang.Boolean) defaultValue(fields()[4]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

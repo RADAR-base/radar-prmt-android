@@ -14,18 +14,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A service that manages a E4DeviceManager and a TableDataHandler to send store the data of an
- * Empatica E4 and send it to a Kafka REST proxy.
+ * A service that manages a E4DeviceManager and a TableDataHandler to send store the data of a
+ * Pebble 2 and send it to a Kafka REST proxy.
  */
 public class Pebble2Service extends DeviceService {
     private final static Logger logger = LoggerFactory.getLogger(Pebble2Service.class);
     private Pebble2Topics topics;
-    private String apiKey;
     private String groupId;
 
     @Override
     public void onCreate() {
-        logger.info("Creating E4 service {}", this);
+        logger.info("Creating Pebble2 service {}", this);
         super.onCreate();
 
         topics = Pebble2Topics.getInstance();
@@ -33,7 +32,7 @@ public class Pebble2Service extends DeviceService {
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new Pebble2DeviceManager(this, this, apiKey, groupId, getDataHandler(), topics);
+        return new Pebble2DeviceManager(this, this, groupId, getDataHandler(), topics);
     }
 
     @Override
@@ -52,18 +51,15 @@ public class Pebble2Service extends DeviceService {
     @Override
     protected AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics() {
         return new AvroTopic[] {
-                topics.getAccelerationTopic(), topics.getBloodVolumePulseTopic(),
-                topics.getElectroDermalActivityTopic(), topics.getInterBeatIntervalTopic(),
-                topics.getTemperatureTopic(), topics.getSensorStatusTopic()
+                topics.getAccelerationTopic(), topics.getHeartRateTopic(),
+                topics.getHeartRateFilteredTopic()
         };
     }
 
     @Override
     protected void onInvocation(Intent intent) {
         super.onInvocation(intent);
-        if (apiKey == null) {
-            apiKey = intent.getStringExtra("empatica_api_key");
-            logger.info("Using API key {}", apiKey);
+        if (groupId == null) {
             groupId = intent.getStringExtra("group_id");
         }
     }

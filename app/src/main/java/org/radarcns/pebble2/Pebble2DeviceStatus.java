@@ -7,6 +7,7 @@ import com.empatica.empalink.config.EmpaSensorType;
 
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.util.Serialization;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -18,11 +19,10 @@ public class Pebble2DeviceStatus implements DeviceState {
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
-    private float bloodVolumePulse = Float.NaN;
-    private float electroDermalActivity = Float.NaN;
-    private float interBeatInterval = Float.NaN;
-    private float temperature = Float.NaN;
-    private final Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = new EnumMap<>(EmpaSensorType.class);
+    private Boolean batteryIsCharging = null;
+    private Boolean batteryIsPlugged = null;
+    private float heartRate = Float.NaN;
+    private float heartRateFiltered = Float.NaN;
 
     @Override
     public int describeContents() {
@@ -36,15 +36,10 @@ public class Pebble2DeviceStatus implements DeviceState {
         dest.writeFloat(this.acceleration[1]);
         dest.writeFloat(this.acceleration[2]);
         dest.writeFloat(this.batteryLevel);
-        dest.writeFloat(this.bloodVolumePulse);
-        dest.writeFloat(this.electroDermalActivity);
-        dest.writeFloat(this.interBeatInterval);
-        dest.writeFloat(this.temperature);
-        dest.writeInt(sensorStatus.size());
-        for (Map.Entry<EmpaSensorType, EmpaSensorStatus> sensor : sensorStatus.entrySet()) {
-            dest.writeInt(sensor.getKey().ordinal());
-            dest.writeInt(sensor.getValue().ordinal());
-        }
+        dest.writeByte(Serialization.booleanToByte(batteryIsCharging));
+        dest.writeByte(Serialization.booleanToByte(batteryIsPlugged));
+        dest.writeFloat(this.heartRate);
+        dest.writeFloat(this.heartRateFiltered);
     }
 
     public static final Creator<Pebble2DeviceStatus> CREATOR = new Creator<Pebble2DeviceStatus>() {
@@ -55,14 +50,10 @@ public class Pebble2DeviceStatus implements DeviceState {
             result.acceleration[1] = in.readFloat();
             result.acceleration[2] = in.readFloat();
             result.batteryLevel = in.readFloat();
-            result.bloodVolumePulse = in.readFloat();
-            result.electroDermalActivity = in.readFloat();
-            result.interBeatInterval = in.readFloat();
-            result.temperature = in.readFloat();
-            int numSensors = in.readInt();
-            for (int i = 0; i < numSensors; i++) {
-                result.sensorStatus.put(EmpaSensorType.values()[in.readInt()], EmpaSensorStatus.values()[in.readInt()]);
-            }
+            result.batteryIsCharging = Serialization.byteToBoolean(in.readByte());
+            result.batteryIsPlugged = Serialization.byteToBoolean(in.readByte());
+            result.heartRate = in.readFloat();
+            result.heartRateFiltered = in.readFloat();
             return result;
         }
 
@@ -86,41 +77,13 @@ public class Pebble2DeviceStatus implements DeviceState {
         return batteryLevel;
     }
 
-    public synchronized void setBatteryLevel(float batteryLevel) {
-        this.batteryLevel = batteryLevel;
-    }
-
-    public float getBloodVolumePulse() {
-        return bloodVolumePulse;
-    }
-
-    public synchronized void setBloodVolumePulse(float bloodVolumePulse) {
-        this.bloodVolumePulse = bloodVolumePulse;
-    }
-
-    public float getElectroDermalActivity() {
-        return electroDermalActivity;
-    }
-
-    public synchronized void setElectroDermalActivity(float electroDermalActivity) {
-        this.electroDermalActivity = electroDermalActivity;
-    }
-
-    public float getInterBeatInterval() {
-        return interBeatInterval;
-    }
-
-    public synchronized void setInterBeatInterval(float interBeatInterval) {
-        this.interBeatInterval = interBeatInterval;
-    }
-
     @Override
     public float getTemperature() {
-        return temperature;
+        return Float.NaN;
     }
 
-    public synchronized void setTemperature(float temperature) {
-        this.temperature = temperature;
+    public synchronized void setBatteryLevel(float batteryLevel) {
+        this.batteryLevel = batteryLevel;
     }
 
     @Override
@@ -128,15 +91,39 @@ public class Pebble2DeviceStatus implements DeviceState {
         return status;
     }
 
-    public synchronized void setStatus(DeviceStatusListener.Status status) {
+    public void setStatus(DeviceStatusListener.Status status) {
         this.status = status;
     }
 
-    public Map<EmpaSensorType, EmpaSensorStatus> getSensorStatus() {
-        return sensorStatus;
+    public Boolean getBatteryIsCharging() {
+        return batteryIsCharging;
     }
 
-    public synchronized void setSensorStatus(EmpaSensorType type, EmpaSensorStatus status) {
-        sensorStatus.put(type, status);
+    public void setBatteryIsCharging(Boolean batteryIsCharging) {
+        this.batteryIsCharging = batteryIsCharging;
+    }
+
+    public Boolean getBatteryIsPlugged() {
+        return batteryIsPlugged;
+    }
+
+    public void setBatteryIsPlugged(Boolean batteryIsPlugged) {
+        this.batteryIsPlugged = batteryIsPlugged;
+    }
+
+    public float getHeartRate() {
+        return heartRate;
+    }
+
+    public void setHeartRate(float heartRate) {
+        this.heartRate = heartRate;
+    }
+
+    public float getHeartRateFiltered() {
+        return heartRateFiltered;
+    }
+
+    public void setHeartRateFiltered(float heartRateFiltered) {
+        this.heartRateFiltered = heartRateFiltered;
     }
 }

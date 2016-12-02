@@ -32,6 +32,9 @@ import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.pebble2.Pebble2DeviceStatus;
+import org.radarcns.pebble2.Pebble2HeartbeatToast;
+import org.radarcns.pebble2.Pebble2Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,11 +68,12 @@ public class MainActivity extends AppCompatActivity {
 
     /** Defines callbacks for service binding, passed to bindService() */
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
+    private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    /** Connections. 0 = Empatica, 1 = Angel sensor **/
+    /** Connections. 0 = Empatica, 1 = Angel sensor, 2 = Pebble sensor **/
     private DeviceServiceConnection[] mConnections;
 
     /** Overview UI **/
@@ -97,6 +101,15 @@ public class MainActivity extends AppCompatActivity {
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
             }
+            if (!mConnectionIsBound[2]) {
+                Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
+                pebble2Intent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+                pebble2Intent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+                pebble2Intent.putExtra("group_id", getString(R.string.group_id));
+
+                pebble2Connection.bind(pebble2Intent);
+                mConnectionIsBound[2] = true;
+            }
         }
     };
 
@@ -104,7 +117,8 @@ public class MainActivity extends AppCompatActivity {
         super();
         isForcedDisconnected = false;
         mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR);
-        mConnections = new DeviceServiceConnection[] {mE4Connection, null, null, null};
+        pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR);
+        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, null};
         mConnectionIsBound = new boolean[] {false, false, false, false};
 
         serverStatusListener = new BroadcastReceiver() {
@@ -552,6 +566,8 @@ public class MainActivity extends AppCompatActivity {
                     DeviceServiceConnection connection = mConnections[row];
                     if (connection == mE4Connection) {
                         new E4HeartbeatToast(MainActivity.this).execute(connection);
+                    } else if (connection == pebble2Connection) {
+                        new Pebble2HeartbeatToast(MainActivity.this).execute(connection);
                     }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
@@ -630,9 +646,9 @@ public class MainActivity extends AppCompatActivity {
         String message;
         String messageTimeStamp = timeFormat.format( System.currentTimeMillis() );
         if ( numberOfRecordsTrigger < 0 ) {
-            message = String.format("%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
+            message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
         } else {
-            message = String.format("%1$25s uploaded %2$4d records (%3$s)", keyNameTrigger, numberOfRecordsTrigger, messageTimeStamp);
+            message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)", keyNameTrigger, numberOfRecordsTrigger, messageTimeStamp);
         }
 
         mServerMessage.setText( message );

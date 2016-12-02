@@ -21,13 +21,13 @@ import java.util.Locale;
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, String[]> {
+public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, String[]> {
     private final Context context;
     final static DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
     final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    final static AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics.getInstance().getInterBeatIntervalTopic();
+    final static AvroTopic<MeasurementKey, Pebble2HeartRateFiltered> topic = Pebble2Topics.getInstance().getHeartRateFilteredTopic();
 
-    Pebble2HeartbeatToast(Context context) {
+    public Pebble2HeartbeatToast(Context context) {
         this.context = context;
     }
 
@@ -36,13 +36,13 @@ class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, Str
         String[] results = new String[params.length];
         for (int i = 0; i < params.length; i++) {
             try {
-                List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = params[i].getRecords(topic, 25);
+                List<Record<MeasurementKey, Pebble2HeartRateFiltered>> measurements = params[i].getRecords(topic, 25);
                 if (!measurements.isEmpty()) {
                     StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                    for (Record<MeasurementKey, EmpaticaE4InterBeatInterval> measurement : measurements) {
+                    for (Record<MeasurementKey, Pebble2HeartRateFiltered> measurement : measurements) {
                         sb.append(timeFormat.format(1000d * measurement.value.getTime()));
                         sb.append(": ");
-                        sb.append(singleDecimal.format(60d / measurement.value.getInterBeatInterval()));
+                        sb.append(singleDecimal.format(measurement.value.getHeartRate()));
                         sb.append('\n');
                     }
                     results[i] = sb.toString();
