@@ -7,23 +7,19 @@ import android.widget.Toast;
 
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.data.Record;
-import org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.Boast;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Void, String[]> {
+public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection<Pebble2DeviceStatus>, Void, String[]> {
     private final Context context;
-    final static DateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
     final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
     final static AvroTopic<MeasurementKey, Pebble2HeartRateFiltered> topic = Pebble2Topics.getInstance().getHeartRateFilteredTopic();
 
@@ -32,7 +28,8 @@ public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Vo
     }
 
     @Override
-    protected String[] doInBackground(DeviceServiceConnection... params) {
+    @SafeVarargs
+    protected final String[] doInBackground(DeviceServiceConnection<Pebble2DeviceStatus>... params) {
         String[] results = new String[params.length];
         for (int i = 0; i < params.length; i++) {
             try {
@@ -40,10 +37,11 @@ public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Vo
                 if (!measurements.isEmpty()) {
                     StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
                     for (Record<MeasurementKey, Pebble2HeartRateFiltered> measurement : measurements) {
-                        sb.append(timeFormat.format(1000d * measurement.value.getTime()));
-                        sb.append(": ");
+                        long diffTimeMillis = System.currentTimeMillis() - (long) (1000d * measurement.value.getTimeReceived());
+                        sb.append(singleDecimal.format(diffTimeMillis / 1000d));
+                        sb.append(" sec. ago: ");
                         sb.append(singleDecimal.format(measurement.value.getHeartRate()));
-                        sb.append('\n');
+                        sb.append(" bpm\n");
                     }
                     results[i] = sb.toString();
                 } else {
@@ -60,9 +58,9 @@ public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection, Vo
     protected void onPostExecute(String[] strings) {
         for (String s : strings) {
             if (s == null) {
-                Toast.makeText(context, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
+                Boast.makeText(context, "No heart rate collected yet.", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, s, Toast.LENGTH_LONG).show();
+                Boast.makeText(context, s, Toast.LENGTH_LONG).show();
             }
         }
     }

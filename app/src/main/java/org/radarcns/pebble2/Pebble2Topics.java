@@ -2,13 +2,6 @@ package org.radarcns.pebble2;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.empaticaE4.EmpaticaE4Acceleration;
-import org.radarcns.empaticaE4.EmpaticaE4BatteryLevel;
-import org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse;
-import org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity;
-import org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval;
-import org.radarcns.empaticaE4.EmpaticaE4SensorStatus;
-import org.radarcns.empaticaE4.EmpaticaE4Temperature;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 

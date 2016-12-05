@@ -35,6 +35,7 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
+import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private View mServerStatusIcon;
     private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
+    private TextView[] mHeartRateLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
@@ -132,7 +134,9 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
                         String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
-                        updateServerRecordsSent( triggerKey, lastNumberOfRecordsSent);
+                        if ( lastNumberOfRecordsSent != null ) {
+                            updateServerRecordsSent(triggerKey, lastNumberOfRecordsSent);
+                        }
                     } catch (RemoteException re) {
                         logger.warn( "Could not update the server records sent: {}", re.getMessage() );
                     }
@@ -166,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+                            Boast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -202,6 +206,13 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.temperatureRow2),
                 (TextView) findViewById(R.id.temperatureRow3),
                 (TextView) findViewById(R.id.temperatureRow4)
+        };
+
+        mHeartRateLabels = new TextView[] {
+                (TextView) findViewById(R.id.heartRateRow1),
+                (TextView) findViewById(R.id.heartRateRow2),
+                (TextView) findViewById(R.id.heartRateRow3),
+                (TextView) findViewById(R.id.heartRateRow4)
         };
 
         mBatteryLabels = new ImageView[] {
@@ -368,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
+                Boast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
                 switch (status) {
                     case CONNECTED:
                         break;
@@ -378,7 +389,7 @@ public class MainActivity extends AppCompatActivity {
                         // Reject if device name inputted does not equal device nameA
                         if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
                             logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
-                            Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
+                            Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
                             // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
                             disconnect();
                         }
@@ -426,7 +437,7 @@ public class MainActivity extends AppCompatActivity {
                 startScanning();
             } else {
                 // User refused to grant permission.
-                Toast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
+                Boast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -467,20 +478,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             for (int i = 0; i < mConnections.length; i++) {
-                updateRow(deviceData[i], i);
+                // Update all fields
+                updateDeviceStatus(deviceData[i], i);
+                updateTemperature(deviceData[i], i);
+                updateHeartRate(deviceData[i], i);
+                updateBattery(deviceData[i], i);
                 updateDeviceName(deviceNames[i], i);
             }
-        }
-
-        /**
-         * Updates a row with the deviceData
-         * @param deviceData    data to update with
-         * @param row           Row number
-         */
-        public void updateRow(DeviceState deviceData, int row ) {
-            updateDeviceStatus(deviceData, row);
-            updateTemperature(deviceData, row);
-            updateBattery(deviceData, row);
         }
 
         public void updateDeviceStatus(DeviceState deviceData, int row ) {
@@ -504,6 +508,10 @@ public class MainActivity extends AppCompatActivity {
         public void updateTemperature(DeviceState deviceData, int row ) {
             // \u2103 == ℃
             setText(mTemperatureLabels[row], deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
+        }
+
+        public void updateHeartRate(DeviceState deviceData, int row ) {
+            setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
@@ -530,12 +538,8 @@ public class MainActivity extends AppCompatActivity {
 
         public void updateDeviceName(String deviceName, int row) {
             // TODO: restrict n_characters of deviceName
-            if (deviceName == null) {
-                // \u2014 == —
-                mDeviceNameLabels[row].setText("\u2014");
-            } else {
-                mDeviceNameLabels[row].setText(deviceName);
-            }
+            // \u2014 == —
+            mDeviceNameLabels[row].setText(deviceName == null ? "\u2014" : deviceName);
         }
 
         private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
@@ -548,7 +552,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
 
     public void connectDevice(View v) {
         int rowIndex = getRowIndexFromView(v);
