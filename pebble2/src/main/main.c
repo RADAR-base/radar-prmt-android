@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <stdio.h>
 #include "main.h"
 #include "../common.h"
 
@@ -6,6 +7,14 @@ static Window *s_main_window;
 static Layer *s_main_layer;
 static GRect window_frame;
 static int status;
+static DeviceState state;
+static AppTimer *timer;
+
+static void prv_delay_timer_callback(void *data) {
+  AppWorkerMessage msg;
+  app_worker_send_message(WORKER_KEY_DEVICE_STATE, &msg);
+  timer = app_timer_register(REDRAW_INTERVAL_MS, prv_delay_timer_callback, NULL);
+}
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   AppWorkerMessage msg;
@@ -21,6 +30,20 @@ static void worker_message_handler(uint16_t type, AppWorkerMessage *data) {
     case WORKER_KEY_STATUS:
       status = data->data0;
       break;
+    case WORKER_KEY_DEVICE_STATE_ACCEL:
+      state.x = data->data0;
+      state.y = data->data1;
+      state.z = data->data2;
+      break;
+    case WORKER_KEY_DEVICE_STATE_BATTERY:
+      state.battery_level = data->data0;
+      state.battery_charging = data->data1;
+      state.battery_plugged = data->data2;
+      break;
+    case WORKER_KEY_DEVICE_STATE_HEART_RATE:
+      state.heartRate = data->data0;
+      state.heartRateFiltered = data->data1;
+      break;
   }
   layer_mark_dirty(s_main_layer);
 }
@@ -33,11 +56,11 @@ static void main_layer_update_proc(Layer *layer, GContext *ctx) {
 
   GRect text_bounds;
   text_bounds.origin.x = bounds.origin.x;
-  text_bounds.origin.y = (bounds.size.h / 2) - 13;
   text_bounds.size.w = bounds.size.w;
   text_bounds.size.h = 20;
 
   const char *status_text;
+  char other_text[30];
   if (status == WORKER_STATUS_RUNNING) {
     status_text = "collecting...";
   } else {
@@ -45,8 +68,27 @@ static void main_layer_update_proc(Layer *layer, GContext *ctx) {
   }
 
   GFont id_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
+  GFont data_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+
   graphics_context_set_text_color(ctx, GColorWhite);
+
+  text_bounds.origin.y = (bounds.size.h / 2) - 13;
   graphics_draw_text(ctx, status_text, id_font, text_bounds,
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+
+  snprintf(other_text, 30, "hr raw: %d, hr: %d", (int)state.heartRate, (int)state.heartRateFiltered);
+  text_bounds.origin.y = (bounds.size.h / 2) + 10;
+  graphics_draw_text(ctx, other_text, data_font, text_bounds,
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+
+  snprintf(other_text, 30, "x: %d, y: %d, z: %d", (int)state.x, (int)state.y, (int)state.z);
+  text_bounds.origin.y = (bounds.size.h / 2) + 30;
+  graphics_draw_text(ctx, other_text, data_font, text_bounds,
+                     GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+
+  snprintf(other_text, 30, "battery: %d (c %d, p %d)", (int)state.battery_level, (int)state.battery_charging, (int)state.battery_plugged);
+  text_bounds.origin.y = (bounds.size.h / 2) + 50;
+  graphics_draw_text(ctx, other_text, data_font, text_bounds,
                      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 }
 
@@ -76,9 +118,12 @@ static void init(void) {
 
   app_worker_launch();
   app_worker_message_subscribe(worker_message_handler);
+
+  timer = app_timer_register(0, prv_delay_timer_callback, NULL);
 }
 
 static void deinit(void) {
+  app_timer_cancel(timer);
   app_worker_message_unsubscribe();
   window_destroy(s_main_window);
 }

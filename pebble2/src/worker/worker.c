@@ -20,7 +20,9 @@ static void stop() {
 }
 
 static void worker_message_handler(uint16_t type, AppWorkerMessage *data) {
-  AppWorkerMessage msg;
+  AppWorkerMessage msg, b_msg, hr_msg;
+  DeviceState state;
+
   switch (type) {
     case WORKER_KEY_START_LOGGING:
       if (!data_handler_is_running()) {
@@ -36,6 +38,20 @@ static void worker_message_handler(uint16_t type, AppWorkerMessage *data) {
         persist_write_bool(PERSIST_KEY_IS_LOGGING, false);
         stop();
       }
+      break;
+    case WORKER_KEY_DEVICE_STATE:
+      data_handler_state(&state);
+      msg.data0 = state.x;
+      msg.data1 = state.y;
+      msg.data2 = state.z;
+      app_worker_send_message(WORKER_KEY_DEVICE_STATE_ACCEL, &msg);
+      hr_msg.data0 = state.heartRate;
+      hr_msg.data1 = state.heartRateFiltered;
+      app_worker_send_message(WORKER_KEY_DEVICE_STATE_HEART_RATE, &hr_msg);
+      b_msg.data0 = state.battery_level;
+      b_msg.data1 = state.battery_charging;
+      b_msg.data2 = state.battery_plugged;
+      app_worker_send_message(WORKER_KEY_DEVICE_STATE_BATTERY, &b_msg);
       break;
     case WORKER_KEY_STOP_LOGGING:
       if (data_handler_is_running()) {

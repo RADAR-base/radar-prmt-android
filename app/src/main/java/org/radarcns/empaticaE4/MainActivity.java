@@ -344,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < mConnections.length; i++) {
             DeviceServiceConnection connection = mConnections[i];
             if (connection == null || !connection.hasService() || connection.isRecording()) {
-                return;
+                continue;
             }
             Set<String> acceptableIds;
             if (mInputDeviceKeys[i] != null && !mInputDeviceKeys[i].isEmpty()) {
@@ -353,6 +353,7 @@ public class MainActivity extends AppCompatActivity {
                 acceptableIds = Collections.emptySet();
             }
             try {
+                logger.info("Starting recording on connection {}", i);
                 connection.startRecording(acceptableIds);
             } catch (RemoteException e) {
                 logger.error("Failed to start recording for device {}", i, e);
@@ -632,7 +633,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
+    public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent)
     {
         // Default to 0 if number of records cannot be retrieved
         int numberOfRecordsTrigger;
