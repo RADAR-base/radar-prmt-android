@@ -5,20 +5,20 @@
  */
 package org.radarcns.pebble2;  
 @SuppressWarnings("all")
-/** Data from 3-axis accelerometer sensor without units. */
+/** Data from 3-axis accelerometer sensor with gravitational constant g as unit. */
 @org.apache.avro.specific.AvroGenerated
 public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2Acceleration\",\"namespace\":\"org.radarcns.pebble2\",\"doc\":\"Data from 3-axis accelerometer sensor without units.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (no unit)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (no unit)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (no unit)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2Acceleration\",\"namespace\":\"org.radarcns.pebble2\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** acceleration in the x-axis (no unit) */
+  /** acceleration in the x-axis (g) */
   @Deprecated public float x;
-  /** acceleration in the y-axis (no unit) */
+  /** acceleration in the y-axis (g) */
   @Deprecated public float y;
-  /** acceleration in the z-axis (no unit) */
+  /** acceleration in the z-axis (g) */
   @Deprecated public float z;
 
   /**
@@ -96,14 +96,14 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
 
   /**
    * Gets the value of the 'x' field.
-   * acceleration in the x-axis (no unit)   */
+   * acceleration in the x-axis (g)   */
   public java.lang.Float getX() {
     return x;
   }
 
   /**
    * Sets the value of the 'x' field.
-   * acceleration in the x-axis (no unit)   * @param value the value to set.
+   * acceleration in the x-axis (g)   * @param value the value to set.
    */
   public void setX(java.lang.Float value) {
     this.x = value;
@@ -111,14 +111,14 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
 
   /**
    * Gets the value of the 'y' field.
-   * acceleration in the y-axis (no unit)   */
+   * acceleration in the y-axis (g)   */
   public java.lang.Float getY() {
     return y;
   }
 
   /**
    * Sets the value of the 'y' field.
-   * acceleration in the y-axis (no unit)   * @param value the value to set.
+   * acceleration in the y-axis (g)   * @param value the value to set.
    */
   public void setY(java.lang.Float value) {
     this.y = value;
@@ -126,14 +126,14 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
 
   /**
    * Gets the value of the 'z' field.
-   * acceleration in the z-axis (no unit)   */
+   * acceleration in the z-axis (g)   */
   public java.lang.Float getZ() {
     return z;
   }
 
   /**
    * Sets the value of the 'z' field.
-   * acceleration in the z-axis (no unit)   * @param value the value to set.
+   * acceleration in the z-axis (g)   * @param value the value to set.
    */
   public void setZ(java.lang.Float value) {
     this.z = value;
