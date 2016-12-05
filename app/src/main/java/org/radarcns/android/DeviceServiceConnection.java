@@ -177,6 +177,9 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     }
 
     public Map<String, Integer> getServerSent() throws RemoteException {
+        if (serviceBinder == null) {
+            return null;
+        }
         return ((DeviceServiceBinder)serviceBinder).getServerRecordsSent();
     }
 
@@ -216,7 +219,12 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     }
 
     public String getDeviceName() {
-        return deviceName;
+        if (isRemote) {
+            // return initial deviceName
+            return deviceName;
+        } else {
+            return ((DeviceServiceBinder)serviceBinder).getDeviceName();
+        }
     }
 
     /**

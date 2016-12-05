@@ -294,6 +294,16 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
+        public String getDeviceName() {
+            DeviceManager localManager = getDeviceManager();
+            if (localManager == null) {
+                return null;
+            } else {
+                return localManager.getName();
+            }
+        }
+
+        @Override
         public DeviceState startRecording(@NonNull Set<String> acceptableIds) {
             DeviceManager localManager = getDeviceManager();
             if (localManager == null) {

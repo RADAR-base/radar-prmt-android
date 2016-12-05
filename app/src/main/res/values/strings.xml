@@ -28,7 +28,8 @@
     <string name="header_device_status">Status</string>
     <string name="header_server_status">Server</string>
     <string name="header_device">Device</string>
-    <string name="header_temp">Temperature</string>
+    <string name="header_temp">Temp.</string>
+    <string name="header_hr">HR</string>
     <string name="header_connect"></string>
     <string name="header_details"></string>
     <string name="deviceTypeLabel1">E4</string>
