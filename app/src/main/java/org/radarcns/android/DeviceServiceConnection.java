@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.radarcns.android.DeviceService.TRANSACT_GET_DEVICE_NAME;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
@@ -220,11 +221,17 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
 
     public String getDeviceName() {
         if (isRemote) {
-            // return initial deviceName
-            return deviceName;
+            try {
+                Parcel reply = Parcel.obtain();
+                serviceBinder.transact(TRANSACT_GET_DEVICE_NAME, Parcel.obtain(), reply, 0);
+                deviceName = reply.readString();
+            } catch (RemoteException ex) {
+                // return initial device name
+            }
         } else {
-            return ((DeviceServiceBinder)serviceBinder).getDeviceName();
+            deviceName = ((DeviceServiceBinder)serviceBinder).getDeviceName();
         }
+        return deviceName;
     }
 
     /**
@@ -233,10 +240,7 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
      * @return
      */
     public boolean isAllowedDevice(String value) {
-        if ( getDeviceName() == null ) {
-            return false;
-        }
-        return getDeviceName().contains(value);
+        return getDeviceName() != null && getDeviceName().contains(value);
     }
 
     public DeviceStatusListener.Status getDeviceStatus() {

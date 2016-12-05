@@ -2,15 +2,9 @@ package org.radarcns.pebble2;
 
 import android.os.Parcel;
 
-import com.empatica.empalink.config.EmpaSensorStatus;
-import com.empatica.empalink.config.EmpaSensorType;
-
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.util.Serialization;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * The status on a single point in time of an Empatica E4 device.
@@ -111,6 +105,7 @@ public class Pebble2DeviceStatus implements DeviceState {
         this.batteryIsPlugged = batteryIsPlugged;
     }
 
+    @Override
     public float getHeartRate() {
         return heartRate;
     }

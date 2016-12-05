@@ -49,6 +49,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public final static int TRANSACT_START_RECORDING = 14;
     public final static int TRANSACT_STOP_RECORDING = 15;
     public final static int TRANSACT_GET_SERVER_STATUS = 16;
+    public final static int TRANSACT_GET_DEVICE_NAME = 17;
     public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
     public final static String SERVER_RECORDS_SENT_CHANGED = "org.radarcns.android.ServerStatusListener.lastNumberOfRecordsSent";
     public final static String DEVICE_STATUS_SERVICE_CLASS = "org.radarcns.android.DeviceService.getClass";
@@ -365,6 +366,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         break;
                     case TRANSACT_GET_SERVER_STATUS:
                         reply.writeInt(getServerStatus().ordinal());
+                        break;
+                    case TRANSACT_GET_DEVICE_NAME:
+                        reply.writeString(getDeviceName());
                         break;
                     default:
                         return false;

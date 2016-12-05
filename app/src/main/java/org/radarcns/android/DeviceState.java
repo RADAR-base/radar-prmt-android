@@ -19,8 +19,8 @@ public interface DeviceState extends Parcelable {
     float getTemperature();
 
     /**
-     * Get the inter beat interval (ibi) in seconds.
-     * @return ibi or Float.NaN if unknown.
+     * Get the heart rate in bpm.
+     * @return heart rate or Float.NaN if unknown.
      */
     float getHeartRate();
 }
