@@ -1,5 +1,5 @@
 {
-  "uuid": "3aa643c5-acd4-4897-9213-5e6812da3857",
+  "uuid": "a3b06265-d50c-4205-8ee4-e4c12abca326",
   "shortName": "RADAR-CNS",
   "longName": "RADAR-CNS",
   "companyName": "The Hyve",
@@ -13,9 +13,8 @@
     "media": []
   },
   "targetPlatforms": [
-    "aplite",
-    "basalt",
-    "chalk"
+    "diorite",
+    "emery"
   ],
   "sdkVersion": "3"
 }
