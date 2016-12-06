@@ -1,23 +1,18 @@
 # RADAR-AndroidApplication
 Application to be run on an Android 4.4 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
 
-Currently only the Empatica E4 is supported. 
+Currently the Empatica E4 and Pebble 2 are supported. Also note that the application only runs on an ARM architecture.
 
 ## Setup Empatica E4
 
 First, request an Empatica API key for your Empatica Connect account from our [Developer Area][1]. Also download the Empatica Android SDK there.
 
-- Clone / download this repository.
-- Copy the empalink-2.0.aar from the Empatica Android SDK package to the `empalink-2.0` directory.
-- Connect Firebase Remote Config #TODO: describe how to connect#
-- Edit the `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml` file
+1. Copy the empalink-2.0.aar from the Empatica Android SDK package to the `empalink-2.0` directory.
+2. Edit the `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml` file
 	- Set your Empatica API key in the `empatica_api_key` xml element.
  	- Set the URL's of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.
 	- Set the `device_group_id` string to a suitable user ID.
-- Rename the file to `remote_config_defaults.xml` to use the file with Firebase.
-- Compile the project with `./gradlew build`.
-- Open the project in Android Studio.
-- Launch the application. Note that the application only runs on an ARM architecture
+3. Rename the file to `remote_config_defaults.xml` to use the file with Firebase. For the full Firebase setup, see below.
 
 [1]: https://www.empatica.com/connect/developer.php
 [2]: https://github.com/empatica/empalink-sample-project-android
@@ -41,6 +36,16 @@ Then run the following sequence:
 9. Enable Bluetooth on the endpoint.
 
 The RADAR-CNS Pebble app will now send data to the endpoint.
+
+## Setup Firebase Remote Configuration
+Firebase can be used to remotely configure some device and system parameters, e.g. the E4 API key, kafka server address and upload rate.
+
+1. [Install the Firebase SDK](https://firebase.google.com/docs/android/setup) in Android Studio.
+2. Login to a Google account.
+3. In the [Firebase console](https://console.firebase.google.com/), add the app (`org.radarcns.android.android`) to a new Firebase project.
+4. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`.
+
+[Full documentation](https://firebase.google.com/docs/remote-config/use-config-android)
 
 ## Usage
 
