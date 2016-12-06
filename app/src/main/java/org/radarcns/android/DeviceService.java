@@ -51,8 +51,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public final static int TRANSACT_GET_SERVER_STATUS = 16;
     public final static int TRANSACT_GET_DEVICE_NAME = 17;
     public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
-    public final static String SERVER_RECORDS_SENT_CHANGED = "org.radarcns.android.ServerStatusListener.lastNumberOfRecordsSent";
-    public final static String DEVICE_STATUS_SERVICE_CLASS = "org.radarcns.android.DeviceService.getClass";
+    public final static String SERVER_RECORDS_SENT_TOPIC = "org.radarcns.android.ServerStatusListener.topic";
+    public final static String SERVER_RECORDS_SENT_NUMBER = "org.radarcns.android.ServerStatusListener.lastNumberOfRecordsSent";
+    public final static String DEVICE_SERVICE_CLASS = "org.radarcns.android.DeviceService.getClass";
     public final static String DEVICE_STATUS_CHANGED = "org.radarcns.android.DeviceStatusListener.Status";
     public final static String DEVICE_STATUS_NAME = "org.radarcns.android.Devicemanager.getName";
     public final static String DEVICE_CONNECT_FAILED = "org.radarcns.android.DeviceStatusListener.deviceFailedToConnect";
@@ -157,7 +158,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     @Override
     public void deviceFailedToConnect(String deviceName) {
         Intent statusChanged = new Intent(DEVICE_CONNECT_FAILED);
-        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
+        statusChanged.putExtra(DEVICE_SERVICE_CLASS, getClass().getName());
         statusChanged.putExtra(DEVICE_STATUS_NAME, deviceName);
         sendBroadcast(statusChanged);
     }
@@ -166,7 +167,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public void deviceStatusUpdated(DeviceManager deviceManager, DeviceStatusListener.Status status) {
         Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
         statusChanged.putExtra(DEVICE_STATUS_CHANGED, status.ordinal());
-        statusChanged.putExtra(DEVICE_STATUS_SERVICE_CLASS, getClass().getName());
+        statusChanged.putExtra(DEVICE_SERVICE_CLASS, getClass().getName());
         if (deviceManager.getName() != null) {
             statusChanged.putExtra(DEVICE_STATUS_NAME, deviceManager.getName());
         }
@@ -259,14 +260,17 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public void updateServerStatus(ServerStatusListener.Status status) {
         Intent statusIntent = new Intent(SERVER_STATUS_CHANGED);
         statusIntent.putExtra(SERVER_STATUS_CHANGED, status.ordinal());
+        statusIntent.putExtra(DEVICE_SERVICE_CLASS, getClass().getName());
         sendBroadcast(statusIntent);
     }
 
     @Override
     public void updateRecordsSent(String topicName, int numberOfRecords) {
-        Intent recordsIntent = new Intent(SERVER_RECORDS_SENT_CHANGED);
+        Intent recordsIntent = new Intent(SERVER_RECORDS_SENT_TOPIC);
         // Signal that a certain topic changed, the key of the map retrieved by getRecordsSent().
-        recordsIntent.putExtra(SERVER_RECORDS_SENT_CHANGED, topicName);
+        recordsIntent.putExtra(SERVER_RECORDS_SENT_TOPIC, topicName);
+        recordsIntent.putExtra(SERVER_RECORDS_SENT_NUMBER, numberOfRecords);
+        recordsIntent.putExtra(DEVICE_SERVICE_CLASS, getClass().getName());
         sendBroadcast(recordsIntent);
     }
 

@@ -28,7 +28,6 @@ import android.widget.Toast;
 
 import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
-
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -44,10 +43,10 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
-import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_CHANGED;
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_NUMBER;
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_TOPIC;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
@@ -129,17 +128,10 @@ public class MainActivity extends AppCompatActivity {
                 if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                     final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
                     updateServerStatus(status);
-                } else if (intent.getAction().equals(SERVER_RECORDS_SENT_CHANGED)) {
-//                    final String lastNumberOfRecordsSent = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED);
-                    try {
-                        final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
-                        String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
-                        if ( lastNumberOfRecordsSent != null ) {
-                            updateServerRecordsSent(triggerKey, lastNumberOfRecordsSent);
-                        }
-                    } catch (RemoteException re) {
-                        logger.warn( "Could not update the server records sent: {}", re.getMessage() );
-                    }
+                } else if (intent.getAction().equals(SERVER_RECORDS_SENT_TOPIC)) {
+                    String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_TOPIC); // topicName that updated
+                    int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);
+                    updateServerRecordsSent(triggerKey, numberOfRecordsSent);
                 }
             }
         };
@@ -269,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         registerReceiver(bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_STATUS_CHANGED));
-        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_CHANGED));
+        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_TOPIC));
         registerReceiver(deviceFailedReceiver, new IntentFilter(E4Service.DEVICE_CONNECT_FAILED));
 
         mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
@@ -633,16 +625,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent)
+    public void updateServerRecordsSent(String keyNameTrigger, int numberOfRecordsTrigger)
     {
-        // Default to 0 if number of records cannot be retrieved
-        int numberOfRecordsTrigger;
-        try {
-            numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
-        } catch ( NullPointerException npe) {
-            numberOfRecordsTrigger = 0;
-        }
-
         // Condensing the message
         keyNameTrigger = keyNameTrigger.replaceFirst("_?android_?","");
         keyNameTrigger = keyNameTrigger.replaceFirst("_?empatica_?(e4)?","E4");
