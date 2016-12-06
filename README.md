@@ -28,15 +28,14 @@ pebble build
 ```
 Then run the following sequence:
 
-1. Pair the Pebble 2 with the Pebble app on your phone.
-2. Disable Bluetooth on your phone.
-3. Pair the Pebble 2 with the app on the endpoint.
-4. Disable Bluetooth on the endpoint.
-5. Enable Bluetooth on your phone.
-6. Open the developer menu on the Pebble app on your phone and enable developer mode.
-7. Install the app with `pebble install --phone 1.2.3.4` with the IP address stated in the Pebble app on your phone.
-8. Disable Bluetooth on your phone. If desired, remove the pairing with your phone and the Pebble 2 device.
-9. Enable Bluetooth on the endpoint.
+1. Pair the Pebble 2 with the app on the endpoint.
+2. Disable Bluetooth on the endpoint.
+3. Enable Bluetooth on your phone.
+4. Pair the Pebble 2 with the Pebble app on your phone.
+5. Open the developer menu on the Pebble app on your phone and enable developer mode.
+6. Install the app with `pebble install --phone 1.2.3.4` with the IP address stated in the Pebble app on your phone.
+7. Disable Bluetooth on your phone. If desired, remove the pairing with your phone and the Pebble 2 device.
+8. Enable Bluetooth on the endpoint.
 
 The RADAR-CNS Pebble app will now send data to the endpoint.
 
