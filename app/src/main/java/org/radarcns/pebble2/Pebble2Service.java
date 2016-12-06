@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A service that manages a E4DeviceManager and a TableDataHandler to send store the data of a
+ * A service that manages a Pebble2DeviceManager and a TableDataHandler to send store the data of a
  * Pebble 2 and send it to a Kafka REST proxy.
  */
 public class Pebble2Service extends DeviceService {

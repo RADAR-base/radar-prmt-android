@@ -6,6 +6,8 @@ import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.util.Serialization;
 
+import java.util.Arrays;
+
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
@@ -120,5 +122,11 @@ public class Pebble2DeviceStatus implements DeviceState {
 
     public void setHeartRateFiltered(float heartRateFiltered) {
         this.heartRateFiltered = heartRateFiltered;
+    }
+
+    public String toString() {
+        return "{status: " + status + ", acceleration: " + Arrays.toString(acceleration) +
+                ", batteryLevel: " + batteryLevel + ", heartRate: " + heartRate +
+                ", heartRateFiltered: " + heartRateFiltered + "}";
     }
 }
