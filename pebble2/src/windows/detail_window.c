@@ -8,6 +8,24 @@ static Layer *s_layer;
 static GRect window_frame;
 static AppTimer *timer;
 
+typedef struct decimal_type {
+  int value;
+  int decimal;
+  const char *sign;
+} DecimalType;
+
+DecimalType to_decimal(int value, int div, int decimal_max) {
+  DecimalType d = {value / div, (value % div) / (div / decimal_max), NULL};
+  if (value >= 0) {
+    d.sign = "";
+  } else {
+    d.value = -d.value;
+    d.decimal = -d.decimal;
+    d.sign = "-";
+  }
+  return d;
+}
+
 static void prv_delay_timer_callback(void *data) {
   AppWorkerMessage msg;
   app_worker_send_message(WORKER_KEY_DEVICE_STATE, &msg);
@@ -55,7 +73,10 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
   graphics_draw_text(ctx, other_text, data_font, text_bounds,
                      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-  snprintf(other_text, 30, "x: %d, y: %d, z: %d", (int)device_state.x, (int)device_state.y, (int)device_state.z);
+  DecimalType x = to_decimal(device_state.x, 1000, 100);
+  DecimalType y = to_decimal(device_state.y, 1000, 100);
+  DecimalType z = to_decimal(device_state.z, 1000, 100);
+  snprintf(other_text, sizeof(other_text), "x: %s%d.%02d, y: %s%d.%02d, z: %s%d.%02d", x.sign, x.value, x.decimal, y.sign, y.value, y.decimal, z.sign, z.value, z.decimal);
   text_bounds.origin.y = 80;
   graphics_draw_text(ctx, other_text, data_font, text_bounds,
                      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
