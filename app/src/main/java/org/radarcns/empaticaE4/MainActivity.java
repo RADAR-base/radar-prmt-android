@@ -122,9 +122,9 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!mConnectionIsBound[2]) {
                 Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                pebble2Intent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-                pebble2Intent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-                pebble2Intent.putExtra("group_id", getString(R.string.group_id));
+                pebble2Intent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
+                pebble2Intent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
+                pebble2Intent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
 
                 pebble2Connection.bind(pebble2Intent);
                 mConnectionIsBound[2] = true;

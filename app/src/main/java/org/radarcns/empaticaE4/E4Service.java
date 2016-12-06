@@ -62,9 +62,9 @@ public class E4Service extends DeviceService {
     protected void onInvocation(Intent intent) {
         super.onInvocation(intent);
         if (apiKey == null) {
-            apiKey = intent.getStringExtra("empatica_api_key");
+            apiKey = intent.getStringExtra(MainActivity.EMPATICA_API_KEY);
             logger.info("Using API key {}", apiKey);
-            groupId = intent.getStringExtra("device_group_id");
+            groupId = intent.getStringExtra(MainActivity.DEVICE_GROUP_ID_KEY);
         }
     }
 }
