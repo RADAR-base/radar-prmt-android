@@ -1,7 +1,7 @@
 #pragma once
 #include <inttypes.h>
 
-enum {
+typedef enum worker_key {
   WORKER_KEY_START_LOGGING,
   WORKER_KEY_STOP_LOGGING,
   WORKER_KEY_TOGGLE_LOGGING,
@@ -10,12 +10,12 @@ enum {
   WORKER_KEY_DEVICE_STATE_ACCEL,
   WORKER_KEY_DEVICE_STATE_BATTERY,
   WORKER_KEY_DEVICE_STATE_HEART_RATE,
-};
+} WorkerKey;
 
-enum {
+typedef enum worker_status {
   WORKER_STATUS_RUNNING,
   WORKER_STATUS_DISABLED,
-};
+} WorkerStatus;
 
 typedef struct DeviceState {
   int16_t x, y, z;
