@@ -100,8 +100,11 @@ public class MainActivity extends AppCompatActivity {
     public static final String SCHEMA_REGISTRY_KEY = "schema_registry_url";
     public static final String DEVICE_GROUP_ID = "device_group_id";
     public static final String EMPATICA_API_KEY = "empatica_api_key";
-    public static final String UI_REFRESH_RATE = "ui_refresh_rate";
-    public static final String KAFKA_UPLOAD_PERIOD = "kafka_upload_period";
+    public static final String UI_REFRESH_RATE = "ui_refresh_rate_millis";
+    public static final String KAFKA_UPLOAD_RATE = "kafka_upload_rate";
+    public static final String KAFKA_CLEAN_RATE = "kafka_clean_rate";
+    public static final String KAFKA_RECORDS_SEND_LIMIT = "kafka_records_send_limit";
+    public static final String SENDER_CONNECTION_TIMEOUT = "sender_connection_timeout";
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -196,7 +199,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Update remote config and set system property.
         fetchAndActivateRemoteConfig();
-        System.setProperty( KAFKA_UPLOAD_PERIOD, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_UPLOAD_PERIOD) ) );
+        System.setProperty( KAFKA_UPLOAD_RATE, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_UPLOAD_RATE) ) );
+        System.setProperty( KAFKA_CLEAN_RATE, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_CLEAN_RATE) ) );
+        System.setProperty( KAFKA_RECORDS_SEND_LIMIT, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_RECORDS_SEND_LIMIT) ) );
+        System.setProperty( SENDER_CONNECTION_TIMEOUT, Long.toString( mFirebaseRemoteConfig.getLong(SENDER_CONNECTION_TIMEOUT) ) );
 
         // Start the UI thread
         uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE);
@@ -284,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
         // the server.
         if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
             remoteConfigCacheExpiration = 0;
+            logger.info("Remote Config: No expiration.");
         }
 
         // Fetch and activate if fetch completed successfully
@@ -295,8 +302,9 @@ public class MainActivity extends AppCompatActivity {
                             // Once the config is successfully fetched it must be
                             // activated before newly fetched values are returned.
                             mFirebaseRemoteConfig.activateFetched();
+                            logger.info("Remote Config: Activate success.");
                         } else {
-                            Toast.makeText(MainActivity.this, "Remote Config Fetch Failed",
+                            Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
                                     Toast.LENGTH_SHORT).show();
                         }
 

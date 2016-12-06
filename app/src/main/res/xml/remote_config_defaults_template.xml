@@ -22,24 +22,24 @@
         <value>82800000</value>
     </entry>
     <entry>
-        <key>ui_refresh_rate</key>
+        <key>ui_refresh_rate_millis</key>
         <value>250</value>
     </entry>
+    <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
-        <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
         <key>kafka_records_send_limit</key>
         <value>1000</value>
     </entry>
     <entry>
-        <key>kafka_upload_period</key>
+        <key>kafka_upload_rate</key>
         <value>10</value>
     </entry>
     <entry>
-        <key>kafka_clean_period</key>
+        <key>kafka_clean_rate</key>
         <value>3600</value>
     </entry>
     <entry>
-        <key>rest_connection_timeout</key>
+        <key>sender_connection_timeout</key>
         <value>20</value>
     </entry>
 </defaultsMap>

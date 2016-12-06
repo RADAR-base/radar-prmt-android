@@ -40,6 +40,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
 
     // Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records
     private final static int SEND_LIMIT = 1000;
+    private int sendLimit;
     private boolean lastUploadFailed = false;
     private DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
@@ -56,6 +57,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         trySendCache = new ConcurrentHashMap<>();
         trySendFuture = new HashMap<>();
         topicSenders = new HashMap<>();
+        sendLimit = Integer.valueOf( System.getProperty( MainActivity.KAFKA_RECORDS_SEND_LIMIT ) );
 
         logger.info("Starting executor");
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
@@ -77,8 +79,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         });
 
         // Get upload frequency from system property
-        long uploadPeriod = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_PERIOD ) );
-        logger.info("Upload period is '{}'", uploadPeriod);
+        long uploadRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_RATE ) );
         executor.scheduleAtFixedRate(new Runnable() {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
             @Override
@@ -96,15 +97,18 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                     topicsToSend.clear();
                 }
             }
-        }, uploadPeriod, uploadPeriod, TimeUnit.SECONDS);
+        }, uploadRate, uploadRate, TimeUnit.SECONDS);
 
         // Remove old data from tables infrequently
+        long cleanRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_CLEAN_RATE ) );
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 KafkaDataSubmitter.this.dataHandler.clean();
             }
-        }, 0L, 1L, TimeUnit.HOURS);
+        }, 0L, cleanRate, TimeUnit.SECONDS);
+
+        logger.info("Remote Config: Upload rate is '{}' sec per upload, clean is {} sec per upload", uploadRate, cleanRate);
     }
 
     /**
@@ -198,8 +202,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                     continue;
                 }
                 @SuppressWarnings("unchecked") // we can upload any record
-                int sent = uploadCache((AvroTopic<K, V>)entry.getKey(), (DataCache<K, V>)entry.getValue(), SEND_LIMIT, uploadingNotified);
-                if (sent < SEND_LIMIT) {
+                int sent = uploadCache((AvroTopic<K, V>)entry.getKey(), (DataCache<K, V>)entry.getValue(), sendLimit, uploadingNotified);
+                if (sent < sendLimit) {
                     toSend.remove(entry.getKey());
                 }
                 uploadingNotified |= sent > 0;
