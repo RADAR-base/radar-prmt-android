@@ -6,7 +6,7 @@
 
 static unsigned char buffer[ACCELERATION_SIZE * ACCELERATION_BATCH];
 static const unsigned char *accel_end_ptr;
-static DeviceState state;
+DeviceState device_state;
 
 static DataLoggingSessionRef battery_level_session_ref;
 static DataLoggingSessionRef heart_rate_session_ref;
@@ -21,24 +21,24 @@ static uint64_t timestamp() {
 }
 
 const char *data_logging_strerror(DataLoggingResult result) {
-switch (result) {
+  switch (result) {
     case DATA_LOGGING_SUCCESS:
-    return "Successful operation.";
+      return "Successful operation.";
     case DATA_LOGGING_BUSY:
-    return "Someone else is writing to this logging session.";
+      return "Someone else is writing to this logging session.";
     case DATA_LOGGING_FULL:
-    return "No more space to save data.";
+      return "No more space to save data.";
     case DATA_LOGGING_NOT_FOUND:
-    return "The logging session does not exist.";
+      return "The logging session does not exist.";
     case DATA_LOGGING_CLOSED:
-    return "The logging session was made inactive.";
+      return "The logging session was made inactive.";
     case DATA_LOGGING_INVALID_PARAMS:
-    return "An invalid parameter was passed to one of the functions.";
+      return "An invalid parameter was passed to one of the functions.";
     case DATA_LOGGING_INTERNAL_ERR:
-    return "An internal error occurred.";
+      return "An internal error occurred.";
     default:
-    return "Unknown error";
-}
+      return "Unknown error";
+  }
 }
 
 static void data_handler_accel(AccelData *data, uint32_t num_samples) {
@@ -53,9 +53,9 @@ static void data_handler_accel(AccelData *data, uint32_t num_samples) {
       data_ptr = serialize_int16(data_ptr, data[i].x);
       data_ptr = serialize_int16(data_ptr, data[i].y);
       data_ptr = serialize_int16(data_ptr, data[i].z);
-      state.x = data[i].x;
-      state.y = data[i].y;
-      state.z = data[i].z;
+      device_state.x = data[i].x;
+      device_state.y = data[i].y;
+      device_state.z = data[i].z;
     }
   }
   // set all data not included in a batch to zero
@@ -69,15 +69,15 @@ static void data_handler_accel(AccelData *data, uint32_t num_samples) {
   }
 }
 
-static void data_handler_battery(BatteryChargeState charge_state) {
+static void data_handler_battery(BatteryChargeState charge_device_state) {
   unsigned char *data_ptr;
   data_ptr = serialize_uint64(buffer, timestamp());
-  data_ptr = serialize_char(data_ptr, charge_state.charge_percent);
-  data_ptr = serialize_char(data_ptr, charge_state.is_charging);
-  serialize_char(data_ptr, charge_state.is_plugged);
-  state.battery_level = charge_state.charge_percent;
-  state.battery_charging = charge_state.is_charging;
-  state.battery_plugged = charge_state.is_plugged;
+  data_ptr = serialize_char(data_ptr, charge_device_state.charge_percent);
+  data_ptr = serialize_char(data_ptr, charge_device_state.is_charging);
+  serialize_char(data_ptr, charge_device_state.is_plugged);
+  device_state.battery_level = charge_device_state.charge_percent;
+  device_state.battery_charging = charge_device_state.is_charging;
+  device_state.battery_plugged = charge_device_state.is_plugged;
   DataLoggingResult res = data_logging_log(battery_level_session_ref, buffer, 1);
   if (res != DATA_LOGGING_SUCCESS) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "failed to add battery level data to the logging session: %d %s", (int) res, data_logging_strerror(res));
@@ -92,16 +92,16 @@ static void data_handler_health(HealthEventType type, void *context) {
 
     // filtered heart rate
     data_ptr = serialize_uint64(buffer, timestamp());
-    state.heartRateFiltered = health_service_peek_current_value(HealthMetricHeartRateBPM);
-    serialize_int32(data_ptr, state.heartRateFiltered);
+    device_state.heartRateFiltered = health_service_peek_current_value(HealthMetricHeartRateBPM);
+    serialize_int32(data_ptr, device_state.heartRateFiltered);
     DataLoggingResult res = data_logging_log(heart_rate_filtered_session_ref, buffer, 1);
     if (res != DATA_LOGGING_SUCCESS) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "failed to add filtered heart rate data to the logging session: %d %s", (int) res, data_logging_strerror(res));
     }
 
     // raw heart rate
-    state.heartRate = health_service_peek_current_value(HealthMetricHeartRateRawBPM);
-    serialize_int32(data_ptr, state.heartRate);
+    device_state.heartRate = health_service_peek_current_value(HealthMetricHeartRateRawBPM);
+    serialize_int32(data_ptr, device_state.heartRate);
     res = data_logging_log(heart_rate_session_ref, buffer, 1);
     if (res != DATA_LOGGING_SUCCESS) {
       APP_LOG(APP_LOG_LEVEL_ERROR, "failed to add raw heart rate data to the logging session: %d %s", (int) res, data_logging_strerror(res));
@@ -139,12 +139,4 @@ void data_handler_stop(void) {
   heart_rate_session_ref = NULL;
   data_logging_finish(heart_rate_filtered_session_ref);
   heart_rate_filtered_session_ref = NULL;
-}
-
-int data_handler_is_running(void) {
-  return acceleration_session_ref != NULL;
-}
-
-void data_handler_state(DeviceState *device_state) {
-  memcpy(device_state, &state, sizeof(DeviceState));
 }
