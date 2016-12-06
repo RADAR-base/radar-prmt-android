@@ -197,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_overview);
         initializeViews();
         initializeRemoteConfig();
+        updateSystemPropertiesFromRemoteConfig();
 
         // Start the UI thread
         uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE_KEY);
@@ -286,10 +287,6 @@ public class MainActivity extends AppCompatActivity {
         mHandler.postDelayed(bindServicesRunner, 300L);
 
         fetchAndActivateRemoteConfig();
-        for (String key: LONG_SYSTEM_PARAMETER_KEYS) {
-            System.setProperty(key, Long.toString( mFirebaseRemoteConfig.getLong(key) ));
-        }
-        logger.info("Remote Config: {}", System.getProperties().toString());
     }
 
     @Override
@@ -367,9 +364,16 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
                                     Toast.LENGTH_SHORT).show();
                         }
-
+                        updateSystemPropertiesFromRemoteConfig();
                     }
                 });
+    }
+
+    private void updateSystemPropertiesFromRemoteConfig() {
+        for (String key: LONG_SYSTEM_PARAMETER_KEYS) {
+            System.setProperty(key, Long.toString( mFirebaseRemoteConfig.getLong(key) ));
+        }
+        logger.info("Remote Config: {}", System.getProperties().toString());
     }
 
 
