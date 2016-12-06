@@ -1,6 +1,6 @@
 #include "worker.h"
 #include "data_handler.h"
-#include "../src/common.h"
+#include "common.h"
 #include <pebble_worker.h>
 
 static WorkerStatus worker_status;
