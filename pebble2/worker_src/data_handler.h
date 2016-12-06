@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common.h"
+#include "../src/common.h"
 
 #define ACCELERATION_LOG 11
 #define HEART_RATE_LOG 12
