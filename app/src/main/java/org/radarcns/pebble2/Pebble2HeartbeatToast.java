@@ -1,4 +1,4 @@
-package org.radarcns.empaticaE4;
+package org.radarcns.pebble2;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -18,29 +18,29 @@ import java.util.List;
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection<E4DeviceStatus>, Void, String[]> {
+public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection<Pebble2DeviceStatus>, Void, String[]> {
     private final Context context;
     final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    final static AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics.getInstance().getInterBeatIntervalTopic();
+    final static AvroTopic<MeasurementKey, Pebble2HeartRateFiltered> topic = Pebble2Topics.getInstance().getHeartRateFilteredTopic();
 
-    E4HeartbeatToast(Context context) {
+    public Pebble2HeartbeatToast(Context context) {
         this.context = context;
     }
 
     @Override
     @SafeVarargs
-    protected final String[] doInBackground(DeviceServiceConnection<E4DeviceStatus>... params) {
+    protected final String[] doInBackground(DeviceServiceConnection<Pebble2DeviceStatus>... params) {
         String[] results = new String[params.length];
         for (int i = 0; i < params.length; i++) {
             try {
-                List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = params[i].getRecords(topic, 2);
+                List<Record<MeasurementKey, Pebble2HeartRateFiltered>> measurements = params[i].getRecords(topic, 25);
                 if (!measurements.isEmpty()) {
                     StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                    for (Record<MeasurementKey, EmpaticaE4InterBeatInterval> measurement : measurements) {
+                    for (Record<MeasurementKey, Pebble2HeartRateFiltered> measurement : measurements) {
                         long diffTimeMillis = System.currentTimeMillis() - (long) (1000d * measurement.value.getTimeReceived());
                         sb.append(singleDecimal.format(diffTimeMillis / 1000d));
                         sb.append(" sec. ago: ");
-                        sb.append(singleDecimal.format(60d / measurement.value.getInterBeatInterval()));
+                        sb.append(singleDecimal.format(measurement.value.getHeartRate()));
                         sb.append(" bpm\n");
                     }
                     results[i] = sb.toString();
