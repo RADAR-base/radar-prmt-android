@@ -1,6 +1,5 @@
 package org.radarcns.kafka;
 
-import org.radarcns.android.TableDataHandler;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.empaticaE4.MainActivity;
@@ -57,7 +56,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         trySendCache = new ConcurrentHashMap<>();
         trySendFuture = new HashMap<>();
         topicSenders = new HashMap<>();
-        sendLimit = Integer.valueOf( System.getProperty( MainActivity.KAFKA_RECORDS_SEND_LIMIT ) );
+        sendLimit = Integer.valueOf( System.getProperty( MainActivity.KAFKA_RECORDS_SEND_LIMIT_KEY) );
 
         logger.info("Starting executor");
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
@@ -79,7 +78,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         });
 
         // Get upload frequency from system property
-        long uploadRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_RATE ) );
+        long uploadRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_RATE_KEY) );
         executor.scheduleAtFixedRate(new Runnable() {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
             @Override
@@ -100,7 +99,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         }, uploadRate, uploadRate, TimeUnit.SECONDS);
 
         // Remove old data from tables infrequently
-        long cleanRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_CLEAN_RATE ) );
+        long cleanRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_CLEAN_RATE_KEY) );
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {

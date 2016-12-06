@@ -63,7 +63,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         jsonFactory = new JsonFactory();
 
         // Default timeout is 10 seconds.
-        long connectionTimeout = Long.valueOf( System.getProperty( MainActivity.SENDER_CONNECTION_TIMEOUT ) );
+        long connectionTimeout = Long.valueOf( System.getProperty( MainActivity.SENDER_CONNECTION_TIMEOUT_KEY) );
         httpClient = new OkHttpClient.Builder()
                 .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
                 .writeTimeout(connectionTimeout, TimeUnit.SECONDS)

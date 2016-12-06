@@ -95,16 +95,17 @@ public class MainActivity extends AppCompatActivity {
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     public FirebaseRemoteConfig mFirebaseRemoteConfig;
-    private long remoteConfigCacheExpiration = 3600; // expire cache every hour by default
+    private long remoteConfigCacheExpiration = 43200; // expire cache every 12 hours by default
     public static final String KAFKA_REST_PROXY_KEY = "kafka_rest_proxy_url";
     public static final String SCHEMA_REGISTRY_KEY = "schema_registry_url";
-    public static final String DEVICE_GROUP_ID = "device_group_id";
+    public static final String DEVICE_GROUP_ID_KEY = "device_group_id";
     public static final String EMPATICA_API_KEY = "empatica_api_key";
-    public static final String UI_REFRESH_RATE = "ui_refresh_rate_millis";
-    public static final String KAFKA_UPLOAD_RATE = "kafka_upload_rate";
-    public static final String KAFKA_CLEAN_RATE = "kafka_clean_rate";
-    public static final String KAFKA_RECORDS_SEND_LIMIT = "kafka_records_send_limit";
-    public static final String SENDER_CONNECTION_TIMEOUT = "sender_connection_timeout";
+    public static final String UI_REFRESH_RATE_KEY = "ui_refresh_rate_millis";
+    public static final String KAFKA_UPLOAD_RATE_KEY = "kafka_upload_rate";
+    public static final String KAFKA_CLEAN_RATE_KEY = "kafka_clean_rate";
+    public static final String KAFKA_RECORDS_SEND_LIMIT_KEY = "kafka_records_send_limit";
+    public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
+    public static final String[] LONG_SYSTEM_PARAMETER_KEYS = new String[]{KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY, SENDER_CONNECTION_TIMEOUT_KEY};
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
                 e4serviceIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
                 e4serviceIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
-                e4serviceIntent.putExtra( DEVICE_GROUP_ID, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID) );
+                e4serviceIntent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
                 e4serviceIntent.putExtra( EMPATICA_API_KEY, mFirebaseRemoteConfig.getString(EMPATICA_API_KEY) ); // getString(R.string.apikey) );//
 
                 mE4Connection.bind(e4serviceIntent);
@@ -197,15 +198,8 @@ public class MainActivity extends AppCompatActivity {
         initializeViews();
         initializeRemoteConfig();
 
-        // Update remote config and set system property.
-        fetchAndActivateRemoteConfig();
-        System.setProperty( KAFKA_UPLOAD_RATE, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_UPLOAD_RATE) ) );
-        System.setProperty( KAFKA_CLEAN_RATE, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_CLEAN_RATE) ) );
-        System.setProperty( KAFKA_RECORDS_SEND_LIMIT, Long.toString( mFirebaseRemoteConfig.getLong(KAFKA_RECORDS_SEND_LIMIT) ) );
-        System.setProperty( SENDER_CONNECTION_TIMEOUT, Long.toString( mFirebaseRemoteConfig.getLong(SENDER_CONNECTION_TIMEOUT) ) );
-
         // Start the UI thread
-        uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE);
+        uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE_KEY);
         mUIUpdater = new DeviceUIUpdater();
         mUIScheduler = new Runnable() {
             @Override
@@ -285,38 +279,17 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
     }
 
-    public void fetchAndActivateRemoteConfig() {
-        // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
-        // the server.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
-            remoteConfigCacheExpiration = 0;
-            logger.info("Remote Config: No expiration.");
-        }
-
-        // Fetch and activate if fetch completed successfully
-        mFirebaseRemoteConfig.fetch(remoteConfigCacheExpiration)
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Once the config is successfully fetched it must be
-                            // activated before newly fetched values are returned.
-                            mFirebaseRemoteConfig.activateFetched();
-                            logger.info("Remote Config: Activate success.");
-                        } else {
-                            Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-
-                    }
-                });
-    }
-
     @Override
     protected void onResume() {
         logger.info("mainActivity onResume");
         super.onResume();
         mHandler.postDelayed(bindServicesRunner, 300L);
+
+        fetchAndActivateRemoteConfig();
+        for (String key: LONG_SYSTEM_PARAMETER_KEYS) {
+            System.setProperty(key, Long.toString( mFirebaseRemoteConfig.getLong(key) ));
+        }
+        logger.info("Remote Config: {}", System.getProperties().toString());
     }
 
     @Override
@@ -372,6 +345,34 @@ public class MainActivity extends AppCompatActivity {
         mHandlerThread.quitSafely();
     }
 
+    public void fetchAndActivateRemoteConfig() {
+        // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
+        // the server.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            remoteConfigCacheExpiration = 0;
+            logger.info("Remote Config: No expiration.");
+        }
+
+        // Fetch and activate if fetch completed successfully
+        mFirebaseRemoteConfig.fetch(remoteConfigCacheExpiration)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Once the config is successfully fetched it must be
+                            // activated before newly fetched values are returned.
+                            mFirebaseRemoteConfig.activateFetched();
+                            logger.info("Remote Config: Activate success.");
+                        } else {
+                            Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                });
+    }
+
+
     private synchronized Handler getHandler() {
         return mHandler;
     }
@@ -381,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
             disconnect(i);
         }
     }
-
 
     private void disconnect(int row) {
         DeviceServiceConnection connection = mConnections[row];
