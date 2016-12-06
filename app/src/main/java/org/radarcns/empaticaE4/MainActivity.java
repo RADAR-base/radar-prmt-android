@@ -138,11 +138,14 @@ public class MainActivity extends AppCompatActivity {
                 if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                     logger.info("Bluetooth state {}", state);
+                    // Upon state change, restart ui handler and restart Scanning.
                     if (state == BluetoothAdapter.STATE_ON) {
                         logger.info("Bluetooth has turned on");
+                        getHandler().postDelayed(mUIScheduler, uiRefreshRate);
                         startScanning();
                     } else if (state == BluetoothAdapter.STATE_OFF) {
                         logger.warn("Bluetooth is off");
+                        getHandler().postDelayed(mUIScheduler, uiRefreshRate);
                         startScanning();
                     }
                 }
