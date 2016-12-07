@@ -37,3 +37,7 @@ To add additional device types to this application, make the following steps (se
 - Finally, extend the main activity to run a service for showing the device data and for controlling the recording.
 
 Make a pull request once the code is working.
+
+## Android Installation
+
+The guide for installing Android on Raspberry Pi3 and UDOO boards is available [here](https://github.com/RADAR-CNS/RADAR-AndroidApplication/wiki)
