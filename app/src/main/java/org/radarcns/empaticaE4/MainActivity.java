@@ -26,6 +26,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
@@ -84,13 +86,16 @@ public class MainActivity extends AppCompatActivity {
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
-    private View mServerStatusIcon;
-    private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
     private TextView[] mHeartRateLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
+
+    private View mServerStatusIcon;
+    private TextView mServerMessage;
+    private View mFirebaseStatusIcon;
+    private TextView mFirebaseMessage;
 
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
@@ -218,6 +223,11 @@ public class MainActivity extends AppCompatActivity {
 
         checkBluetoothPermissions();
 
+        // Check availability of Google Play Services
+        if ( GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS ) {
+            mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
+            mFirebaseMessage.setText(R.string.playServicesUnavailable);
+        }
     }
 
     private void initializeViews() {
@@ -267,6 +277,10 @@ public class MainActivity extends AppCompatActivity {
         // Server
         mServerStatusIcon = findViewById(R.id.statusServer);
         mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
+
+        // Firebase
+        mFirebaseStatusIcon = findViewById(R.id.firebaseStatus);
+        mFirebaseMessage = (TextView) findViewById( R.id.firebaseStatusMessage);
     }
 
     private void initializeRemoteConfig() {
@@ -360,12 +374,14 @@ public class MainActivity extends AppCompatActivity {
                             // activated before newly fetched values are returned.
                             mFirebaseRemoteConfig.activateFetched();
                             logger.info("Remote Config: Activate success.");
+                            // Set global properties.
+                            updateSystemPropertiesFromRemoteConfig();
+                            mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
+                            mFirebaseMessage.setText("Remote config fetched from the server (" +  timeFormat.format( System.currentTimeMillis() ) + ")");
                         } else {
                             Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
                                     Toast.LENGTH_SHORT).show();
                         }
-                        // Set global properties.
-                        updateSystemPropertiesFromRemoteConfig();
                     }
                 });
     }

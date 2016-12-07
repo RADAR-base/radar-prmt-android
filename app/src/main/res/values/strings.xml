@@ -32,6 +32,7 @@
     <string name="header_hr">HR</string>
     <string name="header_connect"></string>
     <string name="header_details"></string>
+    <string name="label_firebase_status">Firebase</string>
     <string name="deviceTypeLabel1">E4</string>
     <string name="deviceTypeLabel2">Angel</string>
     <string name="deviceTypeLabel3">Pebble</string>
@@ -50,4 +51,5 @@
     <string name="bluetooth_permission_failure">Cannot connect to Empatica E4DeviceManager without location permissions</string>
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
+    <string name="playServicesUnavailable">Cannot connect, because Google Play Services is not available.</string>
 </resources>

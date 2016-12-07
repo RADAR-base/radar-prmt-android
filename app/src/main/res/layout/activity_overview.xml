@@ -311,7 +311,7 @@
 
                     <!-- Server status -->
                     <RelativeLayout
-                        android:id="@+id/serverLayout"
+                        android:id="@+id/serverStatusLayout"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_below="@id/deviceTable">
@@ -334,16 +334,44 @@
 
                         <TextView
                             android:id="@+id/statusServerMessage"
-                            style="@style/ServerStatusLabel"
+                            style="@style/StatusMessage"
                             android:text="@string/emptyText"
                             android:layout_marginStart="11dp"
                             android:layout_toEndOf="@id/statusServer"
+                            android:layout_alignParentBottom="true" />
+                    </RelativeLayout>
+
+                    <!-- Firebase status -->
+                    <RelativeLayout
+                        android:id="@+id/firebaseStatusLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_below="@id/serverStatusLayout"
+                        android:layout_marginTop="20dp" >
+
+                        <TextView
+                            android:id="@+id/firbaseStatusLabel"
+                            style="@style/ServerStatusLabel"
+                            android:layout_marginEnd="11dp"
+                            android:text="@string/label_firebase_status"
                             android:layout_alignParentBottom="true"
-                            android:textSize="14sp"
-                            android:textStyle="italic"
-                            android:paddingStart="5dp"
-                            android:paddingEnd="0dp"
-                            android:fontFamily="monospace" />
+                            android:textColor="@android:color/background_dark" />
+
+                        <View
+                            android:id="@+id/firebaseStatus"
+                            style="@style/StatusCircle"
+                            android:layout_margin="0dp"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toEndOf="@id/firbaseStatusLabel"
+                            android:background="@drawable/status_disconnected"/>
+
+                        <TextView
+                            android:id="@+id/firebaseStatusMessage"
+                            style="@style/StatusMessage"
+                            android:text="@string/emptyText"
+                            android:layout_marginStart="11dp"
+                            android:layout_toEndOf="@id/firebaseStatus"
+                            android:layout_alignParentBottom="true" />
 
                     </RelativeLayout>
             </RelativeLayout>
