@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.util.Properties;
 
 public class DirectProducerTest extends TestCase {
@@ -33,7 +34,15 @@ public class DirectProducerTest extends TestCase {
             threads[i] = new MockDevice<>((KafkaSender<String, SpecificRecord>)senders[i], "device" + i, Schema.create(Schema.Type.STRING), String.class);
             threads[i].start();
         }
-        threads[0].join(5_000L);
+        long streamingTimeoutMs = 5_000L;
+        if (props.containsKey("streaming.timeout.ms")) {
+            try {
+                streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
+            } catch (NumberFormatException ex) {
+                // whatever
+            }
+        }
+        threads[0].join(streamingTimeoutMs);
         for (MockDevice device : threads) {
             device.interrupt();
         }

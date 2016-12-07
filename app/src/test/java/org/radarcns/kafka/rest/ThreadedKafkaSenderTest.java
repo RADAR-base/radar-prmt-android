@@ -50,7 +50,15 @@ public class ThreadedKafkaSenderTest extends TestCase {
                 threads[i].start();
             }
             // stop running after 5 seconds, or after the first thread quits, whichever comes first
-            threads[0].join(5_000L);
+            long streamingTimeoutMs = 5_000L;
+            if (props.containsKey("streaming.timeout.ms")) {
+                try {
+                    streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
+                } catch (NumberFormatException ex) {
+                    // whatever
+                }
+            }
+            threads[0].join(streamingTimeoutMs);
             for (MockDevice device : threads) {
                 device.interrupt();
             }
