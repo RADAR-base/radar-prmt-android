@@ -118,7 +118,7 @@
                                 android:id="@+id/refreshButtonRow1"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow1"
@@ -179,7 +179,7 @@
                                 android:id="@+id/refreshButtonRow2"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow2"
@@ -222,7 +222,8 @@
                             <TextView
                                 android:id="@+id/temperatureRow3"
                                 style="@style/NumberColumn"
-                                android:text="@string/emptyText" />
+                                android:text="@string/disabledText"
+                                android:enabled="false" />
 
                             <TextView
                                 android:id="@+id/heartRateRow3"
@@ -232,14 +233,16 @@
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow3"
                                 style="@style/ButtonDeviceKeyColumn"
-                                android:text="@string/button_input"
-                                android:onClick="dialogInputDeviceName" />
+                                android:text="@string/disabledText"
+                                android:onClick="dialogInputDeviceName"
+                                android:clickable="false"
+                                android:enabled="false" />
 
                             <Button
                                 android:id="@+id/refreshButtonRow3"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow3"
@@ -299,7 +302,7 @@
                                 android:id="@+id/refreshButtonRow4"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow4"

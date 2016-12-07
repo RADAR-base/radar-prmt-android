@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
+    private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
 
     private long uiRefreshRate;
 
@@ -386,7 +387,6 @@ public class MainActivity extends AppCompatActivity {
                         if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
                             logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
                             Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
-                            // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
                             disconnect();
                         }
                         break;
@@ -533,15 +533,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void updateDeviceName(String deviceName, int row) {
-            // TODO: restrict n_characters of deviceName
+            // Restrict length of name that is shown.
+            if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH - 3) {
+                deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH) + "...";
+            }
+
             // \u2014 == —
             mDeviceNameLabels[row].setText(deviceName == null ? "\u2014" : deviceName);
         }
 
         private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
             if (Float.isNaN(value)) {
-                // em dash
-                label.setText("\u2014");
+
+                // Only overwrite default value if enabled.
+                if (label.isEnabled()) {
+                    // em dash
+                    label.setText("\u2014");
+                }
+
             } else {
                 label.setText(formatter.format(value) + " " + suffix);
             }
@@ -549,14 +558,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void connectDevice(View v) {
-        int rowIndex = getRowIndexFromView(v);
-        // will restart scanning after disconnect
-        disconnect(rowIndex);
+    public void reconnectDevice(View v) {
+        try {
+            int rowIndex = getRowIndexFromView(v);
+            // will restart scanning after disconnect
+            disconnect(rowIndex);
+        } catch (IndexOutOfBoundsException iobe) {
+            Boast.makeText(this, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
+            logger.warn(iobe.getMessage());
+        }
     }
 
     public void showDetails(final View v) {
-        final int row = getRowIndexFromView(v);
+        final int row;
+        try {
+            row = getRowIndexFromView(v);
+        } catch (IndexOutOfBoundsException iobe) {
+            logger.warn(iobe.getMessage());
+            return;
+        }
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -575,7 +596,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private int getRowIndexFromView(View v) {
+    private int getRowIndexFromView(View v) throws IndexOutOfBoundsException {
         // Assume all elements are direct descendants from the TableRow
         View parent = (View) v.getParent();
         switch ( parent.getId() ) {
@@ -593,7 +614,7 @@ public class MainActivity extends AppCompatActivity {
                 return 3;
 
             default:
-                return -1; // TODO: throw exception
+                throw new IndexOutOfBoundsException("Could not find row index of the given view.");
         }
     }
 
@@ -656,11 +677,20 @@ public class MainActivity extends AppCompatActivity {
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
+        // Setup the row
+        final int row;
+        try {
+            row = getRowIndexFromView(v);
+        } catch (IndexOutOfBoundsException iobe) {
+            Boast.makeText(this, "Could not set this device key, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
+            logger.warn(iobe.getMessage());
+            return;
+        }
+
         // Set up the buttons
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                final int row = getRowIndexFromView( v );
                 String oldValue = mInputDeviceKeys[row];
                 mInputDeviceKeys[row] = input.getText().toString();
                 mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );

@@ -36,6 +36,7 @@
     <string name="deviceTypeLabel2">Angel</string>
     <string name="deviceTypeLabel3">Pebble</string>
     <string name="deviceTypeLabel4">Platyp.</string>
+    <string name="disabledText">NA</string>
 
     <!--Status texts-->
     <string name="server_connected">Server connected</string>
