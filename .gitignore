@@ -113,3 +113,6 @@ modules.xml
 .idea/misc.xml
 *.ipr
 .idea/runConfigurations.xml
+
+## Pebble 2
+.lock*

@@ -23,6 +23,8 @@ public interface DeviceServiceBinder {
     <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit);
     /** Get the current device status */
     DeviceState getDeviceStatus();
+    /** Get the current device name, or null if unknown. */
+    String getDeviceName();
     /** Get the current server status */
     ServerStatusListener.Status getServerStatus();
     /** Get the last number of records sent */

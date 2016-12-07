@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.radarcns.android.DeviceService.DEVICE_SERVICE_CLASS;
+import static org.radarcns.android.DeviceService.TRANSACT_GET_DEVICE_NAME;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
@@ -41,6 +43,7 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     private final static Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
     private final Parcelable.Creator<S> deviceStateCreator;
+    private final String serviceClassName;
     private boolean isRemote;
     private DeviceStatusListener.Status deviceStatus;
     public String deviceName;
@@ -51,24 +54,27 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(DEVICE_STATUS_CHANGED)) {
-                if (intent.hasExtra(DEVICE_STATUS_NAME)) {
-                    deviceName = intent.getStringExtra(DEVICE_STATUS_NAME);
-                    logger.info("Device status changed of device {}", deviceName);
+                if (serviceClassName.equals(intent.getStringExtra(DEVICE_SERVICE_CLASS))) {
+                    if (intent.hasExtra(DEVICE_STATUS_NAME)) {
+                        deviceName = intent.getStringExtra(DEVICE_STATUS_NAME);
+                        logger.info("Device status changed of device {}", deviceName);
+                    }
+                    deviceStatus = DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
+                    logger.info("Updated device status to {}", deviceStatus);
+                    mainActivity.deviceStatusUpdated(DeviceServiceConnection.this, deviceStatus);
                 }
-                deviceStatus = DeviceStatusListener.Status.values()[intent.getIntExtra(DEVICE_STATUS_CHANGED, 0)];
-                logger.info("Updated device status to {}", deviceStatus);
-                mainActivity.deviceStatusUpdated(DeviceServiceConnection.this, deviceStatus);
             }
         }
     };
 
-    public DeviceServiceConnection(@NonNull MainActivity mainActivity, @NonNull Parcelable.Creator<S> deviceStateCreator) {
+    public DeviceServiceConnection(@NonNull MainActivity mainActivity, @NonNull Parcelable.Creator<S> deviceStateCreator, String serviceClassName) {
         this.mainActivity = mainActivity;
         this.serviceBinder = null;
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         this.isRemote = false;
         this.deviceStateCreator = deviceStateCreator;
+        this.serviceClassName = serviceClassName;
     }
 
     @Override
@@ -177,6 +183,9 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     }
 
     public Map<String, Integer> getServerSent() throws RemoteException {
+        if (serviceBinder == null) {
+            return null;
+        }
         return ((DeviceServiceBinder)serviceBinder).getServerRecordsSent();
     }
 
@@ -216,6 +225,17 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
     }
 
     public String getDeviceName() {
+        if (isRemote) {
+            try {
+                Parcel reply = Parcel.obtain();
+                serviceBinder.transact(TRANSACT_GET_DEVICE_NAME, Parcel.obtain(), reply, 0);
+                deviceName = reply.readString();
+            } catch (RemoteException ex) {
+                // return initial device name
+            }
+        } else {
+            deviceName = ((DeviceServiceBinder)serviceBinder).getDeviceName();
+        }
         return deviceName;
     }
 
@@ -225,7 +245,7 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
      * @return
      */
     public boolean isAllowedDevice(String value) {
-        return getDeviceName().contains(value);
+        return getDeviceName() != null && getDeviceName().contains(value);
     }
 
     public DeviceStatusListener.Status getDeviceStatus() {

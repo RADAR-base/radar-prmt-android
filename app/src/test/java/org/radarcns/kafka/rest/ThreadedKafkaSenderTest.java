@@ -11,7 +11,10 @@ import org.radarcns.kafka.MockDevice;
 import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.SchemaRetriever;
 
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +28,14 @@ public class ThreadedKafkaSenderTest extends TestCase {
         logger.info("Simulating the load of " + numberOfDevices);
         MockDevice[] threads = new MockDevice[numberOfDevices];
 
-        SchemaRetriever schemaRetriever = new SchemaRetriever("http://radar-test.thehyve.net:8081");
-        URL kafkaURL = new URL("http://radar-test.thehyve.net:8082");
+        Properties props = new Properties();
+        try (InputStream in = getClass().getResourceAsStream("../kafka.properties")) {
+            assertNotNull(in);
+            props.load(in);
+        }
+
+        SchemaRetriever schemaRetriever = new SchemaRetriever(props.getProperty("schema.registry.url"));
+        URL kafkaURL = new URL(props.getProperty("rest.proxy.url"));
         AvroEncoder keyEncoder = new StringEncoder();
         AvroEncoder valueEncoder = new SpecificRecordEncoder(false);
 
@@ -41,7 +50,15 @@ public class ThreadedKafkaSenderTest extends TestCase {
                 threads[i].start();
             }
             // stop running after 5 seconds, or after the first thread quits, whichever comes first
-            threads[0].join(5_000L);
+            long streamingTimeoutMs = 5_000L;
+            if (props.containsKey("streaming.timeout.ms")) {
+                try {
+                    streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
+                } catch (NumberFormatException ex) {
+                    // whatever
+                }
+            }
+            threads[0].join(streamingTimeoutMs);
             for (MockDevice device : threads) {
                 device.interrupt();
             }

@@ -28,10 +28,13 @@ import android.widget.Toast;
 
 import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
-
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.pebble2.Pebble2DeviceStatus;
+import org.radarcns.pebble2.Pebble2HeartbeatToast;
+import org.radarcns.pebble2.Pebble2Service;
+import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +43,10 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
-import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_CHANGED;
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_NUMBER;
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_TOPIC;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
@@ -52,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
+    private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
 
     private long uiRefreshRate;
 
@@ -65,11 +69,12 @@ public class MainActivity extends AppCompatActivity {
 
     /** Defines callbacks for service binding, passed to bindService() */
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
+    private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    /** Connections. 0 = Empatica, 1 = Angel sensor **/
+    /** Connections. 0 = Empatica, 1 = Angel sensor, 2 = Pebble sensor **/
     private DeviceServiceConnection[] mConnections;
 
     /** Overview UI **/
@@ -78,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private View mServerStatusIcon;
     private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
+    private TextView[] mHeartRateLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
@@ -97,14 +103,24 @@ public class MainActivity extends AppCompatActivity {
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
             }
+            if (!mConnectionIsBound[2]) {
+                Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
+                pebble2Intent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
+                pebble2Intent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
+                pebble2Intent.putExtra("group_id", getString(R.string.group_id));
+
+                pebble2Connection.bind(pebble2Intent);
+                mConnectionIsBound[2] = true;
+            }
         }
     };
 
     public MainActivity() {
         super();
         isForcedDisconnected = false;
-        mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR);
-        mConnections = new DeviceServiceConnection[] {mE4Connection, null, null, null};
+        mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
+        pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
+        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, null};
         mConnectionIsBound = new boolean[] {false, false, false, false};
 
         serverStatusListener = new BroadcastReceiver() {
@@ -113,15 +129,10 @@ public class MainActivity extends AppCompatActivity {
                 if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
                     final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
                     updateServerStatus(status);
-                } else if (intent.getAction().equals(SERVER_RECORDS_SENT_CHANGED)) {
-//                    final String lastNumberOfRecordsSent = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED);
-                    try {
-                        final Map<String, Integer> lastNumberOfRecordsSent = mE4Connection.getServerSent();
-                        String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_CHANGED); // topicName that updated
-                        updateServerRecordsSent( triggerKey, lastNumberOfRecordsSent);
-                    } catch (RemoteException re) {
-                        logger.warn( "Could not update the server records sent: {}", re.getMessage() );
-                    }
+                } else if (intent.getAction().equals(SERVER_RECORDS_SENT_TOPIC)) {
+                    String triggerKey = intent.getStringExtra(SERVER_RECORDS_SENT_TOPIC); // topicName that updated
+                    int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);
+                    updateServerRecordsSent(triggerKey, numberOfRecordsSent);
                 }
             }
         };
@@ -134,11 +145,14 @@ public class MainActivity extends AppCompatActivity {
                 if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                     logger.info("Bluetooth state {}", state);
+                    // Upon state change, restart ui handler and restart Scanning.
                     if (state == BluetoothAdapter.STATE_ON) {
                         logger.info("Bluetooth has turned on");
+                        getHandler().postDelayed(mUIScheduler, uiRefreshRate);
                         startScanning();
                     } else if (state == BluetoothAdapter.STATE_OFF) {
                         logger.warn("Bluetooth is off");
+                        getHandler().postDelayed(mUIScheduler, uiRefreshRate);
                         startScanning();
                     }
                 }
@@ -152,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+                            Boast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -188,6 +202,13 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.temperatureRow2),
                 (TextView) findViewById(R.id.temperatureRow3),
                 (TextView) findViewById(R.id.temperatureRow4)
+        };
+
+        mHeartRateLabels = new TextView[] {
+                (TextView) findViewById(R.id.heartRateRow1),
+                (TextView) findViewById(R.id.heartRateRow2),
+                (TextView) findViewById(R.id.heartRateRow3),
+                (TextView) findViewById(R.id.heartRateRow4)
         };
 
         mBatteryLabels = new ImageView[] {
@@ -244,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         registerReceiver(bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_STATUS_CHANGED));
-        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_CHANGED));
+        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_TOPIC));
         registerReceiver(deviceFailedReceiver, new IntentFilter(E4Service.DEVICE_CONNECT_FAILED));
 
         mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
@@ -319,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < mConnections.length; i++) {
             DeviceServiceConnection connection = mConnections[i];
             if (connection == null || !connection.hasService() || connection.isRecording()) {
-                return;
+                continue;
             }
             Set<String> acceptableIds;
             if (mInputDeviceKeys[i] != null && !mInputDeviceKeys[i].isEmpty()) {
@@ -328,6 +349,7 @@ public class MainActivity extends AppCompatActivity {
                 acceptableIds = Collections.emptySet();
             }
             try {
+                logger.info("Starting recording on connection {}", i);
                 connection.startRecording(acceptableIds);
             } catch (RemoteException e) {
                 logger.error("Failed to start recording for device {}", i, e);
@@ -354,19 +376,23 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
+                Boast.makeText(MainActivity.this, status.toString(), Toast.LENGTH_SHORT).show();
                 switch (status) {
                     case CONNECTED:
                         break;
                     case CONNECTING:
 //                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
-                        // Reject if device name inputted does not equal device nameA
-                        if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
-                            logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
-                            Toast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
-                            // TODO: Clear device name [updateDeviceName( String.format("Device '%s' rejected", connection.getDeviceName() ), 0);]
-                            disconnect();
+                        for (int i = 0; i < mConnections.length; i++) {
+                            if (mConnections[i] != connection) {
+                                continue;
+                            }
+                            // Reject if device name inputted does not equal device nameA
+                            if (mInputDeviceKeys[i] != null && !connection.isAllowedDevice(mInputDeviceKeys[i])) {
+                                logger.info("Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[i]);
+                                Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName()), Toast.LENGTH_LONG).show();
+                                disconnect();
+                            }
                         }
                         break;
                     case DISCONNECTED:
@@ -412,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
                 startScanning();
             } else {
                 // User refused to grant permission.
-                Toast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
+                Boast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -453,20 +479,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             for (int i = 0; i < mConnections.length; i++) {
-                updateRow(deviceData[i], i);
+                // Update all fields
+                updateDeviceStatus(deviceData[i], i);
+                updateTemperature(deviceData[i], i);
+                updateHeartRate(deviceData[i], i);
+                updateBattery(deviceData[i], i);
                 updateDeviceName(deviceNames[i], i);
             }
-        }
-
-        /**
-         * Updates a row with the deviceData
-         * @param deviceData    data to update with
-         * @param row           Row number
-         */
-        public void updateRow(DeviceState deviceData, int row ) {
-            updateDeviceStatus(deviceData, row);
-            updateTemperature(deviceData, row);
-            updateBattery(deviceData, row);
         }
 
         public void updateDeviceStatus(DeviceState deviceData, int row ) {
@@ -492,6 +511,10 @@ public class MainActivity extends AppCompatActivity {
             setText(mTemperatureLabels[row], deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
         }
 
+        public void updateHeartRate(DeviceState deviceData, int row ) {
+            setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
+        }
+
         public void updateBattery(DeviceState deviceData, int row ) {
             // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
             Float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
@@ -515,19 +538,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void updateDeviceName(String deviceName, int row) {
-            // TODO: restrict n_characters of deviceName
-            if (deviceName == null) {
-                // \u2014 == —
-                mDeviceNameLabels[row].setText("\u2014");
-            } else {
-                mDeviceNameLabels[row].setText(deviceName);
+            // Restrict length of name that is shown.
+            if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH - 3) {
+                deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH) + "...";
             }
+
+            // \u2014 == —
+            mDeviceNameLabels[row].setText(deviceName == null ? "\u2014" : deviceName);
         }
 
         private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
             if (Float.isNaN(value)) {
-                // em dash
-                label.setText("\u2014");
+
+                // Only overwrite default value if enabled.
+                if (label.isEnabled()) {
+                    // em dash
+                    label.setText("\u2014");
+                }
+
             } else {
                 label.setText(formatter.format(value) + " " + suffix);
             }
@@ -535,15 +563,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-    public void connectDevice(View v) {
-        int rowIndex = getRowIndexFromView(v);
-        // will restart scanning after disconnect
-        disconnect(rowIndex);
+    public void reconnectDevice(View v) {
+        try {
+            int rowIndex = getRowIndexFromView(v);
+            // will restart scanning after disconnect
+            disconnect(rowIndex);
+        } catch (IndexOutOfBoundsException iobe) {
+            Boast.makeText(this, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
+            logger.warn(iobe.getMessage());
+        }
     }
 
     public void showDetails(final View v) {
-        final int row = getRowIndexFromView(v);
+        final int row;
+        try {
+            row = getRowIndexFromView(v);
+        } catch (IndexOutOfBoundsException iobe) {
+            logger.warn(iobe.getMessage());
+            return;
+        }
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -552,6 +591,8 @@ public class MainActivity extends AppCompatActivity {
                     DeviceServiceConnection connection = mConnections[row];
                     if (connection == mE4Connection) {
                         new E4HeartbeatToast(MainActivity.this).execute(connection);
+                    } else if (connection == pebble2Connection) {
+                        new Pebble2HeartbeatToast(MainActivity.this).execute(connection);
                     }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
@@ -560,7 +601,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private int getRowIndexFromView(View v) {
+    private int getRowIndexFromView(View v) throws IndexOutOfBoundsException {
         // Assume all elements are direct descendants from the TableRow
         View parent = (View) v.getParent();
         switch ( parent.getId() ) {
@@ -578,7 +619,7 @@ public class MainActivity extends AppCompatActivity {
                 return 3;
 
             default:
-                return -1; // TODO: throw exception
+                throw new IndexOutOfBoundsException("Could not find row index of the given view.");
         }
     }
 
@@ -613,10 +654,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateServerRecordsSent(String keyNameTrigger, final Map<String,Integer> lastNumberOfRecordsSent )
+    public void updateServerRecordsSent(String keyNameTrigger, int numberOfRecordsTrigger)
     {
-        int numberOfRecordsTrigger = lastNumberOfRecordsSent.get(keyNameTrigger);
-
         // Condensing the message
         keyNameTrigger = keyNameTrigger.replaceFirst("_?android_?","");
         keyNameTrigger = keyNameTrigger.replaceFirst("_?empatica_?(e4)?","E4");
@@ -624,9 +663,9 @@ public class MainActivity extends AppCompatActivity {
         String message;
         String messageTimeStamp = timeFormat.format( System.currentTimeMillis() );
         if ( numberOfRecordsTrigger < 0 ) {
-            message = String.format("%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
+            message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
         } else {
-            message = String.format("%1$25s uploaded %2$4d records (%3$s)", keyNameTrigger, numberOfRecordsTrigger, messageTimeStamp);
+            message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)", keyNameTrigger, numberOfRecordsTrigger, messageTimeStamp);
         }
 
         mServerMessage.setText( message );
@@ -643,11 +682,20 @@ public class MainActivity extends AppCompatActivity {
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
+        // Setup the row
+        final int row;
+        try {
+            row = getRowIndexFromView(v);
+        } catch (IndexOutOfBoundsException iobe) {
+            Boast.makeText(this, "Could not set this device key, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
+            logger.warn(iobe.getMessage());
+            return;
+        }
+
         // Set up the buttons
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                final int row = getRowIndexFromView( v );
                 String oldValue = mInputDeviceKeys[row];
                 mInputDeviceKeys[row] = input.getText().toString();
                 mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
