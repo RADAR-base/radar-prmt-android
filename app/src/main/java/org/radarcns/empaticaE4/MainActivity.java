@@ -118,8 +118,8 @@ public class MainActivity extends AppCompatActivity {
     public MainActivity() {
         super();
         isForcedDisconnected = false;
-        mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR);
-        pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR);
+        mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
+        pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
         mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, null};
         mConnectionIsBound = new boolean[] {false, false, false, false};
 
@@ -383,11 +383,16 @@ public class MainActivity extends AppCompatActivity {
                     case CONNECTING:
 //                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
-                        // Reject if device name inputted does not equal device nameA
-                        if ( mInputDeviceKeys[0] != null && ! connection.isAllowedDevice( mInputDeviceKeys[0] ) ) {
-                            logger.info( "Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[0]);
-                            Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName() ), Toast.LENGTH_LONG).show();
-                            disconnect();
+                        for (int i = 0; i < mConnections.length; i++) {
+                            if (mConnections[i] != connection) {
+                                continue;
+                            }
+                            // Reject if device name inputted does not equal device nameA
+                            if (mInputDeviceKeys[i] != null && !connection.isAllowedDevice(mInputDeviceKeys[i])) {
+                                logger.info("Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[i]);
+                                Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName()), Toast.LENGTH_LONG).show();
+                                disconnect();
+                            }
                         }
                         break;
                     case DISCONNECTED:
