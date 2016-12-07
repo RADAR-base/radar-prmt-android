@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.avro.Schema;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.Record;
+import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.KafkaTopicSender;
@@ -62,10 +63,11 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         jsonFactory = new JsonFactory();
 
         // Default timeout is 10 seconds.
+        long connectionTimeout = Long.valueOf( System.getProperty( MainActivity.SENDER_CONNECTION_TIMEOUT_KEY) );
         httpClient = new OkHttpClient.Builder()
-                .connectTimeout(20, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS)
-                .readTimeout(20, TimeUnit.SECONDS)
+                .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
+                .writeTimeout(connectionTimeout, TimeUnit.SECONDS)
+                .readTimeout(connectionTimeout, TimeUnit.SECONDS)
                 .build();
 
         isConnectedRequest = new Request.Builder().url(kafkaUrl).head().build();

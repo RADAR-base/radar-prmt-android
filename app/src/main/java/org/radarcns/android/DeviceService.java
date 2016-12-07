@@ -20,6 +20,7 @@ import android.support.annotation.Nullable;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
 import org.radarcns.data.Record;
+import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -398,10 +399,10 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
         URL kafkaUrl = null;
         SchemaRetriever remoteSchemaRetriever = null;
-        if (intent.hasExtra("kafka_rest_proxy_url")) {
-            String kafkaUrlString = intent.getStringExtra("kafka_rest_proxy_url");
+        if (intent.hasExtra(MainActivity.KAFKA_REST_PROXY_KEY)) {
+            String kafkaUrlString = intent.getStringExtra(MainActivity.KAFKA_REST_PROXY_KEY);
             if (!kafkaUrlString.isEmpty()) {
-                remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra("schema_registry_url"));
+                remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra(MainActivity.SCHEMA_REGISTRY_KEY));
                 try {
                     kafkaUrl = new URL(kafkaUrlString);
                 } catch (MalformedURLException e) {

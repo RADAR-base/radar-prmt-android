@@ -26,6 +26,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
+
 import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceState;
@@ -80,34 +87,50 @@ public class MainActivity extends AppCompatActivity {
     /** Overview UI **/
     private TextView[] mDeviceNameLabels;
     private View[] mStatusIcons;
-    private View mServerStatusIcon;
-    private TextView mServerMessage;
     private TextView[] mTemperatureLabels;
     private TextView[] mHeartRateLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
 
+    private View mServerStatusIcon;
+    private TextView mServerMessage;
+    private View mFirebaseStatusIcon;
+    private TextView mFirebaseMessage;
+
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
+
+    public FirebaseRemoteConfig mFirebaseRemoteConfig;
+    private long remoteConfigCacheExpiration = 43200; // expire cache every 12 hours by default
+    public static final String KAFKA_REST_PROXY_KEY = "kafka_rest_proxy_url";
+    public static final String SCHEMA_REGISTRY_KEY = "schema_registry_url";
+    public static final String DEVICE_GROUP_ID_KEY = "device_group_id";
+    public static final String EMPATICA_API_KEY = "empatica_api_key";
+    public static final String UI_REFRESH_RATE_KEY = "ui_refresh_rate_millis";
+    public static final String KAFKA_UPLOAD_RATE_KEY = "kafka_upload_rate";
+    public static final String KAFKA_CLEAN_RATE_KEY = "kafka_clean_rate";
+    public static final String KAFKA_RECORDS_SEND_LIMIT_KEY = "kafka_records_send_limit";
+    public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
+    public static final String[] LONG_SYSTEM_PARAMETER_KEYS = new String[]{KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY, SENDER_CONNECTION_TIMEOUT_KEY};
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
         public void run() {
             if (!mConnectionIsBound[0]) {
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                e4serviceIntent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-                e4serviceIntent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-                e4serviceIntent.putExtra("group_id", getString(R.string.group_id));
-                e4serviceIntent.putExtra("empatica_api_key", getString(R.string.apikey));
+                e4serviceIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
+                e4serviceIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
+                e4serviceIntent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
+                e4serviceIntent.putExtra( EMPATICA_API_KEY, mFirebaseRemoteConfig.getString(EMPATICA_API_KEY) ); // getString(R.string.apikey) );//
 
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
             }
             if (!mConnectionIsBound[2]) {
                 Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                pebble2Intent.putExtra("kafka_rest_proxy_url", getString(R.string.kafka_rest_proxy_url));
-                pebble2Intent.putExtra("schema_registry_url", getString(R.string.schema_registry_url));
-                pebble2Intent.putExtra("group_id", getString(R.string.group_id));
+                pebble2Intent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
+                pebble2Intent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
+                pebble2Intent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
 
                 pebble2Connection.bind(pebble2Intent);
                 mConnectionIsBound[2] = true;
@@ -178,8 +201,38 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_overview);
+        initializeViews();
+        initializeRemoteConfig();
+        updateSystemPropertiesFromRemoteConfig();
 
-        // Create arrays of labels. Fixed to four rows
+        // Start the UI thread
+        uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE_KEY);
+        mUIUpdater = new DeviceUIUpdater();
+        mUIScheduler = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // Update all rows in the UI with the data from the connections
+                    mUIUpdater.update();
+                } catch (RemoteException e) {
+                    logger.warn("Failed to update device data", e);
+                } finally {
+                    getHandler().postDelayed(mUIScheduler, uiRefreshRate);
+                }
+            }
+        };
+
+        checkBluetoothPermissions();
+
+        // Check availability of Google Play Services
+        if ( GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS ) {
+            mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
+            mFirebaseMessage.setText(R.string.playServicesUnavailable);
+        }
+    }
+
+    private void initializeViews() {
+        // The columns, fixed to four rows.
         mDeviceNameLabels = new TextView[] {
                 (TextView) findViewById(R.id.deviceNameRow1),
                 (TextView) findViewById(R.id.deviceNameRow2),
@@ -193,9 +246,6 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.statusRow3),
                 findViewById(R.id.statusRow4)
         };
-
-        mServerStatusIcon = findViewById(R.id.statusServer);
-        mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
 
         mTemperatureLabels = new TextView[] {
                 (TextView) findViewById(R.id.temperatureRow1),
@@ -225,24 +275,24 @@ public class MainActivity extends AppCompatActivity {
                 (Button) findViewById(R.id.inputDeviceNameButtonRow4)
         };
 
-        uiRefreshRate = getResources().getInteger(R.integer.ui_refresh_rate);
+        // Server
+        mServerStatusIcon = findViewById(R.id.statusServer);
+        mServerMessage = (TextView) findViewById( R.id.statusServerMessage);
 
-        mUIUpdater = new DeviceUIUpdater();
-        mUIScheduler = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    // Update all rows in the UI with the data from the connections
-                    mUIUpdater.update();
-                } catch (RemoteException e) {
-                    logger.warn("Failed to update device data", e);
-                } finally {
-                    getHandler().postDelayed(mUIScheduler, uiRefreshRate);
-                }
-            }
-        };
+        // Firebase
+        mFirebaseStatusIcon = findViewById(R.id.firebaseStatus);
+        mFirebaseMessage = (TextView) findViewById( R.id.firebaseStatusMessage);
+    }
 
-        checkBluetoothPermissions();
+    private void initializeRemoteConfig() {
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(true) // TODO: disable developer mode in production
+                .build();
+        mFirebaseRemoteConfig.setConfigSettings(configSettings);
+
+        mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
     }
 
     @Override
@@ -250,6 +300,8 @@ public class MainActivity extends AppCompatActivity {
         logger.info("mainActivity onResume");
         super.onResume();
         mHandler.postDelayed(bindServicesRunner, 300L);
+
+        fetchAndActivateRemoteConfig();
     }
 
     @Override
@@ -305,6 +357,46 @@ public class MainActivity extends AppCompatActivity {
         mHandlerThread.quitSafely();
     }
 
+    public void fetchAndActivateRemoteConfig() {
+        // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
+        // the server.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            remoteConfigCacheExpiration = 0;
+            logger.info("Remote Config: No expiration.");
+        }
+
+        // Fetch and activate if fetch completed successfully
+        mFirebaseRemoteConfig.fetch(remoteConfigCacheExpiration)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            // Once the config is successfully fetched it must be
+                            // activated before newly fetched values are returned.
+                            mFirebaseRemoteConfig.activateFetched();
+                            logger.info("Remote Config: Activate success.");
+                            // Set global properties.
+                            updateSystemPropertiesFromRemoteConfig();
+                            mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
+                            mFirebaseMessage.setText("Remote config fetched from the server (" +  timeFormat.format( System.currentTimeMillis() ) + ")");
+                        } else {
+                            Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    private void updateSystemPropertiesFromRemoteConfig() {
+        // New config will come into effect after app restart
+        // (only then KafakDataSubmitter and RestSender are reinitialized)
+        for (String key: LONG_SYSTEM_PARAMETER_KEYS) {
+            System.setProperty(key, Long.toString( mFirebaseRemoteConfig.getLong(key) ));
+        }
+        logger.info("Remote Config: {}", System.getProperties().toString());
+    }
+
+
     private synchronized Handler getHandler() {
         return mHandler;
     }
@@ -314,7 +406,6 @@ public class MainActivity extends AppCompatActivity {
             disconnect(i);
         }
     }
-
 
     private void disconnect(int row) {
         DeviceServiceConnection connection = mConnections[row];

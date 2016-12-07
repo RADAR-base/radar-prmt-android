@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- START xml_defaults -->
+<defaultsMap>
+    <entry>
+        <key>empatica_api_key</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>kafka_rest_proxy_url</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>schema_registry_url</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>device_group_id</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>device_data_retention_ms</key>
+        <value>82800000</value>
+    </entry>
+    <entry>
+        <key>ui_refresh_rate_millis</key>
+        <value>250</value>
+    </entry>
+    <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
+    <entry>
+        <key>kafka_records_send_limit</key>
+        <value>1000</value>
+    </entry>
+    <entry>
+        <key>kafka_upload_rate</key>
+        <value>10</value>
+    </entry>
+    <entry>
+        <key>kafka_clean_rate</key>
+        <value>3600</value>
+    </entry>
+    <entry>
+        <key>sender_connection_timeout</key>
+        <value>20</value>
+    </entry>
+</defaultsMap>
+<!-- END xml_defaults -->

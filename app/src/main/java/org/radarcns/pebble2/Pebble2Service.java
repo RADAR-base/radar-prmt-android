@@ -8,6 +8,7 @@ import org.radarcns.android.DeviceService;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
+import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public class Pebble2Service extends DeviceService {
     protected void onInvocation(Intent intent) {
         super.onInvocation(intent);
         if (groupId == null) {
-            groupId = intent.getStringExtra("group_id");
+            groupId = intent.getStringExtra(MainActivity.DEVICE_GROUP_ID_KEY);
         }
     }
 }
