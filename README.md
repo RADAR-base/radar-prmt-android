@@ -5,12 +5,12 @@ Currently the Empatica E4 and Pebble 2 are supported. Also note that the applica
 
 ## Setup Empatica E4
 
-First, request an Empatica API key for your Empatica Connect account from our [Developer Area][1]. Also download the Empatica Android SDK there.
+First, request an Empatica API key for your Empatica Connect account from their [Developer Area][1]. Also download the Empatica Android SDK there.
 
 1. Copy the empalink-2.0.aar from the Empatica Android SDK package to the `empalink-2.0` directory.
 2. Edit the `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml` file
 	- Set your Empatica API key in the `empatica_api_key` xml element.
- 	- Set the URL's of the Kafka REST Proxy and the Schema Registry. If the app should not upload any data, leave them blank.
+ 	- Set the `kafka_rest_proxy_url` and the `schema_registry_url`. If the app should not upload any data, leave them blank.
 	- Set the `device_group_id` string to a suitable user ID.
 3. Rename the file to `remote_config_defaults.xml` to use the file with Firebase. For the full Firebase setup, see below.
 
@@ -38,14 +38,15 @@ Then run the following sequence:
 The RADAR-CNS Pebble app will now send data to the endpoint.
 
 ## Setup Firebase Remote Configuration
-Firebase can be used to remotely configure some device and system parameters, e.g. the E4 API key, kafka server address and upload rate.
+Firebase can be used to remotely configure some device and system parameters, e.g. the E4 API key, kafka server address and upload rate. The default parameters are also stored locally in `app/src/main/res/xml/remote_config_defaults.xml`, which will be used if the remote parameters cannot be accessed.
 
 1. [Install the Firebase SDK](https://firebase.google.com/docs/android/setup) in Android Studio.
 2. Login to a Google account.
 3. In the [Firebase console](https://console.firebase.google.com/), add the app (`org.radarcns.android.android`) to a new Firebase project.
-4. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`.
+4. Download the `google-services.json` from the Firebase console (under Project Settings) and move the file to the `app/` folder. 
+5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`.
 
-[Full documentation](https://firebase.google.com/docs/remote-config/use-config-android)
+[Full Firebase guide](https://firebase.google.com/docs/remote-config/use-config-android)
 
 ## Usage
 
