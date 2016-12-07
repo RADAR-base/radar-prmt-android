@@ -364,12 +364,15 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
                                     Toast.LENGTH_SHORT).show();
                         }
+                        // Set global properties.
                         updateSystemPropertiesFromRemoteConfig();
                     }
                 });
     }
 
     private void updateSystemPropertiesFromRemoteConfig() {
+        // New config will come into effect after app restart
+        // (only then KafakDataSubmitter and RestSender are reinitialized)
         for (String key: LONG_SYSTEM_PARAMETER_KEYS) {
             System.setProperty(key, Long.toString( mFirebaseRemoteConfig.getLong(key) ));
         }

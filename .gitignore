@@ -2,6 +2,7 @@
 app/src/main/res/values/apikey.xml
 app/src/main/res/values/server.xml
 app/src/main/res/xml/remote_config_defaults.xml
+app/google-services.json
 
 # Local configuration file
 local.properties

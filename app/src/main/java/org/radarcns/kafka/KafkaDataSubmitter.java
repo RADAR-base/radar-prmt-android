@@ -37,8 +37,6 @@ import java.util.concurrent.TimeUnit;
 public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
 
-    // Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records
-    private final static int SEND_LIMIT = 1000;
     private int sendLimit;
     private boolean lastUploadFailed = false;
     private DataHandler<K, V> dataHandler;
