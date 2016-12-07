@@ -41,7 +41,7 @@ The RADAR-CNS Pebble app will now send data to the endpoint.
 
 ## Usage
 
-To send some mock data to the `radar-test.thehyve.net` server, run `./gradlew :app:cleanTest :app:test`.
+To send some mock data to a Confluent Kafka set up on localhost, run `./gradlew :app:cleanTest :app:test`. If the Confluent Kafka setup is running elsewhere, edit `app/src/test/resources/org/radarcns/kafka/kafka.properties` accordingly.
 
 ## Contributing
 
