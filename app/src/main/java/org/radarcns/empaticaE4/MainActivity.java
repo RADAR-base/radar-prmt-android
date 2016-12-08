@@ -121,23 +121,30 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if (!mConnectionIsBound[0]) {
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                e4serviceIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
-                e4serviceIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
-                e4serviceIntent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
-                e4serviceIntent.putExtra( EMPATICA_API_KEY, mFirebaseRemoteConfig.getString(EMPATICA_API_KEY) ); // getString(R.string.apikey) );//
+                this.configureServiceIntent(e4serviceIntent);
+                e4serviceIntent.putExtra( EMPATICA_API_KEY, mFirebaseRemoteConfig.getString(EMPATICA_API_KEY) );
 
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
             }
             if (!mConnectionIsBound[2]) {
                 Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                pebble2Intent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
-                pebble2Intent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
-                pebble2Intent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
+                this.configureServiceIntent(pebble2Intent);
 
                 pebble2Connection.bind(pebble2Intent);
                 mConnectionIsBound[2] = true;
             }
+        }
+
+        private void configureServiceIntent(Intent serviceIntent) {
+            // Add the default configuration parameters given to the service intents
+            serviceIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
+            serviceIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
+            serviceIntent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
+            serviceIntent.putExtra( KAFKA_UPLOAD_RATE_KEY, mFirebaseRemoteConfig.getLong(KAFKA_UPLOAD_RATE_KEY) );
+            serviceIntent.putExtra( KAFKA_CLEAN_RATE_KEY, mFirebaseRemoteConfig.getLong(KAFKA_CLEAN_RATE_KEY) );
+            serviceIntent.putExtra( KAFKA_RECORDS_SEND_LIMIT_KEY, mFirebaseRemoteConfig.getLong(KAFKA_RECORDS_SEND_LIMIT_KEY) );
+            serviceIntent.putExtra( SENDER_CONNECTION_TIMEOUT_KEY, mFirebaseRemoteConfig.getLong(SENDER_CONNECTION_TIMEOUT_KEY) );
         }
     };
 

@@ -48,7 +48,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     private final KafkaConnectionChecker connection;
     private final static ListPool listPool = new ListPool(1);
 
-    public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory) {
+    public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory, long uploadRate, long cleanRate) {
         this.dataHandler = dataHandler;
         this.sender = sender;
         trySendCache = new ConcurrentHashMap<>();
@@ -76,7 +76,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         });
 
         // Get upload frequency from system property
-        long uploadRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_RATE_KEY) );
         executor.scheduleAtFixedRate(new Runnable() {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
             @Override
@@ -97,7 +96,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         }, uploadRate, uploadRate, TimeUnit.SECONDS);
 
         // Remove old data from tables infrequently
-        long cleanRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_CLEAN_RATE_KEY) );
         executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {

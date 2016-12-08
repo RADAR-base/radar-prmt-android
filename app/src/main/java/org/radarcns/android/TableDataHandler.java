@@ -43,6 +43,10 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> tables;
     private final Set<ServerStatusListener> statusListeners;
     private final BroadcastReceiver connectivityReceiver;
+    private final long kafkaUploadRate;
+    private final long kafkaCleanRate;
+    private final long kafkaRecordsSendLimit;
+    private final long senderConnectionTimeout;
     private ServerStatusListener.Status status;
     private Map<String, Integer> lastNumberOfRecordsSent = new TreeMap<>();
 
@@ -58,6 +62,10 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         this.context = context;
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
+        this.kafkaUploadRate = kafkaUploadRate;
+        this.kafkaCleanRate = kafkaCleanRate;
+        this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
+        this.senderConnectionTimeout = senderConnectionTimeout;
         tables = new HashMap<>(topics.length * 2);
         for (AvroTopic<MeasurementKey, ? extends SpecificRecord> topic : topics) {
             tables.put(topic, new MeasurementTable<>(context, topic, dbAgeMillis));
@@ -113,7 +121,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
         updateServerStatus(Status.CONNECTING);
         KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false));
-        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory);
+        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, this.kafkaUploadRate, this.kafkaCleanRate );
     }
 
     public boolean isStarted() {
