@@ -114,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
     public static final String KAFKA_CLEAN_RATE_KEY = "kafka_clean_rate";
     public static final String KAFKA_RECORDS_SEND_LIMIT_KEY = "kafka_records_send_limit";
     public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
-    public static final String[] LONG_SYSTEM_PARAMETER_KEYS = new String[]{KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY, SENDER_CONNECTION_TIMEOUT_KEY};
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -213,7 +212,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_overview);
         initializeViews();
         initializeRemoteConfig();
-        updateSystemPropertiesFromRemoteConfig();
 
         // Start the UI thread
         uiRefreshRate = mFirebaseRemoteConfig.getLong(UI_REFRESH_RATE_KEY);
@@ -393,26 +391,16 @@ public class MainActivity extends AppCompatActivity {
                             mFirebaseRemoteConfig.activateFetched();
                             logger.info("Remote Config: Activate success.");
                             // Set global properties.
-                            updateSystemPropertiesFromRemoteConfig();
                             mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
                             mFirebaseMessage.setText("Remote config fetched from the server (" +  timeFormat.format( System.currentTimeMillis() ) + ")");
                         } else {
                             Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
                                     Toast.LENGTH_SHORT).show();
+                            logger.info("Remote Config: Fetch failed. Stacktrace: {}", task.getException());
                         }
                     }
                 });
     }
-
-    private void updateSystemPropertiesFromRemoteConfig() {
-        // New config will come into effect after app restart
-        // (only then KafakDataSubmitter and RestSender are reinitialized)
-        for (String key: LONG_SYSTEM_PARAMETER_KEYS) {
-            System.setProperty(key, Long.toString( mFirebaseRemoteConfig.getLong(key) ));
-        }
-        logger.info("Remote Config: {}", System.getProperties().toString());
-    }
-
 
     private synchronized Handler getHandler() {
         return mHandler;

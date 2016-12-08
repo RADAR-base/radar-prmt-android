@@ -239,7 +239,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 lastUploadFailed = true;
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING_FAILED);
                 dataHandler.updateRecordsSent(topic.getName(), -1);
-                logger.info("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
+                logger.debug("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
                 throw ioe;
             }
 
@@ -251,7 +251,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             logger.debug("uploaded {} {} records", numberOfRecords, topic.getName());
             if( topic.getName().equals( "android_empatica_e4_blood_volume_pulse" ) ){
                 Record<K,V> lastMeasurement = measurements.get( numberOfRecords-1 );
-                logger.info("UPF: {} sec. - {}", (int) lastMeasurement.milliTimeAdded/1000, lastMeasurement.value );
             }
 
             if (lastOffset == measurements.get(numberOfRecords - 1).offset) {
