@@ -89,9 +89,12 @@ public class MainActivity extends AppCompatActivity {
     private View[] mStatusIcons;
     private TextView[] mTemperatureLabels;
     private TextView[] mHeartRateLabels;
+    private TextView[] mRecordsSentLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
     private String[] mInputDeviceKeys = new String[4];
+    private int[] mTotalRecordsSent = new int[4];
+    private Long[] mLastRecordsSentTimeMillis = new Long[4];
 
     private View mServerStatusIcon;
     private TextView mServerMessage;
@@ -273,6 +276,13 @@ public class MainActivity extends AppCompatActivity {
                 (Button) findViewById(R.id.inputDeviceNameButtonRow2),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow3),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow4)
+        };
+
+        mRecordsSentLabels = new TextView[] {
+                (TextView) findViewById(R.id.recordsSentRow1),
+                (TextView) findViewById(R.id.recordsSentRow2),
+                (TextView) findViewById(R.id.recordsSentRow3),
+                (TextView) findViewById(R.id.recordsSentRow4)
         };
 
         // Server
@@ -576,6 +586,7 @@ public class MainActivity extends AppCompatActivity {
                 updateHeartRate(deviceData[i], i);
                 updateBattery(deviceData[i], i);
                 updateDeviceName(deviceNames[i], i);
+                updateDeviceTotalRecordsSent(i);
             }
         }
 
@@ -638,15 +649,30 @@ public class MainActivity extends AppCompatActivity {
             mDeviceNameLabels[row].setText(deviceName == null ? "\u2014" : deviceName);
         }
 
+        public void updateDeviceTotalRecordsSent(int row) {
+            if (mLastRecordsSentTimeMillis[row] == null) {
+                mRecordsSentLabels[row].setText( R.string.emptyText );
+            } else {
+                String message;
+                Long timeSinceLastUpdate = ( System.currentTimeMillis() - mLastRecordsSentTimeMillis[row] )/1000;
+                // Small test for Firebase Remote config.
+                if (mFirebaseRemoteConfig.getBoolean("is_condensed_n_records_display")) {
+                    message = String.format(Locale.US, "%1$4dk (%2$d)", mTotalRecordsSent[row]/1000, timeSinceLastUpdate);
+                } else {
+                    message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)", mTotalRecordsSent[row], timeSinceLastUpdate);
+                }
+                mRecordsSentLabels[row].setText( message );
+            }
+
+        }
+
         private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
             if (Float.isNaN(value)) {
-
                 // Only overwrite default value if enabled.
                 if (label.isEnabled()) {
                     // em dash
                     label.setText("\u2014");
                 }
-
             } else {
                 label.setText(formatter.format(value) + " " + suffix);
             }
@@ -690,6 +716,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            fetchAndActivateRemoteConfig();
+        }
     }
 
     private int getRowIndexFromView(View v) throws IndexOutOfBoundsException {
@@ -751,8 +781,8 @@ public class MainActivity extends AppCompatActivity {
         keyNameTrigger = keyNameTrigger.replaceFirst("_?android_?","");
         keyNameTrigger = keyNameTrigger.replaceFirst("_?empatica_?(e4)?","E4");
 
-        String message;
         String messageTimeStamp = timeFormat.format( System.currentTimeMillis() );
+        String message;
         if ( numberOfRecordsTrigger < 0 ) {
             message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)", keyNameTrigger, messageTimeStamp);
         } else {
@@ -761,6 +791,20 @@ public class MainActivity extends AppCompatActivity {
 
         mServerMessage.setText( message );
         logger.info(message);
+
+        // TODO: more reliable way to get the row index. E.g. via the mConnections.
+        int rowIndex;
+        if (keyNameTrigger.contains("E4")) {
+            rowIndex = 0;
+        } else if (keyNameTrigger.contains("pebble")) {
+            rowIndex = 2;
+        } else {
+            logger.debug("Could not match the key name {} to a row in the ui", keyNameTrigger);
+            return;
+        }
+
+        mTotalRecordsSent[rowIndex] += numberOfRecordsTrigger;
+        mLastRecordsSentTimeMillis[rowIndex] = System.currentTimeMillis();
     }
 
     public void dialogInputDeviceName(final View v) {

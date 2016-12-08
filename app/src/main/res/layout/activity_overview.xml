@@ -56,15 +56,19 @@
 
                             <TextView
                                 style="@style/Header"
-                                android:text="" />
+                                android:text="@string/header_device_key" />
 
                             <TextView
                                 style="@style/Header"
-                                android:text="" />
+                                android:text="@string/header_scan" />
 
                             <TextView
                                 style="@style/Header"
-                                android:text="" />
+                                android:text="@string/header_details" />
+
+                            <TextView
+                                style="@style/Header"
+                                android:text="@string/header_records_sent" />
                         </TableRow>
 
                         <TableRow
@@ -126,6 +130,11 @@
                                 android:text="@string/button_details"
                                 android:onClick="showDetails" />
 
+                            <TextView
+                                android:id="@+id/recordsSentRow1"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+
                         </TableRow>
 
                         <TableRow
@@ -186,6 +195,11 @@
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_details"
                                 android:onClick="showDetails" />
+
+                            <TextView
+                                android:id="@+id/recordsSentRow2"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
                         </TableRow>
 
                         <TableRow
@@ -249,6 +263,11 @@
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_details"
                                 android:onClick="showDetails" />
+
+                            <TextView
+                                android:id="@+id/recordsSentRow3"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
                         </TableRow>
 
                         <TableRow
@@ -309,6 +328,11 @@
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_details"
                                 android:onClick="showDetails" />
+
+                            <TextView
+                                android:id="@+id/recordsSentRow4"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
                         </TableRow>
                     </TableLayout>
 

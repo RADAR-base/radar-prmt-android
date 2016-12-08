@@ -30,8 +30,10 @@
     <string name="header_device">Device</string>
     <string name="header_temp">Temp.</string>
     <string name="header_hr">HR</string>
-    <string name="header_connect"></string>
+    <string name="header_device_key"></string>
+    <string name="header_scan"></string>
     <string name="header_details"></string>
+    <string name="header_records_sent">Total # Records Sent</string>
     <string name="label_firebase_status">Firebase</string>
     <string name="deviceTypeLabel1">E4</string>
     <string name="deviceTypeLabel2">Angel</string>
