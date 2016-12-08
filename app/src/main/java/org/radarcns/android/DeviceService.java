@@ -411,12 +411,21 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                 }
             }
         }
-        long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
         //noinspection unchecked
-        boolean didUpdate;
-        localDataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
-                dataRetentionMs, getCachedTopics());
 
+        localDataHandler = new TableDataHandler.TableDataHandlerBuilder()
+                .setContext(this)
+                .setKafkaUrl(kafkaUrl)
+                .setSchemaRetriever(remoteSchemaRetriever)
+                .setTopics(getCachedTopics())
+                .setDataRetentionMillis( intent.getLongExtra("data_retention_ms", 86400000) )
+                .setKafkaUploadRate( intent.getLongExtra(MainActivity.KAFKA_UPLOAD_RATE_KEY, 10) )
+                .setKafkaCleanRate( intent.getLongExtra(MainActivity.KAFKA_CLEAN_RATE_KEY, 3600) )
+                .setKafkaRecordsSendLimit( intent.getLongExtra(MainActivity.KAFKA_RECORDS_SEND_LIMIT_KEY, 1000) )
+                .setSenderConnectionTimeout( intent.getLongExtra(MainActivity.SENDER_CONNECTION_TIMEOUT_KEY, 10) )
+                .createTableDataHandler();
+
+        boolean didUpdate;
         synchronized (this) {
             if (dataHandler == null) {
                 dataHandler = localDataHandler;

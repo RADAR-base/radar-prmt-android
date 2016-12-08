@@ -52,7 +52,9 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
     @SafeVarargs
-    public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis, AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
+    public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis,
+                            long kafkaUploadRate, long kafkaCleanRate, long kafkaRecordsSendLimit, long senderConnectionTimeout,
+                            AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
         this.context = context;
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
@@ -246,6 +248,73 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     public Map<String, Integer> getRecordsSent() {
         synchronized (statusListeners) {
             return this.lastNumberOfRecordsSent;
+        }
+    }
+
+    public static class TableDataHandlerBuilder {
+        private Context context;
+        private int dbAgeMillis = 2500;
+        private URL kafkaUrl;
+        private SchemaRetriever schemaRetriever;
+        private long dataRetentionMillis = 86400000;
+        private AvroTopic<MeasurementKey, ? extends SpecificRecord>[] topics;
+        private long kafkaUploadRate;
+        private long kafkaCleanRate;
+        private long kafkaRecordsSendLimit;
+        private long senderConnectionTimeout;
+
+        public TableDataHandlerBuilder setContext(Context context) {
+            this.context = context;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setDbAgeMillis(int dbAgeMillis) {
+            this.dbAgeMillis = dbAgeMillis;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setKafkaUrl(URL kafkaUrl) {
+            this.kafkaUrl = kafkaUrl;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setSchemaRetriever(SchemaRetriever schemaRetriever) {
+            this.schemaRetriever = schemaRetriever;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setDataRetentionMillis(long dataRetentionMillis) {
+            this.dataRetentionMillis = dataRetentionMillis;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setTopics(AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
+            this.topics = topics;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setKafkaUploadRate(long kafkaUploadRate) {
+            this.kafkaUploadRate = kafkaUploadRate;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setKafkaCleanRate(long kafkaCleanRate) {
+            this.kafkaCleanRate = kafkaCleanRate;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setKafkaRecordsSendLimit(long kafkaRecordsSendLimit) {
+            this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
+            return this;
+        }
+
+        public TableDataHandlerBuilder setSenderConnectionTimeout(long senderConnectionTimeout) {
+            this.senderConnectionTimeout = senderConnectionTimeout;
+            return this;
+        }
+
+        public TableDataHandler createTableDataHandler() {
+            return new TableDataHandler(context, dbAgeMillis, kafkaUrl, schemaRetriever, dataRetentionMillis, kafkaUploadRate, kafkaCleanRate, kafkaRecordsSendLimit, senderConnectionTimeout, topics);
         }
     }
 }
