@@ -49,7 +49,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     private final HttpUrl schemalessKeyUrl;
     private final HttpUrl schemalessValueUrl;
 
-    public RestSender(URL kafkaUrl, SchemaRetriever schemaRetriever, AvroEncoder keyEncoder, AvroEncoder valueEncoder) {
+    public RestSender(URL kafkaUrl, SchemaRetriever schemaRetriever, AvroEncoder keyEncoder, AvroEncoder valueEncoder, long connectionTimeout) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         this.keyEncoder = keyEncoder;
@@ -63,7 +63,6 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         jsonFactory = new JsonFactory();
 
         // Default timeout is 10 seconds.
-        long connectionTimeout = Long.valueOf( System.getProperty( MainActivity.SENDER_CONNECTION_TIMEOUT_KEY) );
         httpClient = new OkHttpClient.Builder()
                 .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
                 .writeTimeout(connectionTimeout, TimeUnit.SECONDS)

@@ -120,8 +120,9 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         }
 
         updateServerStatus(Status.CONNECTING);
-        KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false));
-        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, this.kafkaUploadRate, this.kafkaCleanRate );
+        KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
+        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, kafkaUploadRate, kafkaCleanRate );
+        this.submitter.setSendLimit( (int) kafkaRecordsSendLimit);
     }
 
     public boolean isStarted() {

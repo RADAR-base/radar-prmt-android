@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
 
-    private int sendLimit;
+    private int sendLimit = 1000;
     private boolean lastUploadFailed = false;
     private DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
@@ -54,7 +54,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         trySendCache = new ConcurrentHashMap<>();
         trySendFuture = new HashMap<>();
         topicSenders = new HashMap<>();
-        sendLimit = Integer.valueOf( System.getProperty( MainActivity.KAFKA_RECORDS_SEND_LIMIT_KEY) );
 
         logger.info("Starting executor");
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
@@ -104,6 +103,10 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         }, 0L, cleanRate, TimeUnit.SECONDS);
 
         logger.info("Remote Config: Upload rate is '{}' sec per upload, clean is {} sec per upload", uploadRate, cleanRate);
+    }
+
+    public void setSendLimit(int sendLimit) {
+        this.sendLimit = sendLimit;
     }
 
     /**
