@@ -17,4 +17,10 @@ public interface DeviceState extends Parcelable {
      * @return temperature or Float.NaN if unknown.
      */
     float getTemperature();
+
+    /**
+     * Get the heart rate in bpm.
+     * @return heart rate or Float.NaN if unknown.
+     */
+    float getHeartRate();
 }
