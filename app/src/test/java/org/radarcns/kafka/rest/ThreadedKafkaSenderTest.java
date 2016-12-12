@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
+import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,52 +23,66 @@ public class ThreadedKafkaSenderTest extends TestCase {
     private Logger logger = LoggerFactory.getLogger(ThreadedKafkaSenderTest.class);
 
     public void testMain() throws Exception {
-        System.out.println(System.currentTimeMillis());
-        int numberOfDevices = 50;
-
-        logger.info("Simulating the load of " + numberOfDevices);
-        MockDevice[] threads = new MockDevice[numberOfDevices];
-
         Properties props = new Properties();
         try (InputStream in = getClass().getResourceAsStream("../kafka.properties")) {
             assertNotNull(in);
             props.load(in);
         }
 
-        SchemaRetriever schemaRetriever = new SchemaRetriever(props.getProperty("schema.registry.url"));
-        URL kafkaURL = new URL(props.getProperty("rest.proxy.url"));
-        AvroEncoder keyEncoder = new StringEncoder();
-        AvroEncoder valueEncoder = new SpecificRecordEncoder(false);
+        boolean start = Boolean.parseBoolean(props.getProperty("servertest","false"));
 
-        KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
-        KafkaSender<String, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);
-        kafkaThread.resetConnection();
+        if (start) {
+            System.out.println(System.currentTimeMillis());
+            int numberOfDevices = 50;
 
-        try (KafkaSender<String, SpecificRecord> sender = new BatchedKafkaSender<>(kafkaThread, 1000, 250)) {
-            Schema stringSchema = Schema.create(Schema.Type.STRING);
-            for (int i = 0; i < numberOfDevices; i++) {
-                threads[i] = new MockDevice<>(sender, "device" + i, stringSchema, String.class);
-                threads[i].start();
-            }
-            // stop running after 5 seconds, or after the first thread quits, whichever comes first
-            long streamingTimeoutMs = 5_000L;
-            if (props.containsKey("streaming.timeout.ms")) {
-                try {
-                    streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
-                } catch (NumberFormatException ex) {
-                    // whatever
+            logger.info("Simulating the load of " + numberOfDevices);
+            MockDevice[] threads = new MockDevice[numberOfDevices];
+
+            SchemaRetriever schemaRetriever = new SchemaRetriever(props.getProperty("schema.registry.url"));
+            URL kafkaURL = new URL(props.getProperty("rest.proxy.url"));
+
+            AvroEncoder keyEncoder = new SpecificRecordEncoder(false);
+            AvroEncoder valueEncoder = new SpecificRecordEncoder(false);
+
+            /*KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
+            KafkaSender<String, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);*/
+
+            KafkaSender<MeasurementKey, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
+            KafkaSender<MeasurementKey, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);
+
+            kafkaThread.resetConnection();
+
+            String userID = "UserID_";
+            String sourceID = "SourceID_";
+
+            try (KafkaSender<MeasurementKey, SpecificRecord> sender = new BatchedKafkaSender<>(kafkaThread, 1000, 250)) {
+                for (int i = 0; i < numberOfDevices; i++) {
+                    threads[i] = new MockDevice<>(sender, new MeasurementKey(userID+i, sourceID+i), MeasurementKey.getClassSchema(), MeasurementKey.class);
+                    threads[i].start();
+                }
+                // stop running after 5 seconds, or after the first thread quits, whichever comes first
+                long streamingTimeoutMs = 5_000L;
+                if (props.containsKey("streaming.timeout.ms")) {
+                    try {
+                        streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
+                    } catch (NumberFormatException ex) {
+                        // whatever
+                    }
+                }
+                threads[0].join(streamingTimeoutMs);
+                for (MockDevice device : threads) {
+                    device.interrupt();
+                }
+                for (MockDevice device : threads) {
+                    device.join();
+                }
+                for (MockDevice device : threads) {
+                    assertNull("Device had IOException", device.getException());
                 }
             }
-            threads[0].join(streamingTimeoutMs);
-            for (MockDevice device : threads) {
-                device.interrupt();
-            }
-            for (MockDevice device : threads) {
-                device.join();
-            }
-            for (MockDevice device : threads) {
-                assertNull("Device had IOException", device.getException());
-            }
+        }
+        else{
+            logger.info("Serve test case has been disable. servertest property is "+Boolean.toString(start));
         }
     }
 }

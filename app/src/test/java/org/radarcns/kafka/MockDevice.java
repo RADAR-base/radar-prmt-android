@@ -30,7 +30,7 @@ public class MockDevice<K> extends Thread {
     private final AvroTopic<K, EmpaticaE4Temperature> temperature;
     private final int hertz_modulus;
     private final KafkaSender<K, SpecificRecord> sender;
-    private final K deviceId;
+    private final K key;
     private final long nanoTimeStep;
     private final float batteryDecayFactor;
     private final float timeDriftFactor;
@@ -38,15 +38,15 @@ public class MockDevice<K> extends Thread {
     private final static AtomicLong offset = new AtomicLong(0);
     private IOException exception;
 
-    public MockDevice(KafkaSender<K, SpecificRecord> sender, K deviceId, Schema keySchema, Class<K> deviceClass) {
-        this.deviceId = deviceId;
-        acceleration = new AvroTopic<>("mock_empatica_e4_acceleration", keySchema, EmpaticaE4Acceleration.getClassSchema(), deviceClass, EmpaticaE4Acceleration.class);
-        battery = new AvroTopic<>("mock_empatica_e4_battery_level", keySchema, EmpaticaE4BatteryLevel.getClassSchema(), deviceClass, EmpaticaE4BatteryLevel.class);
-        bvp = new AvroTopic<>("mock_empatica_e4_blood_volume_pulse", keySchema, EmpaticaE4BloodVolumePulse.getClassSchema(), deviceClass, EmpaticaE4BloodVolumePulse.class);
-        eda = new AvroTopic<>("mock_empatica_e4_electrodermal_activity", keySchema, EmpaticaE4ElectroDermalActivity.getClassSchema(), deviceClass, EmpaticaE4ElectroDermalActivity.class);
-        ibi = new AvroTopic<>("mock_empatica_e4_inter_beat_interval", keySchema, EmpaticaE4InterBeatInterval.getClassSchema(), deviceClass, EmpaticaE4InterBeatInterval.class);
-        tags = new AvroTopic<>("mock_empatica_e4_tag", keySchema, EmpaticaE4Tag.getClassSchema(), deviceClass, EmpaticaE4Tag.class);
-        temperature = new AvroTopic<>("mock_empatica_e4_temperature", keySchema, EmpaticaE4Temperature.getClassSchema(), deviceClass, EmpaticaE4Temperature.class);
+    public MockDevice(KafkaSender<K, SpecificRecord> sender, K key, Schema keySchema, Class<K> keyClass) {
+        this.key = key;
+        acceleration = new AvroTopic<>("mock_empatica_e4_acceleration", keySchema, EmpaticaE4Acceleration.getClassSchema(), keyClass, EmpaticaE4Acceleration.class);
+        battery = new AvroTopic<>("mock_empatica_e4_battery_level", keySchema, EmpaticaE4BatteryLevel.getClassSchema(), keyClass, EmpaticaE4BatteryLevel.class);
+        bvp = new AvroTopic<>("mock_empatica_e4_blood_volume_pulse", keySchema, EmpaticaE4BloodVolumePulse.getClassSchema(), keyClass, EmpaticaE4BloodVolumePulse.class);
+        eda = new AvroTopic<>("mock_empatica_e4_electrodermal_activity", keySchema, EmpaticaE4ElectroDermalActivity.getClassSchema(), keyClass, EmpaticaE4ElectroDermalActivity.class);
+        ibi = new AvroTopic<>("mock_empatica_e4_inter_beat_interval", keySchema, EmpaticaE4InterBeatInterval.getClassSchema(), keyClass, EmpaticaE4InterBeatInterval.class);
+        tags = new AvroTopic<>("mock_empatica_e4_tag", keySchema, EmpaticaE4Tag.getClassSchema(), keyClass, EmpaticaE4Tag.class);
+        temperature = new AvroTopic<>("mock_empatica_e4_temperature", keySchema, EmpaticaE4Temperature.getClassSchema(), keyClass, EmpaticaE4Temperature.class);
         hertz_modulus = 64;
         nanoTimeStep = 1000000000L / hertz_modulus;
         lastSleep = 0;
@@ -94,7 +94,7 @@ public class MockDevice<K> extends Thread {
                     sendIfNeeded(i, temperatureFrequency, temperatureSender, new EmpaticaE4Temperature(tD, tR, 37.0f));
                     sleep();
                 }
-                logger.debug("Single time step {}", deviceId);
+                logger.debug("Single time step {}", key);
             }
         } catch (InterruptedException ex) {
             // do nothing, just exit the loop
@@ -102,14 +102,14 @@ public class MockDevice<K> extends Thread {
             synchronized (this) {
                 this.exception = e;
             }
-            logger.error("MockDevice {} failed to send message", deviceId, e);
+            logger.error("MockDevice {} failed to send message", key, e);
         }
     }
 
     private <V extends SpecificRecord> void sendIfNeeded(int timeStep, int frequency, KafkaTopicSender<K, V> topicSender, V avroRecord) throws IOException {
         if (frequency > 0 && timeStep % (hertz_modulus / frequency) == 0) {
             synchronized (offset) {
-                topicSender.send(offset.incrementAndGet(), deviceId, avroRecord);
+                topicSender.send(offset.incrementAndGet(), key, avroRecord);
             }
         }
     }
