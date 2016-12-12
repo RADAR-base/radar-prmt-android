@@ -1,6 +1,7 @@
 package org.radarcns;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
@@ -44,6 +45,14 @@ public class RadarConfiguration {
     private RadarConfiguration(@NonNull FirebaseRemoteConfig config) {
         this.config = config;
         // TODO: fetch settings with a timer and add listeners for that
+    }
+
+    public FirebaseRemoteConfig getFirebase() {
+        return config;
+    }
+
+    public boolean isInDevelopmentMode() {
+        return config.getInfo().getConfigSettings().isDeveloperModeEnabled();
     }
 
     public static boolean hasInstance() {
@@ -181,15 +190,15 @@ public class RadarConfiguration {
         return config.hashCode();
     }
 
-    public void addExtras(Intent intent, String... extras) {
+    public void putExtras(Bundle bundle, String... extras) {
         for (String extra : extras) {
             try {
                 if (LONG_VALUES.contains(extra)) {
-                    intent.putExtra(RADAR_PREFIX + extra, getLong(extra));
+                    bundle.putLong(RADAR_PREFIX + extra, getLong(extra));
                 } else if (INT_VALUES.contains(extra)) {
-                    intent.putExtra(RADAR_PREFIX + extra, getInt(extra));
+                    bundle.putInt(RADAR_PREFIX + extra, getInt(extra));
                 } else {
-                    intent.putExtra(RADAR_PREFIX + extra, getString(extra));
+                    bundle.putString(RADAR_PREFIX + extra, getString(extra));
                 }
             } catch (IllegalArgumentException ex) {
                 // do nothing
@@ -197,20 +206,31 @@ public class RadarConfiguration {
         }
     }
 
-    public static boolean hasExtra(Intent intent, String key) {
-        return intent.hasExtra(RADAR_PREFIX + key);
+    public static boolean hasExtra(Bundle bundle, String key) {
+        return bundle.containsKey(RADAR_PREFIX + key);
     }
 
-    public static int getIntExtra(Intent intent, String key, int defaultValue) {
-        return intent.getIntExtra(RADAR_PREFIX + key, defaultValue);
+    public static int getIntExtra(Bundle bundle, String key, int defaultValue) {
+        return bundle.getInt(RADAR_PREFIX + key, defaultValue);
     }
 
-    public static long getLongExtra(Intent intent, String key, long defaultValue) {
-        return intent.getLongExtra(RADAR_PREFIX + key, defaultValue);
+    public static int getIntExtra(Bundle bundle, String key) {
+        return bundle.getInt(RADAR_PREFIX + key);
     }
 
-    public static String getStringExtra(Intent intent, String key, String defaultValue) {
-        String result = intent.getStringExtra(RADAR_PREFIX + key);
-        return result != null ? result : defaultValue;
+    public static long getLongExtra(Bundle bundle, String key, long defaultValue) {
+        return bundle.getLong(RADAR_PREFIX + key, defaultValue);
+    }
+
+    public static long getLongExtra(Bundle bundle, String key) {
+        return bundle.getLong(RADAR_PREFIX + key);
+    }
+
+    public static String getStringExtra(Bundle bundle, String key, String defaultValue) {
+        return bundle.getString(RADAR_PREFIX + key, defaultValue);
+    }
+
+    public static String getStringExtra(Bundle bundle, String key) {
+        return bundle.getString(RADAR_PREFIX + key);
     }
 }

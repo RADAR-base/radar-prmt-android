@@ -46,7 +46,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
 
     private final SQLiteOpenHelper dbHelper;
     private final AvroTopic<MeasurementKey, V> topic;
-    private final long window;
+    private long window;
     private long lastOffsetSent;
     private final Object lastOffsetSentSync = new Object();
     private SubmitThread submitThread;
@@ -77,7 +77,9 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         };
 
         this.topic = topic;
-        this.window = timeWindowMillis;
+        synchronized (this) {
+            this.window = timeWindowMillis;
+        }
         this.submitThread = null;
         this.lastOffsetSent = -1L;
         this.threadFactory = new AndroidThreadFactory(
@@ -97,6 +99,14 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                     // nothing
             }
         }
+    }
+
+    public synchronized void setTimeWindow(long timeWindowMillis) {
+        this.window = timeWindowMillis;
+    }
+
+    private synchronized long getTimeWindow() {
+        return this.window;
     }
 
     /** Start submitting data to the table. */
@@ -218,14 +228,14 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
 
         synchronized void add(MeasurementKey key, V value) {
             if (!hasFuture) {
-                this.executor.schedule(new DoSubmitValues(), window, TimeUnit.MILLISECONDS);
+                this.executor.schedule(new DoSubmitValues(), getTimeWindow(), TimeUnit.MILLISECONDS);
                 hasFuture = true;
             }
             queue.add(new Pair<>(key, value));
         }
 
         synchronized void flush() {
-            this.executor.schedule(new DoSubmitValues(), window, TimeUnit.MILLISECONDS);
+            this.executor.schedule(new DoSubmitValues(), getTimeWindow(), TimeUnit.MILLISECONDS);
             hasFuture = true;
         }
 

@@ -1,5 +1,7 @@
 package org.radarcns.kafka.rest;
 
+import android.support.annotation.NonNull;
+
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -36,17 +38,18 @@ import okio.Sink;
 
 public class RestSender<K, V> implements KafkaSender<K, V> {
     private final static Logger logger = LoggerFactory.getLogger(RestSender.class);
-    private final SchemaRetriever schemaRetriever;
-    private final URL kafkaUrl;
     private final AvroEncoder keyEncoder;
     private final AvroEncoder valueEncoder;
     private final JsonFactory jsonFactory;
-    private final OkHttpClient httpClient;
     public final static String KAFKA_REST_ACCEPT_ENCODING = "application/vnd.kafka.v1+json, application/vnd.kafka+json, application/json";
     public final static MediaType KAFKA_REST_AVRO_ENCODING = MediaType.parse("application/vnd.kafka.avro.v1+json; charset=utf-8");
-    private final Request isConnectedRequest;
-    private final HttpUrl schemalessKeyUrl;
-    private final HttpUrl schemalessValueUrl;
+
+    private URL kafkaUrl;
+    private HttpUrl schemalessKeyUrl;
+    private HttpUrl schemalessValueUrl;
+    private Request isConnectedRequest;
+    private SchemaRetriever schemaRetriever;
+    private OkHttpClient httpClient;
 
     /**
      * Construct a RestSender.
@@ -56,27 +59,64 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
      * @param valueEncoder Avro encoder for values
      * @param connectionTimeout socket connection timeout in seconds
      */
-    public RestSender(URL kafkaUrl, SchemaRetriever schemaRetriever, AvroEncoder keyEncoder, AvroEncoder valueEncoder, long connectionTimeout) {
-        this.kafkaUrl = kafkaUrl;
-        this.schemaRetriever = schemaRetriever;
+    public RestSender(@NonNull URL kafkaUrl, @NonNull SchemaRetriever schemaRetriever, @NonNull AvroEncoder keyEncoder, @NonNull AvroEncoder valueEncoder, long connectionTimeout) {
+        setKafkaUrl(kafkaUrl);
+        setSchemaRetriever(schemaRetriever);
         this.keyEncoder = keyEncoder;
         this.valueEncoder = valueEncoder;
+        jsonFactory = new JsonFactory();
+        setConnectionTimeout(connectionTimeout);
+    }
+
+    public final synchronized void setConnectionTimeout(long connectionTimeout) {
+        if (httpClient != null && httpClient.connectTimeoutMillis() == connectionTimeout) {
+            return;
+        }
+        httpClient = new OkHttpClient.Builder()
+                .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
+                .writeTimeout(connectionTimeout, TimeUnit.SECONDS)
+                .readTimeout(connectionTimeout, TimeUnit.SECONDS)
+                .build();
+    }
+
+    private synchronized OkHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public final synchronized void setKafkaUrl(@NonNull URL kafkaUrl) {
+        if (kafkaUrl.equals(this.kafkaUrl)) {
+            return;
+        }
+        this.kafkaUrl = kafkaUrl;
+
         try {
             schemalessKeyUrl = HttpUrl.get(new URL(kafkaUrl, "topics/schemaless-key"));
             schemalessValueUrl = HttpUrl.get(new URL(kafkaUrl, "topics/schemaless-value"));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Schemaless topics do not have a valid URL");
         }
-        jsonFactory = new JsonFactory();
-
-        // Default timeout is 10 seconds.
-        httpClient = new OkHttpClient.Builder()
-                .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
-                .writeTimeout(connectionTimeout, TimeUnit.SECONDS)
-                .readTimeout(connectionTimeout, TimeUnit.SECONDS)
-                .build();
 
         isConnectedRequest = new Request.Builder().url(kafkaUrl).head().build();
+    }
+
+    public final synchronized void setSchemaRetriever(@NonNull SchemaRetriever retriever) {
+        this.schemaRetriever = retriever;
+    }
+
+    private synchronized SchemaRetriever getSchemaRetriever() {
+        return this.schemaRetriever;
+    }
+
+    private synchronized HttpUrl getSchemalessValueUrl() {
+        return schemalessValueUrl;
+    }
+
+    private synchronized HttpUrl getSchemalessKeyUrl() {
+        return schemalessKeyUrl;
+    }
+
+    private synchronized Request getIsConnectedRequest() {
+        return isConnectedRequest;
     }
 
     class RestTopicSender<L extends K, W extends V> implements KafkaTopicSender<L, W> {
@@ -104,11 +144,12 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
 
         /**
          * Actually make a REST request to the Kafka REST server and Schema Registry.
+         *
          * @param records values to send
          * @throws IOException if records could not be sent
          */
         @Override
-        public void send(List<Record<L, W>> records) throws IOException {
+        public void send(@NonNull List<Record<L, W>> records) throws IOException {
             if (records.isEmpty()) {
                 return;
             }
@@ -119,19 +160,19 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
             HttpUrl sendToUrl = url;
 
             try {
-                ParsedSchemaMetadata metadata = schemaRetriever.getOrSetSchemaMetadata(sendTopic, false, topic.getKeySchema());
+                ParsedSchemaMetadata metadata = getSchemaRetriever().getOrSetSchemaMetadata(sendTopic, false, topic.getKeySchema());
                 requestBody.keySchemaId = metadata.getId();
             } catch (IOException ex) {
-                sendToUrl = schemalessKeyUrl;
+                sendToUrl = getSchemalessKeyUrl();
                 requestBody.keySchemaId = null;
             }
             requestBody.keySchemaString = requestBody.keySchemaId == null ? topic.getKeySchema().toString() : null;
 
             try {
-                ParsedSchemaMetadata metadata = schemaRetriever.getOrSetSchemaMetadata(sendTopic, true, valueSchema);
+                ParsedSchemaMetadata metadata = getSchemaRetriever().getOrSetSchemaMetadata(sendTopic, true, valueSchema);
                 requestBody.valueSchemaId = metadata.getId();
             } catch (IOException ex) {
-                sendToUrl = schemalessValueUrl;
+                sendToUrl = getSchemalessValueUrl();
                 requestBody.valueSchemaId = null;
             }
             requestBody.valueSchemaString = requestBody.valueSchemaId == null ? topic.getValueSchema().toString() : null;
@@ -143,7 +184,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
                     .post(requestBody)
                     .build();
 
-            try (Response response = httpClient.newCall(request).execute()) {
+            try (Response response = getHttpClient().newCall(request).execute()) {
                 // Evaluate the result
                 if (response.isSuccessful()) {
                     if (logger.isDebugEnabled()) {
@@ -253,7 +294,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     }
 
     public boolean isConnected() {
-        try (Response response = httpClient.newCall(isConnectedRequest).execute()) {
+        try (Response response = getHttpClient().newCall(getIsConnectedRequest()).execute()) {
             if (response.isSuccessful()) {
                 return true;
             } else {

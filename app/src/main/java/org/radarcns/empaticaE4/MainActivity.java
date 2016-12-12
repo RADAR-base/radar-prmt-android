@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
-    public FirebaseRemoteConfig mFirebaseRemoteConfig;
+    public RadarConfiguration radarConfiguration;
     private long remoteConfigCacheExpiration = 43200; // expire cache every 12 hours by default
 
     private final Runnable bindServicesRunner = new Runnable() {
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
             if (!mConnectionIsBound[0]) {
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
                 this.configureServiceIntent(e4serviceIntent);
-                e4serviceIntent.putExtra( EMPATICA_API_KEY, mFirebaseRemoteConfig.getString(EMPATICA_API_KEY) );
+                e4serviceIntent.putExtra( EMPATICA_API_KEY, radarConfiguration.getString(EMPATICA_API_KEY) );
 
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
@@ -137,13 +137,10 @@ public class MainActivity extends AppCompatActivity {
 
         private void configureServiceIntent(Intent serviceIntent) {
             // Add the default configuration parameters given to the service intents
-            serviceIntent.putExtra(KAFKA_REST_PROXY_URL_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_URL_KEY) );
-            serviceIntent.putExtra(SCHEMA_REGISTRY_URL_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_URL_KEY) );
-            serviceIntent.putExtra(DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
-            serviceIntent.putExtra(KAFKA_UPLOAD_RATE_KEY, mFirebaseRemoteConfig.getLong(KAFKA_UPLOAD_RATE_KEY) );
-            serviceIntent.putExtra(KAFKA_CLEAN_RATE_KEY, mFirebaseRemoteConfig.getLong(KAFKA_CLEAN_RATE_KEY) );
-            serviceIntent.putExtra(KAFKA_RECORDS_SEND_LIMIT_KEY, mFirebaseRemoteConfig.getLong(KAFKA_RECORDS_SEND_LIMIT_KEY) );
-            serviceIntent.putExtra(SENDER_CONNECTION_TIMEOUT_KEY, mFirebaseRemoteConfig.getLong(SENDER_CONNECTION_TIMEOUT_KEY) );
+            radarConfiguration.putExtras(serviceIntent.getExtras(),
+                    KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
+                    KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
+                    SENDER_CONNECTION_TIMEOUT_KEY);
         }
     };
 
@@ -214,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         initializeRemoteConfig();
 
         // Start the UI thread
-        uiRefreshRate = mFirebaseRemoteConfig.getLong(RadarConfiguration.UI_REFRESH_RATE_KEY);
+        uiRefreshRate = radarConfiguration.getLong(RadarConfiguration.UI_REFRESH_RATE_KEY);
         mUIUpdater = new DeviceUIUpdater();
         mUIScheduler = new Runnable() {
             @Override
@@ -300,14 +297,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeRemoteConfig() {
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-
         FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
                 .setDeveloperModeEnabled(true) // TODO: disable developer mode in production
                 .build();
-        mFirebaseRemoteConfig.setConfigSettings(configSettings);
-
-        mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
+        radarConfiguration = RadarConfiguration.configure(configSettings,
+                R.xml.remote_config_defaults);
     }
 
     @Override
@@ -375,20 +369,20 @@ public class MainActivity extends AppCompatActivity {
     public void fetchAndActivateRemoteConfig() {
         // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
         // the server.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+        if (radarConfiguration.isInDevelopmentMode()) {
             remoteConfigCacheExpiration = 0;
             logger.info("Remote Config: No expiration.");
         }
 
         // Fetch and activate if fetch completed successfully
-        mFirebaseRemoteConfig.fetch(remoteConfigCacheExpiration)
+        radarConfiguration.getFirebase().fetch(remoteConfigCacheExpiration)
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             // Once the config is successfully fetched it must be
                             // activated before newly fetched values are returned.
-                            mFirebaseRemoteConfig.activateFetched();
+                            radarConfiguration.getFirebase().activateFetched();
                             logger.info("Remote Config: Activate success.");
                             // Set global properties.
                             mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
@@ -651,7 +645,7 @@ public class MainActivity extends AppCompatActivity {
                 String message;
                 Long timeSinceLastUpdate = ( System.currentTimeMillis() - mLastRecordsSentTimeMillis[row] )/1000;
                 // Small test for Firebase Remote config.
-                if (mFirebaseRemoteConfig.getBoolean("is_condensed_n_records_display")) {
+                if (radarConfiguration.getFirebase().getBoolean("is_condensed_n_records_display")) {
                     message = String.format(Locale.US, "%1$4dk (%2$d)", mTotalRecordsSent[row]/1000, timeSinceLastUpdate);
                 } else {
                     message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)", mTotalRecordsSent[row], timeSinceLastUpdate);
@@ -712,7 +706,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+        if (radarConfiguration.isInDevelopmentMode()) {
             fetchAndActivateRemoteConfig();
         }
     }

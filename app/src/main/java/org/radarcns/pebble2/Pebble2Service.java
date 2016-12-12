@@ -1,6 +1,6 @@
 package org.radarcns.pebble2;
 
-import android.content.Intent;
+import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.RadarConfiguration;
@@ -58,10 +58,10 @@ public class Pebble2Service extends DeviceService {
     }
 
     @Override
-    protected void onInvocation(Intent intent) {
-        super.onInvocation(intent);
+    protected void onInvocation(Bundle bundle) {
+        super.onInvocation(bundle);
         if (groupId == null) {
-            groupId = intent.getStringExtra(RadarConfiguration.DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, RadarConfiguration.DEVICE_GROUP_ID_KEY);
         }
     }
 }

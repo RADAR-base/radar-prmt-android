@@ -5,14 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.support.annotation.NonNull;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.RadarConfiguration;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaDataSubmitter;
-import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.RestSender;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Stores data in databases and sends it to the server.
@@ -35,66 +37,75 @@ import java.util.concurrent.ThreadFactory;
 public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRecord> {
     private final static Logger logger = LoggerFactory.getLogger(TableDataHandler.class);
 
-    private final long dataRetention;
+    public static final long DATA_RETENTION_DEFAULT = 86400000L;
+    public static final long DATABASE_COMMIT_RATE_DEFAULT = 2500L;
+    public static final int SEND_LIMIT_DEFAULT = 1000;
+    public static final long CLEAN_RATE_DEFAULT = 3600L;
+    public static final long UPLOAD_RATE_DEFAULT = 10L;
+    public static final long SENDER_CONNECTION_TIMEOUT_DEFAULT = 10L;
+
     private final Context context;
-    private final URL kafkaUrl;
-    private final SchemaRetriever schemaRetriever;
     private final ThreadFactory threadFactory;
     private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> tables;
     private final Set<ServerStatusListener> statusListeners;
     private final BroadcastReceiver connectivityReceiver;
-    private final long kafkaUploadRate;
-    private final long kafkaCleanRate;
-    private final int kafkaRecordsSendLimit;
-    private final long senderConnectionTimeout;
+    private URL kafkaUrl;
+    private SchemaRetriever schemaRetriever;
+    private int kafkaRecordsSendLimit;
+    private final AtomicLong dataRetention;
+    private long kafkaUploadRate;
+    private long kafkaCleanRate;
+    private long senderConnectionTimeout;
 
     private ServerStatusListener.Status status;
     private Map<String, Integer> lastNumberOfRecordsSent = new TreeMap<>();
     private KafkaDataSubmitter<MeasurementKey, SpecificRecord> submitter;
+    private RestSender<MeasurementKey, SpecificRecord> sender;
 
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
     @SafeVarargs
-    public TableDataHandler(Context context, long dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis,
-                            long kafkaUploadRate, long kafkaCleanRate, int kafkaRecordsSendLimit, long senderConnectionTimeout,
+    public TableDataHandler(Context context, URL kafkaUrl, SchemaRetriever schemaRetriever,
                             AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
         this.context = context;
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
-        this.kafkaUploadRate = kafkaUploadRate;
-        this.kafkaCleanRate = kafkaCleanRate;
-        this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
-        this.senderConnectionTimeout = senderConnectionTimeout;
+        this.kafkaUploadRate = UPLOAD_RATE_DEFAULT;
+        this.kafkaCleanRate = CLEAN_RATE_DEFAULT;
+        this.kafkaRecordsSendLimit = SEND_LIMIT_DEFAULT;
+        this.senderConnectionTimeout = SENDER_CONNECTION_TIMEOUT_DEFAULT;
 
         tables = new HashMap<>(topics.length * 2);
         for (AvroTopic<MeasurementKey, ? extends SpecificRecord> topic : topics) {
-            tables.put(topic, new MeasurementTable<>(context, topic, dbAgeMillis));
+            tables.put(topic, new MeasurementTable<>(context, topic, DATABASE_COMMIT_RATE_DEFAULT));
         }
-        dataRetention = dataRetentionMillis;
+        dataRetention = new AtomicLong(DATA_RETENTION_DEFAULT);
 
         submitter = null;
+        sender = null;
+
         statusListeners = new HashSet<>();
-        if (kafkaUrl != null) {
-            this.threadFactory = new AndroidThreadFactory("DataHandler", android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            updateServerStatus(Status.READY);
-            connectivityReceiver = new BroadcastReceiver() {
-                public void onReceive(Context context, Intent intent) {
-                    if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                        if (intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
-                            logger.info("Network disconnected, stopping data sender.");
-                            stop();
-                        } else if (!isStarted()) {
-                            logger.info("Network connected, starting data sender.");
-                            start();
-                        }
+        this.threadFactory = new AndroidThreadFactory("DataHandler", android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
+        connectivityReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+                    if (intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false)) {
+                        logger.info("Network disconnected, stopping data sender.");
+                        stop();
+                    } else if (!isStarted()) {
+                        logger.info("Network connected, starting data sender.");
+                        start();
                     }
                 }
-            };
+            }
+        };
+
+        if (kafkaUrl != null) {
+            updateServerStatus(Status.READY);
             context.registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         } else {
-            this.threadFactory = null;
-            connectivityReceiver = null;
             updateServerStatus(Status.DISABLED);
         }
     }
@@ -109,7 +120,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      *
      * This can only be called if there is not already a submitter running.
      */
-    public void start() {
+    public synchronized void start() {
         if (isStarted()) {
             throw new IllegalStateException("Cannot start submitter, it is already started");
         }
@@ -118,11 +129,11 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         }
 
         updateServerStatus(Status.CONNECTING);
-        KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
+        this.sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
         this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, kafkaRecordsSendLimit, kafkaUploadRate, kafkaCleanRate);
     }
 
-    public boolean isStarted() {
+    public synchronized boolean isStarted() {
         return submitter != null;
     }
 
@@ -130,10 +141,11 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * Pause sending any data.
      * This waits for any remaining data to be sent.
      */
-    public void stop() {
+    public synchronized void stop() {
         if (submitter != null) {
             this.submitter.close();
             this.submitter = null;
+            this.sender = null;
         }
         if (status == Status.DISABLED) {
             return;
@@ -141,11 +153,26 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         updateServerStatus(Status.READY);
     }
 
+    public synchronized void disableSubmitter() {
+        if (status != Status.DISABLED) {
+            updateServerStatus(Status.DISABLED);
+            if (isStarted()) {
+                stop();
+            }
+        }
+    }
+
+    public synchronized void enableSubmitter() {
+        if (status == Status.DISABLED) {
+            updateServerStatus(Status.READY);
+        }
+    }
+
     /**
      * Sends any remaining data and closes the tables and connections.
      * @throws IOException if the tables cannot be flushed
      */
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         if (status != Status.DISABLED) {
             context.unregisterReceiver(connectivityReceiver);
         }
@@ -157,6 +184,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
                 Thread.currentThread().interrupt();
             } finally {
                 this.submitter = null;
+                this.sender = null;
             }
         }
         clean();
@@ -167,13 +195,13 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
     @Override
     public void clean() {
-        long timestamp = (System.currentTimeMillis() - dataRetention);
+        long timestamp = (System.currentTimeMillis() - dataRetention.get());
         for (DataCache<MeasurementKey, ? extends SpecificRecord> table : tables.values()) {
             table.removeBeforeTimestamp(timestamp);
         }
     }
 
-    public boolean trySend(AvroTopic topic, long offset, MeasurementKey deviceId, SpecificRecord record) {
+    public synchronized boolean trySend(AvroTopic topic, long offset, MeasurementKey deviceId, SpecificRecord record) {
         return submitter != null && submitter.trySend(topic, offset, deviceId, record);
     }
 
@@ -183,7 +211,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * Updates will be given to any listeners registered to
      * {@link #addStatusListener(ServerStatusListener)}.
      */
-    public void checkConnection() {
+    public synchronized void checkConnection() {
         if (status == Status.DISABLED) {
             return;
         }
@@ -257,70 +285,55 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         }
     }
 
-    public static class TableDataHandlerBuilder {
-        private Context context;
-        private long dbAgeMillis = 2500L;
-        private URL kafkaUrl;
-        private SchemaRetriever schemaRetriever;
-        private long dataRetentionMillis = 86400000L;
-        private AvroTopic<MeasurementKey, ? extends SpecificRecord>[] topics;
-        private long kafkaUploadRate;
-        private long kafkaCleanRate;
-        private int kafkaRecordsSendLimit;
-        private long senderConnectionTimeout;
-
-        public TableDataHandlerBuilder setContext(Context context) {
-            this.context = context;
-            return this;
+    public void setDatabaseCommitRate(long period) {
+        for (MeasurementTable<?> table : tables.values()) {
+            table.setTimeWindow(period);
         }
+    }
 
-        public TableDataHandlerBuilder setDbAgeMillis(long dbAgeMillis) {
-            this.dbAgeMillis = dbAgeMillis;
-            return this;
+    public synchronized void setKafkaRecordsSendLimit(int kafkaRecordsSendLimit) {
+        if (submitter != null) {
+            submitter.setSendLimit(kafkaRecordsSendLimit);
         }
+        this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
+    }
 
-        public TableDataHandlerBuilder setKafkaUrl(URL kafkaUrl) {
-            this.kafkaUrl = kafkaUrl;
-            return this;
+    public synchronized void setKafkaUploadRate(long kafkaUploadRate) {
+        if (submitter != null) {
+            submitter.setUploadRate(kafkaUploadRate);
         }
+        this.kafkaUploadRate = kafkaUploadRate;
+    }
 
-        public TableDataHandlerBuilder setSchemaRetriever(SchemaRetriever schemaRetriever) {
-            this.schemaRetriever = schemaRetriever;
-            return this;
+    public synchronized void setKafkaCleanRate(long kafkaCleanRate) {
+        if (submitter != null) {
+            submitter.setCleanRate(kafkaCleanRate);
         }
+        this.kafkaCleanRate = kafkaCleanRate;
+    }
 
-        public TableDataHandlerBuilder setDataRetentionMillis(long dataRetentionMillis) {
-            this.dataRetentionMillis = dataRetentionMillis;
-            return this;
+    public synchronized void setSenderConnectionTimeout(long senderConnectionTimeout) {
+        if (sender != null) {
+            sender.setConnectionTimeout(senderConnectionTimeout);
         }
+        this.senderConnectionTimeout = senderConnectionTimeout;
+    }
 
-        public TableDataHandlerBuilder setTopics(AvroTopic<MeasurementKey, ? extends SpecificRecord>[] topics) {
-            this.topics = topics;
-            return this;
+    public synchronized void setKafkaUrl(@NonNull URL kafkaUrl) {
+        if (sender != null) {
+            sender.setKafkaUrl(kafkaUrl);
         }
+        this.kafkaUrl = kafkaUrl;
+    }
 
-        public TableDataHandlerBuilder setKafkaUploadRate(long kafkaUploadRate) {
-            this.kafkaUploadRate = kafkaUploadRate;
-            return this;
+    public synchronized void setSchemaRetriever(@NonNull SchemaRetriever schemaRetriever) {
+        if (sender != null) {
+            sender.setSchemaRetriever(schemaRetriever);
         }
+        this.schemaRetriever = schemaRetriever;
+    }
 
-        public TableDataHandlerBuilder setKafkaCleanRate(long kafkaCleanRate) {
-            this.kafkaCleanRate = kafkaCleanRate;
-            return this;
-        }
-
-        public TableDataHandlerBuilder setKafkaRecordsSendLimit(int kafkaRecordsSendLimit) {
-            this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
-            return this;
-        }
-
-        public TableDataHandlerBuilder setSenderConnectionTimeout(long senderConnectionTimeout) {
-            this.senderConnectionTimeout = senderConnectionTimeout;
-            return this;
-        }
-
-        public TableDataHandler createTableDataHandler() {
-            return new TableDataHandler(context, dbAgeMillis, kafkaUrl, schemaRetriever, dataRetentionMillis, kafkaUploadRate, kafkaCleanRate, kafkaRecordsSendLimit, senderConnectionTimeout, topics);
-        }
+    public void setDataRetention(long dataRetention) {
+        this.dataRetention.set(dataRetention);
     }
 }
