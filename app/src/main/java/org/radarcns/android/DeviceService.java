@@ -19,8 +19,8 @@ import android.support.annotation.Nullable;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
+import org.radarcns.RadarConfiguration;
 import org.radarcns.data.Record;
-import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -392,6 +392,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
      */
     protected void onInvocation(Intent intent) {
         TableDataHandler localDataHandler;
+
         synchronized (this) {
             if (dataHandler != null) {
                 return;
@@ -399,10 +400,10 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
         URL kafkaUrl = null;
         SchemaRetriever remoteSchemaRetriever = null;
-        if (intent.hasExtra(MainActivity.KAFKA_REST_PROXY_KEY)) {
-            String kafkaUrlString = intent.getStringExtra(MainActivity.KAFKA_REST_PROXY_KEY);
+        if (intent.hasExtra(RadarConfiguration.KAFKA_REST_PROXY_URL_KEY)) {
+            String kafkaUrlString = intent.getStringExtra(RadarConfiguration.KAFKA_REST_PROXY_URL_KEY);
             if (!kafkaUrlString.isEmpty()) {
-                remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra(MainActivity.SCHEMA_REGISTRY_KEY));
+                remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra(RadarConfiguration.SCHEMA_REGISTRY_URL_KEY));
                 try {
                     kafkaUrl = new URL(kafkaUrlString);
                 } catch (MalformedURLException e) {
@@ -411,18 +412,18 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                 }
             }
         }
-        //noinspection unchecked
 
         localDataHandler = new TableDataHandler.TableDataHandlerBuilder()
                 .setContext(this)
                 .setKafkaUrl(kafkaUrl)
                 .setSchemaRetriever(remoteSchemaRetriever)
                 .setTopics(getCachedTopics())
-                .setDataRetentionMillis( intent.getLongExtra("data_retention_ms", 86400000) )
-                .setKafkaUploadRate( intent.getLongExtra(MainActivity.KAFKA_UPLOAD_RATE_KEY, 10) )
-                .setKafkaCleanRate( intent.getLongExtra(MainActivity.KAFKA_CLEAN_RATE_KEY, 3600) )
-                .setKafkaRecordsSendLimit( intent.getLongExtra(MainActivity.KAFKA_RECORDS_SEND_LIMIT_KEY, 1000) )
-                .setSenderConnectionTimeout( intent.getLongExtra(MainActivity.SENDER_CONNECTION_TIMEOUT_KEY, 10) )
+                .setDataRetentionMillis( intent.getLongExtra(RadarConfiguration.DATA_RETENTION_KEY, 86400000L) )
+                .setKafkaUploadRate( intent.getLongExtra(RadarConfiguration.KAFKA_UPLOAD_RATE_KEY, 10L) )
+                .setKafkaCleanRate(intent.getLongExtra(RadarConfiguration.KAFKA_CLEAN_RATE_KEY, 3600L) )
+                .setKafkaRecordsSendLimit( intent.getIntExtra(RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY, 1000) )
+                .setSenderConnectionTimeout( intent.getLongExtra(RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY, 10L) )
+                .setDbAgeMillis(intent.getLongExtra(RadarConfiguration.DATABASE_COMMIT_RATE_KEY, 2500L))
                 .createTableDataHandler();
 
         boolean didUpdate;

@@ -3,6 +3,7 @@ package org.radarcns.empaticaE4;
 import android.content.Intent;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
 import org.radarcns.android.DeviceState;
@@ -62,9 +63,9 @@ public class E4Service extends DeviceService {
     protected void onInvocation(Intent intent) {
         super.onInvocation(intent);
         if (apiKey == null) {
-            apiKey = intent.getStringExtra(MainActivity.EMPATICA_API_KEY);
+            apiKey = intent.getStringExtra(RadarConfiguration.EMPATICA_API_KEY);
             logger.info("Using API key {}", apiKey);
-            groupId = intent.getStringExtra(MainActivity.DEVICE_GROUP_ID_KEY);
+            groupId = intent.getStringExtra(RadarConfiguration.DEVICE_GROUP_ID_KEY);
         }
     }
 }

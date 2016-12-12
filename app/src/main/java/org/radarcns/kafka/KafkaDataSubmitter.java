@@ -2,10 +2,9 @@ package org.radarcns.kafka;
 
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
-import org.radarcns.empaticaE4.MainActivity;
-import org.radarcns.util.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.util.ListPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
 
-    private int sendLimit = 1000;
+    private final int sendLimit;
     private boolean lastUploadFailed = false;
     private DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
@@ -48,16 +47,16 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     private final KafkaConnectionChecker connection;
     private final static ListPool listPool = new ListPool(1);
 
-    public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory, long uploadRate, long cleanRate) {
+    public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory, int sendLimit, long uploadRate, long cleanRate) {
         this.dataHandler = dataHandler;
         this.sender = sender;
         trySendCache = new ConcurrentHashMap<>();
         trySendFuture = new HashMap<>();
         topicSenders = new HashMap<>();
+        this.sendLimit = sendLimit;
 
-        logger.info("Starting executor");
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-        logger.info("Started executor");
+        logger.info("Started data submission executor");
 
         connection = new KafkaConnectionChecker(sender, executor, dataHandler);
 
@@ -102,11 +101,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             }
         }, 0L, cleanRate, TimeUnit.SECONDS);
 
-        logger.info("Remote Config: Upload rate is '{}' sec per upload, clean is {} sec per upload", uploadRate, cleanRate);
-    }
-
-    public void setSendLimit(int sendLimit) {
-        this.sendLimit = sendLimit;
+        logger.info("Remote Config: Upload rate is '{}' sec per upload, clean is {} sec per upload",
+                uploadRate, cleanRate);
     }
 
     /**
@@ -249,9 +245,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             dataHandler.updateRecordsSent(topic.getName(), numberOfRecords);
 
             logger.debug("uploaded {} {} records", numberOfRecords, topic.getName());
-            if( topic.getName().equals( "android_empatica_e4_blood_volume_pulse" ) ){
-                Record<K,V> lastMeasurement = measurements.get( numberOfRecords-1 );
-            }
 
             if (lastOffset == measurements.get(numberOfRecords - 1).offset) {
                 cache.returnList(measurements);

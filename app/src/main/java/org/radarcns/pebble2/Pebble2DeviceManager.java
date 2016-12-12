@@ -17,12 +17,14 @@ import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.Serialization;
+import org.radarcns.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static android.bluetooth.BluetoothProfile.GATT_SERVER;
 import static com.getpebble.android.kit.Constants.INTENT_PEBBLE_CONNECTED;
@@ -56,7 +58,7 @@ class Pebble2DeviceManager implements DeviceManager {
 
     private String deviceName;
     private boolean isClosed;
-    private Set<String> acceptableIds;
+    private Pattern[] acceptableIds;
 
     public Pebble2DeviceManager(Context context, DeviceStatusListener pebble2Service, String groupId, TableDataHandler handler, Pebble2Topics topics) {
         this.dataHandler = handler;
@@ -207,7 +209,8 @@ class Pebble2DeviceManager implements DeviceManager {
                 synchronized (this) {
                     deviceName = btDevice.getName();
                     deviceId.setSourceId(btDevice.getAddress());
-                    logger.info("Pebble device set to {} with address {}", deviceName, deviceId.getSourceId());
+                    logger.info("Pebble device set to {} with address {}",
+                            deviceName, deviceId.getSourceId());
 
                     if (currentDeviceIsAcceptable()) {
                         return;
@@ -222,18 +225,10 @@ class Pebble2DeviceManager implements DeviceManager {
     }
 
     private synchronized boolean currentDeviceIsAcceptable() {
-        if (this.acceptableIds.isEmpty()) {
-            return true;
-        }
-        if (this.deviceId.getSourceId() == null) {
-            return false;
-        }
-        for (String id : this.acceptableIds) {
-            if (this.deviceName.contains(id) || this.deviceId.getSourceId().contains(id)) {
-                return true;
-            }
-        }
-        return false;
+        return this.deviceId.getSourceId() != null &&
+                (this.acceptableIds.length == 0
+                    || Strings.findAny(acceptableIds, deviceName)
+                    || Strings.findAny(acceptableIds, deviceId.getSourceId()));
     }
 
     @Override
@@ -243,7 +238,7 @@ class Pebble2DeviceManager implements DeviceManager {
                 return;
             }
             this.isClosed = false;
-            this.acceptableIds = new HashSet<>(acceptableIds);
+            this.acceptableIds = Strings.containsPatterns(acceptableIds);
         }
         logger.info("Registering Pebble2 receivers");
         PebbleKit.registerDataLogReceiver(context, dataLogReceiver);

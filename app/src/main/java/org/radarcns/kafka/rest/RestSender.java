@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.avro.Schema;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.Record;
-import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.KafkaTopicSender;
@@ -49,6 +48,14 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     private final HttpUrl schemalessKeyUrl;
     private final HttpUrl schemalessValueUrl;
 
+    /**
+     * Construct a RestSender.
+     * @param kafkaUrl url to send data to
+     * @param schemaRetriever Retriever of avro schemas
+     * @param keyEncoder Avro encoder for keys
+     * @param valueEncoder Avro encoder for values
+     * @param connectionTimeout socket connection timeout in seconds
+     */
     public RestSender(URL kafkaUrl, SchemaRetriever schemaRetriever, AvroEncoder keyEncoder, AvroEncoder valueEncoder, long connectionTimeout) {
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;

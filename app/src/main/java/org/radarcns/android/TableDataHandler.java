@@ -45,19 +45,19 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     private final BroadcastReceiver connectivityReceiver;
     private final long kafkaUploadRate;
     private final long kafkaCleanRate;
-    private final long kafkaRecordsSendLimit;
+    private final int kafkaRecordsSendLimit;
     private final long senderConnectionTimeout;
+
     private ServerStatusListener.Status status;
     private Map<String, Integer> lastNumberOfRecordsSent = new TreeMap<>();
-
     private KafkaDataSubmitter<MeasurementKey, SpecificRecord> submitter;
 
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
     @SafeVarargs
-    public TableDataHandler(Context context, int dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis,
-                            long kafkaUploadRate, long kafkaCleanRate, long kafkaRecordsSendLimit, long senderConnectionTimeout,
+    public TableDataHandler(Context context, long dbAgeMillis, URL kafkaUrl, SchemaRetriever schemaRetriever, long dataRetentionMillis,
+                            long kafkaUploadRate, long kafkaCleanRate, int kafkaRecordsSendLimit, long senderConnectionTimeout,
                             AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
         this.context = context;
         this.kafkaUrl = kafkaUrl;
@@ -66,6 +66,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         this.kafkaCleanRate = kafkaCleanRate;
         this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
         this.senderConnectionTimeout = senderConnectionTimeout;
+
         tables = new HashMap<>(topics.length * 2);
         for (AvroTopic<MeasurementKey, ? extends SpecificRecord> topic : topics) {
             tables.put(topic, new MeasurementTable<>(context, topic, dbAgeMillis));
@@ -76,10 +77,6 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         statusListeners = new HashSet<>();
         if (kafkaUrl != null) {
             this.threadFactory = new AndroidThreadFactory("DataHandler", android.os.Process.THREAD_PRIORITY_BACKGROUND);
-        } else {
-            this.threadFactory = null;
-        }
-        if (kafkaUrl != null) {
             updateServerStatus(Status.READY);
             connectivityReceiver = new BroadcastReceiver() {
                 public void onReceive(Context context, Intent intent) {
@@ -96,6 +93,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             };
             context.registerReceiver(connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         } else {
+            this.threadFactory = null;
             connectivityReceiver = null;
             updateServerStatus(Status.DISABLED);
         }
@@ -121,8 +119,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
         updateServerStatus(Status.CONNECTING);
         KafkaSender<MeasurementKey, SpecificRecord> sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
-        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, kafkaUploadRate, kafkaCleanRate );
-        this.submitter.setSendLimit( (int) kafkaRecordsSendLimit);
+        this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, kafkaRecordsSendLimit, kafkaUploadRate, kafkaCleanRate);
     }
 
     public boolean isStarted() {
@@ -262,14 +259,14 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
     public static class TableDataHandlerBuilder {
         private Context context;
-        private int dbAgeMillis = 2500;
+        private long dbAgeMillis = 2500L;
         private URL kafkaUrl;
         private SchemaRetriever schemaRetriever;
-        private long dataRetentionMillis = 86400000;
+        private long dataRetentionMillis = 86400000L;
         private AvroTopic<MeasurementKey, ? extends SpecificRecord>[] topics;
         private long kafkaUploadRate;
         private long kafkaCleanRate;
-        private long kafkaRecordsSendLimit;
+        private int kafkaRecordsSendLimit;
         private long senderConnectionTimeout;
 
         public TableDataHandlerBuilder setContext(Context context) {
@@ -277,7 +274,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             return this;
         }
 
-        public TableDataHandlerBuilder setDbAgeMillis(int dbAgeMillis) {
+        public TableDataHandlerBuilder setDbAgeMillis(long dbAgeMillis) {
             this.dbAgeMillis = dbAgeMillis;
             return this;
         }
@@ -297,7 +294,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             return this;
         }
 
-        public TableDataHandlerBuilder setTopics(AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
+        public TableDataHandlerBuilder setTopics(AvroTopic<MeasurementKey, ? extends SpecificRecord>[] topics) {
             this.topics = topics;
             return this;
         }
@@ -312,7 +309,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             return this;
         }
 
-        public TableDataHandlerBuilder setKafkaRecordsSendLimit(long kafkaRecordsSendLimit) {
+        public TableDataHandlerBuilder setKafkaRecordsSendLimit(int kafkaRecordsSendLimit) {
             this.kafkaRecordsSendLimit = kafkaRecordsSendLimit;
             return this;
         }

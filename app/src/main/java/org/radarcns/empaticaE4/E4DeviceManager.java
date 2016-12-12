@@ -22,11 +22,13 @@ import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /** Manages scanning for an Empatica E4 wearable and connecting to it */
 class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceManager {
@@ -54,7 +56,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
     private EmpaDeviceManager deviceManager;
     private String deviceName;
     private boolean isScanning;
-    private Set<String> acceptableIds;
+    private Pattern[] acceptableIds;
 
     public E4DeviceManager(Context context, DeviceStatusListener e4Service, String apiKey, String groupId, TableDataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
@@ -95,11 +97,7 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                 deviceManager = new EmpaDeviceManager(context, E4DeviceManager.this, E4DeviceManager.this);
                 // Initialize the Device Manager using your API key. You need to have Internet access at this point.
                 deviceManager.authenticateWithAPIKey(apiKey);
-
-                E4DeviceManager.this.acceptableIds = new HashSet<>();
-                for (String s : acceptableIds) {
-                    E4DeviceManager.this.acceptableIds.add(s.toLowerCase());
-                }
+                E4DeviceManager.this.acceptableIds = Strings.containsPatterns(acceptableIds);
                 logger.info("Authenticated device manager");
             }
         });
@@ -149,14 +147,9 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
         logger.info("Bluetooth address: {}", bluetoothDevice.getAddress());
         if (allowed) {
             final String sourceId = bluetoothDevice.getAddress();
-            boolean isAcceptable = acceptableIds.isEmpty();
-            for (String s : acceptableIds) {
-                if (deviceName.toLowerCase().contains(s) || sourceId.toLowerCase().contains(s)) {
-                    isAcceptable = true;
-                    break;
-                }
-            }
-            if (!isAcceptable) {
+            if (acceptableIds.length > 0
+                    && !Strings.findAny(acceptableIds, deviceName)
+                    && !Strings.findAny(acceptableIds, sourceId)) {
                 logger.info("Device {} with ID {} is not listed in acceptable device IDs", deviceName, sourceId);
                 e4service.deviceFailedToConnect(deviceName);
                 return;

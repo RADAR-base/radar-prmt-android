@@ -33,6 +33,7 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
         exclude group: 'log4j'
         exclude group: 'jline'
+        exclude group: 'com.101tec'
     }
     // needed to work with testCompile -> kafka-clients
     compile 'com.getpebble:pebblekit:4.0.0'
