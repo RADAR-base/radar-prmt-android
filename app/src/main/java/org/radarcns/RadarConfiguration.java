@@ -1,16 +1,21 @@
 package org.radarcns;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Timer;
 
 public class RadarConfiguration {
+    public static final String RADAR_PREFIX = "org.radarcns.android.";
+
     public static final String KAFKA_REST_PROXY_URL_KEY = "kafka_rest_proxy_url";
     public static final String SCHEMA_REGISTRY_URL_KEY = "schema_registry_url";
     public static final String DEVICE_GROUP_ID_KEY = "device_group_id";
@@ -23,7 +28,14 @@ public class RadarConfiguration {
     public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
     public static final String DATA_RETENTION_KEY = "data_retention_ms";
     public static final String FETCH_SETTINGS_MS_KEY = "fetch_settings_ms";
-    public static final String[] LONG_SYSTEM_PARAMETER_KEYS = new String[]{KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY, SENDER_CONNECTION_TIMEOUT_KEY};
+
+    public static final Set<String> LONG_VALUES = new HashSet<>(Arrays.asList(
+            UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
+            KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
+            FETCH_SETTINGS_MS_KEY));
+
+    public static final Set<String> INT_VALUES = new HashSet<>(Arrays.asList(
+            KAFKA_RECORDS_SEND_LIMIT_KEY));
 
     private static final Object syncObject = new Object();
     private static RadarConfiguration instance = null;
@@ -167,5 +179,38 @@ public class RadarConfiguration {
 
     public int hashCode() {
         return config.hashCode();
+    }
+
+    public void addExtras(Intent intent, String... extras) {
+        for (String extra : extras) {
+            try {
+                if (LONG_VALUES.contains(extra)) {
+                    intent.putExtra(RADAR_PREFIX + extra, getLong(extra));
+                } else if (INT_VALUES.contains(extra)) {
+                    intent.putExtra(RADAR_PREFIX + extra, getInt(extra));
+                } else {
+                    intent.putExtra(RADAR_PREFIX + extra, getString(extra));
+                }
+            } catch (IllegalArgumentException ex) {
+                // do nothing
+            }
+        }
+    }
+
+    public static boolean hasExtra(Intent intent, String key) {
+        return intent.hasExtra(RADAR_PREFIX + key);
+    }
+
+    public static int getIntExtra(Intent intent, String key, int defaultValue) {
+        return intent.getIntExtra(RADAR_PREFIX + key, defaultValue);
+    }
+
+    public static long getLongExtra(Intent intent, String key, long defaultValue) {
+        return intent.getLongExtra(RADAR_PREFIX + key, defaultValue);
+    }
+
+    public static String getStringExtra(Intent intent, String key, String defaultValue) {
+        String result = intent.getStringExtra(RADAR_PREFIX + key);
+        return result != null ? result : defaultValue;
     }
 }
