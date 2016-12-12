@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        checkBluetoothPermissions();
+//        checkBluetoothPermissions();
 
         // Check availability of Google Play Services
         if ( GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS ) {
@@ -516,7 +516,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkBluetoothPermissions() {
-        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
+        String[] permissions = {
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN};
 
         boolean waitingForPermission = false;
         for (String permission : permissions) {
