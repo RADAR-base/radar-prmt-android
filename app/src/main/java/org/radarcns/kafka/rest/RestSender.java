@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.avro.Schema;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.Record;
-import org.radarcns.empaticaE4.MainActivity;
+import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaSender;
 import org.radarcns.kafka.KafkaTopicSender;

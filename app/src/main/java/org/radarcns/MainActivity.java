@@ -1,4 +1,4 @@
-package org.radarcns.empaticaE4;
+package org.radarcns;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -33,10 +33,12 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
-import org.radarcns.R;
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.empaticaE4.E4DeviceStatus;
+import org.radarcns.empaticaE4.E4HeartbeatToast;
+import org.radarcns.empaticaE4.E4Service;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
