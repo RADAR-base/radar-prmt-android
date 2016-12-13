@@ -1,9 +1,12 @@
 package org.radarcns;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
@@ -32,7 +35,7 @@ public class RadarConfiguration {
     public static final String KAFKA_RECORDS_SEND_LIMIT_KEY = "kafka_records_send_limit";
     public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
     public static final String DATA_RETENTION_KEY = "data_retention_ms";
-    public static final String FETCH_SETTINGS_MS_KEY = "fetch_settings_ms";
+    public static final String FIREBASE_FETCH_TIMEOUT_KEY = "firebase_fetch_timeout";
     public static final String CONDENSED_DISPLAY_KEY = "is_condensed_n_records_display";
 
     public static final Pattern IS_TRUE = Pattern.compile(
@@ -43,23 +46,36 @@ public class RadarConfiguration {
     public static final Set<String> LONG_VALUES = new HashSet<>(Arrays.asList(
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
             KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
-            FETCH_SETTINGS_MS_KEY));
+            FIREBASE_FETCH_TIMEOUT_KEY));
 
-    public static final Set<String> INT_VALUES = new HashSet<>(Arrays.asList(
-            KAFKA_RECORDS_SEND_LIMIT_KEY));
+    public static final Set<String> INT_VALUES = Collections.singleton(
+            KAFKA_RECORDS_SEND_LIMIT_KEY);
+
+    public static final Set<String> BOOLEAN_VALUES = Collections.singleton(
+            CONDENSED_DISPLAY_KEY);
 
     private static final Object syncObject = new Object();
     private static RadarConfiguration instance = null;
     private final FirebaseRemoteConfig config;
-    private final long remoteConfigCacheExpiration;
+
+    public static final long FIREBASE_FETCH_TIMEOUT_DEFAULT = 43200L;
+    private final Handler handler;
+    private Activity onFetchActivity;
+    private OnCompleteListener<Void> onFetchCompleteHandler;
 
     private RadarConfiguration(@NonNull FirebaseRemoteConfig config) {
         this.config = config;
-        if (config.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
-            remoteConfigCacheExpiration = 0L;
-        } else {
-            remoteConfigCacheExpiration = 43200L; // expire cache every 12 hours by default
-        }
+        this.onFetchCompleteHandler = null;
+
+        this.handler = new Handler();
+        this.handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                fetch();
+                long delay = getLong(FIREBASE_FETCH_TIMEOUT_KEY, FIREBASE_FETCH_TIMEOUT_DEFAULT);
+                handler.postDelayed(this, delay);
+            }
+        }, getLong(FIREBASE_FETCH_TIMEOUT_KEY, FIREBASE_FETCH_TIMEOUT_DEFAULT));
     }
 
     public FirebaseRemoteConfig getFirebase() {
@@ -97,7 +113,36 @@ public class RadarConfiguration {
     }
 
     public Task<Void> fetch() {
-        return config.fetch(remoteConfigCacheExpiration);
+        long delay;
+        if (isInDevelopmentMode()) {
+            delay = 0L;
+        } else {
+            delay = getLong(FIREBASE_FETCH_TIMEOUT_KEY, FIREBASE_FETCH_TIMEOUT_DEFAULT);
+        }
+        return fetch(delay);
+    }
+
+    private Task<Void> fetch(long delay) {
+        Task<Void> task = config.fetch(delay);
+        synchronized (this) {
+            if (onFetchCompleteHandler != null) {
+                if (onFetchActivity != null) {
+                    task.addOnCompleteListener(onFetchActivity, onFetchCompleteHandler);
+                } else {
+                    task.addOnCompleteListener(onFetchCompleteHandler);
+                }
+            }
+        }
+        return task;
+    }
+
+    public Task<Void> forceFetch() {
+        return fetch(0L);
+    }
+
+    public synchronized void onFetchComplete(Activity activity, OnCompleteListener<Void> completeListener) {
+        onFetchActivity = activity;
+        onFetchCompleteHandler = completeListener;
     }
 
     public boolean activateFetched() {

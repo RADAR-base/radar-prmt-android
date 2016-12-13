@@ -308,6 +308,35 @@ public class MainActivity extends AppCompatActivity {
     private void initializeRemoteConfig() {
         // TODO: disable developer mode in production
         radarConfiguration = RadarConfiguration.configure(true, R.xml.remote_config_defaults);
+        radarConfiguration.onFetchComplete(this, new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Once the config is successfully fetched it must be
+                    // activated before newly fetched values are returned.
+                    radarConfiguration.activateFetched();
+                    if (mConnectionIsBound[0]) {
+                        Bundle bundle = new Bundle();
+                        configureEmpatica(bundle);
+                        mE4Connection.updateConfiguration(bundle);
+                    }
+                    if (mConnectionIsBound[2]) {
+                        Bundle bundle = new Bundle();
+                        configurePebble2(bundle);
+                        pebble2Connection.updateConfiguration(bundle);
+                    }
+                    logger.info("Remote Config: Activate success.");
+                    // Set global properties.
+                    mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
+                    mFirebaseMessage.setText("Remote config fetched from the server ("
+                            + timeFormat.format( System.currentTimeMillis() ) + ")");
+                } else {
+                    Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
+                            Toast.LENGTH_SHORT).show();
+                    logger.info("Remote Config: Fetch failed. Stacktrace: {}", task.getException());
+                }
+            }
+        });
     }
 
     @Override
@@ -316,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         mHandler.postDelayed(bindServicesRunner, 300L);
 
-        fetchAndActivateRemoteConfig();
+        radarConfiguration.fetch();
     }
 
     @Override
@@ -370,41 +399,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mHandlerThread.quitSafely();
-    }
-
-    public void fetchAndActivateRemoteConfig() {
-        // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
-        // the server.
-        // Fetch and activate if fetch completed successfully
-        radarConfiguration.fetch()
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            // Once the config is successfully fetched it must be
-                            // activated before newly fetched values are returned.
-                            radarConfiguration.activateFetched();
-                            if (mConnectionIsBound[0]) {
-                                Bundle bundle = new Bundle();
-                                configureEmpatica(bundle);
-                                mE4Connection.updateConfiguration(bundle);
-                            }
-                            if (mConnectionIsBound[2]) {
-                                Bundle bundle = new Bundle();
-                                configurePebble2(bundle);
-                                pebble2Connection.updateConfiguration(bundle);
-                            }
-                            logger.info("Remote Config: Activate success.");
-                            // Set global properties.
-                            mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
-                            mFirebaseMessage.setText("Remote config fetched from the server (" +  timeFormat.format( System.currentTimeMillis() ) + ")");
-                        } else {
-                            Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
-                                    Toast.LENGTH_SHORT).show();
-                            logger.info("Remote Config: Fetch failed. Stacktrace: {}", task.getException());
-                        }
-                    }
-                });
     }
 
     private synchronized Handler getHandler() {
@@ -718,7 +712,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         if (radarConfiguration.isInDevelopmentMode()) {
-            fetchAndActivateRemoteConfig();
+            radarConfiguration.fetch();
         }
     }
 
