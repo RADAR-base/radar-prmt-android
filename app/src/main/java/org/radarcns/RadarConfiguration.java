@@ -284,12 +284,15 @@ public class RadarConfiguration {
     public void putExtras(Bundle bundle, String... extras) {
         for (String extra : extras) {
             try {
+                String key = RADAR_PREFIX + extra;
                 if (LONG_VALUES.contains(extra)) {
-                    bundle.putLong(RADAR_PREFIX + extra, getLong(extra));
+                    bundle.putLong(key, getLong(extra));
                 } else if (INT_VALUES.contains(extra)) {
-                    bundle.putInt(RADAR_PREFIX + extra, getInt(extra));
+                    bundle.putInt(key, getInt(extra));
+                } else if (BOOLEAN_VALUES.contains(extra)) {
+                    bundle.putBoolean(key, getString(extra).equals("true"));
                 } else {
-                    bundle.putString(RADAR_PREFIX + extra, getString(extra));
+                    bundle.putString(key, getString(extra));
                 }
             } catch (IllegalArgumentException ex) {
                 // do nothing
