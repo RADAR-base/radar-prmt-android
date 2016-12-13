@@ -394,7 +394,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         reply.writeString(getDeviceName());
                         break;
                     case TRANSACT_UPDATE_CONFIG:
-                        updateConfiguration(data.readBundle(null));
+                        updateConfiguration(data.readBundle(getClass().getClassLoader()));
                         break;
                     default:
                         return false;
