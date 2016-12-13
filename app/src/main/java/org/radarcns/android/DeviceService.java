@@ -351,6 +351,11 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
+        public void updateConfiguration(Bundle bundle) {
+            onInvocation(bundle);
+        }
+
+        @Override
         public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
             try {
                 switch (code) {
@@ -380,7 +385,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         reply.writeString(getDeviceName());
                         break;
                     case TRANSACT_UPDATE_CONFIG:
-                        onInvocation(data.readBundle(null));
+                        updateConfiguration(data.readBundle(null));
                         break;
                     default:
                         return false;

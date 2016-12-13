@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
@@ -13,6 +14,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Timer;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 public class RadarConfiguration {
     public static final String RADAR_PREFIX = "org.radarcns.android.";
@@ -29,6 +33,12 @@ public class RadarConfiguration {
     public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
     public static final String DATA_RETENTION_KEY = "data_retention_ms";
     public static final String FETCH_SETTINGS_MS_KEY = "fetch_settings_ms";
+    public static final String CONDENSED_DISPLAY_KEY = "is_condensed_n_records_display";
+
+    public static final Pattern IS_TRUE = Pattern.compile(
+            "^(1|true|t|yes|y|on)$", CASE_INSENSITIVE);
+    public static final Pattern IS_FALSE = Pattern.compile(
+            "^(0|false|f|no|n|off|)$", CASE_INSENSITIVE);
 
     public static final Set<String> LONG_VALUES = new HashSet<>(Arrays.asList(
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
@@ -41,10 +51,15 @@ public class RadarConfiguration {
     private static final Object syncObject = new Object();
     private static RadarConfiguration instance = null;
     private final FirebaseRemoteConfig config;
+    private final long remoteConfigCacheExpiration;
 
     private RadarConfiguration(@NonNull FirebaseRemoteConfig config) {
         this.config = config;
-        // TODO: fetch settings with a timer and add listeners for that
+        if (config.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            remoteConfigCacheExpiration = 0L;
+        } else {
+            remoteConfigCacheExpiration = 43200L; // expire cache every 12 hours by default
+        }
     }
 
     public FirebaseRemoteConfig getFirebase() {
@@ -53,12 +68,6 @@ public class RadarConfiguration {
 
     public boolean isInDevelopmentMode() {
         return config.getInfo().getConfigSettings().isDeveloperModeEnabled();
-    }
-
-    public static boolean hasInstance() {
-        synchronized (syncObject) {
-            return instance != null;
-        }
     }
 
     public static RadarConfiguration getInstance() {
@@ -71,18 +80,28 @@ public class RadarConfiguration {
         }
     }
 
-    public static RadarConfiguration configure(@NonNull FirebaseRemoteConfigSettings settings,
-                                               int defaultSettings) {
+    public static RadarConfiguration configure(boolean inDevelopmentMode, int defaultSettings) {
         synchronized (syncObject) {
             if (instance == null) {
+                FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                        .setDeveloperModeEnabled(inDevelopmentMode)
+                        .build();
                 FirebaseRemoteConfig config = FirebaseRemoteConfig.getInstance();
-                config.setConfigSettings(settings);
+                config.setConfigSettings(configSettings);
                 config.setDefaults(defaultSettings);
 
                 instance = new RadarConfiguration(config);
             }
             return instance;
         }
+    }
+
+    public Task<Void> fetch() {
+        return config.fetch(remoteConfigCacheExpiration);
+    }
+
+    public boolean activateFetched() {
+        return config.activateFetched();
     }
 
     public String getString(@NonNull String key) {
@@ -167,6 +186,33 @@ public class RadarConfiguration {
 
     public boolean containsKey(@NonNull String key) {
         return config.getKeysByPrefix(key).contains(key);
+    }
+
+    public boolean getBoolean(@NonNull String key) {
+        String str = getString(key);
+        if (IS_TRUE.matcher(str).find()) {
+            return true;
+        } else if (IS_FALSE.matcher(str).find()) {
+            return false;
+        } else {
+            throw new NumberFormatException("String '" + str + "' of property '" + key
+                    + "' is not a boolean");
+        }
+    }
+
+
+    public boolean getBoolean(@NonNull String key, boolean defaultValue) {
+        String str = getString(key, null);
+        if (str == null) {
+            return defaultValue;
+        }
+        if (IS_TRUE.matcher(str).find()) {
+            return true;
+        } else if (IS_FALSE.matcher(str).find()) {
+            return false;
+        } else {
+            return defaultValue;
+        }
     }
 
     public Set<String> keySet() {

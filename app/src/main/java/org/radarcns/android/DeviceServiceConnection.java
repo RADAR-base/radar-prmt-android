@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
@@ -29,9 +31,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.radarcns.android.DeviceService.DEVICE_SERVICE_CLASS;
 import static org.radarcns.android.DeviceService.TRANSACT_GET_DEVICE_NAME;
+import static org.radarcns.android.DeviceService.TRANSACT_UPDATE_CONFIG;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
@@ -237,6 +241,20 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
             deviceName = ((DeviceServiceBinder)serviceBinder).getDeviceName();
         }
         return deviceName;
+    }
+
+    public void updateConfiguration(Bundle bundle) {
+        if (isRemote) {
+            try {
+                Parcel data = Parcel.obtain();
+                data.writeBundle(bundle);
+                serviceBinder.transact(TRANSACT_UPDATE_CONFIG, data, Parcel.obtain(), 0);
+            } catch (RemoteException ex) {
+                // keep old configuration
+            }
+        } else {
+            ((DeviceServiceBinder)serviceBinder).updateConfiguration(bundle);
+        }
     }
 
     /**

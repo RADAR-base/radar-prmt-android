@@ -30,8 +30,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
@@ -53,6 +51,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
@@ -120,29 +119,39 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if (!mConnectionIsBound[0]) {
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                this.configureServiceIntent(e4serviceIntent);
-                e4serviceIntent.putExtra( EMPATICA_API_KEY, radarConfiguration.getString(EMPATICA_API_KEY) );
+                configureEmpatica(e4serviceIntent.getExtras());
 
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
             }
             if (!mConnectionIsBound[2]) {
                 Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                this.configureServiceIntent(pebble2Intent);
+                configurePebble2(pebble2Intent.getExtras());
 
                 pebble2Connection.bind(pebble2Intent);
                 mConnectionIsBound[2] = true;
             }
         }
 
-        private void configureServiceIntent(Intent serviceIntent) {
-            // Add the default configuration parameters given to the service intents
-            radarConfiguration.putExtras(serviceIntent.getExtras(),
-                    KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
-                    KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
-                    SENDER_CONNECTION_TIMEOUT_KEY);
-        }
     };
+
+
+    private void configureEmpatica(Bundle bundle) {
+        configureServiceExtras(bundle);
+        radarConfiguration.putExtras(bundle, EMPATICA_API_KEY);
+    }
+
+    private void configurePebble2(Bundle bundle) {
+        configureServiceExtras(bundle);
+    }
+
+    private void configureServiceExtras(Bundle bundle) {
+        // Add the default configuration parameters given to the service intents
+        radarConfiguration.putExtras(bundle,
+                KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
+                KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
+                SENDER_CONNECTION_TIMEOUT_KEY);
+    }
 
     public MainActivity() {
         super();
@@ -297,11 +306,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeRemoteConfig() {
-        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(true) // TODO: disable developer mode in production
-                .build();
-        radarConfiguration = RadarConfiguration.configure(configSettings,
-                R.xml.remote_config_defaults);
+        // TODO: disable developer mode in production
+        radarConfiguration = RadarConfiguration.configure(true, R.xml.remote_config_defaults);
     }
 
     @Override
@@ -369,20 +375,25 @@ public class MainActivity extends AppCompatActivity {
     public void fetchAndActivateRemoteConfig() {
         // If in developer mode cacheExpiration is set to 0 so each fetch will retrieve values from
         // the server.
-        if (radarConfiguration.isInDevelopmentMode()) {
-            remoteConfigCacheExpiration = 0;
-            logger.info("Remote Config: No expiration.");
-        }
-
         // Fetch and activate if fetch completed successfully
-        radarConfiguration.getFirebase().fetch(remoteConfigCacheExpiration)
+        radarConfiguration.fetch()
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             // Once the config is successfully fetched it must be
                             // activated before newly fetched values are returned.
-                            radarConfiguration.getFirebase().activateFetched();
+                            radarConfiguration.activateFetched();
+                            if (mConnectionIsBound[0]) {
+                                Bundle bundle = new Bundle();
+                                configureEmpatica(bundle);
+                                mE4Connection.updateConfiguration(bundle);
+                            }
+                            if (mConnectionIsBound[2]) {
+                                Bundle bundle = new Bundle();
+                                configurePebble2(bundle);
+                                pebble2Connection.updateConfiguration(bundle);
+                            }
                             logger.info("Remote Config: Activate success.");
                             // Set global properties.
                             mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
@@ -645,7 +656,7 @@ public class MainActivity extends AppCompatActivity {
                 String message;
                 Long timeSinceLastUpdate = ( System.currentTimeMillis() - mLastRecordsSentTimeMillis[row] )/1000;
                 // Small test for Firebase Remote config.
-                if (radarConfiguration.getFirebase().getBoolean("is_condensed_n_records_display")) {
+                if (radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true)) {
                     message = String.format(Locale.US, "%1$4dk (%2$d)", mTotalRecordsSent[row]/1000, timeSinceLastUpdate);
                 } else {
                     message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)", mTotalRecordsSent[row], timeSinceLastUpdate);
