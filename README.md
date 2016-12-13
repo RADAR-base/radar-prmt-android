@@ -61,6 +61,6 @@ To add additional device types to this application, make the following steps (se
   - implement `org.radarcns.android.DeviceState` to keep the current state of the device.
   - subclass `org.radarcns.android.DeviceService` to run the device manager in.
   - implement a singleton `org.radarcns.android.DeviceTopics` that contains all Kafka topics that the wearable will generate.
-- Finally, modify `org.radarcns.android.empaticaE4.MainActivity` to run a service for showing the device data and for controlling the recording.
+- Finally, modify `org.radarcns.MainActivity` to run a service for showing the device data and for controlling the recording.
 
 Make a pull request once the code is working.
