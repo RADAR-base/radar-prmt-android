@@ -17,7 +17,7 @@ import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.empaticaE4.MainActivity;
+import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;

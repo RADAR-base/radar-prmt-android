@@ -20,7 +20,7 @@ import android.support.annotation.Nullable;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
 import org.radarcns.data.Record;
-import org.radarcns.empaticaE4.MainActivity;
+import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;

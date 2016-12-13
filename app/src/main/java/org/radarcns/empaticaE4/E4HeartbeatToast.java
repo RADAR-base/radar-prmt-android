@@ -18,12 +18,12 @@ import java.util.List;
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection<E4DeviceStatus>, Void, String[]> {
+public class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection<E4DeviceStatus>, Void, String[]> {
     private final Context context;
     final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
     final static AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics.getInstance().getInterBeatIntervalTopic();
 
-    E4HeartbeatToast(Context context) {
+    public E4HeartbeatToast(Context context) {
         this.context = context;
     }
 

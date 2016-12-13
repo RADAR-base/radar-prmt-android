@@ -3,6 +3,7 @@ package org.radarcns.empaticaE4;
 import android.content.Intent;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.MainActivity;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
 import org.radarcns.android.DeviceState;
