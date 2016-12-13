@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '24.0.3'
+    compileSdkVersion 22
+    buildToolsVersion '22.0.1'
     defaultConfig {
         applicationId 'org.radarcns.android.android'
         minSdkVersion 19
-        targetSdkVersion 24
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
     }
@@ -41,7 +41,7 @@ dependencies {
     compile project(':avro')
     compile 'org.slf4j:slf4j-android:1.7.21'
     compile 'com.loopj.android:android-async-http:1.4.6'
-    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
     compile 'org.apache.avro:avro:1.7.7'
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'

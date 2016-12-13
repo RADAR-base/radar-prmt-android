@@ -1,4 +1,4 @@
-package org.radarcns.empaticaE4;
+package org.radarcns;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -31,11 +31,12 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
-import org.radarcns.R;
-import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.empaticaE4.E4DeviceStatus;
+import org.radarcns.empaticaE4.E4HeartbeatToast;
+import org.radarcns.empaticaE4.E4Service;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
@@ -236,7 +237,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        checkBluetoothPermissions();
+        // Not needed in API level 22.
+        // checkBluetoothPermissions();
 
         // Check availability of Google Play Services
         if ( GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS ) {
@@ -510,7 +512,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkBluetoothPermissions() {
-        String[] permissions = {Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN};
+        String[] permissions = {
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN};
 
         boolean waitingForPermission = false;
         for (String permission : permissions) {

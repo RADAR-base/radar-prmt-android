@@ -19,7 +19,7 @@ import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.empaticaE4.MainActivity;
+import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
@@ -43,7 +43,7 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-public class DeviceServiceConnection<S extends DeviceState>implements ServiceConnection {
+public class DeviceServiceConnection<S extends DeviceState> implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
     private final Parcelable.Creator<S> deviceStateCreator;
@@ -259,8 +259,6 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
 
     /**
      * True if given string is a substring of the device name.
-     * @param value
-     * @return
      */
     public boolean isAllowedDevice(String value) {
         return getDeviceName() != null && getDeviceName().contains(value);
