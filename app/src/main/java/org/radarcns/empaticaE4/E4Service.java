@@ -14,6 +14,9 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
+
 /**
  * A service that manages a E4DeviceManager and a TableDataHandler to send store the data of an
  * Empatica E4 and send it to a Kafka REST proxy.
@@ -63,9 +66,9 @@ public class E4Service extends DeviceService {
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
         if (apiKey == null) {
-            apiKey = RadarConfiguration.getStringExtra(bundle, RadarConfiguration.EMPATICA_API_KEY);
+            apiKey = RadarConfiguration.getStringExtra(bundle, EMPATICA_API_KEY);
             logger.info("Using API key {}", apiKey);
-            groupId = RadarConfiguration.getStringExtra(bundle, RadarConfiguration.DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
         }
     }
 }

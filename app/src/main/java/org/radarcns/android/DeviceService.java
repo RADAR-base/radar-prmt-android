@@ -38,6 +38,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.radarcns.RadarConfiguration.DATABASE_COMMIT_RATE_KEY;
+import static org.radarcns.RadarConfiguration.DATA_RETENTION_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
+import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
+import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
+
 /**
  * A service that manages a DeviceManager and a TableDataHandler to send store the data of a
  * wearable device and send it to a Kafka REST proxy.
@@ -407,10 +416,10 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
         URL kafkaUrl = null;
         SchemaRetriever remoteSchemaRetriever = null;
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.KAFKA_REST_PROXY_URL_KEY)) {
-            String kafkaUrlString = RadarConfiguration.getStringExtra(bundle, RadarConfiguration.KAFKA_REST_PROXY_URL_KEY);
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_REST_PROXY_URL_KEY)) {
+            String kafkaUrlString = RadarConfiguration.getStringExtra(bundle, KAFKA_REST_PROXY_URL_KEY);
             if (!kafkaUrlString.isEmpty()) {
-                remoteSchemaRetriever = new SchemaRetriever(RadarConfiguration.getStringExtra(bundle, RadarConfiguration.SCHEMA_REGISTRY_URL_KEY));
+                remoteSchemaRetriever = new SchemaRetriever(RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
                 try {
                     kafkaUrl = new URL(kafkaUrlString);
                 } catch (MalformedURLException e) {
@@ -441,23 +450,23 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             }
         }
 
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.DATA_RETENTION_KEY)) {
-            localDataHandler.setDataRetention(RadarConfiguration.getLongExtra(bundle, RadarConfiguration.DATA_RETENTION_KEY));
+        if (RadarConfiguration.hasExtra(bundle, DATA_RETENTION_KEY)) {
+            localDataHandler.setDataRetention(RadarConfiguration.getLongExtra(bundle, DATA_RETENTION_KEY));
         }
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.KAFKA_UPLOAD_RATE_KEY)) {
-            localDataHandler.setKafkaUploadRate(RadarConfiguration.getLongExtra(bundle, RadarConfiguration.KAFKA_UPLOAD_RATE_KEY));
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_UPLOAD_RATE_KEY)) {
+            localDataHandler.setKafkaUploadRate(RadarConfiguration.getLongExtra(bundle, KAFKA_UPLOAD_RATE_KEY));
         }
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.KAFKA_CLEAN_RATE_KEY)) {
-            localDataHandler.setKafkaCleanRate(RadarConfiguration.getLongExtra(bundle, RadarConfiguration.KAFKA_CLEAN_RATE_KEY));
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_CLEAN_RATE_KEY)) {
+            localDataHandler.setKafkaCleanRate(RadarConfiguration.getLongExtra(bundle, KAFKA_CLEAN_RATE_KEY));
         }
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY)) {
-            localDataHandler.setKafkaRecordsSendLimit(RadarConfiguration.getIntExtra(bundle, RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY));
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY)) {
+            localDataHandler.setKafkaRecordsSendLimit(RadarConfiguration.getIntExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY));
         }
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY)) {
-            localDataHandler.setSenderConnectionTimeout(RadarConfiguration.getLongExtra(bundle, RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY));
+        if (RadarConfiguration.hasExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY)) {
+            localDataHandler.setSenderConnectionTimeout(RadarConfiguration.getLongExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY));
         }
-        if (RadarConfiguration.hasExtra(bundle, RadarConfiguration.DATABASE_COMMIT_RATE_KEY)) {
-            localDataHandler.setDatabaseCommitRate(RadarConfiguration.getLongExtra(bundle, RadarConfiguration.DATABASE_COMMIT_RATE_KEY));
+        if (RadarConfiguration.hasExtra(bundle, DATABASE_COMMIT_RATE_KEY)) {
+            localDataHandler.setDatabaseCommitRate(RadarConfiguration.getLongExtra(bundle, DATABASE_COMMIT_RATE_KEY));
         }
 
         if (newlyCreated) {

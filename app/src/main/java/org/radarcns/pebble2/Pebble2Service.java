@@ -14,6 +14,8 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+
 /**
  * A service that manages a Pebble2DeviceManager and a TableDataHandler to send store the data of a
  * Pebble 2 and send it to a Kafka REST proxy.
@@ -61,7 +63,7 @@ public class Pebble2Service extends DeviceService {
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
         if (groupId == null) {
-            groupId = RadarConfiguration.getStringExtra(bundle, RadarConfiguration.DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
         }
     }
 }

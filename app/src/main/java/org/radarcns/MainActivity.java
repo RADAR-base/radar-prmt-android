@@ -61,6 +61,7 @@ import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
+import static org.radarcns.RadarConfiguration.UI_REFRESH_RATE_KEY;
 import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_NUMBER;
 import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_TOPIC;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
@@ -221,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
         initializeRemoteConfig();
 
         // Start the UI thread
-        uiRefreshRate = radarConfiguration.getLong(RadarConfiguration.UI_REFRESH_RATE_KEY);
+        uiRefreshRate = radarConfiguration.getLong(UI_REFRESH_RATE_KEY);
         mUIUpdater = new DeviceUIUpdater();
         mUIScheduler = new Runnable() {
             @Override
