@@ -23,6 +23,7 @@ import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -261,7 +262,17 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
      * True if given string is a substring of the device name.
      */
     public boolean isAllowedDevice(String value) {
-        return getDeviceName() != null && getDeviceName().contains(value);
+        Pattern pattern = Strings.containsIgnoreCasePattern(value);
+        String deviceName = getDeviceName();
+        if (deviceName != null && pattern.matcher(deviceName).find()) {
+            return true;
+        }
+        try {
+            String sourceId = getDeviceData().getId().getSourceId();
+            return sourceId != null && pattern.matcher(sourceId).find();
+        } catch (RemoteException ex) {
+            return false;
+        }
     }
 
     public DeviceStatusListener.Status getDeviceStatus() {
