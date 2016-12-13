@@ -816,7 +816,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             row = getRowIndexFromView(v);
         } catch (IndexOutOfBoundsException iobe) {
-            Boast.makeText(this, "Could not set this device key, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
+            Boast.makeText(this, "Could not set this device key, there is no valid row index "
+                    + "associated with this button.", Toast.LENGTH_LONG).show();
             logger.warn(iobe.getMessage());
             return;
         }
