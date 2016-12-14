@@ -5,9 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Process;
 import android.support.annotation.NonNull;
 
 import org.radarcns.android.DeviceManager;
@@ -29,8 +26,6 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     private final Context context;
 
     private final DeviceStatusListener phoneService;
-    private Handler mHandler;
-    private final HandlerThread mHandlerThread;
     private MeasurementKey deviceId;
 
     private Sensor accelerometer;
@@ -43,7 +38,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     private final PhoneSensorDeviceStatus deviceStatus;
 
     private String deviceName;
-    private boolean isScanning;
+    private boolean isRegistered = false;
     private SensorManager sensorManager;
 
     public PhoneSensorDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, PhoneSensorTopics topics) {
@@ -51,6 +46,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
+
         this.phoneService = phoneService;
 
         this.context = context;
@@ -59,8 +55,6 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         this.deviceId = new MeasurementKey();
         this.deviceId.setUserId(groupId);
         this.deviceName = null;
-        this.mHandlerThread = new HandlerThread("Phone-device-handler", Process.THREAD_PRIORITY_AUDIO);
-        this.isScanning = false;
         this.deviceStatus = new PhoneSensorDeviceStatus();
         this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
@@ -68,9 +62,8 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
 
     @Override
     public void start(@NonNull final Set<String> acceptableIds) {
-        updateStatus(DeviceStatusListener.Status.READY);
-
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        // Accelerometer
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success! we have an accelerometer
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -78,14 +71,16 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         } else {
             logger.warn("Phone Accelerometer not found");
         }
-
+        // Light
         if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             logger.warn("Phone Light sensor not found");
         }
-
+        // Battery
+        // TBD
+        isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
     }
 
@@ -122,8 +117,13 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
 
     public void processLight(SensorEvent event) {
         Float lightValue = event.values[0];
+        deviceStatus.setLight(lightValue);
 
-        //TODO: Sent to Kafka via Avro Topic
+        PhoneSensorLight value = new PhoneSensorLight(
+                (double) event.timestamp, System.currentTimeMillis() / 1000d,
+                lightValue);
+
+        dataHandler.addMeasurement(lightTable, deviceId, value);
 
         // DEBUG: Report light intensity as battery level
         deviceStatus.setBatteryLevel(lightValue/180);
@@ -134,18 +134,17 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
 
     }
 
-    private synchronized Handler getHandler() {
-        return this.mHandler;
-    }
-
     @Override
     public boolean isClosed() {
-        return getHandler() == null;
+        return !isRegistered;
     }
+
 
     @Override
     public void close() {
-
+        sensorManager.unregisterListener(this);
+        isRegistered = false;
+        updateStatus(DeviceStatusListener.Status.DISCONNECTED);
     }
 
     @Override

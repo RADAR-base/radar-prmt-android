@@ -13,6 +13,7 @@ public class PhoneSensorDeviceStatus implements DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float temperature = Float.NaN;
+    private float light = Float.NaN;
 
     @Override
     public int describeContents() {
@@ -27,6 +28,7 @@ public class PhoneSensorDeviceStatus implements DeviceState {
         dest.writeFloat(this.acceleration[2]);
         dest.writeFloat(this.batteryLevel);
         dest.writeFloat(this.temperature);
+        dest.writeFloat(this.light);
     }
 
     public static final Creator<PhoneSensorDeviceStatus> CREATOR = new Creator<PhoneSensorDeviceStatus>() {
@@ -38,6 +40,7 @@ public class PhoneSensorDeviceStatus implements DeviceState {
             result.acceleration[2] = in.readFloat();
             result.batteryLevel = in.readFloat();
             result.temperature = in.readFloat();
+            result.light = in.readFloat();
             return result;
         }
 
@@ -77,6 +80,14 @@ public class PhoneSensorDeviceStatus implements DeviceState {
 
     public synchronized void setTemperature(float temperature) {
         this.temperature = temperature;
+    }
+
+    public float getLight() {
+        return light;
+    }
+
+    public void setLight(float light) {
+        this.light = light;
     }
 
     @Override
