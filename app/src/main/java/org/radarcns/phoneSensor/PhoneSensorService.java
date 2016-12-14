@@ -8,7 +8,6 @@ import org.radarcns.android.DeviceService;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.empaticaE4.E4Topics;
 import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PhoneSensorService extends DeviceService {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorService.class);
-    private E4Topics topics; //TODO
+    private PhoneSensorTopics topics; //TODO
     private String groupId;
 
     @Override
@@ -29,7 +28,7 @@ public class PhoneSensorService extends DeviceService {
         logger.info("Creating Phone Sensor service {}", this);
         super.onCreate();
 
-        topics = E4Topics.getInstance();
+        topics = PhoneSensorTopics.getInstance();
     }
 
     @Override
@@ -53,7 +52,7 @@ public class PhoneSensorService extends DeviceService {
     @Override
     protected AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics() {
         return new AvroTopic[] {
-                topics.getAccelerationTopic(), topics.getBloodVolumePulseTopic(),
+                topics.getAccelerationTopic(), topics.getLightTopic(),
         };
     }
 

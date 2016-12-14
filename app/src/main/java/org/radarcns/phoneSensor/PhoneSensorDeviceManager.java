@@ -14,8 +14,7 @@ import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
-import org.radarcns.empaticaE4.E4Topics;
-import org.radarcns.empaticaE4.EmpaticaE4Acceleration;
+import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,9 +36,9 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     private Sensor accelerometer;
     private Sensor lightSensor;
     public float testOutput;
-    private final MeasurementTable<EmpaticaE4Acceleration> accelerationTable; //TODO
-//    private final MeasurementTable<PhoneLight> lightTable;
-//    private final AvroTopic<MeasurementKey, PhoneBatteryLevel> batteryTopic;
+    private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
+    private final MeasurementTable<PhoneSensorLight> lightTable;
+    private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
 
     private final PhoneSensorDeviceStatus deviceStatus;
 
@@ -47,10 +46,11 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     private boolean isScanning;
     private SensorManager sensorManager;
 
-    public PhoneSensorDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, E4Topics topics) {
+    public PhoneSensorDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, PhoneSensorTopics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
-//        this.batteryTopic = topics.getBatteryLevelTopic();
+        this.lightTable = dataHandler.getCache(topics.getLightTopic());
+        this.batteryTopic = topics.getBatteryLevelTopic();
         this.phoneService = phoneService;
 
         this.context = context;
@@ -109,7 +109,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         deviceStatus.setAcceleration(x / 64f, y / 64f, z / 64f);
 
         float[] latestAcceleration = deviceStatus.getAcceleration();
-        EmpaticaE4Acceleration value = new EmpaticaE4Acceleration(
+        PhoneSensorAcceleration value = new PhoneSensorAcceleration(
                 (double) event.timestamp, System.currentTimeMillis() / 1000d,
                 latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
 
@@ -122,50 +122,17 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
 
     public void processLight(SensorEvent event) {
         Float lightValue = event.values[0];
+
+        //TODO: Sent to Kafka via Avro Topic
+
+        // DEBUG: Report light intensity as battery level
         deviceStatus.setBatteryLevel(lightValue/180);
-        //TODO
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-//    @Override
-//    public void didUpdateStatus(EmpaStatus empaStatus) {
-//        logger.info("Updated E4 status to {}", empaStatus);
-//        switch (empaStatus) {
-//            case READY:
-//                // The device manager is ready for use
-//                // Start scanning
-//                Handler localHandler = getHandler();
-//                if (localHandler != null) {
-//                    localHandler.post(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            logger.info("Started scanning");
-//                            deviceManager.startScanning();
-//                            isScanning = true;
-//                            updateStatus(DeviceStatusListener.Status.READY);
-//                        }
-//                    });
-//                }
-//                break;
-//            case CONNECTED:
-//                // The device manager has established a connection
-//                this.deviceManager.stopScanning();
-//                updateStatus(DeviceStatusListener.Status.CONNECTED);
-//                break;
-//            case DISCONNECTING:
-//            case DISCONNECTED:
-//                // The device manager disconnected from a device. Before it ever makes a connection,
-//                // it also calls this, so check if we have a connected device first.
-//                if (deviceStatus.getStatus() != DeviceStatusListener.Status.DISCONNECTED && deviceName != null) {
-//                    updateStatus(DeviceStatusListener.Status.DISCONNECTED);
-//                }
-//                break;
-//        }
-//    }
 
     private synchronized Handler getHandler() {
         return this.mHandler;
