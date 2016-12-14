@@ -120,15 +120,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             if (!mConnectionIsBound[0]) {
+                Bundle extras = new Bundle();
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                configureEmpatica(e4serviceIntent.getExtras());
+                configureEmpatica(extras);
+                e4serviceIntent.putExtras(extras);
 
                 mE4Connection.bind(e4serviceIntent);
                 mConnectionIsBound[0] = true;
             }
             if (!mConnectionIsBound[2]) {
                 Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                configurePebble2(pebble2Intent.getExtras());
+                Bundle extras = new Bundle();
+                configurePebble2(extras);
+                pebble2Intent.putExtras(extras);
 
                 pebble2Connection.bind(pebble2Intent);
                 mConnectionIsBound[2] = true;

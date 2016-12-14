@@ -1,6 +1,4 @@
 apply plugin: 'com.android.application'
-// Needed for Firebase
-apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 22
@@ -53,3 +51,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.slf4j:slf4j-simple:1.7.21'
 }
+// Needed for Firebase. Put at the bottom so it can detect the firebase version 10.0.1.
+apply plugin: 'com.google.gms.google-services'
