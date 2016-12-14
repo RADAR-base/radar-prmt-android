@@ -33,6 +33,7 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
         exclude group: 'log4j'
         exclude group: 'jline'
+        exclude group: 'com.101tec'
     }
     // needed to work with testCompile -> kafka-clients
     compile 'com.getpebble:pebblekit:4.0.0'
@@ -50,6 +51,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.slf4j:slf4j-simple:1.7.21'
 }
-
-
+// Needed for Firebase. Put at the bottom so it can detect the firebase version 10.0.1.
 apply plugin: 'com.google.gms.google-services'

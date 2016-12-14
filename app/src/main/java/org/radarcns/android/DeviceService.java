@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.RemoteException;
@@ -19,8 +20,8 @@ import android.support.annotation.Nullable;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
+import org.radarcns.RadarConfiguration;
 import org.radarcns.data.Record;
-import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -37,6 +38,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.radarcns.RadarConfiguration.DATABASE_COMMIT_RATE_KEY;
+import static org.radarcns.RadarConfiguration.DATA_RETENTION_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
+import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
+import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
+import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
+
 /**
  * A service that manages a DeviceManager and a TableDataHandler to send store the data of a
  * wearable device and send it to a Kafka REST proxy.
@@ -51,6 +61,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public final static int TRANSACT_STOP_RECORDING = 15;
     public final static int TRANSACT_GET_SERVER_STATUS = 16;
     public final static int TRANSACT_GET_DEVICE_NAME = 17;
+    public final static int TRANSACT_UPDATE_CONFIG = 18;
     public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
     public final static String SERVER_RECORDS_SENT_TOPIC = "org.radarcns.android.ServerStatusListener.topic";
     public final static String SERVER_RECORDS_SENT_NUMBER = "org.radarcns.android.ServerStatusListener.lastNumberOfRecordsSent";
@@ -123,7 +134,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             latestStartId = startId;
         }
         if (intent != null) {
-            onInvocation(intent);
+            onInvocation(intent.getExtras());
         }
         // If we get killed, after returning from here, restart
         return START_STICKY;
@@ -139,7 +150,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     @Override
     public void onRebind(Intent intent) {
         numberOfActivitiesBound.incrementAndGet();
-        onInvocation(intent);
+        if (intent != null) {
+            onInvocation(intent.getExtras());
+        }
     }
 
     @Override
@@ -347,6 +360,11 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
+        public void updateConfiguration(Bundle bundle) {
+            onInvocation(bundle);
+        }
+
+        @Override
         public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
             try {
                 switch (code) {
@@ -375,6 +393,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                     case TRANSACT_GET_DEVICE_NAME:
                         reply.writeString(getDeviceName());
                         break;
+                    case TRANSACT_UPDATE_CONFIG:
+                        updateConfiguration(data.readBundle(getClass().getClassLoader()));
+                        break;
                     default:
                         return false;
                 }
@@ -388,21 +409,17 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     /**
      * Override this function to get any parameters from the given intent.
      * Also call the superclass.
-     * @param intent intent that the activity provided.
+     * @param bundle intent extras that the activity provided.
      */
-    protected void onInvocation(Intent intent) {
+    protected void onInvocation(Bundle bundle) {
         TableDataHandler localDataHandler;
-        synchronized (this) {
-            if (dataHandler != null) {
-                return;
-            }
-        }
+
         URL kafkaUrl = null;
         SchemaRetriever remoteSchemaRetriever = null;
-        if (intent.hasExtra(MainActivity.KAFKA_REST_PROXY_KEY)) {
-            String kafkaUrlString = intent.getStringExtra(MainActivity.KAFKA_REST_PROXY_KEY);
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_REST_PROXY_URL_KEY)) {
+            String kafkaUrlString = RadarConfiguration.getStringExtra(bundle, KAFKA_REST_PROXY_URL_KEY);
             if (!kafkaUrlString.isEmpty()) {
-                remoteSchemaRetriever = new SchemaRetriever(intent.getStringExtra(MainActivity.SCHEMA_REGISTRY_KEY));
+                remoteSchemaRetriever = new SchemaRetriever(RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
                 try {
                     kafkaUrl = new URL(kafkaUrlString);
                 } catch (MalformedURLException e) {
@@ -411,30 +428,52 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                 }
             }
         }
-        long dataRetentionMs = intent.getLongExtra("data_retention_ms", 86400000);
-        //noinspection unchecked
-        boolean didUpdate;
-        localDataHandler = new TableDataHandler(this, 2500, kafkaUrl, remoteSchemaRetriever,
-                dataRetentionMs, getCachedTopics());
 
+        boolean newlyCreated;
         synchronized (this) {
             if (dataHandler == null) {
-                dataHandler = localDataHandler;
-                didUpdate = true;
+                dataHandler = new TableDataHandler(
+                        this, kafkaUrl, remoteSchemaRetriever, getCachedTopics());
+                newlyCreated = true;
             } else {
-                didUpdate = false;
+                newlyCreated = false;
+            }
+            localDataHandler = dataHandler;
+        }
+
+        if (!newlyCreated) {
+            if (kafkaUrl == null) {
+                localDataHandler.disableSubmitter();
+            } else {
+                localDataHandler.setKafkaUrl(kafkaUrl);
+                localDataHandler.setSchemaRetriever(remoteSchemaRetriever);
             }
         }
 
-        if (didUpdate) {
+        if (RadarConfiguration.hasExtra(bundle, DATA_RETENTION_KEY)) {
+            localDataHandler.setDataRetention(RadarConfiguration.getLongExtra(bundle, DATA_RETENTION_KEY));
+        }
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_UPLOAD_RATE_KEY)) {
+            localDataHandler.setKafkaUploadRate(RadarConfiguration.getLongExtra(bundle, KAFKA_UPLOAD_RATE_KEY));
+        }
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_CLEAN_RATE_KEY)) {
+            localDataHandler.setKafkaCleanRate(RadarConfiguration.getLongExtra(bundle, KAFKA_CLEAN_RATE_KEY));
+        }
+        if (RadarConfiguration.hasExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY)) {
+            localDataHandler.setKafkaRecordsSendLimit(RadarConfiguration.getIntExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY));
+        }
+        if (RadarConfiguration.hasExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY)) {
+            localDataHandler.setSenderConnectionTimeout(RadarConfiguration.getLongExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY));
+        }
+        if (RadarConfiguration.hasExtra(bundle, DATABASE_COMMIT_RATE_KEY)) {
+            localDataHandler.setDatabaseCommitRate(RadarConfiguration.getLongExtra(bundle, DATABASE_COMMIT_RATE_KEY));
+        }
+
+        if (newlyCreated) {
             localDataHandler.addStatusListener(this);
             localDataHandler.start();
-        } else {
-            try {
-                localDataHandler.close();
-            } catch (IOException e) {
-                logger.warn("Failed to close unnecessary data handler");
-            }
+        } else if (kafkaUrl != null) {
+            localDataHandler.enableSubmitter();
         }
     }
 

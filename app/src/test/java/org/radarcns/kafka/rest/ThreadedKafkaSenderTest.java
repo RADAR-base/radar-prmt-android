@@ -39,7 +39,7 @@ public class ThreadedKafkaSenderTest extends TestCase {
         AvroEncoder keyEncoder = new StringEncoder();
         AvroEncoder valueEncoder = new SpecificRecordEncoder(false);
 
-        KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
+        KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder, 2500);
         KafkaSender<String, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);
         kafkaThread.resetConnection();
 
