@@ -309,8 +309,10 @@
                         <Button
                             android:id="@+id/inputDeviceNameButtonRow4"
                             style="@style/ButtonDeviceKeyColumn"
-                            android:text="@string/button_input"
-                            android:onClick="dialogInputDeviceName" />
+                            android:text="@string/disabledText"
+                            android:onClick="dialogInputDeviceName"
+                            android:clickable="false"
+                            android:enabled="false" />
 
                         <Button
                             android:id="@+id/refreshButtonRow4"

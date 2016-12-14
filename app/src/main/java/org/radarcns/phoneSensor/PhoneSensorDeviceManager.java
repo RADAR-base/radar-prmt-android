@@ -38,7 +38,6 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
     private final MeasurementTable<PhoneSensorLight> lightTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
-    public float testOutput;
 
     private final PhoneSensorDeviceStatus deviceStatus;
 
@@ -98,23 +97,23 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         if ( event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ) {
-            logger.info("Accelerometer changed");
             processAcceleration(event);
         } else if ( event.sensor.getType() == Sensor.TYPE_LIGHT ) {
             processLight(event);
         } else {
-            // other sensor
+            logger.info("Phone registered other sensor change: '{}'", event.sensor.getType());
         }
 
-        // Battery
+        // Get new battery status
         processBattery();
     }
 
     public void processAcceleration(SensorEvent event) {
-        Float x = event.values[0];
-        Float y = event.values[1];
-        Float z = event.values[2];
-        deviceStatus.setAcceleration(x / 64f, y / 64f, z / 64f);
+        // x,y,z are in m/s2
+        Float x = event.values[0] / 9.81f;
+        Float y = event.values[1] / 9.81f;
+        Float z = event.values[2] / 9.81f;
+        deviceStatus.setAcceleration(x, y, z);
 
         float[] latestAcceleration = deviceStatus.getAcceleration();
         PhoneSensorAcceleration value = new PhoneSensorAcceleration(
@@ -124,7 +123,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         dataHandler.addMeasurement(accelerationTable, deviceId, value);
 
         // TODO: DEBUG setting: Report total acceleration as temperature (in ui)
-        testOutput = (float) Math.sqrt( Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) );
+        float testOutput = (float) Math.sqrt( Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) );
         deviceStatus.setTemperature(testOutput);
     }
 
