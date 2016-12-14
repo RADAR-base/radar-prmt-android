@@ -70,7 +70,7 @@ public class PhoneSensorDeviceStatus implements DeviceState {
 
     @Override
     public float getHeartRate() {
-        return Float.NaN;
+        return light; // TODO: DEBUG setting: report light as HR in ui
     }
 
     @Override

@@ -1,10 +1,13 @@
 package org.radarcns.phoneSensor;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.BatteryManager;
 import android.support.annotation.NonNull;
 
 import org.radarcns.android.DeviceManager;
@@ -30,10 +33,12 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
 
     private Sensor accelerometer;
     private Sensor lightSensor;
-    public float testOutput;
+    private Intent batteryStatus;
+
     private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
     private final MeasurementTable<PhoneSensorLight> lightTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
+    public float testOutput;
 
     private final PhoneSensorDeviceStatus deviceStatus;
 
@@ -63,6 +68,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     @Override
     public void start(@NonNull final Set<String> acceptableIds) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+
         // Accelerometer
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success! we have an accelerometer
@@ -71,6 +77,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         } else {
             logger.warn("Phone Accelerometer not found");
         }
+
         // Light
         if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
@@ -78,8 +85,12 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         } else {
             logger.warn("Phone Light sensor not found");
         }
+
         // Battery
-        // TBD
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        batteryStatus = context.registerReceiver(null, ifilter);
+
+
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
     }
@@ -95,6 +106,8 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
             // other sensor
         }
 
+        // Battery
+        processBattery();
     }
 
     public void processAcceleration(SensorEvent event) {
@@ -110,7 +123,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
 
         dataHandler.addMeasurement(accelerationTable, deviceId, value);
 
-        // DEBUG: Report total acceleration as temperature (in ui)
+        // TODO: DEBUG setting: Report total acceleration as temperature (in ui)
         testOutput = (float) Math.sqrt( Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) );
         deviceStatus.setTemperature(testOutput);
     }
@@ -124,9 +137,18 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
                 lightValue);
 
         dataHandler.addMeasurement(lightTable, deviceId, value);
+    }
 
-        // DEBUG: Report light intensity as battery level
-        deviceStatus.setBatteryLevel(lightValue/180);
+    public void processBattery() {
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float)scale;
+
+        deviceStatus.setBatteryLevel(batteryPct);
+
+        double timestamp = System.currentTimeMillis() / 1000d;
+        PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(timestamp, timestamp, batteryPct);
+        dataHandler.trySend(batteryTopic, 0L, deviceId, value);
     }
 
     @Override
