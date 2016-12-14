@@ -3,34 +3,34 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.phoneSensor;  
+package org.radarcns.phoneSensors;  
 @SuppressWarnings("all")
-/** Phone battery level. */
+/** Data from the light sensor in luminous flux per unit area. */
 @org.apache.avro.specific.AvroGenerated
-public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorBatteryLevel\",\"namespace\":\"org.radarcns.phoneSensor\",\"doc\":\"Phone battery level.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"batteryLevel\",\"type\":\"float\",\"doc\":\"battery level from 0 to 1\"}]}");
+public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorLight\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from the light sensor in luminous flux per unit area.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"light\",\"type\":\"float\",\"doc\":\"illuminance (lx)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** battery level from 0 to 1 */
-  @Deprecated public float batteryLevel;
+  /** illuminance (lx) */
+  @Deprecated public float light;
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>. 
    */
-  public PhoneSensorBatteryLevel() {}
+  public PhoneSensorLight() {}
 
   /**
    * All-args constructor.
    */
-  public PhoneSensorBatteryLevel(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float batteryLevel) {
+  public PhoneSensorLight(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float light) {
     this.time = time;
     this.timeReceived = timeReceived;
-    this.batteryLevel = batteryLevel;
+    this.light = light;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -39,7 +39,7 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
-    case 2: return batteryLevel;
+    case 2: return light;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -49,7 +49,7 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: batteryLevel = (java.lang.Float)value$; break;
+    case 2: light = (java.lang.Float)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -85,52 +85,52 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
   }
 
   /**
-   * Gets the value of the 'batteryLevel' field.
-   * battery level from 0 to 1   */
-  public java.lang.Float getBatteryLevel() {
-    return batteryLevel;
+   * Gets the value of the 'light' field.
+   * illuminance (lx)   */
+  public java.lang.Float getLight() {
+    return light;
   }
 
   /**
-   * Sets the value of the 'batteryLevel' field.
-   * battery level from 0 to 1   * @param value the value to set.
+   * Sets the value of the 'light' field.
+   * illuminance (lx)   * @param value the value to set.
    */
-  public void setBatteryLevel(java.lang.Float value) {
-    this.batteryLevel = value;
+  public void setLight(java.lang.Float value) {
+    this.light = value;
   }
 
-  /** Creates a new PhoneSensorBatteryLevel RecordBuilder */
-  public static org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder newBuilder() {
-    return new org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder();
+  /** Creates a new PhoneSensorLight RecordBuilder */
+  public static org.radarcns.phoneSensors.PhoneSensorLight.Builder newBuilder() {
+    return new org.radarcns.phoneSensors.PhoneSensorLight.Builder();
   }
   
-  /** Creates a new PhoneSensorBatteryLevel RecordBuilder by copying an existing Builder */
-  public static org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder newBuilder(org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder other) {
-    return new org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder(other);
+  /** Creates a new PhoneSensorLight RecordBuilder by copying an existing Builder */
+  public static org.radarcns.phoneSensors.PhoneSensorLight.Builder newBuilder(org.radarcns.phoneSensors.PhoneSensorLight.Builder other) {
+    return new org.radarcns.phoneSensors.PhoneSensorLight.Builder(other);
   }
   
-  /** Creates a new PhoneSensorBatteryLevel RecordBuilder by copying an existing PhoneSensorBatteryLevel instance */
-  public static org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder newBuilder(org.radarcns.phoneSensor.PhoneSensorBatteryLevel other) {
-    return new org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder(other);
+  /** Creates a new PhoneSensorLight RecordBuilder by copying an existing PhoneSensorLight instance */
+  public static org.radarcns.phoneSensors.PhoneSensorLight.Builder newBuilder(org.radarcns.phoneSensors.PhoneSensorLight other) {
+    return new org.radarcns.phoneSensors.PhoneSensorLight.Builder(other);
   }
   
   /**
-   * RecordBuilder for PhoneSensorBatteryLevel instances.
+   * RecordBuilder for PhoneSensorLight instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<PhoneSensorBatteryLevel>
-    implements org.apache.avro.data.RecordBuilder<PhoneSensorBatteryLevel> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<PhoneSensorLight>
+    implements org.apache.avro.data.RecordBuilder<PhoneSensorLight> {
 
     private double time;
     private double timeReceived;
-    private float batteryLevel;
+    private float light;
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.phoneSensor.PhoneSensorBatteryLevel.SCHEMA$);
+      super(org.radarcns.phoneSensors.PhoneSensorLight.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder other) {
+    private Builder(org.radarcns.phoneSensors.PhoneSensorLight.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -140,15 +140,15 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.batteryLevel)) {
-        this.batteryLevel = data().deepCopy(fields()[2].schema(), other.batteryLevel);
+      if (isValidValue(fields()[2], other.light)) {
+        this.light = data().deepCopy(fields()[2].schema(), other.light);
         fieldSetFlags()[2] = true;
       }
     }
     
-    /** Creates a Builder by copying an existing PhoneSensorBatteryLevel instance */
-    private Builder(org.radarcns.phoneSensor.PhoneSensorBatteryLevel other) {
-            super(org.radarcns.phoneSensor.PhoneSensorBatteryLevel.SCHEMA$);
+    /** Creates a Builder by copying an existing PhoneSensorLight instance */
+    private Builder(org.radarcns.phoneSensors.PhoneSensorLight other) {
+            super(org.radarcns.phoneSensors.PhoneSensorLight.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -157,8 +157,8 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.batteryLevel)) {
-        this.batteryLevel = data().deepCopy(fields()[2].schema(), other.batteryLevel);
+      if (isValidValue(fields()[2], other.light)) {
+        this.light = data().deepCopy(fields()[2].schema(), other.light);
         fieldSetFlags()[2] = true;
       }
     }
@@ -169,7 +169,7 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder setTime(double value) {
+    public org.radarcns.phoneSensors.PhoneSensorLight.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +182,7 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder clearTime() {
+    public org.radarcns.phoneSensors.PhoneSensorLight.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +193,7 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder setTimeReceived(double value) {
+    public org.radarcns.phoneSensors.PhoneSensorLight.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,42 +206,42 @@ public class PhoneSensorBatteryLevel extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder clearTimeReceived() {
+    public org.radarcns.phoneSensors.PhoneSensorLight.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
-    /** Gets the value of the 'batteryLevel' field */
-    public java.lang.Float getBatteryLevel() {
-      return batteryLevel;
+    /** Gets the value of the 'light' field */
+    public java.lang.Float getLight() {
+      return light;
     }
     
-    /** Sets the value of the 'batteryLevel' field */
-    public org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder setBatteryLevel(float value) {
+    /** Sets the value of the 'light' field */
+    public org.radarcns.phoneSensors.PhoneSensorLight.Builder setLight(float value) {
       validate(fields()[2], value);
-      this.batteryLevel = value;
+      this.light = value;
       fieldSetFlags()[2] = true;
       return this; 
     }
     
-    /** Checks whether the 'batteryLevel' field has been set */
-    public boolean hasBatteryLevel() {
+    /** Checks whether the 'light' field has been set */
+    public boolean hasLight() {
       return fieldSetFlags()[2];
     }
     
-    /** Clears the value of the 'batteryLevel' field */
-    public org.radarcns.phoneSensor.PhoneSensorBatteryLevel.Builder clearBatteryLevel() {
+    /** Clears the value of the 'light' field */
+    public org.radarcns.phoneSensors.PhoneSensorLight.Builder clearLight() {
       fieldSetFlags()[2] = false;
       return this;
     }
 
     @Override
-    public PhoneSensorBatteryLevel build() {
+    public PhoneSensorLight build() {
       try {
-        PhoneSensorBatteryLevel record = new PhoneSensorBatteryLevel();
+        PhoneSensorLight record = new PhoneSensorLight();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.batteryLevel = fieldSetFlags()[2] ? this.batteryLevel : (java.lang.Float) defaultValue(fields()[2]);
+        record.light = fieldSetFlags()[2] ? this.light : (java.lang.Float) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

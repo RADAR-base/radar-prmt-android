@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.phoneSensor;  
+package org.radarcns.phoneSensors;  
 @SuppressWarnings("all")
 /** Data from 3-axis accelerometer sensor with gravitational constant g as unit. */
 @org.apache.avro.specific.AvroGenerated
 public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorAcceleration\",\"namespace\":\"org.radarcns.phoneSensor\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorAcceleration\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -140,18 +140,18 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
   }
 
   /** Creates a new PhoneSensorAcceleration RecordBuilder */
-  public static org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder newBuilder() {
-    return new org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder();
+  public static org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder newBuilder() {
+    return new org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder();
   }
   
   /** Creates a new PhoneSensorAcceleration RecordBuilder by copying an existing Builder */
-  public static org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder newBuilder(org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder other) {
-    return new org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder(other);
+  public static org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder newBuilder(org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder other) {
+    return new org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder(other);
   }
   
   /** Creates a new PhoneSensorAcceleration RecordBuilder by copying an existing PhoneSensorAcceleration instance */
-  public static org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder newBuilder(org.radarcns.phoneSensor.PhoneSensorAcceleration other) {
-    return new org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder(other);
+  public static org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder newBuilder(org.radarcns.phoneSensors.PhoneSensorAcceleration other) {
+    return new org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder(other);
   }
   
   /**
@@ -168,11 +168,11 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.phoneSensor.PhoneSensorAcceleration.SCHEMA$);
+      super(org.radarcns.phoneSensors.PhoneSensorAcceleration.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder other) {
+    private Builder(org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -197,8 +197,8 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Creates a Builder by copying an existing PhoneSensorAcceleration instance */
-    private Builder(org.radarcns.phoneSensor.PhoneSensorAcceleration other) {
-            super(org.radarcns.phoneSensor.PhoneSensorAcceleration.SCHEMA$);
+    private Builder(org.radarcns.phoneSensors.PhoneSensorAcceleration other) {
+            super(org.radarcns.phoneSensors.PhoneSensorAcceleration.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -227,7 +227,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder setTime(double value) {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -240,7 +240,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder clearTime() {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -251,7 +251,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder setTimeReceived(double value) {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -264,7 +264,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder clearTimeReceived() {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -275,7 +275,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'x' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder setX(float value) {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder setX(float value) {
       validate(fields()[2], value);
       this.x = value;
       fieldSetFlags()[2] = true;
@@ -288,7 +288,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'x' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder clearX() {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder clearX() {
       fieldSetFlags()[2] = false;
       return this;
     }
@@ -299,7 +299,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'y' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder setY(float value) {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder setY(float value) {
       validate(fields()[3], value);
       this.y = value;
       fieldSetFlags()[3] = true;
@@ -312,7 +312,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'y' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder clearY() {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder clearY() {
       fieldSetFlags()[3] = false;
       return this;
     }
@@ -323,7 +323,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Sets the value of the 'z' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder setZ(float value) {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder setZ(float value) {
       validate(fields()[4], value);
       this.z = value;
       fieldSetFlags()[4] = true;
@@ -336,7 +336,7 @@ public class PhoneSensorAcceleration extends org.apache.avro.specific.SpecificRe
     }
     
     /** Clears the value of the 'z' field */
-    public org.radarcns.phoneSensor.PhoneSensorAcceleration.Builder clearZ() {
+    public org.radarcns.phoneSensors.PhoneSensorAcceleration.Builder clearZ() {
       fieldSetFlags()[4] = false;
       return this;
     }

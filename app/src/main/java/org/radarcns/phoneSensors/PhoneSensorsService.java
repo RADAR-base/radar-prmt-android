@@ -1,4 +1,4 @@
-package org.radarcns.phoneSensor;
+package org.radarcns.phoneSensors;
 
 import android.content.Intent;
 
@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory;
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
  * the phone sensors and send it to a Kafka REST proxy.
  */
-public class PhoneSensorService extends DeviceService {
-    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorService.class);
-    private PhoneSensorTopics topics; //TODO
+public class PhoneSensorsService extends DeviceService {
+    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
+    private PhoneSensorsTopics topics; //TODO
     private String groupId;
 
     @Override
@@ -28,17 +28,17 @@ public class PhoneSensorService extends DeviceService {
         logger.info("Creating Phone Sensor service {}", this);
         super.onCreate();
 
-        topics = PhoneSensorTopics.getInstance();
+        topics = PhoneSensorsTopics.getInstance();
     }
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new PhoneSensorDeviceManager(this, this, groupId, getDataHandler(), topics);
+        return new PhoneSensorsDeviceManager(this, this, groupId, getDataHandler(), topics);
     }
 
     @Override
     protected DeviceState getDefaultState() {
-        PhoneSensorDeviceStatus newStatus = new PhoneSensorDeviceStatus();
+        PhoneSensorsDeviceStatus newStatus = new PhoneSensorsDeviceStatus();
         newStatus.setStatus(DeviceStatusListener.Status.CONNECTED);
         return newStatus;
     }

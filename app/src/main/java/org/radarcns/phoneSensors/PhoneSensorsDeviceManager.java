@@ -1,4 +1,4 @@
-package org.radarcns.phoneSensor;
+package org.radarcns.phoneSensors;
 
 import android.content.Context;
 import android.content.Intent;
@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 /** Manages Phone sensors */
-class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
-    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorDeviceManager.class);
+class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
+    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsDeviceManager.class);
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -39,13 +39,13 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     private final MeasurementTable<PhoneSensorLight> lightTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
 
-    private final PhoneSensorDeviceStatus deviceStatus;
+    private final PhoneSensorsDeviceStatus deviceStatus;
 
     private String deviceName;
     private boolean isRegistered = false;
     private SensorManager sensorManager;
 
-    public PhoneSensorDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, PhoneSensorTopics topics) {
+    public PhoneSensorsDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
@@ -59,7 +59,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
         this.deviceId = new MeasurementKey();
         this.deviceId.setUserId(groupId);
         this.deviceName = null;
-        this.deviceStatus = new PhoneSensorDeviceStatus();
+        this.deviceStatus = new PhoneSensorsDeviceStatus();
         this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
     }
@@ -174,7 +174,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     }
 
     @Override
-    public PhoneSensorDeviceStatus getState() {
+    public PhoneSensorsDeviceStatus getState() {
         return deviceStatus;
     }
 
@@ -187,7 +187,7 @@ class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
     public boolean equals(Object other) {
         return other == this ||
                 other != null && getClass().equals(other.getClass()) &&
-                        deviceId.getSourceId() != null && deviceId.equals(((PhoneSensorDeviceManager) other).deviceId);
+                        deviceId.getSourceId() != null && deviceId.equals(((PhoneSensorsDeviceManager) other).deviceId);
     }
 
 }

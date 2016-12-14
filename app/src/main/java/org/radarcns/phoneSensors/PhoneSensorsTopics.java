@@ -1,36 +1,29 @@
-package org.radarcns.phoneSensor;
+package org.radarcns.phoneSensors;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.empaticaE4.EmpaticaE4Acceleration;
-import org.radarcns.empaticaE4.EmpaticaE4BatteryLevel;
-import org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse;
-import org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity;
-import org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval;
-import org.radarcns.empaticaE4.EmpaticaE4SensorStatus;
-import org.radarcns.empaticaE4.EmpaticaE4Temperature;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
 /** Topic manager for topics concerning the Empatica E4. */
-public class PhoneSensorTopics implements DeviceTopics {
+public class PhoneSensorsTopics implements DeviceTopics {
     private final AvroTopic<MeasurementKey, PhoneSensorAcceleration> accelerationTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryLevelTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorLight> lightTopic;
 
     private final static Object syncObject = new Object();
-    private static PhoneSensorTopics instance = null;
+    private static PhoneSensorsTopics instance = null;
 
-    public static PhoneSensorTopics getInstance() {
+    public static PhoneSensorsTopics getInstance() {
         synchronized (syncObject) {
             if (instance == null) {
-                instance = new PhoneSensorTopics();
+                instance = new PhoneSensorsTopics();
             }
             return instance;
         }
     }
 
-    private PhoneSensorTopics() {
+    private PhoneSensorsTopics() {
         accelerationTopic = new AvroTopic<>("android_phone_sensor_acceleration", MeasurementKey.getClassSchema(), PhoneSensorAcceleration.getClassSchema(), MeasurementKey.class, PhoneSensorAcceleration.class);
         batteryLevelTopic = new AvroTopic<>("android_phone_sensor_battery_level", MeasurementKey.getClassSchema(), PhoneSensorBatteryLevel.getClassSchema(), MeasurementKey.class, PhoneSensorBatteryLevel.class);
         lightTopic = new AvroTopic<>("android_phone_sensor_light", MeasurementKey.getClassSchema(), PhoneSensorLight.getClassSchema(), MeasurementKey.class, PhoneSensorLight.class);

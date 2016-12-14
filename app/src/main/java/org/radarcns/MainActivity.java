@@ -41,8 +41,8 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
-import org.radarcns.phoneSensor.PhoneSensorDeviceStatus;
-import org.radarcns.phoneSensor.PhoneSensorService;
+import org.radarcns.phoneSensors.PhoneSensorsDeviceStatus;
+import org.radarcns.phoneSensors.PhoneSensorsService;
 import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     /** Defines callbacks for service binding, passed to bindService() */
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
     private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
-    private final DeviceServiceConnection<PhoneSensorDeviceStatus> phoneConnection;
+    private final DeviceServiceConnection<PhoneSensorsDeviceStatus> phoneConnection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                 mConnectionIsBound[2] = true;
             }
             if (!mConnectionIsBound[3]) {
-                Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorService.class);
+                Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
                 phoneIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
                 phoneIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
                 phoneIntent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         isForcedDisconnected = false;
         mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
         pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
-        phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorDeviceStatus.CREATOR, PhoneSensorService.class.getName());
+        phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorsDeviceStatus.CREATOR, PhoneSensorsService.class.getName());
         mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection};
         mConnectionIsBound = new boolean[] {false, false, false, false};
 

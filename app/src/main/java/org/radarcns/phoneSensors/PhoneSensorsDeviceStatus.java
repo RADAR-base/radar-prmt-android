@@ -1,4 +1,4 @@
-package org.radarcns.phoneSensor;
+package org.radarcns.phoneSensors;
 
 import android.os.Parcel;
 
@@ -8,7 +8,7 @@ import org.radarcns.android.DeviceStatusListener;
 /**
  * The status on a single point in time
  */
-public class PhoneSensorDeviceStatus implements DeviceState {
+public class PhoneSensorsDeviceStatus implements DeviceState {
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
@@ -31,9 +31,9 @@ public class PhoneSensorDeviceStatus implements DeviceState {
         dest.writeFloat(this.light);
     }
 
-    public static final Creator<PhoneSensorDeviceStatus> CREATOR = new Creator<PhoneSensorDeviceStatus>() {
-        public PhoneSensorDeviceStatus createFromParcel(Parcel in) {
-            PhoneSensorDeviceStatus result = new PhoneSensorDeviceStatus();
+    public static final Creator<PhoneSensorsDeviceStatus> CREATOR = new Creator<PhoneSensorsDeviceStatus>() {
+        public PhoneSensorsDeviceStatus createFromParcel(Parcel in) {
+            PhoneSensorsDeviceStatus result = new PhoneSensorsDeviceStatus();
             result.status = DeviceStatusListener.Status.values()[in.readInt()];
             result.acceleration[0] = in.readFloat();
             result.acceleration[1] = in.readFloat();
@@ -44,8 +44,8 @@ public class PhoneSensorDeviceStatus implements DeviceState {
             return result;
         }
 
-        public PhoneSensorDeviceStatus[] newArray(int size) {
-            return new PhoneSensorDeviceStatus[size];
+        public PhoneSensorsDeviceStatus[] newArray(int size) {
+            return new PhoneSensorsDeviceStatus[size];
         }
     };
 

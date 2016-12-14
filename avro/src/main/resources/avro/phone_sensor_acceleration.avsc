@@ -1,5 +1,5 @@
 {
-  "namespace": "org.radarcns.phoneSensor",
+  "namespace": "org.radarcns.phoneSensors",
   "type": "record",
   "name": "PhoneSensorAcceleration",
   "doc": "Data from 3-axis accelerometer sensor with gravitational constant g as unit.",
