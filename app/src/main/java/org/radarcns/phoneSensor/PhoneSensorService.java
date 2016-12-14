@@ -9,15 +9,15 @@ import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.empaticaE4.E4Topics;
-import org.radarcns.empaticaE4.MainActivity;
+import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A service that manages a E4DeviceManager and a TableDataHandler to send store the data of an
- * Empatica E4 and send it to a Kafka REST proxy.
+ * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
+ * the phone sensors and send it to a Kafka REST proxy.
  */
 public class PhoneSensorService extends DeviceService {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorService.class);
@@ -26,7 +26,7 @@ public class PhoneSensorService extends DeviceService {
 
     @Override
     public void onCreate() {
-        logger.info("Creating Phone service {}", this);
+        logger.info("Creating Phone Sensor service {}", this);
         super.onCreate();
 
         topics = E4Topics.getInstance();
@@ -34,12 +34,12 @@ public class PhoneSensorService extends DeviceService {
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new PhoneSensorManager(this, this, groupId, getDataHandler(), topics);
+        return new PhoneSensorDeviceManager(this, this, groupId, getDataHandler(), topics);
     }
 
     @Override
     protected DeviceState getDefaultState() {
-        PhoneSensorStatus newStatus = new PhoneSensorStatus();
+        PhoneSensorDeviceStatus newStatus = new PhoneSensorDeviceStatus();
         newStatus.setStatus(DeviceStatusListener.Status.CONNECTED);
         return newStatus;
     }

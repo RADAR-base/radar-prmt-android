@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 /** Manages Phone sensors */
-class PhoneSensorManager implements DeviceManager, SensorEventListener {
-    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorManager.class);
+class PhoneSensorDeviceManager implements DeviceManager, SensorEventListener {
+    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorDeviceManager.class);
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -41,17 +41,16 @@ class PhoneSensorManager implements DeviceManager, SensorEventListener {
 //    private final MeasurementTable<PhoneLight> lightTable;
 //    private final AvroTopic<MeasurementKey, PhoneBatteryLevel> batteryTopic;
 
-    private final PhoneSensorStatus deviceStatus;
+    private final PhoneSensorDeviceStatus deviceStatus;
 
     private String deviceName;
     private boolean isScanning;
     private SensorManager sensorManager;
 
-    public PhoneSensorManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, E4Topics topics) {
+    public PhoneSensorDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, E4Topics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
 //        this.batteryTopic = topics.getBatteryLevelTopic();
-        logger.info("Phone device manager started");
         this.phoneService = phoneService;
 
         this.context = context;
@@ -62,8 +61,8 @@ class PhoneSensorManager implements DeviceManager, SensorEventListener {
         this.deviceName = null;
         this.mHandlerThread = new HandlerThread("Phone-device-handler", Process.THREAD_PRIORITY_AUDIO);
         this.isScanning = false;
-        this.deviceStatus = new PhoneSensorStatus();
-        this.deviceName = "TBD: Phone Model"; // TODO: Phone model as name
+        this.deviceStatus = new PhoneSensorDeviceStatus();
+        this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
     }
 
@@ -77,14 +76,14 @@ class PhoneSensorManager implements DeviceManager, SensorEventListener {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
-            logger.warn("Accelerometer not found");
+            logger.warn("Phone Accelerometer not found");
         }
 
         if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
-            logger.warn("Light sensor not found");
+            logger.warn("Phone Light sensor not found");
         }
 
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -182,24 +181,13 @@ class PhoneSensorManager implements DeviceManager, SensorEventListener {
 
     }
 
-//    @Override
-//    public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
-//        deviceStatus.setAcceleration(x / 64f, y / 64f, z / 64f);
-//        float[] latestAcceleration = deviceStatus.getAcceleration();
-//        EmpaticaE4Acceleration value = new EmpaticaE4Acceleration(
-//                timestamp, System.currentTimeMillis() / 1000d,
-//                latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
-//
-//        dataHandler.addMeasurement(accelerationTable, deviceId, value);
-//    }
-
     @Override
     public String getName() {
         return deviceName;
     }
 
     @Override
-    public PhoneSensorStatus getState() {
+    public PhoneSensorDeviceStatus getState() {
         return deviceStatus;
     }
 
@@ -212,7 +200,7 @@ class PhoneSensorManager implements DeviceManager, SensorEventListener {
     public boolean equals(Object other) {
         return other == this ||
                 other != null && getClass().equals(other.getClass()) &&
-                        deviceId.getSourceId() != null && deviceId.equals(((PhoneSensorManager) other).deviceId);
+                        deviceId.getSourceId() != null && deviceId.equals(((PhoneSensorDeviceManager) other).deviceId);
     }
 
 }

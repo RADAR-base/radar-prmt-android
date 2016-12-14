@@ -41,7 +41,7 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
-import org.radarcns.phoneSensor.PhoneSensorStatus;
+import org.radarcns.phoneSensor.PhoneSensorDeviceStatus;
 import org.radarcns.phoneSensor.PhoneSensorService;
 import org.radarcns.util.Boast;
 import org.slf4j.Logger;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     /** Defines callbacks for service binding, passed to bindService() */
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
     private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
-    private final DeviceServiceConnection<PhoneSensorStatus> phoneConnection;
+    private final DeviceServiceConnection<PhoneSensorDeviceStatus> phoneConnection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         isForcedDisconnected = false;
         mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
         pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
-        phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorStatus.CREATOR, PhoneSensorService.class.getName());
+        phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorDeviceStatus.CREATOR, PhoneSensorService.class.getName());
         mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection};
         mConnectionIsBound = new boolean[] {false, false, false, false};
 
