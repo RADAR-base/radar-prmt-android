@@ -123,8 +123,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             if (!mConnectionIsBound[0]) {
-                Bundle extras = new Bundle();
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                Bundle extras = new Bundle();
                 configureEmpatica(extras);
                 e4serviceIntent.putExtras(extras);
 
@@ -142,16 +142,16 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!mConnectionIsBound[3]) {
                 Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
-                phoneIntent.putExtra( KAFKA_REST_PROXY_KEY, mFirebaseRemoteConfig.getString(KAFKA_REST_PROXY_KEY) );
-                phoneIntent.putExtra( SCHEMA_REGISTRY_KEY, mFirebaseRemoteConfig.getString(SCHEMA_REGISTRY_KEY) );
-                phoneIntent.putExtra( DEVICE_GROUP_ID_KEY, mFirebaseRemoteConfig.getString(DEVICE_GROUP_ID_KEY) );
+                Bundle extras = new Bundle();
+                configureServiceExtras(extras);
+                phoneIntent.putExtras(extras);
+
                 phoneConnection.bind(phoneIntent);
                 mConnectionIsBound[3] = true;
             }
         }
 
     };
-
 
     private void configureEmpatica(Bundle bundle) {
         configureServiceExtras(bundle);

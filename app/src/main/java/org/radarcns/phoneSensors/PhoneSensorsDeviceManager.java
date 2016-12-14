@@ -29,7 +29,6 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private final Context context;
 
     private final DeviceStatusListener phoneService;
-    private MeasurementKey deviceId;
 
     private Sensor accelerometer;
     private Sensor lightSensor;
@@ -56,10 +55,8 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         this.context = context;
         sensorManager = null;
         // Initialize the Device Manager using your API key. You need to have Internet access at this point.
-        this.deviceId = new MeasurementKey();
-        this.deviceId.setUserId(groupId);
-        this.deviceName = null;
         this.deviceStatus = new PhoneSensorsDeviceStatus();
+        this.deviceStatus.getId().setUserId(groupId);
         this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
     }
@@ -120,7 +117,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
                 (double) event.timestamp, System.currentTimeMillis() / 1000d,
                 latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
 
-        dataHandler.addMeasurement(accelerationTable, deviceId, value);
+        dataHandler.addMeasurement(accelerationTable, deviceStatus.getId(), value);
 
         // TODO: DEBUG setting: Report total acceleration as temperature (in ui)
         float testOutput = (float) Math.sqrt( Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) );
@@ -135,7 +132,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
                 (double) event.timestamp, System.currentTimeMillis() / 1000d,
                 lightValue);
 
-        dataHandler.addMeasurement(lightTable, deviceId, value);
+        dataHandler.addMeasurement(lightTable, deviceStatus.getId(), value);
     }
 
     public void processBattery() {
@@ -147,7 +144,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
         double timestamp = System.currentTimeMillis() / 1000d;
         PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(timestamp, timestamp, batteryPct);
-        dataHandler.trySend(batteryTopic, 0L, deviceId, value);
+        dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
     @Override
@@ -185,9 +182,10 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
     @Override
     public boolean equals(Object other) {
-        return other == this ||
-                other != null && getClass().equals(other.getClass()) &&
-                        deviceId.getSourceId() != null && deviceId.equals(((PhoneSensorsDeviceManager) other).deviceId);
+        return other == this
+                || other != null && getClass().equals(other.getClass())
+                && deviceStatus.getId().getSourceId() != null
+                && deviceStatus.getId().equals(((PhoneSensorsDeviceManager) other).deviceStatus.getId());
     }
 
 }

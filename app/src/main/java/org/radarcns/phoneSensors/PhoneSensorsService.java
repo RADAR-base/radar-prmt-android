@@ -1,18 +1,20 @@
 package org.radarcns.phoneSensors;
 
-import android.content.Intent;
+import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
 
 /**
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
@@ -20,7 +22,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PhoneSensorsService extends DeviceService {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
-    private PhoneSensorsTopics topics; //TODO
+    private PhoneSensorsTopics topics;
     private String groupId;
 
     @Override
@@ -57,10 +59,10 @@ public class PhoneSensorsService extends DeviceService {
     }
 
     @Override
-    protected void onInvocation(Intent intent) {
-        super.onInvocation(intent);
+    protected void onInvocation(Bundle bundle) {
+        super.onInvocation(bundle);
         if (groupId == null) {
-            groupId = intent.getStringExtra(MainActivity.DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
         }
     }
 }

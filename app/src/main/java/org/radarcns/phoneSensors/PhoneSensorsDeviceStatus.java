@@ -3,13 +3,11 @@ package org.radarcns.phoneSensors;
 import android.os.Parcel;
 
 import org.radarcns.android.DeviceState;
-import org.radarcns.android.DeviceStatusListener;
 
 /**
  * The status on a single point in time
  */
-public class PhoneSensorsDeviceStatus implements DeviceState {
-    private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
+public class PhoneSensorsDeviceStatus extends DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float temperature = Float.NaN;
@@ -20,9 +18,21 @@ public class PhoneSensorsDeviceStatus implements DeviceState {
         return 0;
     }
 
+    public static final Creator<PhoneSensorsDeviceStatus> CREATOR = new Creator<PhoneSensorsDeviceStatus>() {
+        public PhoneSensorsDeviceStatus createFromParcel(Parcel in) {
+            PhoneSensorsDeviceStatus result = new PhoneSensorsDeviceStatus();
+            result.updateFromParcel(in);
+            return result;
+        }
+
+        public PhoneSensorsDeviceStatus[] newArray(int size) {
+            return new PhoneSensorsDeviceStatus[size];
+        }
+    };
+
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(status.ordinal());
+        super.writeToParcel(dest, flags);
         dest.writeFloat(this.acceleration[0]);
         dest.writeFloat(this.acceleration[1]);
         dest.writeFloat(this.acceleration[2]);
@@ -31,23 +41,15 @@ public class PhoneSensorsDeviceStatus implements DeviceState {
         dest.writeFloat(this.light);
     }
 
-    public static final Creator<PhoneSensorsDeviceStatus> CREATOR = new Creator<PhoneSensorsDeviceStatus>() {
-        public PhoneSensorsDeviceStatus createFromParcel(Parcel in) {
-            PhoneSensorsDeviceStatus result = new PhoneSensorsDeviceStatus();
-            result.status = DeviceStatusListener.Status.values()[in.readInt()];
-            result.acceleration[0] = in.readFloat();
-            result.acceleration[1] = in.readFloat();
-            result.acceleration[2] = in.readFloat();
-            result.batteryLevel = in.readFloat();
-            result.temperature = in.readFloat();
-            result.light = in.readFloat();
-            return result;
-        }
-
-        public PhoneSensorsDeviceStatus[] newArray(int size) {
-            return new PhoneSensorsDeviceStatus[size];
-        }
-    };
+    protected void updateFromParcel(Parcel in) {
+        super.updateFromParcel(in);
+        acceleration[0] = in.readFloat();
+        acceleration[1] = in.readFloat();
+        acceleration[2] = in.readFloat();
+        batteryLevel = in.readFloat();
+        temperature = in.readFloat();
+        light = in.readFloat();
+    }
 
     public float[] getAcceleration() {
         return acceleration;
@@ -88,15 +90,6 @@ public class PhoneSensorsDeviceStatus implements DeviceState {
 
     public void setLight(float light) {
         this.light = light;
-    }
-
-    @Override
-    public DeviceStatusListener.Status getStatus() {
-        return status;
-    }
-
-    public synchronized void setStatus(DeviceStatusListener.Status status) {
-        this.status = status;
     }
 
 }
