@@ -1,12 +1,11 @@
 package org.radarcns.pebble2;
 
-import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
 /** Topic manager for topics concerning the Empatica E4. */
-public class Pebble2Topics implements DeviceTopics {
+public class Pebble2Topics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, Pebble2Acceleration> accelerationTopic;
     private final AvroTopic<MeasurementKey, Pebble2BatteryLevel> batteryLevelTopic;
     private final AvroTopic<MeasurementKey, Pebble2HeartRate> heartRateTopic;
@@ -25,26 +24,18 @@ public class Pebble2Topics implements DeviceTopics {
     }
 
     private Pebble2Topics() {
-        accelerationTopic = new AvroTopic<>("android_pebble2_acceleration", MeasurementKey.getClassSchema(), Pebble2Acceleration.getClassSchema(), MeasurementKey.class, Pebble2Acceleration.class);
-        batteryLevelTopic = new AvroTopic<>("android_pebble2_battery_level", MeasurementKey.getClassSchema(), Pebble2BatteryLevel.getClassSchema(), MeasurementKey.class, Pebble2BatteryLevel.class);
-        heartRateTopic = new AvroTopic<>("android_pebble2_heart_rate", MeasurementKey.getClassSchema(), Pebble2HeartRate.getClassSchema(), MeasurementKey.class, Pebble2HeartRate.class);
-        heartRateFilteredTopic = new AvroTopic<>("android_pebble2_heart_rate_filtered", MeasurementKey.getClassSchema(), Pebble2HeartRateFiltered.getClassSchema(), MeasurementKey.class, Pebble2HeartRateFiltered.class);
-    }
-
-    @Override
-    public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
-        switch (name) {
-            case "android_pebble2_acceleration":
-                return accelerationTopic;
-            case "android_pebble2_battery_level":
-                return batteryLevelTopic;
-            case "android_pebble2_heart_rate":
-                return heartRateTopic;
-            case "android_pebble2_heart_rate_filtered":
-                return heartRateFilteredTopic;
-            default:
-                throw new IllegalArgumentException("Topic " + name + " unknown");
-        }
+        accelerationTopic = createTopic("android_pebble2_acceleration",
+                Pebble2Acceleration.getClassSchema(),
+                Pebble2Acceleration.class);
+        batteryLevelTopic = createTopic("android_pebble2_battery_level",
+                Pebble2BatteryLevel.getClassSchema(),
+                Pebble2BatteryLevel.class);
+        heartRateTopic = createTopic("android_pebble2_heart_rate",
+                Pebble2HeartRate.getClassSchema(),
+                Pebble2HeartRate.class);
+        heartRateFilteredTopic = createTopic("android_pebble2_heart_rate_filtered",
+                Pebble2HeartRateFiltered.getClassSchema(),
+                Pebble2HeartRateFiltered.class);
     }
 
     public AvroTopic<MeasurementKey, Pebble2Acceleration> getAccelerationTopic() {

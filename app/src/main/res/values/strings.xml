@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RADAR-CNS Empatica E4 connection</string>
+    <string name="app_name">RADAR-CNS passive Remote Monitoring</string>
     <string name="accel">Accelerometers</string>
     <string name="accel_x">x:</string>
     <string name="accel_y">y:</string>
@@ -10,9 +10,9 @@
     <string name="emptyText">—</string>
     <string name="temp_label">Temperature</string>
     <string name="battery_label">Battery</string>
-    <string name="service_notification_ticker">Empatica E4 data collection</string>
+    <string name="service_notification_ticker">Wearables data collection</string>
     <string name="service_notification_text">Collecting data from your wearable bluetooth device.</string>
-    <string name="service_notification_title">Empatica E4 data collection</string>
+    <string name="service_notification_title">Wearables data collection</string>
     <string name="stop_recording">Stop recording</string>
     <string name="show_heart_rate">Show heart rate</string>
     <string name="reconnect_to_server">Reconnect to server</string>
@@ -24,17 +24,17 @@
     <string name="button_details">Details</string>
     <string name="request_E4_key">Enter E4 S/N</string>
     <string name="button_input">Enter Device Key</string>
-    <string name="header_battery">Battery</string>
-    <string name="header_device_status">Status</string>
+    <string name="header_battery"></string>
+    <string name="header_device_status"></string>
     <string name="header_server_status">Server</string>
     <string name="header_device">Device</string>
     <string name="header_temp">Temp.</string>
     <string name="header_hr">HR</string>
     <string name="header_acceleration">Accel.</string>
     <string name="header_device_key"></string>
-    <string name="header_scan"></string>
+    <string name="header_scan">Controls</string>
     <string name="header_details"></string>
-    <string name="header_records_sent">Total # Records Sent</string>
+    <string name="header_records_sent"># Records Sent</string>
     <string name="label_firebase_status">Firebase</string>
     <string name="deviceTypeLabel1">E4</string>
     <string name="deviceTypeLabel2">Angel</string>
