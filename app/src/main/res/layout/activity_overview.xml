@@ -244,9 +244,8 @@
 
                         <TextView
                             android:id="@+id/temperatureRow3"
-                            style="@style/NumberColumn"
-                            android:text="@string/disabledText"
-                            android:enabled="false" />
+                            style="@style/DisabledColumn"
+                            android:text="@string/disabledText" />
 
                         <TextView
                             android:id="@+id/heartRateRow3"
@@ -317,13 +316,13 @@
 
                         <TextView
                             android:id="@+id/temperatureRow4"
-                            style="@style/NumberColumn"
-                            android:text="@string/emptyText" />
+                            style="@style/DisabledColumn"
+                            android:text="@string/disabledText" />
 
                         <TextView
                             android:id="@+id/heartRateRow4"
-                            style="@style/NumberColumn"
-                            android:text="@string/emptyText" />
+                            style="@style/DisabledColumn"
+                            android:text="@string/disabledText" />
 
                         <TextView
                             android:id="@+id/accelerationRow4"
