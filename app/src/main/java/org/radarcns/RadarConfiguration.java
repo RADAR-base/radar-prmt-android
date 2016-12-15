@@ -5,18 +5,23 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringDef;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -62,11 +67,13 @@ public class RadarConfiguration {
     private final Handler handler;
     private Activity onFetchActivity;
     private OnCompleteListener<Void> onFetchCompleteHandler;
+    private final Map<String, Object> localConfiguration;
 
     private RadarConfiguration(@NonNull FirebaseRemoteConfig config) {
         this.config = config;
         this.onFetchCompleteHandler = null;
 
+        this.localConfiguration = new ConcurrentHashMap<>();
         this.handler = new Handler();
         this.handler.postDelayed(new Runnable() {
             @Override
@@ -112,6 +119,10 @@ public class RadarConfiguration {
         }
     }
 
+    public Object put(String key, Object value) {
+        return localConfiguration.put(key, value);
+    }
+
     public Task<Void> fetch() {
         long delay;
         if (isInDevelopmentMode()) {
@@ -149,21 +160,58 @@ public class RadarConfiguration {
         return config.activateFetched();
     }
 
+    private String getRawString(String key) {
+        if (localConfiguration.containsKey(key)) {
+            Object value = localConfiguration.get(key);
+            if (value == null || value instanceof String) {
+                return (String)value;
+            } else {
+                return null;
+            }
+        } else {
+            return config.getString(key);
+        }
+    }
+
+    private Long getRawLong(String key) {
+        if (localConfiguration.containsKey(key)) {
+            Object value = localConfiguration.get(key);
+            if (value == null) {
+                return null;
+            } else if (value instanceof Number) {
+                return ((Number)value).longValue();
+            } else if (value instanceof String) {
+                return Long.valueOf((String)value);
+            } else {
+                return null;
+            }
+        } else {
+            return Long.valueOf(getString(key));
+        }
+    }
+
+    private Integer getRawInteger(String key) {
+        if (localConfiguration.containsKey(key)) {
+            Object value = localConfiguration.get(key);
+            if (value == null) {
+                return null;
+            } else if (value instanceof Number) {
+                return ((Number)value).intValue();
+            } else if (value instanceof String) {
+                return Integer.valueOf((String)value);
+            } else {
+                return null;
+            }
+        } else {
+            return Integer.valueOf(getString(key));
+        }
+    }
+
     public String getString(@NonNull String key) {
-        String result = config.getString(key);
+        String result = getRawString(key);
 
         if (result == null || result.isEmpty()) {
             throw new IllegalArgumentException("Key does not have a value");
-        }
-
-        return result;
-    }
-
-    public String getString(@NonNull String key, String defaultValue) {
-        String result = config.getString(key);
-
-        if (result == null || result.isEmpty()) {
-            return defaultValue;
         }
 
         return result;
@@ -177,8 +225,13 @@ public class RadarConfiguration {
      * @throws IllegalArgumentException if the key does not have an associated value
      */
     public long getLong(@NonNull String key) {
-        return Long.parseLong(getString(key));
+        Long ret = getRawLong(key);
+        if (ret == null) {
+            throw new IllegalArgumentException("Key does not have a value");
+        }
+        return ret;
     }
+
 
     /**
      * Get a configured int value.
@@ -188,7 +241,21 @@ public class RadarConfiguration {
      * @throws IllegalArgumentException if the key does not have an associated value
      */
     public int getInt(@NonNull String key) {
-        return Integer.parseInt(getString(key));
+        Integer ret = getRawInteger(key);
+        if (ret == null) {
+            throw new IllegalArgumentException("Key does not have a value");
+        }
+        return ret;
+    }
+
+    public String getString(@NonNull String key, String defaultValue) {
+        String result = getRawString(key);
+
+        if (result == null || result.isEmpty()) {
+            return defaultValue;
+        }
+
+        return result;
     }
 
     /**
@@ -200,9 +267,9 @@ public class RadarConfiguration {
      */
     public long getLong(@NonNull String key, long defaultValue) {
         try {
-            String result = config.getString(key);
-            if (result != null && !result.isEmpty()) {
-                return Long.parseLong(result);
+            Long ret = getRawLong(key);
+            if (ret != null) {
+                return ret;
             }
         } catch (NumberFormatException ex) {
             // return default
@@ -219,9 +286,9 @@ public class RadarConfiguration {
      */
     public int getInt(@NonNull String key, int defaultValue) {
         try {
-            String result = config.getString(key);
-            if (result != null && !result.isEmpty()) {
-                return Integer.parseInt(result);
+            Integer ret = getRawInteger(key);
+            if (ret != null) {
+                return ret;
             }
         } catch (NumberFormatException ex) {
             // return default
@@ -283,19 +350,34 @@ public class RadarConfiguration {
 
     public void putExtras(Bundle bundle, String... extras) {
         for (String extra : extras) {
-            try {
-                String key = RADAR_PREFIX + extra;
-                if (LONG_VALUES.contains(extra)) {
-                    bundle.putLong(key, getLong(extra));
-                } else if (INT_VALUES.contains(extra)) {
-                    bundle.putInt(key, getInt(extra));
-                } else if (BOOLEAN_VALUES.contains(extra)) {
-                    bundle.putBoolean(key, getString(extra).equals("true"));
-                } else {
-                    bundle.putString(key, getString(extra));
+            String key = RADAR_PREFIX + extra;
+
+            if (localConfiguration.containsKey(extra)) {
+                Object value = localConfiguration.get(extra);
+                if (value == null) {
+                    bundle.putString(key, null);
+                } else if (value instanceof Boolean) {
+                    bundle.putBoolean(key, (Boolean) value);
+                } else if (value instanceof Long) {
+                    bundle.putLong(key, (Long) value);
+                } else if (value instanceof Integer) {
+                    bundle.putInt(key, (Integer) value);
                 }
-            } catch (IllegalArgumentException ex) {
-                // do nothing
+            }
+            else {
+                try {
+                    if (LONG_VALUES.contains(extra)) {
+                        bundle.putLong(key, getLong(extra));
+                    } else if (INT_VALUES.contains(extra)) {
+                        bundle.putInt(key, getInt(extra));
+                    } else if (BOOLEAN_VALUES.contains(extra)) {
+                        bundle.putBoolean(key, getString(extra).equals("true"));
+                    } else {
+                        bundle.putString(key, getString(extra));
+                    }
+                } catch (IllegalArgumentException ex) {
+                    // do nothing
+                }
             }
         }
     }
