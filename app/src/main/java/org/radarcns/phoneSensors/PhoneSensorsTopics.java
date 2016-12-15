@@ -6,7 +6,7 @@ import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
 /** Topic manager for topics concerning the Empatica E4. */
-public class PhoneSensorsTopics implements DeviceTopics {
+public class PhoneSensorsTopics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, PhoneSensorAcceleration> accelerationTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryLevelTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorLight> lightTopic;
@@ -24,23 +24,15 @@ public class PhoneSensorsTopics implements DeviceTopics {
     }
 
     private PhoneSensorsTopics() {
-        accelerationTopic = new AvroTopic<>("android_phone_sensor_acceleration", MeasurementKey.getClassSchema(), PhoneSensorAcceleration.getClassSchema(), MeasurementKey.class, PhoneSensorAcceleration.class);
-        batteryLevelTopic = new AvroTopic<>("android_phone_sensor_battery_level", MeasurementKey.getClassSchema(), PhoneSensorBatteryLevel.getClassSchema(), MeasurementKey.class, PhoneSensorBatteryLevel.class);
-        lightTopic = new AvroTopic<>("android_phone_sensor_light", MeasurementKey.getClassSchema(), PhoneSensorLight.getClassSchema(), MeasurementKey.class, PhoneSensorLight.class);
-    }
-
-    @Override
-    public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
-        switch (name) {
-            case "android_phone_sensor_acceleration":
-                return accelerationTopic;
-            case "android_phone_sensor_battery_level":
-                return batteryLevelTopic;
-            case "android_phone_sensor_light":
-                return lightTopic;
-            default:
-                throw new IllegalArgumentException("Topic " + name + " unknown");
-        }
+        accelerationTopic = createTopic("android_phone_sensor_acceleration",
+                PhoneSensorAcceleration.getClassSchema(),
+                PhoneSensorAcceleration.class);
+        batteryLevelTopic = createTopic("android_phone_sensor_battery_level",
+                PhoneSensorBatteryLevel.getClassSchema(),
+                PhoneSensorBatteryLevel.class);
+        lightTopic = createTopic("android_phone_sensor_light",
+                PhoneSensorLight.getClassSchema(),
+                PhoneSensorLight.class);
     }
 
     public AvroTopic<MeasurementKey, PhoneSensorAcceleration> getAccelerationTopic() {
