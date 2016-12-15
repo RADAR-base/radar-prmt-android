@@ -1,6 +1,7 @@
 package org.radarcns.phoneSensors;
 
 import android.os.Bundle;
+import android.os.Environment;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.RadarConfiguration;
@@ -14,7 +15,16 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.UUID;
+
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.PHONE_SOURCE_ID_FILENAME_KEY;
 
 /**
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
@@ -24,6 +34,8 @@ public class PhoneSensorsService extends DeviceService {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
     private PhoneSensorsTopics topics;
     private String groupId;
+    private String sourceIdFilename;
+    private String sourceId;
 
     @Override
     public void onCreate() {
@@ -35,7 +47,7 @@ public class PhoneSensorsService extends DeviceService {
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new PhoneSensorsDeviceManager(this, this, groupId, getDataHandler(), topics);
+        return new PhoneSensorsDeviceManager(this, this, groupId, getSourceId(), getDataHandler(), topics);
     }
 
     @Override
@@ -63,6 +75,48 @@ public class PhoneSensorsService extends DeviceService {
         super.onInvocation(bundle);
         if (groupId == null) {
             groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
+            sourceIdFilename = RadarConfiguration.getStringExtra(bundle, PHONE_SOURCE_ID_FILENAME_KEY);
         }
+    }
+
+    public String getSourceId() {
+        if (sourceId == null) {
+            setSourceId( getSourceIdFromFile() );
+        }
+        return sourceId;
+    }
+
+    public void setSourceId(String sourceId) {
+        this.sourceId = sourceId;
+    }
+
+    private String getSourceIdFromFile() {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        File sourceIdFile = new File(path, sourceIdFilename);
+        if (!path.mkdirs()) {
+            logger.error("'{}' could not be created or already exists.", path.getAbsolutePath());
+        }
+
+        String result;
+        try {
+            if (sourceIdFile.exists()) {
+                // Read source id
+                BufferedReader reader = new BufferedReader(new FileReader(sourceIdFile));
+                result = reader.readLine();
+                logger.info("Source Id '{}' read from file", result);
+                reader.close();
+            } else {
+                // Create new source id
+                result = UUID.randomUUID().toString();
+                BufferedWriter writer = new BufferedWriter(new FileWriter(sourceIdFile));
+                writer.write(result);
+                logger.info("Source Id '{}' written to file", result);
+                writer.close();
+            }
+        } catch (IOException ioe) {
+            logger.warn("IOException when reading/writing source id file. Assigning one-time source id.");
+            result = UUID.randomUUID().toString();
+        }
+        return result;
     }
 }

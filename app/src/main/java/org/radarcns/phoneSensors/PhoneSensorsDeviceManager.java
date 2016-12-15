@@ -44,7 +44,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private boolean isRegistered = false;
     private SensorManager sensorManager;
 
-    public PhoneSensorsDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
+    public PhoneSensorsDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
@@ -57,6 +57,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         // Initialize the Device Manager using your API key. You need to have Internet access at this point.
         this.deviceStatus = new PhoneSensorsDeviceStatus();
         this.deviceStatus.getId().setUserId(groupId);
+        this.deviceStatus.getId().setSourceId(sourceId);
         this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
     }

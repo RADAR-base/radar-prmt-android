@@ -56,6 +56,7 @@ import java.util.Set;
 
 import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.PHONE_SOURCE_ID_FILENAME_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
@@ -117,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     public RadarConfiguration radarConfiguration;
-    private long remoteConfigCacheExpiration = 43200; // expire cache every 12 hours by default
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         radarConfiguration.putExtras(bundle,
                 KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
                 KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
-                SENDER_CONNECTION_TIMEOUT_KEY);
+                SENDER_CONNECTION_TIMEOUT_KEY, PHONE_SOURCE_ID_FILENAME_KEY);
     }
 
     public MainActivity() {
