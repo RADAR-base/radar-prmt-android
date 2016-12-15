@@ -227,7 +227,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
         Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-        notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
+        notificationBuilder.setSmallIcon(R.drawable.ic_bt_connected);
         notificationBuilder.setLargeIcon(largeIcon);
         notificationBuilder.setTicker(getText(R.string.service_notification_ticker));
         notificationBuilder.setWhen(System.currentTimeMillis());
