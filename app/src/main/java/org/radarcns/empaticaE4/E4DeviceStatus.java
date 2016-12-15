@@ -76,6 +76,7 @@ public class E4DeviceStatus extends DeviceState {
         }
     }
 
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }

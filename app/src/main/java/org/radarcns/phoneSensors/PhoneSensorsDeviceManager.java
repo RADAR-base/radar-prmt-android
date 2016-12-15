@@ -119,10 +119,6 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
                 latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
 
         dataHandler.addMeasurement(accelerationTable, deviceStatus.getId(), value);
-
-        // TODO: DEBUG setting: Report total acceleration as temperature (in ui)
-        float testOutput = (float) Math.sqrt( Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) );
-        deviceStatus.setTemperature(testOutput);
     }
 
     public void processLight(SensorEvent event) {

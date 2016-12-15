@@ -51,6 +51,10 @@
 
                         <TextView
                             style="@style/Header"
+                            android:text="@string/header_acceleration" />
+
+                        <TextView
+                            style="@style/Header"
                             android:text="@string/header_device_key" />
 
                         <TextView
@@ -104,6 +108,11 @@
 
                         <TextView
                             android:id="@+id/heartRateRow1"
+                            style="@style/NumberColumn"
+                            android:text="@string/emptyText" />
+
+                        <TextView
+                            android:id="@+id/accelerationRow1"
                             style="@style/NumberColumn"
                             android:text="@string/emptyText" />
 
@@ -173,6 +182,11 @@
                             style="@style/NumberColumn"
                             android:text="@string/emptyText" />
 
+                        <TextView
+                            android:id="@+id/accelerationRow2"
+                            style="@style/NumberColumn"
+                            android:text="@string/emptyText" />
+
                         <Button
                             android:id="@+id/inputDeviceNameButtonRow2"
                             style="@style/ButtonDeviceKeyColumn"
@@ -236,6 +250,11 @@
 
                         <TextView
                             android:id="@+id/heartRateRow3"
+                            style="@style/NumberColumn"
+                            android:text="@string/emptyText" />
+
+                        <TextView
+                            android:id="@+id/accelerationRow3"
                             style="@style/NumberColumn"
                             android:text="@string/emptyText" />
 
@@ -303,6 +322,11 @@
 
                         <TextView
                             android:id="@+id/heartRateRow4"
+                            style="@style/NumberColumn"
+                            android:text="@string/emptyText" />
+
+                        <TextView
+                            android:id="@+id/accelerationRow4"
                             style="@style/NumberColumn"
                             android:text="@string/emptyText" />
 

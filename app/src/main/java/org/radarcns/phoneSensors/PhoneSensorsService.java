@@ -103,18 +103,18 @@ public class PhoneSensorsService extends DeviceService {
                 // Read source id
                 BufferedReader reader = new BufferedReader(new FileReader(sourceIdFile));
                 result = reader.readLine();
-                logger.info("Source Id '{}' read from file", result);
+                logger.info("Phone source Id '{}' read from file", result);
                 reader.close();
             } else {
                 // Create new source id
                 result = UUID.randomUUID().toString();
                 BufferedWriter writer = new BufferedWriter(new FileWriter(sourceIdFile));
                 writer.write(result);
-                logger.info("Source Id '{}' written to file", result);
+                logger.info("Phone source Id '{}' written to file", result);
                 writer.close();
             }
         } catch (IOException ioe) {
-            logger.warn("IOException when reading/writing source id file. Assigning one-time source id.");
+            logger.warn("IOException when reading/writing phone source id file. Assigning one-time source id.");
             result = UUID.randomUUID().toString();
         }
         return result;

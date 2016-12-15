@@ -10,7 +10,6 @@ import org.radarcns.android.DeviceState;
 public class PhoneSensorsDeviceStatus extends DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
-    private float temperature = Float.NaN;
     private float light = Float.NaN;
 
     @Override
@@ -37,7 +36,6 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
         dest.writeFloat(this.acceleration[1]);
         dest.writeFloat(this.acceleration[2]);
         dest.writeFloat(this.batteryLevel);
-        dest.writeFloat(this.temperature);
         dest.writeFloat(this.light);
     }
 
@@ -47,10 +45,10 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
         acceleration[1] = in.readFloat();
         acceleration[2] = in.readFloat();
         batteryLevel = in.readFloat();
-        temperature = in.readFloat();
         light = in.readFloat();
     }
 
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
@@ -68,20 +66,6 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
 
     public synchronized void setBatteryLevel(float batteryLevel) {
         this.batteryLevel = batteryLevel;
-    }
-
-    @Override
-    public float getHeartRate() {
-        return light; // TODO: DEBUG setting: report light as HR in ui
-    }
-
-    @Override
-    public float getTemperature() {
-        return temperature;
-    }
-
-    public synchronized void setTemperature(float temperature) {
-        this.temperature = temperature;
     }
 
     public float getLight() {

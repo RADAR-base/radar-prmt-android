@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private View[] mStatusIcons;
     private TextView[] mTemperatureLabels;
     private TextView[] mHeartRateLabels;
+    private TextView[] mAccelerationLabels;
     private TextView[] mRecordsSentLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
@@ -292,6 +293,13 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.heartRateRow2),
                 (TextView) findViewById(R.id.heartRateRow3),
                 (TextView) findViewById(R.id.heartRateRow4)
+        };
+
+        mAccelerationLabels = new TextView[] {
+                (TextView) findViewById(R.id.accelerationRow1),
+                (TextView) findViewById(R.id.accelerationRow2),
+                (TextView) findViewById(R.id.accelerationRow3),
+                (TextView) findViewById(R.id.accelerationRow4)
         };
 
         mBatteryLabels = new ImageView[] {
@@ -563,6 +571,7 @@ public class MainActivity extends AppCompatActivity {
     public class DeviceUIUpdater implements Runnable {
         /** Data formats **/
         final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
         final DecimalFormat noDecimals = new DecimalFormat("0");
         final DeviceState[] deviceData;
         final String[] deviceNames;
@@ -600,6 +609,7 @@ public class MainActivity extends AppCompatActivity {
                 updateDeviceStatus(deviceData[i], i);
                 updateTemperature(deviceData[i], i);
                 updateHeartRate(deviceData[i], i);
+                updateAcceleration(deviceData[i], i);
                 updateBattery(deviceData[i], i);
                 updateDeviceName(deviceNames[i], i);
                 updateDeviceTotalRecordsSent(i);
@@ -631,6 +641,10 @@ public class MainActivity extends AppCompatActivity {
 
         public void updateHeartRate(DeviceState deviceData, int row ) {
             setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
+        }
+
+        public void updateAcceleration(DeviceState deviceData, int row ) {
+            setText(mAccelerationLabels[row], deviceData == null ? Float.NaN : deviceData.getAccelerationMagnitude(), "g", doubleDecimal);
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
@@ -814,8 +828,10 @@ public class MainActivity extends AppCompatActivity {
             rowIndex = 0;
         } else if (keyNameTrigger.contains("pebble")) {
             rowIndex = 2;
+        } else if (keyNameTrigger.contains("phone")) {
+            rowIndex = 3;
         } else {
-            logger.debug("Could not match the key name {} to a row in the ui", keyNameTrigger);
+            logger.info("Could not match the key name {} to a row in the ui", keyNameTrigger);
             return;
         }
 

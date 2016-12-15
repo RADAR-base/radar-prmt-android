@@ -62,6 +62,7 @@ public class Pebble2DeviceStatus extends DeviceState {
         heartRateFiltered = in.readFloat();
     }
 
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
