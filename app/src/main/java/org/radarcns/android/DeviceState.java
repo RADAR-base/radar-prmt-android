@@ -57,4 +57,23 @@ public abstract class DeviceState implements Parcelable {
     public float getHeartRate() {
         return Float.NaN;
     }
+
+    /**
+     * Get the x, y and z components of the acceleration in g.
+     * @return array of acceleration or Float.NaN if unknown
+     */
+    public float[] getAcceleration() {
+        return new float[] {Float.NaN, Float.NaN, Float.NaN};
+    }
+
+    /**
+     * Get the magnitude of the acceleration in g.
+     * @return acceleration or Float.NaN if unknown.
+     */
+    public float getAccelerationMagnitude() {
+        float[] acceleration = getAcceleration();
+        return (float) Math.sqrt( Math.pow(acceleration[0],2)
+                                + Math.pow(acceleration[1],2)
+                                + Math.pow(acceleration[2],2) );
+    }
 }

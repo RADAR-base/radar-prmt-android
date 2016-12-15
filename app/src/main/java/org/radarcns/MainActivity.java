@@ -41,6 +41,8 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
+import org.radarcns.phoneSensors.PhoneSensorsDeviceStatus;
+import org.radarcns.phoneSensors.PhoneSensorsService;
 import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     /** Defines callbacks for service binding, passed to bindService() */
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
     private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
+    private final DeviceServiceConnection<PhoneSensorsDeviceStatus> phoneConnection;
     private final BroadcastReceiver serverStatusListener;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     private View[] mStatusIcons;
     private TextView[] mTemperatureLabels;
     private TextView[] mHeartRateLabels;
+    private TextView[] mAccelerationLabels;
     private TextView[] mRecordsSentLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
@@ -114,14 +118,13 @@ public class MainActivity extends AppCompatActivity {
     final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     public RadarConfiguration radarConfiguration;
-    private long remoteConfigCacheExpiration = 43200; // expire cache every 12 hours by default
 
     private final Runnable bindServicesRunner = new Runnable() {
         @Override
         public void run() {
             if (!mConnectionIsBound[0]) {
-                Bundle extras = new Bundle();
                 Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                Bundle extras = new Bundle();
                 configureEmpatica(extras);
                 e4serviceIntent.putExtras(extras);
 
@@ -137,10 +140,18 @@ public class MainActivity extends AppCompatActivity {
                 pebble2Connection.bind(pebble2Intent);
                 mConnectionIsBound[2] = true;
             }
+            if (!mConnectionIsBound[3]) {
+                Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
+                Bundle extras = new Bundle();
+                configureServiceExtras(extras);
+                phoneIntent.putExtras(extras);
+
+                phoneConnection.bind(phoneIntent);
+                mConnectionIsBound[3] = true;
+            }
         }
 
     };
-
 
     private void configureEmpatica(Bundle bundle) {
         configureServiceExtras(bundle);
@@ -164,7 +175,8 @@ public class MainActivity extends AppCompatActivity {
         isForcedDisconnected = false;
         mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
         pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
-        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, null};
+        phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorsDeviceStatus.CREATOR, PhoneSensorsService.class.getName());
+        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection};
         mConnectionIsBound = new boolean[] {false, false, false, false};
 
         serverStatusListener = new BroadcastReceiver() {
@@ -280,6 +292,13 @@ public class MainActivity extends AppCompatActivity {
                 (TextView) findViewById(R.id.heartRateRow2),
                 (TextView) findViewById(R.id.heartRateRow3),
                 (TextView) findViewById(R.id.heartRateRow4)
+        };
+
+        mAccelerationLabels = new TextView[] {
+                (TextView) findViewById(R.id.accelerationRow1),
+                (TextView) findViewById(R.id.accelerationRow2),
+                (TextView) findViewById(R.id.accelerationRow3),
+                (TextView) findViewById(R.id.accelerationRow4)
         };
 
         mBatteryLabels = new ImageView[] {
@@ -551,6 +570,7 @@ public class MainActivity extends AppCompatActivity {
     public class DeviceUIUpdater implements Runnable {
         /** Data formats **/
         final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
         final DecimalFormat noDecimals = new DecimalFormat("0");
         final DeviceState[] deviceData;
         final String[] deviceNames;
@@ -588,6 +608,7 @@ public class MainActivity extends AppCompatActivity {
                 updateDeviceStatus(deviceData[i], i);
                 updateTemperature(deviceData[i], i);
                 updateHeartRate(deviceData[i], i);
+                updateAcceleration(deviceData[i], i);
                 updateBattery(deviceData[i], i);
                 updateDeviceName(deviceNames[i], i);
                 updateDeviceTotalRecordsSent(i);
@@ -619,6 +640,10 @@ public class MainActivity extends AppCompatActivity {
 
         public void updateHeartRate(DeviceState deviceData, int row ) {
             setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
+        }
+
+        public void updateAcceleration(DeviceState deviceData, int row ) {
+            setText(mAccelerationLabels[row], deviceData == null ? Float.NaN : deviceData.getAccelerationMagnitude(), "g", doubleDecimal);
         }
 
         public void updateBattery(DeviceState deviceData, int row ) {
@@ -802,8 +827,10 @@ public class MainActivity extends AppCompatActivity {
             rowIndex = 0;
         } else if (keyNameTrigger.contains("pebble")) {
             rowIndex = 2;
+        } else if (keyNameTrigger.contains("phone")) {
+            rowIndex = 3;
         } else {
-            logger.debug("Could not match the key name {} to a row in the ui", keyNameTrigger);
+            logger.info("Could not match the key name {} to a row in the ui", keyNameTrigger);
             return;
         }
 
