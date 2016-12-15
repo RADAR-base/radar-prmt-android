@@ -25,48 +25,46 @@ public class DirectProducerTest extends TestCase {
             props.load(in);
         }
 
-        boolean start = Boolean.parseBoolean(props.getProperty("servertest","false"));
+        if (!Boolean.parseBoolean(props.getProperty("servertest","false"))) {
+            logger.info("Serve test case has been disable.");
+            return;
+        }
 
-        if (start) {
-            int numberOfDevices = 1;
-            logger.info("Simulating the load of " + numberOfDevices);
+        int numberOfDevices = 1;
+        logger.info("Simulating the load of " + numberOfDevices);
 
-            String userID = "UserID_";
-            String sourceID = "SourceID_";
+        String userID = "UserID_";
+        String sourceID = "SourceID_";
 
-            MockDevice[] threads = new MockDevice[numberOfDevices];
-            KafkaSender[] senders = new KafkaSender[numberOfDevices];
-            for (int i = 0; i < numberOfDevices; i++) {
-                senders[i] = new DirectProducer<>(props);
-                //noinspection unchecked
-                threads[i] = new MockDevice<>(senders[i], new MeasurementKey(userID+i, sourceID+i), MeasurementKey.getClassSchema(), MeasurementKey.class);
-                threads[i].start();
-            }
-            long streamingTimeoutMs = 5_000L;
-            if (props.containsKey("streaming.timeout.ms")) {
-                try {
-                    streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
-                } catch (NumberFormatException ex) {
-                    // whatever
-                }
-            }
-            threads[0].join(streamingTimeoutMs);
-            for (MockDevice device : threads) {
-                device.interrupt();
-            }
-            for (MockDevice device : threads) {
-                device.join();
-            }
-            for (KafkaSender sender : senders) {
-                try {
-                    sender.close();
-                } catch (IOException e) {
-                    logger.warn("Failed to close sender", e);
-                }
+        MockDevice[] threads = new MockDevice[numberOfDevices];
+        KafkaSender[] senders = new KafkaSender[numberOfDevices];
+        for (int i = 0; i < numberOfDevices; i++) {
+            senders[i] = new DirectProducer<>(props);
+            //noinspection unchecked
+            threads[i] = new MockDevice<>(senders[i], new MeasurementKey(userID+i, sourceID+i), MeasurementKey.getClassSchema(), MeasurementKey.class);
+            threads[i].start();
+        }
+        long streamingTimeoutMs = 5_000L;
+        if (props.containsKey("streaming.timeout.ms")) {
+            try {
+                streamingTimeoutMs = Long.parseLong(props.getProperty("streaming.timeout.ms"));
+            } catch (NumberFormatException ex) {
+                // whatever
             }
         }
-        else{
-            logger.info("Serve test case has been disable. servertest property is "+Boolean.toString(start));
+        threads[0].join(streamingTimeoutMs);
+        for (MockDevice device : threads) {
+            device.interrupt();
+        }
+        for (MockDevice device : threads) {
+            device.join();
+        }
+        for (KafkaSender sender : senders) {
+            try {
+                sender.close();
+            } catch (IOException e) {
+                logger.warn("Failed to close sender", e);
+            }
         }
     }
 }
