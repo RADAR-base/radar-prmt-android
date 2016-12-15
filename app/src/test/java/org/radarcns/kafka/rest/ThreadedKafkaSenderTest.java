@@ -45,9 +45,6 @@ public class ThreadedKafkaSenderTest extends TestCase {
         AvroEncoder keyEncoder = new SpecificRecordEncoder(false);
         AvroEncoder valueEncoder = new SpecificRecordEncoder(false);
 
-        /*KafkaSender<String, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
-        KafkaSender<String, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);*/
-
         KafkaSender<MeasurementKey, SpecificRecord> directSender = new RestSender<>(kafkaURL, schemaRetriever, keyEncoder, valueEncoder);
         KafkaSender<MeasurementKey, SpecificRecord> kafkaThread = new ThreadedKafkaSender<>(directSender);
 
