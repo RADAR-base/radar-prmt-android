@@ -1,5 +1,6 @@
 package org.radarcns.android;
 
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import org.apache.avro.specific.SpecificRecord;
@@ -29,4 +30,6 @@ public interface DeviceServiceBinder {
     ServerStatusListener.Status getServerStatus();
     /** Get the last number of records sent */
     Map<String, Integer> getServerRecordsSent();
+    /** Update the configuration of the service */
+    void updateConfiguration(Bundle bundle);
 }

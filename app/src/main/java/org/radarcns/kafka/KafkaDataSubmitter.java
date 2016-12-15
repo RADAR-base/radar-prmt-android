@@ -1,11 +1,12 @@
 package org.radarcns.kafka;
 
+import android.support.annotation.NonNull;
+
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
-import org.radarcns.empaticaE4.MainActivity;
-import org.radarcns.util.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.util.ListPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Separate thread to read from the database and send it to the Kafka server. It cleans the
@@ -37,9 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class KafkaDataSubmitter<K, V> implements Closeable {
     private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
 
-    private int sendLimit;
-    private boolean lastUploadFailed = false;
-    private DataHandler<K, V> dataHandler;
+    private final DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
     private final ScheduledExecutorService executor;
     private final ConcurrentMap<AvroTopic<K, V>, Queue<Record<K, V>>> trySendCache;
@@ -47,18 +47,22 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     private final Map<AvroTopic<K, V>, KafkaTopicSender<K, V>> topicSenders;
     private final KafkaConnectionChecker connection;
     private final static ListPool listPool = new ListPool(1);
+    private final AtomicInteger sendLimit;
 
-    public KafkaDataSubmitter(DataHandler<K, V> dataHandler, KafkaSender<K, V> sender, ThreadFactory threadFactory) {
+    private boolean lastUploadFailed = false;
+    private ScheduledFuture<?> cleanFuture;
+    private ScheduledFuture<?> uploadFuture;
+
+    public KafkaDataSubmitter(@NonNull DataHandler<K, V> dataHandler, @NonNull KafkaSender<K, V> sender, ThreadFactory threadFactory, int sendLimit, long uploadRate, long cleanRate) {
         this.dataHandler = dataHandler;
         this.sender = sender;
         trySendCache = new ConcurrentHashMap<>();
         trySendFuture = new HashMap<>();
         topicSenders = new HashMap<>();
-        sendLimit = Integer.valueOf( System.getProperty( MainActivity.KAFKA_RECORDS_SEND_LIMIT_KEY) );
+        this.sendLimit = new AtomicInteger(sendLimit);
 
-        logger.info("Starting executor");
         executor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-        logger.info("Started executor");
+        logger.info("Started data submission executor");
 
         connection = new KafkaConnectionChecker(sender, executor, dataHandler);
 
@@ -75,10 +79,24 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             }
         });
 
+        synchronized (this) {
+            uploadFuture = null;
+            setUploadRate(uploadRate);
+            cleanFuture = null;
+            setCleanRate(cleanRate);
+        }
+        logger.info("Remote Config: Upload rate is '{}' sec per upload, clean is {} sec per upload",
+                uploadRate, cleanRate);
+    }
+
+    public final synchronized void setUploadRate(long period) {
+        if (uploadFuture != null) {
+            uploadFuture.cancel(false);
+        }
         // Get upload frequency from system property
-        long uploadRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_UPLOAD_RATE_KEY) );
-        executor.scheduleAtFixedRate(new Runnable() {
+        uploadFuture = executor.scheduleAtFixedRate(new Runnable() {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
+
             @Override
             public void run() {
                 if (connection.isConnected()) {
@@ -94,18 +112,25 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                     topicsToSend.clear();
                 }
             }
-        }, uploadRate, uploadRate, TimeUnit.SECONDS);
+        }, period, period, TimeUnit.SECONDS);
+    }
+
+    public final synchronized void setCleanRate(long period) {
+        if (cleanFuture != null) {
+            cleanFuture.cancel(false);
+        }
 
         // Remove old data from tables infrequently
-        long cleanRate = Long.valueOf( System.getProperty( MainActivity.KAFKA_CLEAN_RATE_KEY) );
-        executor.scheduleAtFixedRate(new Runnable() {
+        cleanFuture = executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 KafkaDataSubmitter.this.dataHandler.clean();
             }
-        }, 0L, cleanRate, TimeUnit.SECONDS);
+        }, 0L, period, TimeUnit.SECONDS);
+    }
 
-        logger.info("Remote Config: Upload rate is '{}' sec per upload, clean is {} sec per upload", uploadRate, cleanRate);
+    public void setSendLimit(int limit) {
+        sendLimit.set(limit);
     }
 
     /**
@@ -193,14 +218,15 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      */
     private void uploadCaches(Set<AvroTopic<K, ? extends V>> toSend) {
         boolean uploadingNotified = false;
+        int currentSendLimit = sendLimit.get();
         try {
             for (Map.Entry<AvroTopic<K, ? extends V>, ? extends DataCache<K, ? extends V>> entry : dataHandler.getCaches().entrySet()) {
                 if (!toSend.contains(entry.getKey())) {
                     continue;
                 }
                 @SuppressWarnings("unchecked") // we can upload any record
-                int sent = uploadCache((AvroTopic<K, V>)entry.getKey(), (DataCache<K, V>)entry.getValue(), sendLimit, uploadingNotified);
-                if (sent < sendLimit) {
+                int sent = uploadCache((AvroTopic<K, V>)entry.getKey(), (DataCache<K, V>)entry.getValue(), currentSendLimit, uploadingNotified);
+                if (sent < currentSendLimit) {
                     toSend.remove(entry.getKey());
                 }
                 uploadingNotified |= sent > 0;
@@ -238,7 +264,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 lastUploadFailed = true;
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING_FAILED);
                 dataHandler.updateRecordsSent(topic.getName(), -1);
-                logger.info("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
+                logger.debug("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
                 throw ioe;
             }
 
@@ -248,10 +274,6 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             dataHandler.updateRecordsSent(topic.getName(), numberOfRecords);
 
             logger.debug("uploaded {} {} records", numberOfRecords, topic.getName());
-            if( topic.getName().equals( "android_empatica_e4_blood_volume_pulse" ) ){
-                Record<K,V> lastMeasurement = measurements.get( numberOfRecords-1 );
-                logger.info("UPF: {} sec. - {}", (int) lastMeasurement.milliTimeAdded/1000, lastMeasurement.value );
-            }
 
             if (lastOffset == measurements.get(numberOfRecords - 1).offset) {
                 cache.returnList(measurements);

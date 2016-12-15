@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 
@@ -17,10 +19,11 @@ import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.empaticaE4.MainActivity;
+import org.radarcns.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +32,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.radarcns.android.DeviceService.DEVICE_SERVICE_CLASS;
 import static org.radarcns.android.DeviceService.TRANSACT_GET_DEVICE_NAME;
+import static org.radarcns.android.DeviceService.TRANSACT_UPDATE_CONFIG;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
@@ -39,7 +44,7 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-public class DeviceServiceConnection<S extends DeviceState>implements ServiceConnection {
+public class DeviceServiceConnection<S extends DeviceState> implements ServiceConnection {
     private final static Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
     private final Parcelable.Creator<S> deviceStateCreator;
@@ -239,13 +244,35 @@ public class DeviceServiceConnection<S extends DeviceState>implements ServiceCon
         return deviceName;
     }
 
+    public void updateConfiguration(Bundle bundle) {
+        if (isRemote) {
+            try {
+                Parcel data = Parcel.obtain();
+                data.writeBundle(bundle);
+                serviceBinder.transact(TRANSACT_UPDATE_CONFIG, data, Parcel.obtain(), 0);
+            } catch (RemoteException ex) {
+                // keep old configuration
+            }
+        } else {
+            ((DeviceServiceBinder)serviceBinder).updateConfiguration(bundle);
+        }
+    }
+
     /**
      * True if given string is a substring of the device name.
-     * @param value
-     * @return
      */
     public boolean isAllowedDevice(String value) {
-        return getDeviceName() != null && getDeviceName().contains(value);
+        Pattern pattern = Strings.containsIgnoreCasePattern(value);
+        String deviceName = getDeviceName();
+        if (deviceName != null && pattern.matcher(deviceName).find()) {
+            return true;
+        }
+        try {
+            String sourceId = getDeviceData().getId().getSourceId();
+            return sourceId != null && pattern.matcher(sourceId).find();
+        } catch (RemoteException ex) {
+            return false;
+        }
     }
 
     public DeviceStatusListener.Status getDeviceStatus() {

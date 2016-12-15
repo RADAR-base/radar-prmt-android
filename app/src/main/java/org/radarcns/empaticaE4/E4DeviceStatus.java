@@ -8,6 +8,7 @@ import com.empatica.empalink.config.EmpaSensorType;
 
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.key.MeasurementKey;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -15,8 +16,7 @@ import java.util.Map;
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
-public class E4DeviceStatus implements DeviceState {
-    private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
+public class E4DeviceStatus extends DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float bloodVolumePulse = Float.NaN;
@@ -30,9 +30,21 @@ public class E4DeviceStatus implements DeviceState {
         return 0;
     }
 
+    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
+        public E4DeviceStatus createFromParcel(Parcel in) {
+            E4DeviceStatus result = new E4DeviceStatus();
+            result.updateFromParcel(in);
+            return result;
+        }
+
+        public E4DeviceStatus[] newArray(int size) {
+            return new E4DeviceStatus[size];
+        }
+    };
+
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(status.ordinal());
+        super.writeToParcel(dest, flags);
         dest.writeFloat(this.acceleration[0]);
         dest.writeFloat(this.acceleration[1]);
         dest.writeFloat(this.acceleration[2]);
@@ -48,30 +60,23 @@ public class E4DeviceStatus implements DeviceState {
         }
     }
 
-    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
-        public E4DeviceStatus createFromParcel(Parcel in) {
-            E4DeviceStatus result = new E4DeviceStatus();
-            result.status = DeviceStatusListener.Status.values()[in.readInt()];
-            result.acceleration[0] = in.readFloat();
-            result.acceleration[1] = in.readFloat();
-            result.acceleration[2] = in.readFloat();
-            result.batteryLevel = in.readFloat();
-            result.bloodVolumePulse = in.readFloat();
-            result.electroDermalActivity = in.readFloat();
-            result.interBeatInterval = in.readFloat();
-            result.temperature = in.readFloat();
-            int numSensors = in.readInt();
-            for (int i = 0; i < numSensors; i++) {
-                result.sensorStatus.put(EmpaSensorType.values()[in.readInt()], EmpaSensorStatus.values()[in.readInt()]);
-            }
-            return result;
+    protected void updateFromParcel(Parcel in) {
+        super.updateFromParcel(in);
+        acceleration[0] = in.readFloat();
+        acceleration[1] = in.readFloat();
+        acceleration[2] = in.readFloat();
+        batteryLevel = in.readFloat();
+        bloodVolumePulse = in.readFloat();
+        electroDermalActivity = in.readFloat();
+        interBeatInterval = in.readFloat();
+        temperature = in.readFloat();
+        int numSensors = in.readInt();
+        for (int i = 0; i < numSensors; i++) {
+            sensorStatus.put(EmpaSensorType.values()[in.readInt()], EmpaSensorStatus.values()[in.readInt()]);
         }
+    }
 
-        public E4DeviceStatus[] newArray(int size) {
-            return new E4DeviceStatus[size];
-        }
-    };
-
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
@@ -126,15 +131,6 @@ public class E4DeviceStatus implements DeviceState {
 
     public synchronized void setTemperature(float temperature) {
         this.temperature = temperature;
-    }
-
-    @Override
-    public DeviceStatusListener.Status getStatus() {
-        return status;
-    }
-
-    public synchronized void setStatus(DeviceStatusListener.Status status) {
-        this.status = status;
     }
 
     public Map<EmpaSensorType, EmpaSensorStatus> getSensorStatus() {

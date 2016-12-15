@@ -4,6 +4,7 @@ import android.os.Parcel;
 
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.Serialization;
 
 import java.util.Arrays;
@@ -11,8 +12,7 @@ import java.util.Arrays;
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
-public class Pebble2DeviceStatus implements DeviceState {
-    private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
+public class Pebble2DeviceStatus extends DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private Boolean batteryIsCharging = null;
@@ -25,9 +25,21 @@ public class Pebble2DeviceStatus implements DeviceState {
         return 0;
     }
 
+    public static final Creator<Pebble2DeviceStatus> CREATOR = new Creator<Pebble2DeviceStatus>() {
+        public Pebble2DeviceStatus createFromParcel(Parcel in) {
+            Pebble2DeviceStatus result = new Pebble2DeviceStatus();
+            result.updateFromParcel(in);
+            return result;
+        }
+
+        public Pebble2DeviceStatus[] newArray(int size) {
+            return new Pebble2DeviceStatus[size];
+        }
+    };
+
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(status.ordinal());
+        super.writeToParcel(dest, flags);
         dest.writeFloat(this.acceleration[0]);
         dest.writeFloat(this.acceleration[1]);
         dest.writeFloat(this.acceleration[2]);
@@ -38,26 +50,19 @@ public class Pebble2DeviceStatus implements DeviceState {
         dest.writeFloat(this.heartRateFiltered);
     }
 
-    public static final Creator<Pebble2DeviceStatus> CREATOR = new Creator<Pebble2DeviceStatus>() {
-        public Pebble2DeviceStatus createFromParcel(Parcel in) {
-            Pebble2DeviceStatus result = new Pebble2DeviceStatus();
-            result.status = DeviceStatusListener.Status.values()[in.readInt()];
-            result.acceleration[0] = in.readFloat();
-            result.acceleration[1] = in.readFloat();
-            result.acceleration[2] = in.readFloat();
-            result.batteryLevel = in.readFloat();
-            result.batteryIsCharging = Serialization.byteToBoolean(in.readByte());
-            result.batteryIsPlugged = Serialization.byteToBoolean(in.readByte());
-            result.heartRate = in.readFloat();
-            result.heartRateFiltered = in.readFloat();
-            return result;
-        }
+    protected void updateFromParcel(Parcel in) {
+        super.updateFromParcel(in);
+        acceleration[0] = in.readFloat();
+        acceleration[1] = in.readFloat();
+        acceleration[2] = in.readFloat();
+        batteryLevel = in.readFloat();
+        batteryIsCharging = Serialization.byteToBoolean(in.readByte());
+        batteryIsPlugged = Serialization.byteToBoolean(in.readByte());
+        heartRate = in.readFloat();
+        heartRateFiltered = in.readFloat();
+    }
 
-        public Pebble2DeviceStatus[] newArray(int size) {
-            return new Pebble2DeviceStatus[size];
-        }
-    };
-
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
@@ -73,22 +78,8 @@ public class Pebble2DeviceStatus implements DeviceState {
         return batteryLevel;
     }
 
-    @Override
-    public float getTemperature() {
-        return Float.NaN;
-    }
-
     public synchronized void setBatteryLevel(float batteryLevel) {
         this.batteryLevel = batteryLevel;
-    }
-
-    @Override
-    public DeviceStatusListener.Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(DeviceStatusListener.Status status) {
-        this.status = status;
     }
 
     public Boolean getBatteryIsCharging() {
@@ -125,7 +116,7 @@ public class Pebble2DeviceStatus implements DeviceState {
     }
 
     public String toString() {
-        return "{status: " + status + ", acceleration: " + Arrays.toString(acceleration) +
+        return "{status: " + getStatus() + ", acceleration: " + Arrays.toString(acceleration) +
                 ", batteryLevel: " + batteryLevel + ", heartRate: " + heartRate +
                 ", heartRateFiltered: " + heartRateFiltered + "}";
     }

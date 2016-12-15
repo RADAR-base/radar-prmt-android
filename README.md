@@ -1,7 +1,10 @@
-# RADAR-AndroidApplication
+# RADAR-pRMT
 Application to be run on an Android 4.4 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
 
 Currently the Empatica E4 and Pebble 2 are supported. Also note that the application only runs on an ARM architecture.
+
+![Screenshot](/man/screen20161215_edited.png?raw=True "Screenshot 2016-12-15")
+
 
 ## Setup Empatica E4
 
@@ -61,6 +64,7 @@ To add additional device types to this application, make the following steps (se
   - implement `org.radarcns.android.DeviceState` to keep the current state of the device.
   - subclass `org.radarcns.android.DeviceService` to run the device manager in.
   - implement a singleton `org.radarcns.android.DeviceTopics` that contains all Kafka topics that the wearable will generate.
-- Finally, modify `org.radarcns.android.empaticaE4.MainActivity` to run a service for showing the device data and for controlling the recording.
+- Add a new service element to `AndroidManifest.xml`, referencing the newly created device service.
+- Finally, modify `org.radarcns.MainActivity` to run a service for showing the device data and for controlling the recording.
 
 Make a pull request once the code is working.

@@ -1,18 +1,20 @@
 package org.radarcns.pebble2;
 
-import android.content.Intent;
+import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.empaticaE4.MainActivity;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
 
 /**
  * A service that manages a Pebble2DeviceManager and a TableDataHandler to send store the data of a
@@ -58,10 +60,10 @@ public class Pebble2Service extends DeviceService {
     }
 
     @Override
-    protected void onInvocation(Intent intent) {
-        super.onInvocation(intent);
+    protected void onInvocation(Bundle bundle) {
+        super.onInvocation(bundle);
         if (groupId == null) {
-            groupId = intent.getStringExtra(MainActivity.DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
         }
     }
 }
