@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
-import static org.radarcns.RadarConfiguration.PHONE_SOURCE_ID_FILENAME_KEY;
 
 /**
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
@@ -34,7 +33,7 @@ public class PhoneSensorsService extends DeviceService {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
     private PhoneSensorsTopics topics;
     private String groupId;
-    private String sourceIdFilename;
+    private String sourceIdFilename = this.getClass().getName() + "_source_id.txt";
     private String sourceId;
 
     @Override
@@ -75,13 +74,12 @@ public class PhoneSensorsService extends DeviceService {
         super.onInvocation(bundle);
         if (groupId == null) {
             groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
-            sourceIdFilename = RadarConfiguration.getStringExtra(bundle, PHONE_SOURCE_ID_FILENAME_KEY);
         }
     }
 
     public String getSourceId() {
         if (sourceId == null) {
-            setSourceId( getSourceIdFromFile() );
+            setSourceId( getSourceIdFromFile(sourceIdFilename) );
         }
         return sourceId;
     }
@@ -90,9 +88,9 @@ public class PhoneSensorsService extends DeviceService {
         this.sourceId = sourceId;
     }
 
-    private String getSourceIdFromFile() {
+    private String getSourceIdFromFile(String fileName) {
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File sourceIdFile = new File(path, sourceIdFilename);
+        File sourceIdFile = new File(path, fileName);
         if (!path.mkdirs()) {
             logger.error("'{}' could not be created or already exists.", path.getAbsolutePath());
         }
