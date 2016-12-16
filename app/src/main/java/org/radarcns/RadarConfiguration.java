@@ -271,7 +271,7 @@ public class RadarConfiguration {
             if (ret != null) {
                 return ret;
             }
-        } catch (NumberFormatException ex) {
+        } catch (IllegalArgumentException ex) {
             // return default
         }
         return defaultValue;
@@ -290,7 +290,7 @@ public class RadarConfiguration {
             if (ret != null) {
                 return ret;
             }
-        } catch (NumberFormatException ex) {
+        } catch (IllegalArgumentException ex) {
             // return default
         }
         return defaultValue;
