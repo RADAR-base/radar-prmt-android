@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /** Manages Phone sensors */
@@ -58,7 +59,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private String deviceName;
     private boolean isRegistered = false;
     private SensorManager sensorManager;
-    private final Runnable runnableReadCallLog;
+    private ScheduledFuture<?> callLogReadFuture;
     private final ScheduledExecutorService executor;
     private final long CALL_LOG_INTERVAL_MS = 60 * 60 * 24 * 1000; //60*60*1000; // an hour in milliseconds
 
@@ -83,37 +84,6 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
         // Call log
         executor = Executors.newSingleThreadScheduledExecutor();
-        runnableReadCallLog = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
-                    if (!c.moveToLast()) {
-                        c.close();
-                        return;
-                    }
-                    long now = System.currentTimeMillis();
-                    long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-                    while ((now - timeStamp) <= CALL_LOG_INTERVAL_MS) {
-                        processCall(c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
-                                c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
-                                c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)),
-                                timeStamp);
-                        if (!c.moveToPrevious()) {
-                            c.close();
-                            return;
-                        }
-                        timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-
-                    }
-                    c.close();
-                } catch (Throwable t) {
-                    logger.warn("Error in processing the calls: {}", t.getMessage());
-                    t.printStackTrace();
-                    return;
-                }
-            }
-        };
     }
 
     @Override
@@ -142,11 +112,49 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         batteryStatus = context.registerReceiver(null, intentBattery);
 
         // Calls, in and outgoing
-        executor.scheduleAtFixedRate(runnableReadCallLog, 0, CALL_LOG_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        setCallLogUpdateRate(CALL_LOG_INTERVAL_MS);
         logger.info("Call log listener activated.");
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
+    }
+
+    public final synchronized void setCallLogUpdateRate(long period_ms) {
+        if (callLogReadFuture != null) {
+            callLogReadFuture.cancel(false);
+        }
+
+        callLogReadFuture = executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
+                    if (!c.moveToLast()) {
+                        c.close();
+                        return;
+                    }
+                    long now = System.currentTimeMillis();
+                    long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
+                    while ((now - timeStamp) <= CALL_LOG_INTERVAL_MS) {
+                        processCall(c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
+                                    c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
+                                    c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)),
+                                    timeStamp);
+                        if (!c.moveToPrevious()) {
+                            c.close();
+                            return;
+                        }
+                        timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
+
+                    }
+                    c.close();
+                } catch (Throwable t) {
+                    logger.warn("Error in processing the calls: {}", t.getMessage());
+                    t.printStackTrace();
+                    return;
+                }
+            }
+        }, 0, period_ms, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -207,10 +215,8 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
         // TODO: expose some live metric on number of calls or total duration in deviceStatus
 
-        // 1 = incoming, 2 = outgoing, 3 or higher is incoming missed/rejected/blocked/etc
-        if (type >= 3) {
-            type = 3;
-        }
+        // 1 = incoming, 2 = outgoing, 3 is unanswered incoming (missed/rejected/blocked/etc)
+        if (type >= 3) type = 3;
 
         double timestamp = System.currentTimeMillis() / 1000d;
         PhoneSensorCall value = new PhoneSensorCall(eventTimestamp, timestamp, duration, targetKey, type);

@@ -8,6 +8,6 @@
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
     {"name": "duration", "type": "float", "doc": "duration of the call (s)"},
     {"name": "target", "type": "string", "doc": "SHA-256 one-way source/target of the call"},
-    {"name": "call_type", "type": "int", "doc": "1-Incoming, 2-Outgoing, 3-Missed"}
+    {"name": "call_type", "type": "int", "doc": "1-Incoming, 2-Outgoing, 3-Unanswered"}
   ]
 }

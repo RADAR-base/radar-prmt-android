@@ -93,7 +93,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
         if (uploadFuture != null) {
             uploadFuture.cancel(false);
         }
-        // Get upload frequency from system property
+
         uploadFuture = executor.scheduleAtFixedRate(new Runnable() {
             Set<AvroTopic<K, ? extends V>> topicsToSend = Collections.emptySet();
 
