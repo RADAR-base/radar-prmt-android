@@ -55,7 +55,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private SensorManager sensorManager;
     private ScheduledFuture<?> callLogReadFuture;
     private final ScheduledExecutorService executor;
-    private final long CALL_LOG_INTERVAL_MS_DEFAULT = 60 * 60 * 24 * 1000; //60*60*1000; // an hour in milliseconds
+    private final long CALL_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L; //60*60*1000; // an hour in milliseconds
 
     public PhoneSensorsDeviceManager(Context contextIn, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
@@ -107,7 +107,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         // Calls, in and outgoing
         setCallLogUpdateRate(CALL_LOG_INTERVAL_MS_DEFAULT);
-        logger.info("Call log listener activated.");
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -127,8 +126,10 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                         c.close();
                         return;
                     }
+
                     long now = System.currentTimeMillis();
                     long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
+                    //TODO: check for last call record send
                     while ((now - timeStamp) <= period_ms) {
                         processCall(c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
                                     c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
@@ -139,7 +140,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                             return;
                         }
                         timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-
                     }
                     c.close();
                 } catch (Throwable t) {
@@ -149,6 +149,8 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 }
             }
         }, 0, period_ms, TimeUnit.MILLISECONDS);
+
+        logger.info("Call log: listener activated and set to a period of {}", period_ms);
     }
 
     @Override
@@ -216,7 +218,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         PhoneSensorCall value = new PhoneSensorCall(eventTimestamp, timestamp, duration, targetKey, type);
         dataHandler.addMeasurement(callTable, deviceStatus.getId(), value);
 
-        logger.info(String.format("Call: %s, %s, %s, %s, %s, %s", target, targetKey, duration, type, eventTimestamp, timestamp));
+        logger.info(String.format("Call log: %s, %s, %s, %s, %s, %s", target, targetKey, duration, type, eventTimestamp, timestamp));
     }
 
     @Override
