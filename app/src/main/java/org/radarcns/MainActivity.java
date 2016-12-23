@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.radarcns.RadarConfiguration.CALL_LOG_UPDATE_RATE_KEY;
 import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
@@ -143,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
             if (!mConnectionIsBound[3]) {
                 Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
                 Bundle extras = new Bundle();
-                configureServiceExtras(extras);
+                configurePhoneSensors(extras);
                 phoneIntent.putExtras(extras);
 
                 phoneConnection.bind(phoneIntent);
@@ -162,12 +163,16 @@ public class MainActivity extends AppCompatActivity {
         configureServiceExtras(bundle);
     }
 
+    private void configurePhoneSensors(Bundle bundle) {
+        configureServiceExtras(bundle);
+    }
+
     private void configureServiceExtras(Bundle bundle) {
         // Add the default configuration parameters given to the service intents
         radarConfiguration.putExtras(bundle,
                 KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
                 KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
-                SENDER_CONNECTION_TIMEOUT_KEY);
+                SENDER_CONNECTION_TIMEOUT_KEY, CALL_LOG_UPDATE_RATE_KEY );
     }
 
     public MainActivity() {
@@ -350,6 +355,11 @@ public class MainActivity extends AppCompatActivity {
                         Bundle bundle = new Bundle();
                         configurePebble2(bundle);
                         pebble2Connection.updateConfiguration(bundle);
+                    }
+                    if (mConnectionIsBound[3]) {
+                        Bundle bundle = new Bundle();
+                        configurePhoneSensors(bundle);
+                        phoneConnection.updateConfiguration(bundle);
                     }
                     logger.info("Remote Config: Activate success.");
                     // Set global properties.

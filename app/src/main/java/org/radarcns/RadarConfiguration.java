@@ -52,7 +52,7 @@ public class RadarConfiguration {
     public static final Set<String> LONG_VALUES = new HashSet<>(Arrays.asList(
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
             KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
-            FIREBASE_FETCH_TIMEOUT_KEY));
+            FIREBASE_FETCH_TIMEOUT_KEY, CALL_LOG_UPDATE_RATE_KEY));
 
     public static final Set<String> INT_VALUES = Collections.singleton(
             KAFKA_RECORDS_SEND_LIMIT_KEY);

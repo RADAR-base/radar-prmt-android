@@ -477,8 +477,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         } else if (kafkaUrl != null) {
             localDataHandler.enableSubmitter();
         }
+
         if (RadarConfiguration.hasExtra(bundle, CALL_LOG_UPDATE_RATE_KEY)) {
-            if (deviceScanner.getClass().equals(PhoneSensorsDeviceManager.class)) {
+            if (deviceScanner instanceof PhoneSensorsDeviceManager) {
                 ((PhoneSensorsDeviceManager) deviceScanner).setCallLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_LOG_UPDATE_RATE_KEY));
             }
         }
