@@ -8,7 +8,7 @@ package org.radarcns.phoneSensors;
 /** Data from listening to calls made. */
 @org.apache.avro.specific.AvroGenerated
 public class PhoneSensorCall extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorCall\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from listening to calls made.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"duration\",\"type\":\"float\",\"doc\":\"duration of the call (s)\"},{\"name\":\"target\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"SHA-1 one-way source/target of the call\"},{\"name\":\"call_type\",\"type\":\"int\",\"doc\":\"1-Incoming, 2-Outgoing, 3-Missed\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorCall\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from listening to calls made.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"duration\",\"type\":\"float\",\"doc\":\"duration of the call (s)\"},{\"name\":\"target\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"SHA-256 one-way source/target of the call\"},{\"name\":\"call_type\",\"type\":\"int\",\"doc\":\"1-Incoming, 2-Outgoing, 3-Missed\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -16,7 +16,7 @@ public class PhoneSensorCall extends org.apache.avro.specific.SpecificRecordBase
   @Deprecated public double timeReceived;
   /** duration of the call (s) */
   @Deprecated public float duration;
-  /** SHA-1 one-way source/target of the call */
+  /** SHA-256 one-way source/target of the call */
   @Deprecated public java.lang.String target;
   /** 1-Incoming, 2-Outgoing, 3-Missed */
   @Deprecated public int call_type;
@@ -111,14 +111,14 @@ public class PhoneSensorCall extends org.apache.avro.specific.SpecificRecordBase
 
   /**
    * Gets the value of the 'target' field.
-   * SHA-1 one-way source/target of the call   */
+   * SHA-256 one-way source/target of the call   */
   public java.lang.String getTarget() {
     return target;
   }
 
   /**
    * Sets the value of the 'target' field.
-   * SHA-1 one-way source/target of the call   * @param value the value to set.
+   * SHA-256 one-way source/target of the call   * @param value the value to set.
    */
   public void setTarget(java.lang.String value) {
     this.target = value;
