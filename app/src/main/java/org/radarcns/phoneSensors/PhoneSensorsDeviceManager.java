@@ -55,7 +55,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private boolean isRegistered = false;
     private SensorManager sensorManager;
     private ScheduledFuture<?> callLogReadFuture;
+    public long callMaxTimestampSeen;
     private ScheduledFuture<?> smsLogReadFuture;
+    public long smsMaxTimestampSeen;
     private final ScheduledExecutorService executor;
     private final long CALL_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L; //60*60*1000; // an hour in milliseconds
 
@@ -117,7 +119,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
     public final synchronized void setCallLogUpdateRate(final long period_ms) {
         if (callLogReadFuture != null) {
-            // TODO: something clever here to prevent sending duplicates?
             callLogReadFuture.cancel(false);
         }
 
@@ -133,12 +134,21 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
                     long now = System.currentTimeMillis();
                     long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-                    //TODO: check for last call record send
+
+                    if (timeStamp <= callMaxTimestampSeen) {
+                        return;
+                    }
+
                     while ((now - timeStamp) <= period_ms) {
                         processCall(c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
                                     c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
                                     c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)),
                                     timeStamp);
+
+                        if (timeStamp > callMaxTimestampSeen) {
+                            callMaxTimestampSeen = timeStamp;
+                        }
+
                         if (!c.moveToNext()) {
                             c.close();
                             return;
@@ -147,7 +157,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     }
                     c.close();
                 } catch (Throwable t) {
-                    logger.warn("Error in processing the calls: {}", t.getMessage());
+                    logger.warn("Error in processing the call log: {}", t.getMessage());
                     t.printStackTrace();
                     return;
                 }
@@ -174,11 +184,20 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
                     long now = System.currentTimeMillis();
                     long timeStamp = c.getLong(c.getColumnIndex(Telephony.Sms.DATE));
+
+                    if (timeStamp <= smsMaxTimestampSeen) {
+                        return;
+                    }
+
                     while ((now - timeStamp) <= period_ms) {
                         long type = c.getLong(c.getColumnIndex(Telephony.Sms.TYPE));
                         String id = c.getString(c.getColumnIndex(Telephony.Sms._ID));
                         String target = c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS));   //this is phone number rather than address
                         logger.info(String.format("SMS log: %s, %s, %s, %s", type, timeStamp, target, id));
+
+                        if (timeStamp > smsMaxTimestampSeen) {
+                            smsMaxTimestampSeen = timeStamp;
+                        }
 
                         if (!c.moveToNext()) {
                             c.close();
@@ -188,7 +207,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     }
                     c.close();
                 } catch (Throwable t) {
-                    logger.warn("Error in processing the sms: {}", t.getMessage());
+                    logger.warn("Error in processing the sms log: {}", t.getMessage());
                     t.printStackTrace();
                     return;
                 }
@@ -251,6 +270,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     }
 
     public void processCall(String target, float duration, int type, long eventTimestampMillis) {
+        // TODO: strip target number from area codes (+31). e.g. only last 9 digits
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
         double eventTimestamp = eventTimestampMillis / 1000d; // TODO: round to nearest hour
 
