@@ -42,6 +42,7 @@ public class RadarConfiguration {
     public static final String DATA_RETENTION_KEY = "data_retention_ms";
     public static final String FIREBASE_FETCH_TIMEOUT_KEY = "firebase_fetch_timeout";
     public static final String CONDENSED_DISPLAY_KEY = "is_condensed_n_records_display";
+    public static final String CALL_LOG_UPDATE_RATE_KEY = "call_log_update_rate_ms";
 
     public static final Pattern IS_TRUE = Pattern.compile(
             "^(1|true|t|yes|y|on)$", CASE_INSENSITIVE);

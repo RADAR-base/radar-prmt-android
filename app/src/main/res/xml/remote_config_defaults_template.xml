@@ -42,5 +42,9 @@
         <key>sender_connection_timeout</key>
         <value>20</value>
     </entry>
+    <entry>
+        <key>call_log_update_rate_ms</key>
+        <value>3600000</value>
+    </entry>
 </defaultsMap>
 <!-- END xml_defaults -->

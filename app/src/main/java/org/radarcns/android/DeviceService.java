@@ -26,6 +26,7 @@ import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.phoneSensors.PhoneSensorsDeviceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
+import static org.radarcns.RadarConfiguration.CALL_LOG_UPDATE_RATE_KEY;
 
 /**
  * A service that manages a DeviceManager and a TableDataHandler to send store the data of a
@@ -474,6 +476,11 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             localDataHandler.start();
         } else if (kafkaUrl != null) {
             localDataHandler.enableSubmitter();
+        }
+        if (RadarConfiguration.hasExtra(bundle, CALL_LOG_UPDATE_RATE_KEY)) {
+            if (deviceScanner.getClass().equals(PhoneSensorsDeviceManager.class)) {
+                ((PhoneSensorsDeviceManager) deviceScanner).setCallLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_LOG_UPDATE_RATE_KEY));
+            }
         }
     }
 

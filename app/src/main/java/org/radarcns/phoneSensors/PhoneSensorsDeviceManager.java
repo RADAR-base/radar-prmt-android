@@ -1,7 +1,5 @@
 package org.radarcns.phoneSensors;
 
-import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,11 +9,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.BatteryManager;
-import android.os.Bundle;
 import android.provider.CallLog;
-import android.provider.Telephony;
 import android.support.annotation.NonNull;
-import android.telephony.TelephonyManager;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -29,7 +24,6 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +31,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /** Manages Phone sensors */
-class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
+public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsDeviceManager.class);
 
     private final TableDataHandler dataHandler;
@@ -61,7 +55,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private SensorManager sensorManager;
     private ScheduledFuture<?> callLogReadFuture;
     private final ScheduledExecutorService executor;
-    private final long CALL_LOG_INTERVAL_MS = 60 * 60 * 24 * 1000; //60*60*1000; // an hour in milliseconds
+    private final long CALL_LOG_INTERVAL_MS_DEFAULT = 60 * 60 * 24 * 1000; //60*60*1000; // an hour in milliseconds
 
     public PhoneSensorsDeviceManager(Context contextIn, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
@@ -112,14 +106,14 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         batteryStatus = context.registerReceiver(null, intentBattery);
 
         // Calls, in and outgoing
-        setCallLogUpdateRate(CALL_LOG_INTERVAL_MS);
+        setCallLogUpdateRate(CALL_LOG_INTERVAL_MS_DEFAULT);
         logger.info("Call log listener activated.");
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
     }
 
-    public final synchronized void setCallLogUpdateRate(long period_ms) {
+    public final synchronized void setCallLogUpdateRate(final long period_ms) {
         if (callLogReadFuture != null) {
             callLogReadFuture.cancel(false);
         }
@@ -135,7 +129,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
                     }
                     long now = System.currentTimeMillis();
                     long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-                    while ((now - timeStamp) <= CALL_LOG_INTERVAL_MS) {
+                    while ((now - timeStamp) <= period_ms) {
                         processCall(c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
                                     c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
                                     c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)),
