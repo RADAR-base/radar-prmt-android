@@ -47,7 +47,7 @@ import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
-import static org.radarcns.RadarConfiguration.CALL_LOG_UPDATE_RATE_KEY;
+import static org.radarcns.RadarConfiguration.CALL_SMS_LOG_UPDATE_RATE_KEY;
 
 /**
  * A service that manages a DeviceManager and a TableDataHandler to send store the data of a
@@ -478,9 +478,10 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             localDataHandler.enableSubmitter();
         }
 
-        if (RadarConfiguration.hasExtra(bundle, CALL_LOG_UPDATE_RATE_KEY)) {
+        if (RadarConfiguration.hasExtra(bundle, CALL_SMS_LOG_UPDATE_RATE_KEY)) {
             if (deviceScanner instanceof PhoneSensorsDeviceManager) {
-                ((PhoneSensorsDeviceManager) deviceScanner).setCallLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_LOG_UPDATE_RATE_KEY));
+                ((PhoneSensorsDeviceManager) deviceScanner).setCallLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_SMS_LOG_UPDATE_RATE_KEY));
+                ((PhoneSensorsDeviceManager) deviceScanner).setSmsLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_SMS_LOG_UPDATE_RATE_KEY));
             }
         }
     }

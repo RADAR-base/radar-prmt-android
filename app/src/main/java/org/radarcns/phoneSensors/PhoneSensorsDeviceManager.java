@@ -47,6 +47,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
     private final MeasurementTable<PhoneSensorLight> lightTable;
     private final MeasurementTable<PhoneSensorCall> callTable;
+    private final MeasurementTable<PhoneSensorSms> smsTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
 
     private final PhoneSensorsDeviceStatus deviceStatus;
@@ -59,13 +60,14 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private ScheduledFuture<?> smsLogReadFuture;
     public long smsMaxTimestampSeen;
     private final ScheduledExecutorService executor;
-    private final long CALL_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L; //60*60*1000; // an hour in milliseconds
+    private final long CALL_SMS_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L;
 
     public PhoneSensorsDeviceManager(Context contextIn, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
         this.callTable = dataHandler.getCache(topics.getCallTopic());
+        this.smsTable = dataHandler.getCache(topics.getSmsTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
 
         this.phoneService = phoneService;
@@ -110,8 +112,8 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         batteryStatus = context.registerReceiver(null, intentBattery);
 
         // Calls, in and outgoing
-        setCallLogUpdateRate(CALL_LOG_INTERVAL_MS_DEFAULT);
-        setSmsLogUpdateRate(CALL_LOG_INTERVAL_MS_DEFAULT*20); // 20 days to test with
+        setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
+        setSmsLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT*20); // 20 days to test with
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -190,10 +192,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     }
 
                     while ((now - timeStamp) <= period_ms) {
-                        long type = c.getLong(c.getColumnIndex(Telephony.Sms.TYPE));
-                        String id = c.getString(c.getColumnIndex(Telephony.Sms._ID));
-                        String target = c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS));   //this is phone number rather than address
-                        logger.info(String.format("SMS log: %s, %s, %s, %s", type, timeStamp, target, id));
+                        processSMS( c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS)), //this is phone number rather than address
+                                    c.getInt(c.getColumnIndex(Telephony.Sms.TYPE)),
+                                    timeStamp);
 
                         if (timeStamp > smsMaxTimestampSeen) {
                             smsMaxTimestampSeen = timeStamp;
@@ -269,7 +270,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
-    public void processCall(String target, float duration, int type, long eventTimestampMillis) {
+    public void processCall(String target, float duration, int typeCode, long eventTimestampMillis) {
         // TODO: strip target number from area codes (+31). e.g. only last 9 digits
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
         double eventTimestamp = eventTimestampMillis / 1000d; // TODO: round to nearest hour
@@ -277,13 +278,49 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         // TODO: expose some live metric on number of calls or total duration in deviceStatus
 
         // 1 = incoming, 2 = outgoing, 3 is unanswered incoming (missed/rejected/blocked/etc)
-        if (type >= 3) type = 3;
+        int type;
+        switch (typeCode) {
+            case CallLog.Calls.INCOMING_TYPE:
+                type = 1;
+                break;
+            case CallLog.Calls.OUTGOING_TYPE:
+                type = 2;
+                break;
+            default:
+                type = 3;
+        }
 
         double timestamp = System.currentTimeMillis() / 1000d;
         PhoneSensorCall value = new PhoneSensorCall(eventTimestamp, timestamp, duration, targetKey, type);
         dataHandler.addMeasurement(callTable, deviceStatus.getId(), value);
 
         logger.info(String.format("Call log: %s, %s, %s, %s, %s, %s", target, targetKey, duration, type, eventTimestamp, timestamp));
+    }
+
+    public void processSMS(String target, int typeCode, long eventTimestampMillis) {
+        // TODO: strip target number from area codes (+31). e.g. only last 9 digits
+        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
+        double eventTimestamp = eventTimestampMillis / 1000d; // TODO: round to nearest hour
+
+        // 1 = incoming, 2 = outgoing, 3 is not sent (draft/failed/queued)
+        int type;
+        switch (typeCode) {
+            case Telephony.Sms.MESSAGE_TYPE_INBOX:
+                type = 1;
+                break;
+            case Telephony.Sms.MESSAGE_TYPE_OUTBOX:
+            case Telephony.Sms.MESSAGE_TYPE_SENT:
+                type = 2;
+                break;
+            default:
+                type = 3;
+        }
+
+        double timestamp = System.currentTimeMillis() / 1000d;
+        PhoneSensorSms value = new PhoneSensorSms(eventTimestamp, timestamp, targetKey, type);
+        dataHandler.addMeasurement(smsTable, deviceStatus.getId(), value);
+
+        logger.info(String.format("SMS log: %s, %s, %s, %s, %s", target, targetKey, type, eventTimestamp, timestamp));
     }
 
     @Override

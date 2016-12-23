@@ -2,7 +2,7 @@
   "namespace": "org.radarcns.phoneSensors",
   "type": "record",
   "name": "PhoneSensorCall",
-  "doc": "Data from listening to calls made.",
+  "doc": "Data from the log of received and made calls.",
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},

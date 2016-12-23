@@ -54,7 +54,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 
-import static org.radarcns.RadarConfiguration.CALL_LOG_UPDATE_RATE_KEY;
+import static org.radarcns.RadarConfiguration.CALL_SMS_LOG_UPDATE_RATE_KEY;
 import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         radarConfiguration.putExtras(bundle,
                 KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
                 KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
-                SENDER_CONNECTION_TIMEOUT_KEY, CALL_LOG_UPDATE_RATE_KEY );
+                SENDER_CONNECTION_TIMEOUT_KEY, CALL_SMS_LOG_UPDATE_RATE_KEY);
     }
 
     public MainActivity() {

@@ -1,0 +1,12 @@
+{
+  "namespace": "org.radarcns.phoneSensors",
+  "type": "record",
+  "name": "PhoneSensorSms",
+  "doc": "Data from log sent and received text messages.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "target", "type": "string", "doc": "SHA-256 one-way source/target of the text"},
+    {"name": "sms_type", "type": "int", "doc": "1-Incoming, 2-Outgoing, 3-Other"}
+  ]
+}

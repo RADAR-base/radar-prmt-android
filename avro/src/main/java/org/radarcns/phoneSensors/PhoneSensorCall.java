@@ -5,10 +5,10 @@
  */
 package org.radarcns.phoneSensors;  
 @SuppressWarnings("all")
-/** Data from listening to calls made. */
+/** Data from the log of received and made calls. */
 @org.apache.avro.specific.AvroGenerated
 public class PhoneSensorCall extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorCall\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from listening to calls made.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"duration\",\"type\":\"float\",\"doc\":\"duration of the call (s)\"},{\"name\":\"target\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"SHA-256 one-way source/target of the call\"},{\"name\":\"call_type\",\"type\":\"int\",\"doc\":\"1-Incoming, 2-Outgoing, 3-Unanswered\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorCall\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from the log of received and made calls.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"duration\",\"type\":\"float\",\"doc\":\"duration of the call (s)\"},{\"name\":\"target\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"SHA-256 one-way source/target of the call\"},{\"name\":\"call_type\",\"type\":\"int\",\"doc\":\"1-Incoming, 2-Outgoing, 3-Unanswered\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
