@@ -10,6 +10,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.BatteryManager;
 import android.provider.CallLog;
+import android.provider.Telephony;
 import android.support.annotation.NonNull;
 
 import org.apache.commons.codec.binary.Hex;
@@ -54,6 +55,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private boolean isRegistered = false;
     private SensorManager sensorManager;
     private ScheduledFuture<?> callLogReadFuture;
+    private ScheduledFuture<?> smsLogReadFuture;
     private final ScheduledExecutorService executor;
     private final long CALL_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L; //60*60*1000; // an hour in milliseconds
 
@@ -107,6 +109,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         // Calls, in and outgoing
         setCallLogUpdateRate(CALL_LOG_INTERVAL_MS_DEFAULT);
+        setSmsLogUpdateRate(CALL_LOG_INTERVAL_MS_DEFAULT*20); // 20 days to test with
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -114,6 +117,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
     public final synchronized void setCallLogUpdateRate(final long period_ms) {
         if (callLogReadFuture != null) {
+            // TODO: something clever here to prevent sending duplicates?
             callLogReadFuture.cancel(false);
         }
 
@@ -121,8 +125,8 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
             @Override
             public void run() {
                 try {
-                    Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
-                    if (!c.moveToLast()) {
+                    Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, CallLog.Calls.DATE + " DESC");
+                    if (!c.moveToFirst()) {
                         c.close();
                         return;
                     }
@@ -135,7 +139,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                                     c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
                                     c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)),
                                     timeStamp);
-                        if (!c.moveToPrevious()) {
+                        if (!c.moveToNext()) {
                             c.close();
                             return;
                         }
@@ -151,6 +155,47 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         }, 0, period_ms, TimeUnit.MILLISECONDS);
 
         logger.info("Call log: listener activated and set to a period of {}", period_ms);
+    }
+
+    public final synchronized void setSmsLogUpdateRate(final long period_ms) {
+        if (smsLogReadFuture != null) {
+            smsLogReadFuture.cancel(false);
+        }
+
+        smsLogReadFuture = executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Cursor c = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, null, null, null, Telephony.Sms.DATE + " DESC");
+                    if (!c.moveToFirst()) {
+                        c.close();
+                        return;
+                    }
+
+                    long now = System.currentTimeMillis();
+                    long timeStamp = c.getLong(c.getColumnIndex(Telephony.Sms.DATE));
+                    while ((now - timeStamp) <= period_ms) {
+                        long type = c.getLong(c.getColumnIndex(Telephony.Sms.TYPE));
+                        String id = c.getString(c.getColumnIndex(Telephony.Sms._ID));
+                        String target = c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS));   //this is phone number rather than address
+                        logger.info(String.format("SMS log: %s, %s, %s, %s", type, timeStamp, target, id));
+
+                        if (!c.moveToNext()) {
+                            c.close();
+                            return;
+                        }
+                        timeStamp = c.getLong(c.getColumnIndex(Telephony.Sms.DATE));
+                    }
+                    c.close();
+                } catch (Throwable t) {
+                    logger.warn("Error in processing the sms: {}", t.getMessage());
+                    t.printStackTrace();
+                    return;
+                }
+            }
+        }, 0, period_ms, TimeUnit.MILLISECONDS);
+
+        logger.info("SMS log: listener activated and set to a period of {}", period_ms);
     }
 
     @Override
