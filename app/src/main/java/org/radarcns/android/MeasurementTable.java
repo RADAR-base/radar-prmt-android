@@ -208,7 +208,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                             statement.bindLong(i + 3, ((Number) value).longValue());
                             break;
                         case STRING:
-                            statement.bindLong(i + 3, ((Number) value).longValue());
+                            statement.bindString(i + 3, value.toString());
                             break;
                         case BOOLEAN:
                             statement.bindLong(i + 3, value.equals(Boolean.TRUE) ? 1L : 0L);
