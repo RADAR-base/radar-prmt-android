@@ -72,6 +72,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         if (httpClient != null && httpClient.connectTimeoutMillis() == connectionTimeout) {
             return;
         }
+        connectionTimeout = 1;
         httpClient = new OkHttpClient.Builder()
                 .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
                 .writeTimeout(connectionTimeout, TimeUnit.SECONDS)
@@ -197,7 +198,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
                     throw new IOException("Failed to submit (HTTP status code " + response.code() + "): " + content);
                 }
             } catch (IOException ex) {
-                logger.error("FAILED to transmit message: {}...", requestBody.content().substring(0, 255), ex);
+                logger.error("FAILED to transmit message:\n{}...", requestBody.content().substring(0, 255) );
                 throw ex;
             }
         }
