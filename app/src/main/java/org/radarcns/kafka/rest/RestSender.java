@@ -72,7 +72,6 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
         if (httpClient != null && httpClient.connectTimeoutMillis() == connectionTimeout) {
             return;
         }
-        connectionTimeout = 1;
         httpClient = new OkHttpClient.Builder()
                 .connectTimeout(connectionTimeout, TimeUnit.SECONDS)
                 .writeTimeout(connectionTimeout, TimeUnit.SECONDS)
