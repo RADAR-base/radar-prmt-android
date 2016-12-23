@@ -40,7 +40,7 @@ public class RadarConfiguration {
     public static final String KAFKA_RECORDS_SEND_LIMIT_KEY = "kafka_records_send_limit";
     public static final String SENDER_CONNECTION_TIMEOUT_KEY = "sender_connection_timeout";
     public static final String DATA_RETENTION_KEY = "data_retention_ms";
-    public static final String FIREBASE_FETCH_TIMEOUT_KEY = "firebase_fetch_timeout";
+    public static final String FIREBASE_FETCH_TIMEOUT_MS_KEY = "firebase_fetch_timeout_ms";
     public static final String CONDENSED_DISPLAY_KEY = "is_condensed_n_records_display";
     public static final String CALL_LOG_UPDATE_RATE_KEY = "call_log_update_rate_ms";
 
@@ -52,7 +52,7 @@ public class RadarConfiguration {
     public static final Set<String> LONG_VALUES = new HashSet<>(Arrays.asList(
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
             KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
-            FIREBASE_FETCH_TIMEOUT_KEY, CALL_LOG_UPDATE_RATE_KEY));
+            FIREBASE_FETCH_TIMEOUT_MS_KEY, CALL_LOG_UPDATE_RATE_KEY));
 
     public static final Set<String> INT_VALUES = Collections.singleton(
             KAFKA_RECORDS_SEND_LIMIT_KEY);
@@ -64,7 +64,7 @@ public class RadarConfiguration {
     private static RadarConfiguration instance = null;
     private final FirebaseRemoteConfig config;
 
-    public static final long FIREBASE_FETCH_TIMEOUT_DEFAULT = 43200L;
+    public static final long FIREBASE_FETCH_TIMEOUT_MS_DEFAULT = 12*60*60 * 1000L;
     private final Handler handler;
     private Activity onFetchActivity;
     private OnCompleteListener<Void> onFetchCompleteHandler;
@@ -80,10 +80,10 @@ public class RadarConfiguration {
             @Override
             public void run() {
                 fetch();
-                long delay = getLong(FIREBASE_FETCH_TIMEOUT_KEY, FIREBASE_FETCH_TIMEOUT_DEFAULT);
+                long delay = getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT);
                 handler.postDelayed(this, delay);
             }
-        }, getLong(FIREBASE_FETCH_TIMEOUT_KEY, FIREBASE_FETCH_TIMEOUT_DEFAULT));
+        }, getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT));
     }
 
     public FirebaseRemoteConfig getFirebase() {
@@ -129,7 +129,7 @@ public class RadarConfiguration {
         if (isInDevelopmentMode()) {
             delay = 0L;
         } else {
-            delay = getLong(FIREBASE_FETCH_TIMEOUT_KEY, FIREBASE_FETCH_TIMEOUT_DEFAULT);
+            delay = getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT);
         }
         return fetch(delay);
     }
