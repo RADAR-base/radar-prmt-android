@@ -1,14 +1,24 @@
 package org.radarcns.phoneSensors;
 
+import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.BatteryManager;
+import android.os.Bundle;
+import android.provider.CallLog;
+import android.provider.Telephony;
 import android.support.annotation.NonNull;
+import android.telephony.TelephonyManager;
+
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
@@ -19,7 +29,11 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /** Manages Phone sensors */
 class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
@@ -43,8 +57,11 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private String deviceName;
     private boolean isRegistered = false;
     private SensorManager sensorManager;
+    private final Runnable runnableReadCallLog;
+    private final ScheduledExecutorService executor;
+    private final long CALL_LOG_INTERVAL_MS = 60 * 60 * 24 * 1000; //60*60*1000; // an hour in milliseconds
 
-    public PhoneSensorsDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
+    public PhoneSensorsDeviceManager(Context contextIn, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
@@ -52,14 +69,46 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
         this.phoneService = phoneService;
 
-        this.context = context;
+        this.context = contextIn;
         sensorManager = null;
-        // Initialize the Device Manager using your API key. You need to have Internet access at this point.
+
         this.deviceStatus = new PhoneSensorsDeviceStatus();
         this.deviceStatus.getId().setUserId(groupId);
         this.deviceStatus.getId().setSourceId(sourceId);
+
         this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
+
+        // Call log
+        executor = Executors.newSingleThreadScheduledExecutor();
+        runnableReadCallLog = new Runnable() {
+            @Override
+            public void run() {
+                Cursor c = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
+                if (!c.moveToLast()) {
+                    c.close();
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
+                while ((now - timeStamp) <= CALL_LOG_INTERVAL_MS) {
+                    String num = c.getString(c.getColumnIndex(CallLog.Calls.NUMBER));// for  number
+                    String salt = deviceStatus.getId().getSourceId();
+                    String shaNum = new String(Hex.encodeHex(DigestUtils.sha256(num + salt)));
+                    String duration = c.getString(c.getColumnIndex(CallLog.Calls.DURATION));// for duration
+                    int type = c.getInt(c.getColumnIndex(CallLog.Calls.TYPE));// for call type, Incoming or out going.
+                    String date = c.getString(c.getColumnIndex(CallLog.Calls.DATE));
+                    logger.info(String.format("%s, %s, %s, %s, %d, %d, %s, %d", num, salt, shaNum, duration, type, timeStamp, date, now));
+
+                    if (!c.moveToPrevious()) {
+                        c.close();
+                        return;
+                    }
+                    timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
+                }
+                c.close();
+            }
+        };
     }
 
     @Override
@@ -84,9 +133,11 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         }
 
         // Battery
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        batteryStatus = context.registerReceiver(null, ifilter);
+        IntentFilter intentBattery = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        batteryStatus = context.registerReceiver(null, intentBattery);
 
+        // Calls, in and outgoing
+        executor.scheduleAtFixedRate(runnableReadCallLog, 0, CALL_LOG_INTERVAL_MS, TimeUnit.MILLISECONDS);
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
