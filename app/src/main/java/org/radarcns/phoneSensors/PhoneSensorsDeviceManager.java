@@ -221,15 +221,21 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         // Remove updates, if any
         locationManager.removeUpdates(locationListener);
 
-        // Initialize with last known
-        processLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-        processLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
-
-        // Start listening
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, periodGPS_ms, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, periodNetwork_ms, 0, locationListener);
-
-        logger.info("Location listener activated and set to periods of {} and {}", periodGPS_ms, periodNetwork_ms);
+        // Initialize with last known and start listening
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            processLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, periodGPS_ms, 0, locationListener);
+            logger.info("Location GPS listener activated and set to periods of {}", periodGPS_ms);
+        } else {
+            logger.warn("Location GPS listener not found");
+        }
+        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            processLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, periodNetwork_ms, 0, locationListener);
+            logger.info("Location Network listener activated and set to periods of {}", periodGPS_ms, periodNetwork_ms);
+        } else {
+            logger.warn("Location Network listener not found");
+        }
     }
     @Override
     public void onSensorChanged(SensorEvent event) {
