@@ -56,9 +56,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private boolean isRegistered = false;
     private SensorManager sensorManager;
     private ScheduledFuture<?> callLogReadFuture;
-    public long callMaxTimestampSeen;
     private ScheduledFuture<?> smsLogReadFuture;
-    public long smsMaxTimestampSeen;
     private final ScheduledExecutorService executor;
     private final long CALL_SMS_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L;
 
@@ -137,20 +135,11 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     long now = System.currentTimeMillis();
                     long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
 
-                    if (timeStamp <= callMaxTimestampSeen) {
-                        return;
-                    }
-
                     while ((now - timeStamp) <= period_ms) {
-                        processCall(c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
+                        processCall(timeStamp,
+                                    c.getString(c.getColumnIndex(CallLog.Calls.NUMBER)),
                                     c.getFloat(c.getColumnIndex(CallLog.Calls.DURATION)),
-                                    c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)),
-                                    timeStamp);
-
-                        if (timeStamp > callMaxTimestampSeen) {
-                            callMaxTimestampSeen = timeStamp;
-                        }
-
+                                    c.getInt(c.getColumnIndex(CallLog.Calls.TYPE)));
                         if (!c.moveToNext()) {
                             c.close();
                             return;
@@ -161,7 +150,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 } catch (Throwable t) {
                     logger.warn("Error in processing the call log: {}", t.getMessage());
                     t.printStackTrace();
-                    return;
                 }
             }
         }, 0, period_ms, TimeUnit.MILLISECONDS);
@@ -187,19 +175,10 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     long now = System.currentTimeMillis();
                     long timeStamp = c.getLong(c.getColumnIndex(Telephony.Sms.DATE));
 
-                    if (timeStamp <= smsMaxTimestampSeen) {
-                        return;
-                    }
-
                     while ((now - timeStamp) <= period_ms) {
-                        processSMS( c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS)), //this is phone number rather than address
-                                    c.getInt(c.getColumnIndex(Telephony.Sms.TYPE)),
-                                    timeStamp);
-
-                        if (timeStamp > smsMaxTimestampSeen) {
-                            smsMaxTimestampSeen = timeStamp;
-                        }
-
+                        processSMS( timeStamp,
+                                    c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS)), //this is phone number rather than address
+                                    c.getInt(c.getColumnIndex(Telephony.Sms.TYPE)) );
                         if (!c.moveToNext()) {
                             c.close();
                             return;
@@ -210,7 +189,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 } catch (Throwable t) {
                     logger.warn("Error in processing the sms log: {}", t.getMessage());
                     t.printStackTrace();
-                    return;
                 }
             }
         }, 0, period_ms, TimeUnit.MILLISECONDS);
@@ -270,12 +248,23 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
-    public void processCall(String target, float duration, int typeCode, long eventTimestampMillis) {
+    public void processCall(long eventTimestampMillis, String target, float duration, int typeCode) {
         // TODO: strip target number from area codes (+31). e.g. only last 9 digits
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
-        double eventTimestamp = eventTimestampMillis / 1000d; // TODO: round to nearest hour
+        double eventTimestamp = eventTimestampMillis / 1000d;
 
         // TODO: expose some live metric on number of calls or total duration in deviceStatus
+
+        // Check whether a newer call has already been stored
+        try {
+            PhoneSensorCall lastValue = callTable.getRecords(1, "time", "desc").get(0).value;
+            if (eventTimestamp <= lastValue.getTime()) {
+                logger.info(String.format("Call log: already stored this call, %s, %s, %s, %s", target, targetKey, duration, eventTimestamp));
+                return;
+            }
+        } catch (IndexOutOfBoundsException iobe) {
+            logger.warn("Call log: could not find any persisted call records");
+        }
 
         // 1 = incoming, 2 = outgoing, 3 is unanswered incoming (missed/rejected/blocked/etc)
         int type;
@@ -297,10 +286,21 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         logger.info(String.format("Call log: %s, %s, %s, %s, %s, %s", target, targetKey, duration, type, eventTimestamp, timestamp));
     }
 
-    public void processSMS(String target, int typeCode, long eventTimestampMillis) {
+    public void processSMS(long eventTimestampMillis, String target, int typeCode) {
         // TODO: strip target number from area codes (+31). e.g. only last 9 digits
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
-        double eventTimestamp = eventTimestampMillis / 1000d; // TODO: round to nearest hour
+        double eventTimestamp = eventTimestampMillis / 1000d;
+
+        // Check whether a newer sms has already been stored
+        try {
+            PhoneSensorSms lastValue = smsTable.getRecords(1, "time", "desc").get(0).value;
+            if (eventTimestamp <= lastValue.getTime()) {
+                logger.info(String.format("Sms log: already stored this sms, %s, %s, %s, %s", target, targetKey, eventTimestamp));
+                return;
+            }
+        } catch (IndexOutOfBoundsException iobe) {
+            logger.warn("Call log: could not find any persisted sms records");
+        }
 
         // 1 = incoming, 2 = outgoing, 3 is not sent (draft/failed/queued)
         int type;

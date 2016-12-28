@@ -376,8 +376,12 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
 
     @Override
     public List<Record<MeasurementKey, V>> getRecords(int limit) {
+        return getRecords(limit, "offset", "DESC");
+    }
+
+    public List<Record<MeasurementKey, V>> getRecords(int limit, String orderBy, String orderDirection) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String sql = "SELECT * FROM " + topic.getName() + " ORDER BY offset DESC LIMIT " + limit;
+        String sql = "SELECT * FROM " + topic.getName() + " ORDER BY " + orderBy + " " + orderDirection + " LIMIT " + limit;
         try (Cursor cursor = db.rawQuery(sql, null)) {
             return cursorToRecords(cursor);
         }
