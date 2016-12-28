@@ -12,6 +12,8 @@
     <!--Listen for incoming and outgoing calls-->
     <uses-permission android:name="android.permission.READ_CALL_LOG"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
+    <!--Phone GPS location-->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!--Write permission needed for persisting phone source id. e.g. between new installations-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 

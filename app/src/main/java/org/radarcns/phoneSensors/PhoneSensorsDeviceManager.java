@@ -8,7 +8,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.LocationManager;
 import android.os.BatteryManager;
+import android.os.Looper;
 import android.provider.CallLog;
 import android.provider.Telephony;
 import android.support.annotation.NonNull;
@@ -55,10 +57,14 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private String deviceName;
     private boolean isRegistered = false;
     private SensorManager sensorManager;
+    private LocationManager locationManager;
     private ScheduledFuture<?> callLogReadFuture;
     private ScheduledFuture<?> smsLogReadFuture;
+    private ScheduledFuture<?> locationReadFuture;
     private final ScheduledExecutorService executor;
     private final long CALL_SMS_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L;
+    private final long LOCATION_INTERVAL_MS_DEFAULT = 5*60 * 1000L;
+    private final long LOCATION_LISTEN_INTERVAL_MS_DEFAULT = 1*60 * 1000L;
 
     public PhoneSensorsDeviceManager(Context contextIn, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
@@ -80,7 +86,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         this.deviceName = android.os.Build.MODEL;
         updateStatus(DeviceStatusListener.Status.READY);
 
-        // Call log
+        // Scheduler TODO: run executor with existing thread pool/factory
         executor = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -109,9 +115,16 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         IntentFilter intentBattery = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         batteryStatus = context.registerReceiver(null, intentBattery);
 
-        // Calls, in and outgoing
+        // Calls and sms, in and outgoing
         setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
         setSmsLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
+
+        // Location
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        PhoneSensorsLocationListener locationListener = new PhoneSensorsLocationListener();
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_LISTEN_INTERVAL_MS_DEFAULT, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL_MS_DEFAULT, 0, locationListener);
+//        setLocationUpdateRate(LOCATION_INTERVAL_MS_DEFAULT, LOCATION_LISTEN_INTERVAL_MS_DEFAULT);
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -194,6 +207,50 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         }, 0, period_ms, TimeUnit.MILLISECONDS);
 
         logger.info("SMS log: listener activated and set to a period of {}", period_ms);
+    }
+
+    public final synchronized void setLocationUpdateRate(final long period_ms, final long listenPeriod_ms) {
+
+        PhoneSensorsLocationListener locationListener = new PhoneSensorsLocationListener();
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_LISTEN_INTERVAL_MS_DEFAULT, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL_MS_DEFAULT, 0, locationListener);
+
+        if (locationReadFuture != null) {
+            locationReadFuture.cancel(false);
+        }
+
+        locationReadFuture = executor.scheduleAtFixedRate(new Runnable() {
+            PhoneSensorsLocationListener locationListener;
+            Looper myLooper = Looper.myLooper();
+            @Override
+            public void run() {
+                Looper.prepare();
+                try {
+                    // Start listening for network and gps location
+                    locationListener = new PhoneSensorsLocationListener();
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+                    // Stop listening after fixed delay
+                    executor.schedule(new Runnable() {
+                        public void run() {
+                            myLooper.quit();
+                            Looper.prepare();
+                            logger.info("Location updating stopped");
+                            locationManager.removeUpdates(locationListener);
+                            Looper.loop();
+                        }
+                    }, listenPeriod_ms, TimeUnit.MILLISECONDS);
+
+                } catch (Throwable t) {
+                    logger.warn("Error in requesting the location: {}", t.getMessage());
+                    t.printStackTrace();
+                }
+                Looper.loop();
+            }
+        }, 0, period_ms, TimeUnit.MILLISECONDS);
+
+        logger.info("Location log: listener activated and set to a period of {}", period_ms);
     }
 
     @Override
