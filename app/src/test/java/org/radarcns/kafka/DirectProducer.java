@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+
 /**
  * Directly sends a message to Kafka using a KafkaProducer
  */
@@ -17,12 +19,10 @@ public class DirectProducer<K, V> implements KafkaSender<K, V> {
 
     public DirectProducer(Properties properties) {
         Properties props = new Properties();
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
-        props.put("schema.registry.url", "http://ubuntu:8081");
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "ubuntu:9092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        props.put("schema.registry.url", "http://localhost:8081");
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         if (properties != null) {
             props.putAll(properties);
         }
