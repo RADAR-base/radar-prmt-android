@@ -2,25 +2,22 @@ package org.radarcns.kafka.rest;
 
 import junit.framework.TestCase;
 
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.SpecificRecordEncoder;
-import org.radarcns.data.StringEncoder;
-import org.radarcns.kafka.MockDevice;
 import org.radarcns.kafka.KafkaSender;
+import org.radarcns.kafka.MockDevice;
 import org.radarcns.kafka.SchemaRetriever;
+import org.radarcns.key.MeasurementKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
-import org.radarcns.key.MeasurementKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ThreadedKafkaSenderTest extends TestCase {
-    private Logger logger = LoggerFactory.getLogger(ThreadedKafkaSenderTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ThreadedKafkaSenderTest.class);
 
     public void testMain() throws Exception {
         Properties props = new Properties();
