@@ -45,6 +45,8 @@ import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
+import static org.radarcns.RadarConfiguration.LOCATION_GPS_INTERVAL_MS_KEY;
+import static org.radarcns.RadarConfiguration.LOCATION_NETWORK_INTERVAL_MS_KEY;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
 import static org.radarcns.RadarConfiguration.CALL_SMS_LOG_UPDATE_RATE_KEY;
@@ -482,6 +484,14 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             if (deviceScanner instanceof PhoneSensorsDeviceManager) {
                 ((PhoneSensorsDeviceManager) deviceScanner).setCallLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_SMS_LOG_UPDATE_RATE_KEY));
                 ((PhoneSensorsDeviceManager) deviceScanner).setSmsLogUpdateRate(RadarConfiguration.getLongExtra(bundle, CALL_SMS_LOG_UPDATE_RATE_KEY));
+            }
+        }
+
+        if (RadarConfiguration.hasExtra(bundle, LOCATION_GPS_INTERVAL_MS_KEY)) {
+            if (deviceScanner instanceof PhoneSensorsDeviceManager) {
+                ((PhoneSensorsDeviceManager) deviceScanner).setLocationUpdateRate(
+                        RadarConfiguration.getLongExtra(bundle, LOCATION_GPS_INTERVAL_MS_KEY),
+                        RadarConfiguration.getLongExtra(bundle, LOCATION_NETWORK_INTERVAL_MS_KEY));
             }
         }
     }

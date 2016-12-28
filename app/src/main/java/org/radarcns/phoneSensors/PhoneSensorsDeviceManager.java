@@ -47,6 +47,14 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private Sensor accelerometer;
     private Sensor lightSensor;
     private Intent batteryStatus;
+    LocationListener locationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            processLocation(location);
+        }
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+        public void onProviderEnabled(String provider) {}
+        public void onProviderDisabled(String provider) {}
+    };
 
     private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
     private final MeasurementTable<PhoneSensorLight> lightTable;
@@ -124,20 +132,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         // Location
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-//        PhoneSensorsLocationListener locationListener = new PhoneSensorsLocationListener();
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                processLocation(location);
-            }
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-            public void onProviderEnabled(String provider) {}
-            public void onProviderDisabled(String provider) {}
-        };
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_NETWORK_INTERVAL_MS_DEFAULT, 0, locationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_GPS_INTERVAL_MS_DEFAULT, 0, locationListener);
-        // Initialize with last known
-        processLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-        processLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+        setLocationUpdateRate(LOCATION_GPS_INTERVAL_MS_DEFAULT, LOCATION_NETWORK_INTERVAL_MS_DEFAULT);
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -222,6 +217,20 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         logger.info("SMS log: listener activated and set to a period of {}", period_ms);
     }
 
+    public final synchronized void setLocationUpdateRate(final long periodGPS_ms, final long periodNetwork_ms) {
+        // Remove updates, if any
+        locationManager.removeUpdates(locationListener);
+
+        // Initialize with last known
+        processLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+        processLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+
+        // Start listening
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, periodGPS_ms, 0, locationListener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, periodNetwork_ms, 0, locationListener);
+
+        logger.info("Location listener activated and set to periods of {} and {}", periodGPS_ms, periodNetwork_ms);
+    }
     @Override
     public void onSensorChanged(SensorEvent event) {
         if ( event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ) {

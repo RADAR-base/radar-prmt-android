@@ -62,6 +62,8 @@ import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
+import static org.radarcns.RadarConfiguration.LOCATION_GPS_INTERVAL_MS_KEY;
+import static org.radarcns.RadarConfiguration.LOCATION_NETWORK_INTERVAL_MS_KEY;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
 import static org.radarcns.RadarConfiguration.UI_REFRESH_RATE_KEY;
@@ -172,7 +174,8 @@ public class MainActivity extends AppCompatActivity {
         radarConfiguration.putExtras(bundle,
                 KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
                 KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
-                SENDER_CONNECTION_TIMEOUT_KEY, CALL_SMS_LOG_UPDATE_RATE_KEY);
+                SENDER_CONNECTION_TIMEOUT_KEY, CALL_SMS_LOG_UPDATE_RATE_KEY,
+                LOCATION_GPS_INTERVAL_MS_KEY, LOCATION_NETWORK_INTERVAL_MS_KEY);
     }
 
     public MainActivity() {
