@@ -37,9 +37,9 @@ public class RadarConfiguration {
     public static final String DATA_RETENTION_KEY = "data_retention_ms";
     public static final String FIREBASE_FETCH_TIMEOUT_MS_KEY = "firebase_fetch_timeout_ms";
     public static final String CONDENSED_DISPLAY_KEY = "is_condensed_n_records_display";
-    public static final String CALL_SMS_LOG_UPDATE_RATE_KEY = "call_sms_log_update_rate_ms";
-    public static final String LOCATION_GPS_INTERVAL_MS_KEY = "location_gps_interval_ms";
-    public static final String LOCATION_NETWORK_INTERVAL_MS_KEY = "location_network_interval_ms";
+    public static final String CALL_SMS_LOG_UPDATE_RATE_KEY = "call_sms_log_update_rate";
+    public static final String LOCATION_GPS_UPDATE_RATE_KEY = "location_gps_update_rate";
+    public static final String LOCATION_NETWORK_UPDATE_RATE_KEY = "location_network_update_rate";
 
     public static final Pattern IS_TRUE = Pattern.compile(
             "^(1|true|t|yes|y|on)$", CASE_INSENSITIVE);
@@ -50,7 +50,7 @@ public class RadarConfiguration {
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
             KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
             FIREBASE_FETCH_TIMEOUT_MS_KEY, CALL_SMS_LOG_UPDATE_RATE_KEY,
-            LOCATION_GPS_INTERVAL_MS_KEY,LOCATION_NETWORK_INTERVAL_MS_KEY));
+            LOCATION_GPS_UPDATE_RATE_KEY, LOCATION_NETWORK_UPDATE_RATE_KEY));
 
     public static final Set<String> INT_VALUES = Collections.singleton(
             KAFKA_RECORDS_SEND_LIMIT_KEY);

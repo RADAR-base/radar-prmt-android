@@ -72,9 +72,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private ScheduledFuture<?> callLogReadFuture;
     private ScheduledFuture<?> smsLogReadFuture;
     private final ScheduledExecutorService executor;
-    private final long CALL_SMS_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L;
-    private final long LOCATION_NETWORK_INTERVAL_MS_DEFAULT = 1*60 * 1000L;
-    private final long LOCATION_GPS_INTERVAL_MS_DEFAULT = 5*60 * 1000L;
+    private final long CALL_SMS_LOG_INTERVAL_DEFAULT = 24*60*60;
+    private final long LOCATION_NETWORK_INTERVAL_DEFAULT = 10*60;
+    private final long LOCATION_GPS_INTERVAL_DEFAULT = 60*60;
 
     public PhoneSensorsDeviceManager(Context contextIn, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
         this.dataHandler = dataHandler;
@@ -127,18 +127,18 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         batteryStatus = context.registerReceiver(null, intentBattery);
 
         // Calls and sms, in and outgoing
-        setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
-        setSmsLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
+        setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_DEFAULT);
+        setSmsLogUpdateRate(CALL_SMS_LOG_INTERVAL_DEFAULT);
 
         // Location
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        setLocationUpdateRate(LOCATION_GPS_INTERVAL_MS_DEFAULT, LOCATION_NETWORK_INTERVAL_MS_DEFAULT);
+        setLocationUpdateRate(LOCATION_GPS_INTERVAL_DEFAULT, LOCATION_NETWORK_INTERVAL_DEFAULT);
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
     }
 
-    public final synchronized void setCallLogUpdateRate(final long period_ms) {
+    public final synchronized void setCallLogUpdateRate(final long period) {
         if (callLogReadFuture != null) {
             callLogReadFuture.cancel(false);
         }
@@ -158,10 +158,10 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     boolean isInsidePeriod;
                     boolean lastIsProcessed = true;
                     boolean nextIsAvailable = true;
-                    long now = System.currentTimeMillis();
+                    long now = System.currentTimeMillis() / 1000;
                     while (true) {
-                        long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-                        isInsidePeriod = (now - timeStamp) <= period_ms;
+                        long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE)) / 1000;
+                        isInsidePeriod = (now - timeStamp) <= period;
                         if (!isInsidePeriod ||
                             !lastIsProcessed ||
                             !nextIsAvailable) {
@@ -182,12 +182,12 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     t.printStackTrace();
                 }
             }
-        }, 0, period_ms, TimeUnit.MILLISECONDS);
+        }, 0, period, TimeUnit.SECONDS);
 
-        logger.info("Call log: listener activated and set to a period of {}", period_ms);
+        logger.info("Call log: listener activated and set to a period of {}", period);
     }
 
-    public final synchronized void setSmsLogUpdateRate(final long period_ms) {
+    public final synchronized void setSmsLogUpdateRate(final long period) {
         if (smsLogReadFuture != null) {
             smsLogReadFuture.cancel(false);
         }
@@ -207,10 +207,10 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     boolean isInsidePeriod;
                     boolean lastIsProcessed = true;
                     boolean nextIsAvailable = true;
-                    long now = System.currentTimeMillis();
+                    long now = System.currentTimeMillis() / 1000;
                     while (true) {
-                        long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE));
-                        isInsidePeriod = (now - timeStamp) <= period_ms;
+                        long timeStamp = c.getLong(c.getColumnIndex(CallLog.Calls.DATE)) / 1000;
+                        isInsidePeriod = (now - timeStamp) <= period;
                         if (!isInsidePeriod ||
                             !lastIsProcessed ||
                             !nextIsAvailable) {
@@ -230,27 +230,27 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     t.printStackTrace();
                 }
             }
-        }, 0, period_ms, TimeUnit.MILLISECONDS);
+        }, 0, period, TimeUnit.SECONDS);
 
-        logger.info("SMS log: listener activated and set to a period of {}", period_ms);
+        logger.info("SMS log: listener activated and set to a period of {}", period);
     }
 
-    public final synchronized void setLocationUpdateRate(final long periodGPS_ms, final long periodNetwork_ms) {
+    public final synchronized void setLocationUpdateRate(final long periodGPS, final long periodNetwork) {
         // Remove updates, if any
         locationManager.removeUpdates(locationListener);
 
         // Initialize with last known and start listening
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             processLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, periodGPS_ms, 0, locationListener);
-            logger.info("Location GPS listener activated and set to periods of {}", periodGPS_ms);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, periodGPS * 1000, 0, locationListener);
+            logger.info("Location GPS listener activated and set to periods of {}", periodGPS);
         } else {
             logger.warn("Location GPS listener not found");
         }
         if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             processLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, periodNetwork_ms, 0, locationListener);
-            logger.info("Location Network listener activated and set to periods of {}", periodGPS_ms, periodNetwork_ms);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, periodNetwork * 1000, 0, locationListener);
+            logger.info("Location Network listener activated and set to periods of {}", periodNetwork);
         } else {
             logger.warn("Location Network listener not found");
         }
@@ -307,10 +307,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
-    public boolean processCall(long eventTimestampMillis, String target, float duration, int typeCode) {
+    public boolean processCall(long eventTimestamp, String target, float duration, int typeCode) {
         target = normalizePhoneTarget(target);
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
-        double eventTimestamp = eventTimestampMillis / 1000d;
 
         // Check whether a newer call has already been stored
         try {
@@ -337,17 +336,17 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         }
 
         double timestamp = System.currentTimeMillis() / 1000d;
-        PhoneSensorCall value = new PhoneSensorCall(eventTimestamp, timestamp, duration, targetKey, type);
+        PhoneSensorCall value = new PhoneSensorCall(
+                (double) eventTimestamp, timestamp, duration, targetKey, type);
         dataHandler.addMeasurement(callTable, deviceStatus.getId(), value);
 
         logger.info(String.format("Call log: %s, %s, %s, %s, %s, %s", target, targetKey, duration, type, eventTimestamp, timestamp));
         return true;
     }
 
-    public boolean processSMS(long eventTimestampMillis, String target, int typeCode) {
+    public boolean processSMS(long eventTimestamp, String target, int typeCode) {
         target = normalizePhoneTarget(target);
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
-        double eventTimestamp = eventTimestampMillis / 1000d;
 
         // Check whether a newer sms has already been stored
         try {
@@ -375,7 +374,8 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         }
 
         double timestamp = System.currentTimeMillis() / 1000d;
-        PhoneSensorSms value = new PhoneSensorSms(eventTimestamp, timestamp, targetKey, type);
+        PhoneSensorSms value = new PhoneSensorSms(
+                (double) eventTimestamp, timestamp, targetKey, type);
         dataHandler.addMeasurement(smsTable, deviceStatus.getId(), value);
 
         logger.info(String.format("SMS log: %s, %s, %s, %s, %s", target, targetKey, type, eventTimestamp, timestamp));
@@ -409,7 +409,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 altitude, accuracy, speed, bearing);
         dataHandler.addMeasurement(locationTable, deviceStatus.getId(), value);
 
-        logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,timestamp,location.getLatitude(),location.getLongitude(),accuracy,altitude,speed,bearing,eventTimestamp);
+        logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,eventTimestamp,location.getLatitude(),location.getLongitude(),accuracy,altitude,speed,bearing,timestamp);
     }
 
     /**

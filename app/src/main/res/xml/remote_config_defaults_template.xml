@@ -43,16 +43,16 @@
         <value>20</value>
     </entry>
     <entry>
-        <key>call_sms_log_update_rate_ms</key>
-        <value>3600000</value>
+        <key>call_sms_log_update_rate</key>
+        <value>3600</value>
     </entry>
     <entry>
-        <key>location_gps_update_rate_ms</key>
-        <value>7200000</value>
+        <key>location_gps_update_rate</key>
+        <value>7200</value>
     </entry>
     <entry>
-        <key>location_network_update_rate_ms</key>
-        <value>600000</value>
+        <key>location_network_update_rate</key>
+        <value>600</value>
     </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
