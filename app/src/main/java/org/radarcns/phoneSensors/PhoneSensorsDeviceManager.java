@@ -13,7 +13,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Looper;
 import android.provider.CallLog;
 import android.provider.Telephony;
 import android.support.annotation.NonNull;
@@ -53,6 +52,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private final MeasurementTable<PhoneSensorLight> lightTable;
     private final MeasurementTable<PhoneSensorCall> callTable;
     private final MeasurementTable<PhoneSensorSms> smsTable;
+    private final MeasurementTable<PhoneSensorLocation> locationTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
 
     private final PhoneSensorsDeviceStatus deviceStatus;
@@ -63,7 +63,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private LocationManager locationManager;
     private ScheduledFuture<?> callLogReadFuture;
     private ScheduledFuture<?> smsLogReadFuture;
-    private ScheduledFuture<?> locationReadFuture;
     private final ScheduledExecutorService executor;
     private final long CALL_SMS_LOG_INTERVAL_MS_DEFAULT = 24*60*60 * 1000L;
     private final long LOCATION_NETWORK_INTERVAL_MS_DEFAULT = 1*60 * 1000L;
@@ -75,6 +74,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
         this.callTable = dataHandler.getCache(topics.getCallTopic());
         this.smsTable = dataHandler.getCache(topics.getSmsTopic());
+        this.locationTable = dataHandler.getCache(topics.getLocationTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
 
         this.phoneService = phoneService;
@@ -135,6 +135,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         };
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_NETWORK_INTERVAL_MS_DEFAULT, 0, locationListener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_GPS_INTERVAL_MS_DEFAULT, 0, locationListener);
+        // Initialize with last known
+        processLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+        processLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -345,7 +348,33 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     }
 
     public void processLocation(Location location) {
-        logger.info("Location: location changed {}", location.toString());
+        double eventTimestamp = location.getTime() / 1000d;
+        double timestamp = System.currentTimeMillis() / 1000d;
+
+        int provider;
+        switch(location.getProvider()) {
+            case LocationManager.GPS_PROVIDER:
+                provider = 1;
+                break;
+            case LocationManager.NETWORK_PROVIDER:
+                provider = 2;
+                break;
+            default:
+                provider = 3;
+        }
+
+        float altitude = location.hasAltitude() ? (float) location.getAltitude() : Float.NaN;
+        float accuracy = location.hasAccuracy() ? location.getAccuracy() : Float.NaN;
+        float speed = location.hasSpeed() ? location.getSpeed() : Float.NaN;
+        float bearing = location.hasBearing() ? location.getBearing() : Float.NaN;
+
+        PhoneSensorLocation value = new PhoneSensorLocation(
+                eventTimestamp, timestamp, provider,
+                location.getLatitude(), location.getLongitude(),
+                altitude, accuracy, speed, bearing);
+        dataHandler.addMeasurement(locationTable, deviceStatus.getId(), value);
+
+        logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,timestamp,location.getLatitude(),location.getLongitude(),accuracy,altitude,speed,bearing,eventTimestamp);
     }
 
     /**

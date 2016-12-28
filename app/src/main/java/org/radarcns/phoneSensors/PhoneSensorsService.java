@@ -65,7 +65,7 @@ public class PhoneSensorsService extends DeviceService {
     @Override
     protected AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics() {
         return new AvroTopic[] {
-                topics.getAccelerationTopic(), topics.getLightTopic(), topics.getCallTopic(), topics.getSmsTopic()
+                topics.getAccelerationTopic(), topics.getLightTopic(), topics.getCallTopic(), topics.getSmsTopic(), topics.getLocationTopic()
         };
     }
 
