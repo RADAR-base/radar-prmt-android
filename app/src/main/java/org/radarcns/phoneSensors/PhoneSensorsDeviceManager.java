@@ -249,7 +249,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     }
 
     public void processCall(long eventTimestampMillis, String target, float duration, int typeCode) {
-        // TODO: strip target number from area codes (+31). e.g. only last 9 digits
+        target = normalizePhoneTarget(target);
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
         double eventTimestamp = eventTimestampMillis / 1000d;
 
@@ -287,7 +287,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     }
 
     public void processSMS(long eventTimestampMillis, String target, int typeCode) {
-        // TODO: strip target number from area codes (+31). e.g. only last 9 digits
+        target = normalizePhoneTarget(target);
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
         double eventTimestamp = eventTimestampMillis / 1000d;
 
@@ -321,6 +321,22 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         dataHandler.addMeasurement(smsTable, deviceStatus.getId(), value);
 
         logger.info(String.format("SMS log: %s, %s, %s, %s, %s", target, targetKey, type, eventTimestamp, timestamp));
+    }
+
+    /**
+     * Removes area code from phone number.
+     * By returning last 9 characters of input, if input contains more than 9 characters.
+     * e.g. +31232014111 becomes 232014111 and 0612345678 becomes 612345678
+     * @param phoneTarget String
+     * @return String
+     */
+    public static String normalizePhoneTarget(String phoneTarget) {
+        int length = phoneTarget.length();
+        if (length <= 9) {
+            return phoneTarget;
+        }
+
+        return phoneTarget.substring(length-9,length);
     }
 
     @Override
