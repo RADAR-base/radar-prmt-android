@@ -111,7 +111,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         // Calls, in and outgoing
         setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
-        setSmsLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT*20); // 20 days to test with
+        setSmsLogUpdateRate(CALL_SMS_LOG_INTERVAL_MS_DEFAULT);
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -253,13 +253,11 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
         double eventTimestamp = eventTimestampMillis / 1000d;
 
-        // TODO: expose some live metric on number of calls or total duration in deviceStatus
-
         // Check whether a newer call has already been stored
         try {
             PhoneSensorCall lastValue = callTable.getRecords(1, "time", "desc").get(0).value;
             if (eventTimestamp <= lastValue.getTime()) {
-                logger.info(String.format("Call log: already stored this call, %s, %s, %s, %s", target, targetKey, duration, eventTimestamp));
+                logger.info(String.format("Call log already stored this call: %s, %s, %s, %s", target, targetKey, duration, eventTimestamp));
                 return;
             }
         } catch (IndexOutOfBoundsException iobe) {
@@ -295,11 +293,11 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         try {
             PhoneSensorSms lastValue = smsTable.getRecords(1, "time", "desc").get(0).value;
             if (eventTimestamp <= lastValue.getTime()) {
-                logger.info(String.format("Sms log: already stored this sms, %s, %s, %s, %s", target, targetKey, eventTimestamp));
+                logger.info(String.format("SMS log already stored this sms: %s, %s, %s", target, targetKey, eventTimestamp));
                 return;
             }
         } catch (IndexOutOfBoundsException iobe) {
-            logger.warn("Call log: could not find any persisted sms records");
+            logger.warn("SMS log: could not find any persisted sms records");
         }
 
         // 1 = incoming, 2 = outgoing, 3 is not sent (draft/failed/queued)
