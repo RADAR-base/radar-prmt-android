@@ -21,11 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * called.
  */
 class KafkaConnectionChecker implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(KafkaConnectionChecker.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConnectionChecker.class);
 
-    private final static int INCREMENTAL_BACKOFF_SECONDS = 60;
-    private final static int MAX_BACKOFF_SECONDS = 14400; // 4 hours
-    private final static long HEARTBEAT_SECONDS = 60L;
+    private static final int INCREMENTAL_BACKOFF_SECONDS = 60;
+    private static final int MAX_BACKOFF_SECONDS = 14400; // 4 hours
+    private static final long HEARTBEAT_SECONDS = 60L;
     private final KafkaSender sender;
     private final ScheduledExecutorService executor;
     private final ServerStatusListener listener;

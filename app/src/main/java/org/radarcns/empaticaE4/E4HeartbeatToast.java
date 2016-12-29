@@ -20,8 +20,8 @@ import java.util.List;
  */
 public class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection<E4DeviceStatus>, Void, String[]> {
     private final Context context;
-    final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    final static AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics.getInstance().getInterBeatIntervalTopic();
+    static final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+    static final AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics.getInstance().getInterBeatIntervalTopic();
 
     public E4HeartbeatToast(Context context) {
         this.context = context;

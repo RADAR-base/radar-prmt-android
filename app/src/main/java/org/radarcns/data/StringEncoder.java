@@ -8,7 +8,7 @@ import java.io.IOException;
 
 /** Encodes a String as Avro */
 public class StringEncoder implements AvroEncoder, AvroEncoder.AvroWriter<String> {
-    private final static ObjectWriter jsonEncoder = new ObjectMapper().writer();
+    private static final ObjectWriter jsonEncoder = new ObjectMapper().writer();
 
     @Override
     public <T> AvroWriter<T> writer(Schema schema, Class<T> clazz) {

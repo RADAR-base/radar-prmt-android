@@ -14,7 +14,7 @@ import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientExcept
 
 /** Retriever of an Avro Schema */
 public class SchemaRetriever {
-    private final static Logger logger = LoggerFactory.getLogger(SchemaRetriever.class);
+    private static final Logger logger = LoggerFactory.getLogger(SchemaRetriever.class);
     private final ConcurrentMap<String, ParsedSchemaMetadata> cache;
     private final CachedSchemaRegistryClient schemaClient;
 

@@ -71,7 +71,7 @@ import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
 
 public class MainActivity extends AppCompatActivity {
-    private final static Logger logger = LoggerFactory.getLogger(MainActivity.class);
+    private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
     private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
 
-    final static DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
+    static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     public RadarConfiguration radarConfiguration;
 

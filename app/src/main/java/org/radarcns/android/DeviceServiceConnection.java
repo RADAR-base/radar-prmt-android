@@ -45,7 +45,7 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
 public class DeviceServiceConnection<S extends DeviceState> implements ServiceConnection {
-    private final static Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
     private final Parcelable.Creator<S> deviceStateCreator;
     private final String serviceClassName;

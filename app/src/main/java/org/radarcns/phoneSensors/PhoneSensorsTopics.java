@@ -11,7 +11,7 @@ public class PhoneSensorsTopics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryLevelTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorLight> lightTopic;
 
-    private final static Object syncObject = new Object();
+    private static final Object syncObject = new Object();
     private static PhoneSensorsTopics instance = null;
 
     public static PhoneSensorsTopics getInstance() {

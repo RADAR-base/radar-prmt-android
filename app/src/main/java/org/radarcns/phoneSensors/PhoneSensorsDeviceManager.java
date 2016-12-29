@@ -24,8 +24,8 @@ import java.util.Set;
 
 /** Manages Phone sensors */
 class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
-    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsDeviceManager.class);
-    private final static float EARTH_GRAVITATIONAL_ACCELERATION = 9.80665f;
+    private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsDeviceManager.class);
+    private static final float EARTH_GRAVITATIONAL_ACCELERATION = 9.80665f;
 
     private final TableDataHandler dataHandler;
     private final Context context;

@@ -54,21 +54,22 @@ import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
  * Specific wearables should extend this class.
  */
 public abstract class DeviceService extends Service implements DeviceStatusListener, ServerStatusListener {
-    private final static int ONGOING_NOTIFICATION_ID = 11;
-    public final static int TRANSACT_GET_RECORDS = 12;
-    public final static int TRANSACT_GET_DEVICE_STATUS = 13;
-    public final static int TRANSACT_START_RECORDING = 14;
-    public final static int TRANSACT_STOP_RECORDING = 15;
-    public final static int TRANSACT_GET_SERVER_STATUS = 16;
-    public final static int TRANSACT_GET_DEVICE_NAME = 17;
-    public final static int TRANSACT_UPDATE_CONFIG = 18;
-    public final static String SERVER_STATUS_CHANGED = "org.radarcns.android.ServerStatusListener.Status";
-    public final static String SERVER_RECORDS_SENT_TOPIC = "org.radarcns.android.ServerStatusListener.topic";
-    public final static String SERVER_RECORDS_SENT_NUMBER = "org.radarcns.android.ServerStatusListener.lastNumberOfRecordsSent";
-    public final static String DEVICE_SERVICE_CLASS = "org.radarcns.android.DeviceService.getClass";
-    public final static String DEVICE_STATUS_CHANGED = "org.radarcns.android.DeviceStatusListener.Status";
-    public final static String DEVICE_STATUS_NAME = "org.radarcns.android.Devicemanager.getName";
-    public final static String DEVICE_CONNECT_FAILED = "org.radarcns.android.DeviceStatusListener.deviceFailedToConnect";
+    private static final int ONGOING_NOTIFICATION_ID = 11;
+    public static final int TRANSACT_GET_RECORDS = 12;
+    public static final int TRANSACT_GET_DEVICE_STATUS = 13;
+    public static final int TRANSACT_START_RECORDING = 14;
+    public static final int TRANSACT_STOP_RECORDING = 15;
+    public static final int TRANSACT_GET_SERVER_STATUS = 16;
+    public static final int TRANSACT_GET_DEVICE_NAME = 17;
+    public static final int TRANSACT_UPDATE_CONFIG = 18;
+    private static final String PREFIX = "org.radarcns.android.";
+    public static final String SERVER_STATUS_CHANGED = PREFIX + "ServerStatusListener.Status";
+    public static final String SERVER_RECORDS_SENT_TOPIC = PREFIX + "ServerStatusListener.topic";
+    public static final String SERVER_RECORDS_SENT_NUMBER = PREFIX + "ServerStatusListener.lastNumberOfRecordsSent";
+    public static final String DEVICE_SERVICE_CLASS = PREFIX + "DeviceService.getClass";
+    public static final String DEVICE_STATUS_CHANGED = PREFIX + "DeviceStatusListener.Status";
+    public static final String DEVICE_STATUS_NAME = PREFIX + "Devicemanager.getName";
+    public static final String DEVICE_CONNECT_FAILED = PREFIX + "DeviceStatusListener.deviceFailedToConnect";
 
     /** Stops the device when bluetooth is disabled. */
     private final BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
@@ -77,18 +78,22 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             final String action = intent.getAction();
 
             if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                final int state = intent.getIntExtra(
+                        BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 switch (state) {
                     case BluetoothAdapter.STATE_TURNING_OFF: case BluetoothAdapter.STATE_OFF:
                         logger.warn("Bluetooth is off");
                         stopDeviceManager(unsetDeviceManager());
+                        break;
+                    default:
+                        logger.debug("Bluetooth is in state {}", state);
                         break;
                 }
             }
         }
     };
 
-    private final static Logger logger = LoggerFactory.getLogger(DeviceService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DeviceService.class);
     private TableDataHandler dataHandler;
     private DeviceManager deviceScanner;
     private final LocalBinder mBinder = new LocalBinder();
@@ -178,7 +183,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     }
 
     @Override
-    public void deviceStatusUpdated(DeviceManager deviceManager, DeviceStatusListener.Status status) {
+    public void deviceStatusUpdated(DeviceManager deviceManager,
+                                    DeviceStatusListener.Status status) {
         Intent statusChanged = new Intent(DEVICE_STATUS_CHANGED);
         statusChanged.putExtra(DEVICE_STATUS_CHANGED, status.ordinal());
         statusChanged.putExtra(DEVICE_SERVICE_CLASS, getClass().getName());
@@ -211,6 +217,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                     stopSelf(latestStartId);
                 }
                 break;
+            default:
+                // do nothing
+                break;
         }
     }
 
@@ -225,7 +234,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         Intent notificationIntent = new Intent(context, DeviceService.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
 
-        Notification.Builder notificationBuilder = new Notification.Builder(getApplicationContext());
+        Notification.Builder notificationBuilder = new Notification.Builder(
+                getApplicationContext());
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
         notificationBuilder.setSmallIcon(R.drawable.ic_bt_connected);
         notificationBuilder.setLargeIcon(largeIcon);
@@ -298,7 +308,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
-        public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit) {
+        public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(
+                @NonNull AvroTopic<MeasurementKey, V> topic, int limit) {
             return getDataHandler().getCache(topic).getRecords(limit);
         }
 
@@ -369,7 +380,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             try {
                 switch (code) {
                     case TRANSACT_GET_RECORDS:
-                        AvroTopic<MeasurementKey, ? extends SpecificRecord> topic = getTopics().getTopic(data.readString());
+                        AvroTopic<MeasurementKey, ? extends SpecificRecord> topic = getTopics()
+                                .getTopic(data.readString());
                         int limit = data.readInt();
                         dataHandler.getCache(topic).writeRecordsToParcel(reply, limit);
                         break;
@@ -417,13 +429,14 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         URL kafkaUrl = null;
         SchemaRetriever remoteSchemaRetriever = null;
         if (RadarConfiguration.hasExtra(bundle, KAFKA_REST_PROXY_URL_KEY)) {
-            String kafkaUrlString = RadarConfiguration.getStringExtra(bundle, KAFKA_REST_PROXY_URL_KEY);
-            if (!kafkaUrlString.isEmpty()) {
-                remoteSchemaRetriever = new SchemaRetriever(RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
+            String urlString = RadarConfiguration.getStringExtra(bundle, KAFKA_REST_PROXY_URL_KEY);
+            if (!urlString.isEmpty()) {
+                remoteSchemaRetriever = new SchemaRetriever(
+                        RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
                 try {
-                    kafkaUrl = new URL(kafkaUrlString);
+                    kafkaUrl = new URL(urlString);
                 } catch (MalformedURLException e) {
-                    logger.error("Malformed Kafka server URL {}", kafkaUrlString);
+                    logger.error("Malformed Kafka server URL {}", urlString);
                     throw new RuntimeException(e);
                 }
             }
@@ -451,22 +464,28 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         if (RadarConfiguration.hasExtra(bundle, DATA_RETENTION_KEY)) {
-            localDataHandler.setDataRetention(RadarConfiguration.getLongExtra(bundle, DATA_RETENTION_KEY));
+            localDataHandler.setDataRetention(
+                    RadarConfiguration.getLongExtra(bundle, DATA_RETENTION_KEY));
         }
         if (RadarConfiguration.hasExtra(bundle, KAFKA_UPLOAD_RATE_KEY)) {
-            localDataHandler.setKafkaUploadRate(RadarConfiguration.getLongExtra(bundle, KAFKA_UPLOAD_RATE_KEY));
+            localDataHandler.setKafkaUploadRate(
+                    RadarConfiguration.getLongExtra(bundle, KAFKA_UPLOAD_RATE_KEY));
         }
         if (RadarConfiguration.hasExtra(bundle, KAFKA_CLEAN_RATE_KEY)) {
-            localDataHandler.setKafkaCleanRate(RadarConfiguration.getLongExtra(bundle, KAFKA_CLEAN_RATE_KEY));
+            localDataHandler.setKafkaCleanRate(
+                    RadarConfiguration.getLongExtra(bundle, KAFKA_CLEAN_RATE_KEY));
         }
         if (RadarConfiguration.hasExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY)) {
-            localDataHandler.setKafkaRecordsSendLimit(RadarConfiguration.getIntExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY));
+            localDataHandler.setKafkaRecordsSendLimit(
+                    RadarConfiguration.getIntExtra(bundle, KAFKA_RECORDS_SEND_LIMIT_KEY));
         }
         if (RadarConfiguration.hasExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY)) {
-            localDataHandler.setSenderConnectionTimeout(RadarConfiguration.getLongExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY));
+            localDataHandler.setSenderConnectionTimeout(
+                    RadarConfiguration.getLongExtra(bundle, SENDER_CONNECTION_TIMEOUT_KEY));
         }
         if (RadarConfiguration.hasExtra(bundle, DATABASE_COMMIT_RATE_KEY)) {
-            localDataHandler.setDatabaseCommitRate(RadarConfiguration.getLongExtra(bundle, DATABASE_COMMIT_RATE_KEY));
+            localDataHandler.setDatabaseCommitRate(
+                    RadarConfiguration.getLongExtra(bundle, DATABASE_COMMIT_RATE_KEY));
         }
 
         if (newlyCreated) {

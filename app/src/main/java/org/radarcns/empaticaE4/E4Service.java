@@ -22,7 +22,7 @@ import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
  * Empatica E4 and send it to a Kafka REST proxy.
  */
 public class E4Service extends DeviceService {
-    private final static Logger logger = LoggerFactory.getLogger(E4Service.class);
+    private static final Logger logger = LoggerFactory.getLogger(E4Service.class);
     private E4Topics topics;
     private String apiKey;
     private String groupId;

@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * It uses a set of timers to addMeasurement data and clean the databases.
  */
 public class KafkaDataSubmitter<K, V> implements Closeable {
-    private final static Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaDataSubmitter.class);
 
     private final DataHandler<K, V> dataHandler;
     private final KafkaSender<K, V> sender;
@@ -46,7 +46,7 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
     private final Map<AvroTopic<K, V>, ScheduledFuture<?>> trySendFuture;
     private final Map<AvroTopic<K, V>, KafkaTopicSender<K, V>> topicSenders;
     private final KafkaConnectionChecker connection;
-    private final static ListPool listPool = new ListPool(1);
+    private static final ListPool listPool = new ListPool(1);
     private final AtomicInteger sendLimit;
 
     private boolean lastUploadFailed = false;
