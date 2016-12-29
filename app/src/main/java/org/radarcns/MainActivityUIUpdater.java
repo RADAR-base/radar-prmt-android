@@ -173,6 +173,9 @@ public class MainActivityUIUpdater implements Runnable {
 
     private void updateServerStatus() {
         String topic = mainActivity.getLatestTopicSent();
+        if (topic == null) {
+            return;
+        }
         // Condensing the message
         topic = topic.replaceFirst("_?android_?","");
         topic = topic.replaceFirst("_?empatica_?(e4)?","E4");

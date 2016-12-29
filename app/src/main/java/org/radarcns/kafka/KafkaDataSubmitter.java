@@ -229,7 +229,9 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 if (sent < currentSendLimit) {
                     toSend.remove(entry.getKey());
                 }
-                uploadingNotified |= sent > 0;
+                if (!uploadingNotified && sent > 0) {
+                    uploadingNotified = true;
+                }
             }
             if (uploadingNotified) {
                 dataHandler.updateServerStatus(ServerStatusListener.Status.CONNECTED);
