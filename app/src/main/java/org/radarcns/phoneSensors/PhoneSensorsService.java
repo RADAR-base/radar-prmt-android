@@ -88,7 +88,7 @@ public class PhoneSensorsService extends DeviceService {
         Properties defaults = new Properties();
         defaults.setProperty(SOURCE_ID_KEY, UUID.randomUUID().toString());
         try {
-            Properties props = PersistentStorage.retrieveOrStore(getClass(), defaults);
+            Properties props = PersistentStorage.loadOrStore(getClass(), defaults);
             return props.getProperty(SOURCE_ID_KEY);
         } catch (IOException ex) {
             logger.error("Failed to retrieve or store persistent source ID key. "

@@ -23,7 +23,7 @@ public class PersistentStorage {
     private static Logger logger = LoggerFactory.getLogger(PersistentStorage.class);
 
     /**
-     * Use a class-bounded file-based storage to retrieve or store properties.
+     * Use a class-bounded file-based storage to load or store properties.
      *
      * If a class-bound properties file exists, the default properties are updated with the contents
      * of that file. If any defaults were not stored yet, the combined loaded properties and default
@@ -34,14 +34,13 @@ public class PersistentStorage {
      * @throws IOException if the properties cannot be retrieved or stored.
      * @return a new Properties object that combines defaults with any loaded properties.
      */
-    public static Properties retrieveOrStore(Class<?> clazz, Properties defaults) throws IOException {
+    public static Properties loadOrStore(Class<?> clazz, Properties defaults)
+            throws IOException {
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
         File file = new File(path, clazz.getName() + ".properties");
 
-        if (!path.exists()) {
-            if (!path.mkdirs()) {
-                logger.error("'{}' could not be created or already exists.", path.getAbsolutePath());
-            }
+        if (!path.exists() && !path.mkdirs()) {
+            logger.error("'{}' could not be created or already exists.", path.getAbsolutePath());
         }
 
         Properties loadedProps = new Properties();
@@ -52,6 +51,7 @@ public class PersistentStorage {
                  Reader fr = new InputStreamReader(fin, "UTF-8");
                  Reader in = new BufferedReader(fr)) {
                 loadedProps.load(in);
+                logger.debug("Loaded persistent properties from {}", file);
             }
             // Find out if the defaults had more values than the properties file. If not, do not
             // store the values again.
@@ -69,6 +69,7 @@ public class PersistentStorage {
              OutputStreamWriter fwr = new OutputStreamWriter(fout, "UTF-8");
              Writer out = new BufferedWriter(fwr)) {
             combinedProperties.store(out, null);
+            logger.debug("Stored persistent properties to {}", file);
         }
         return combinedProperties;
     }
