@@ -626,7 +626,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int getRow(DeviceServiceConnection<?> connection) {
         for (int i = 0; i < mConnections.length; i++) {
-            if (mConnections[i].getServiceClassName().equals(connection.getServiceClassName())) {
+            if (mConnections[i] != null && mConnections[i].getServiceClassName().equals(connection.getServiceClassName())) {
                 return i;
             }
         }
