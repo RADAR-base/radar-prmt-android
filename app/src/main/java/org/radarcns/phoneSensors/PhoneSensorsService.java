@@ -30,7 +30,7 @@ import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
  * the phone sensors and send it to a Kafka REST proxy.
  */
 public class PhoneSensorsService extends DeviceService {
-    private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
+    private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
     private PhoneSensorsTopics topics;
     private String groupId;
     private String sourceIdFilename = this.getClass().getName() + "_source_id.txt";

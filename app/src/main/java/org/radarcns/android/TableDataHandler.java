@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Stores data in databases and sends it to the server.
  */
 public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRecord> {
-    private final static Logger logger = LoggerFactory.getLogger(TableDataHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(TableDataHandler.class);
 
     public static final long DATA_RETENTION_DEFAULT = 86400000L;
     public static final long DATABASE_COMMIT_RATE_DEFAULT = 2500L;

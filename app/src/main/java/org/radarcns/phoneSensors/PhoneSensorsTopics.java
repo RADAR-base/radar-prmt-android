@@ -13,7 +13,7 @@ public class PhoneSensorsTopics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, PhoneSensorSms> smsTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorLocation> locationTopic;
 
-    private final static Object syncObject = new Object();
+    private static final Object syncObject = new Object();
     private static PhoneSensorsTopics instance = null;
 
     public static PhoneSensorsTopics getInstance() {

@@ -20,8 +20,9 @@ import java.util.List;
  */
 public class Pebble2HeartbeatToast extends AsyncTask<DeviceServiceConnection<Pebble2DeviceStatus>, Void, String[]> {
     private final Context context;
-    final static DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    final static AvroTopic<MeasurementKey, Pebble2HeartRateFiltered> topic = Pebble2Topics.getInstance().getHeartRateFilteredTopic();
+    private static final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+    private static final AvroTopic<MeasurementKey, Pebble2HeartRateFiltered> topic = Pebble2Topics
+            .getInstance().getHeartRateFilteredTopic();
 
     public Pebble2HeartbeatToast(Context context) {
         this.context = context;

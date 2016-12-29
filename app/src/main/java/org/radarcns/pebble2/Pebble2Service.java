@@ -21,7 +21,7 @@ import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
  * Pebble 2 and send it to a Kafka REST proxy.
  */
 public class Pebble2Service extends DeviceService {
-    private final static Logger logger = LoggerFactory.getLogger(Pebble2Service.class);
+    private static final Logger logger = LoggerFactory.getLogger(Pebble2Service.class);
     private Pebble2Topics topics;
     private String groupId;
 

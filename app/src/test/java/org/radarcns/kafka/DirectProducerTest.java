@@ -15,7 +15,7 @@ import java.util.Properties;
 
 public class DirectProducerTest extends TestCase {
 
-    private final static Logger logger = LoggerFactory.getLogger(DirectProducerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(DirectProducerTest.class);
 
     public void testDirect() throws InterruptedException, IOException {
 

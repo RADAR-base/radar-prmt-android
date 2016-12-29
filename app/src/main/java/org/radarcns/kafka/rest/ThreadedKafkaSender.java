@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit;
  * This queues messages for a specified amount of time and then sends all messages up to that time.
  */
 public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
-    private final static Logger logger = LoggerFactory.getLogger(ThreadedKafkaSender.class);
-    private final static int RETRIES = 3;
-    private final static long HEARTBEAT_TIMEOUT_MILLIS = 60_000L;
-    private final static long HEARTBEAT_TIMEOUT_MARGIN = 10_000L;
+    private static final Logger logger = LoggerFactory.getLogger(ThreadedKafkaSender.class);
+    private static final int RETRIES = 3;
+    private static final long HEARTBEAT_TIMEOUT_MILLIS = 60_000L;
+    private static final long HEARTBEAT_TIMEOUT_MARGIN = 10_000L;
 
     private final KafkaSender<K, V> sender;
     private final ScheduledExecutorService executor;

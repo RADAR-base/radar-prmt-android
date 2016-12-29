@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 /** Manages scanning for an Empatica E4 wearable and connecting to it */
 class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceManager {
-    private final static Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(E4DeviceManager.class);
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -286,6 +286,11 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                 || other != null && getClass().equals(other.getClass())
                 && deviceStatus.getId().getSourceId() != null
                 && deviceStatus.getId().equals(((E4DeviceManager) other).deviceStatus.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return deviceStatus.getId().hashCode();
     }
 
     private synchronized void updateStatus(DeviceStatusListener.Status status) {

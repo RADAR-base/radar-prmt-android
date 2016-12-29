@@ -11,7 +11,7 @@ public class Pebble2Topics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, Pebble2HeartRate> heartRateTopic;
     private final AvroTopic<MeasurementKey, Pebble2HeartRateFiltered> heartRateFilteredTopic;
 
-    private final static Object syncObject = new Object();
+    private static final Object syncObject = new Object();
     private static Pebble2Topics instance = null;
 
     public static Pebble2Topics getInstance() {

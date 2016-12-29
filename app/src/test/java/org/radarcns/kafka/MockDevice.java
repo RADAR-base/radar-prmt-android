@@ -17,7 +17,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MockDevice<K> extends Thread {
-    private final static Logger logger = LoggerFactory.getLogger(MockDevice.class);
+    private static final Logger logger = LoggerFactory.getLogger(MockDevice.class);
 
     private final AvroTopic<K, EmpaticaE4Acceleration> acceleration;
     private final AvroTopic<K, EmpaticaE4BatteryLevel> battery;
@@ -33,7 +33,7 @@ public class MockDevice<K> extends Thread {
     private final float batteryDecayFactor;
     private final float timeDriftFactor;
     private long lastSleep;
-    private final static AtomicLong offset = new AtomicLong(0);
+    private static final AtomicLong offset = new AtomicLong(0);
     private IOException exception;
 
     public MockDevice(KafkaSender<K, SpecificRecord> sender, K key, Schema keySchema, Class<K> keyClass) {

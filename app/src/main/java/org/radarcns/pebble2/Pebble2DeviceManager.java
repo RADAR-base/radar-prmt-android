@@ -31,13 +31,13 @@ import static com.getpebble.android.kit.Constants.INTENT_PEBBLE_DISCONNECTED;
 
 /** Manages scanning for an Pebble 2 wearable and connecting to it */
 class Pebble2DeviceManager implements DeviceManager {
-    private final static UUID APP_UUID = UUID.fromString("a3b06265-d50c-4205-8ee4-e4c12abca326");
-    private final static int ACCELERATION_LOG = 11;
-    private final static int HEART_RATE_LOG = 12;
-    private final static int HEART_RATE_FILTERED_LOG = 13;
-    private final static int BATTERY_LEVEL_LOG = 14;
+    private static final UUID APP_UUID = UUID.fromString("a3b06265-d50c-4205-8ee4-e4c12abca326");
+    private static final int ACCELERATION_LOG = 11;
+    private static final int HEART_RATE_LOG = 12;
+    private static final int HEART_RATE_FILTERED_LOG = 13;
+    private static final int BATTERY_LEVEL_LOG = 14;
 
-    private final static Logger logger = LoggerFactory.getLogger(Pebble2DeviceManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(Pebble2DeviceManager.class);
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -285,6 +285,11 @@ class Pebble2DeviceManager implements DeviceManager {
                 || other != null && getClass().equals(other.getClass())
                 && deviceStatus.getId().getSourceId() != null
                 && deviceStatus.getId().equals(((Pebble2DeviceManager) other).deviceStatus.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return deviceStatus.getId().hashCode();
     }
 
     private synchronized void updateStatus(DeviceStatusListener.Status status) {

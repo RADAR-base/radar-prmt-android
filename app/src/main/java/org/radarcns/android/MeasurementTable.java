@@ -41,8 +41,8 @@ import java.util.concurrent.TimeUnit;
  * Measurements are grouped into transactions before being committed in a separate Thread
  */
 public class MeasurementTable<V extends SpecificRecord> implements DataCache<MeasurementKey, V> {
-    private final static Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
-    private final static int DATABASE_VERSION = 2;
+    private static final Logger logger = LoggerFactory.getLogger(MeasurementTable.class);
+    private static final int DATABASE_VERSION = 2;
 
     private final SQLiteOpenHelper dbHelper;
     private final AvroTopic<MeasurementKey, V> topic;
@@ -50,14 +50,14 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
     private long lastOffsetSent;
     private final Object lastOffsetSentSync = new Object();
     private SubmitThread submitThread;
-    private final static NumberFormat decimalFormat = new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.US));
+    private static final NumberFormat decimalFormat = new DecimalFormat("0.#", DecimalFormatSymbols.getInstance(Locale.US));
     private final ThreadFactory threadFactory;
     static {
         decimalFormat.setMaximumIntegerDigits(Integer.MAX_VALUE);
         decimalFormat.setMaximumFractionDigits(24);
     }
 
-    private final static ListPool listPool = new ListPool(10);
+    private static final ListPool listPool = new ListPool(10);
 
     public MeasurementTable(Context context, AvroTopic<MeasurementKey, V> topic, long timeWindowMillis) {
         if (timeWindowMillis > System.currentTimeMillis()) {

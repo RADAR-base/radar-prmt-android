@@ -37,12 +37,12 @@ import okio.Okio;
 import okio.Sink;
 
 public class RestSender<K, V> implements KafkaSender<K, V> {
-    private final static Logger logger = LoggerFactory.getLogger(RestSender.class);
+    private static final Logger logger = LoggerFactory.getLogger(RestSender.class);
     private final AvroEncoder keyEncoder;
     private final AvroEncoder valueEncoder;
     private final JsonFactory jsonFactory;
-    public final static String KAFKA_REST_ACCEPT_ENCODING = "application/vnd.kafka.v1+json, application/vnd.kafka+json, application/json";
-    public final static MediaType KAFKA_REST_AVRO_ENCODING = MediaType.parse("application/vnd.kafka.avro.v1+json; charset=utf-8");
+    public static final String KAFKA_REST_ACCEPT_ENCODING = "application/vnd.kafka.v1+json, application/vnd.kafka+json, application/json";
+    public static final MediaType KAFKA_REST_AVRO_ENCODING = MediaType.parse("application/vnd.kafka.avro.v1+json; charset=utf-8");
 
     private URL kafkaUrl;
     private HttpUrl schemalessKeyUrl;

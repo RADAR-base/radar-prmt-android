@@ -14,7 +14,7 @@ public class E4Topics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, EmpaticaE4Temperature> temperatureTopic;
     private final AvroTopic<MeasurementKey, EmpaticaE4SensorStatus> sensorStatusTopic;
 
-    private final static Object syncObject = new Object();
+    private static final Object syncObject = new Object();
     private static E4Topics instance = null;
 
     public static E4Topics getInstance() {
