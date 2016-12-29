@@ -254,7 +254,9 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
                 // keep old configuration
             }
         } else {
-            ((DeviceServiceBinder)serviceBinder).updateConfiguration(bundle);
+            if (serviceBinder != null) {
+                ((DeviceServiceBinder) serviceBinder).updateConfiguration(bundle);
+            }
         }
     }
 
