@@ -1,0 +1,11 @@
+{
+  "namespace": "org.radarcns.phoneSensors",
+  "type": "record",
+  "name": "PhoneSensorInteractionState",
+  "doc": "Logs change of interaction state of the phone when the phone is unlocked or set to standby.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "interactionState", "type": "int", "doc": "status of phone"}
+  ]
+}

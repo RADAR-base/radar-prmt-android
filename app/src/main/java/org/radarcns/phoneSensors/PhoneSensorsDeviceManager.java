@@ -123,7 +123,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         }
 
         // Battery
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         processBatteryStatus(context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -131,7 +131,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                     processBatteryStatus(intent);
                 }
             }
-        }, ifilter));
+        }, batteryFilter));
 
         // Calls and sms, in and outgoing
         setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_DEFAULT);
@@ -140,6 +140,20 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         // Location
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         setLocationUpdateRate(LOCATION_GPS_INTERVAL_DEFAULT, LOCATION_NETWORK_INTERVAL_DEFAULT);
+
+        // Screen active
+        IntentFilter screenStateFilter = new IntentFilter();
+        screenStateFilter.addAction(Intent.ACTION_SCREEN_ON);
+        screenStateFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON) ||
+                    intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                    processScreenState(intent);
+                }
+            }
+        }, screenStateFilter);
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -418,6 +432,16 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         dataHandler.addMeasurement(locationTable, deviceStatus.getId(), value);
 
         logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,eventTimestamp,location.getLatitude(),location.getLongitude(),accuracy,altitude,speed,bearing,timestamp);
+    }
+
+    public void processScreenState(Intent intent) {
+        int screenState = 1;
+        if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+            screenState = 0;
+        }
+
+        double timestamp = System.currentTimeMillis() / 1000d;
+        logger.info("Screen: {} {}", timestamp, screenState);
     }
 
     /**
