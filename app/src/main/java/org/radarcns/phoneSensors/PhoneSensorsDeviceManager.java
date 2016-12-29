@@ -51,6 +51,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private final MeasurementTable<PhoneSensorCall> callTable;
     private final MeasurementTable<PhoneSensorSms> smsTable;
     private final MeasurementTable<PhoneSensorLocation> locationTable;
+    private final MeasurementTable<PhoneSensorUserInteraction> userInteractionTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
 
     private final PhoneSensorsDeviceStatus deviceStatus;
@@ -75,6 +76,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         this.callTable = dataHandler.getCache(topics.getCallTopic());
         this.smsTable = dataHandler.getCache(topics.getSmsTopic());
         this.locationTable = dataHandler.getCache(topics.getLocationTopic());
+        this.userInteractionTable = dataHandler.getCache(topics.getUserInteractionTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
 
         this.phoneService = phoneService;
@@ -143,14 +145,14 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         // Screen active
         IntentFilter screenStateFilter = new IntentFilter();
-        screenStateFilter.addAction(Intent.ACTION_SCREEN_ON);
+        screenStateFilter.addAction(Intent.ACTION_USER_PRESENT);
         screenStateFilter.addAction(Intent.ACTION_SCREEN_OFF);
         context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON) ||
+                if (intent.getAction().equals(Intent.ACTION_USER_PRESENT) ||
                     intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                    processScreenState(intent);
+                    processInteractionState(intent);
                 }
             }
         }, screenStateFilter);
@@ -434,14 +436,18 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,eventTimestamp,location.getLatitude(),location.getLongitude(),accuracy,altitude,speed,bearing,timestamp);
     }
 
-    public void processScreenState(Intent intent) {
-        int screenState = 1;
+    public void processInteractionState(Intent intent) {
+        int state = 1;
         if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-            screenState = 0;
+            state = 0;
         }
 
         double timestamp = System.currentTimeMillis() / 1000d;
-        logger.info("Screen: {} {}", timestamp, screenState);
+        PhoneSensorUserInteraction value = new PhoneSensorUserInteraction(
+                timestamp, timestamp, state);
+        dataHandler.addMeasurement(userInteractionTable, deviceStatus.getId(), value);
+
+        logger.info("Interaction State: {} {}", timestamp, state);
     }
 
     /**
