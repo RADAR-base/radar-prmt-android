@@ -288,6 +288,11 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                 && deviceStatus.getId().equals(((E4DeviceManager) other).deviceStatus.getId());
     }
 
+    @Override
+    public int hashCode() {
+        return deviceStatus.getId().hashCode();
+    }
+
     private synchronized void updateStatus(DeviceStatusListener.Status status) {
         this.deviceStatus.setStatus(status);
         this.e4service.deviceStatusUpdated(this, status);

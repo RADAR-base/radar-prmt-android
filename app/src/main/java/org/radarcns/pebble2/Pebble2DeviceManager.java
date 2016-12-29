@@ -287,6 +287,11 @@ class Pebble2DeviceManager implements DeviceManager {
                 && deviceStatus.getId().equals(((Pebble2DeviceManager) other).deviceStatus.getId());
     }
 
+    @Override
+    public int hashCode() {
+        return deviceStatus.getId().hashCode();
+    }
+
     private synchronized void updateStatus(DeviceStatusListener.Status status) {
         this.deviceStatus.setStatus(status);
         this.pebble2Service.deviceStatusUpdated(this, status);

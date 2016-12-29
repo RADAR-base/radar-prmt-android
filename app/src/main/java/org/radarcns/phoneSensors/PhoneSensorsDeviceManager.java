@@ -196,4 +196,9 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         PhoneSensorsDeviceManager otherDevice = ((PhoneSensorsDeviceManager) other);
         return deviceStatus.getId().equals((otherDevice.deviceStatus.getId()));
     }
+
+    @Override
+    public int hashCode() {
+        return deviceStatus.getId().hashCode();
+    }
 }
