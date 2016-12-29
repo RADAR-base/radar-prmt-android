@@ -819,7 +819,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mServerMessage.setText( message );
-        logger.info(message);
 
         // TODO: more reliable way to get the row index. E.g. via the mConnections.
         int rowIndex;

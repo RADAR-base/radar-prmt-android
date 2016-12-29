@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -276,6 +277,15 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
             }
             // Overwrite key-value if exists. Only stores the last
             this.lastNumberOfRecordsSent.put(topicName, numberOfRecords );
+
+            if (numberOfRecords < 0 ) {
+                String message = String.format(Locale.US, "%1$45s has FAILED uploading", topicName);
+                logger.warn(message);
+            } else {
+                String message = String.format(Locale.US, "%1$45s uploaded %2$4d records",
+                        topicName, numberOfRecords);
+                logger.info(message);
+            }
         }
     }
 
