@@ -1,5 +1,6 @@
 package org.radarcns.phoneSensors;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -24,15 +25,12 @@ import java.util.Set;
 /** Manages Phone sensors */
 class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     private final static Logger logger = LoggerFactory.getLogger(PhoneSensorsDeviceManager.class);
+    private final static float EARTH_GRAVITATIONAL_ACCELERATION = 9.80665f;
 
     private final TableDataHandler dataHandler;
     private final Context context;
 
     private final DeviceStatusListener phoneService;
-
-    private Sensor accelerometer;
-    private Sensor lightSensor;
-    private Intent batteryStatus;
 
     private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
     private final MeasurementTable<PhoneSensorLight> lightTable;
@@ -69,7 +67,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         // Accelerometer
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             // success! we have an accelerometer
-            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             logger.warn("Phone Accelerometer not found");
@@ -77,7 +75,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
         // Light
         if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null) {
-            lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+            Sensor lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             logger.warn("Phone Light sensor not found");
@@ -85,8 +83,14 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
         // Battery
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        batteryStatus = context.registerReceiver(null, ifilter);
-
+        processBatteryStatus(context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
+                    processBatteryStatus(intent);
+                }
+            }
+        }, ifilter));
 
         isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
@@ -101,46 +105,47 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         } else {
             logger.info("Phone registered other sensor change: '{}'", event.sensor.getType());
         }
-
-        // Get new battery status
-        processBattery();
     }
 
     public void processAcceleration(SensorEvent event) {
         // x,y,z are in m/s2
-        Float x = event.values[0] / 9.81f;
-        Float y = event.values[1] / 9.81f;
-        Float z = event.values[2] / 9.81f;
+        float x = event.values[0] / EARTH_GRAVITATIONAL_ACCELERATION;
+        float y = event.values[1] / EARTH_GRAVITATIONAL_ACCELERATION;
+        float z = event.values[2] / EARTH_GRAVITATIONAL_ACCELERATION;
         deviceStatus.setAcceleration(x, y, z);
+        // nanoseconds to seconds
+        double time = event.timestamp / 1_000_000_000d;
+        double timeReceived = System.currentTimeMillis() / 1_000d;
 
-        float[] latestAcceleration = deviceStatus.getAcceleration();
-        PhoneSensorAcceleration value = new PhoneSensorAcceleration(
-                (double) event.timestamp, System.currentTimeMillis() / 1000d,
-                latestAcceleration[0], latestAcceleration[1], latestAcceleration[2]);
+        PhoneSensorAcceleration value = new PhoneSensorAcceleration(time, timeReceived, x, y, z);
 
         dataHandler.addMeasurement(accelerationTable, deviceStatus.getId(), value);
     }
 
     public void processLight(SensorEvent event) {
-        Float lightValue = event.values[0];
+        float lightValue = event.values[0];
         deviceStatus.setLight(lightValue);
+        // nanoseconds to seconds
+        double time = event.timestamp / 1_000_000_000d;
+        double timeReceived = System.currentTimeMillis() / 1000d;
 
-        PhoneSensorLight value = new PhoneSensorLight(
-                (double) event.timestamp, System.currentTimeMillis() / 1000d,
-                lightValue);
-
+        PhoneSensorLight value = new PhoneSensorLight(time, timeReceived, lightValue);
         dataHandler.addMeasurement(lightTable, deviceStatus.getId(), value);
     }
 
-    public void processBattery() {
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+    public void processBatteryStatus(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
         float batteryPct = level / (float)scale;
 
         deviceStatus.setBatteryLevel(batteryPct);
 
-        double timestamp = System.currentTimeMillis() / 1000d;
-        PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(timestamp, timestamp, batteryPct);
+        double time = System.currentTimeMillis() / 1000d;
+        PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(time, time, batteryPct);
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
@@ -179,10 +184,16 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
     @Override
     public boolean equals(Object other) {
-        return other == this
-                || other != null && getClass().equals(other.getClass())
-                && deviceStatus.getId().getSourceId() != null
-                && deviceStatus.getId().equals(((PhoneSensorsDeviceManager) other).deviceStatus.getId());
-    }
+        if (other == this) {
+            return true;
+        }
+        if (other == null
+                || !getClass().equals(other.getClass())
+                || deviceStatus.getId().getSourceId() == null) {
+            return false;
+        }
 
+        PhoneSensorsDeviceManager otherDevice = ((PhoneSensorsDeviceManager) other);
+        return deviceStatus.getId().equals((otherDevice.deviceStatus.getId()));
+    }
 }
