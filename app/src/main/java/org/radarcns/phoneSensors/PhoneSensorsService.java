@@ -1,7 +1,6 @@
 package org.radarcns.phoneSensors;
 
 import android.os.Bundle;
-import android.os.Environment;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.RadarConfiguration;
@@ -12,15 +11,12 @@ import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.UUID;
 
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
@@ -31,15 +27,10 @@ import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
  */
 public class PhoneSensorsService extends DeviceService {
     private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
+    private static final String SOURCE_ID_KEY = "source.id";
     private PhoneSensorsTopics topics;
     private String groupId;
-    private final String sourceIdFilename;
     private String sourceId;
-
-    public PhoneSensorsService() {
-        super();
-        sourceIdFilename = getClass().getName() + "_source_id.txt";
-    }
 
     @Override
     public void onCreate() {
@@ -84,7 +75,7 @@ public class PhoneSensorsService extends DeviceService {
 
     public String getSourceId() {
         if (sourceId == null) {
-            setSourceId( getSourceIdFromFile(sourceIdFilename) );
+            setSourceId(getSourceIdFromFile());
         }
         return sourceId;
     }
@@ -93,33 +84,16 @@ public class PhoneSensorsService extends DeviceService {
         this.sourceId = sourceId;
     }
 
-    private String getSourceIdFromFile(String fileName) {
-        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        File sourceIdFile = new File(path, fileName);
-        if (!path.mkdirs()) {
-            logger.error("'{}' could not be created or already exists.", path.getAbsolutePath());
-        }
-
-        String result;
+    private String getSourceIdFromFile() {
+        Properties defaults = new Properties();
+        defaults.setProperty(SOURCE_ID_KEY, UUID.randomUUID().toString());
         try {
-            if (sourceIdFile.exists()) {
-                // Read source id
-                BufferedReader reader = new BufferedReader(new FileReader(sourceIdFile));
-                result = reader.readLine();
-                logger.info("Phone source Id '{}' read from file", result);
-                reader.close();
-            } else {
-                // Create new source id
-                result = UUID.randomUUID().toString();
-                BufferedWriter writer = new BufferedWriter(new FileWriter(sourceIdFile));
-                writer.write(result);
-                logger.info("Phone source Id '{}' written to file", result);
-                writer.close();
-            }
-        } catch (IOException ioe) {
-            logger.warn("IOException when reading/writing phone source id file. Assigning one-time source id.");
-            result = UUID.randomUUID().toString();
+            Properties props = PersistentStorage.retrieveOrStore(getClass(), defaults);
+            return props.getProperty(SOURCE_ID_KEY);
+        } catch (IOException ex) {
+            logger.error("Failed to retrieve or store persistent source ID key. "
+                    + "Using a newly generated UUID.", ex);
+            return defaults.getProperty(SOURCE_ID_KEY);
         }
-        return result;
     }
 }
