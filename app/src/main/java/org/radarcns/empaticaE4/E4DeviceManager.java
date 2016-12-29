@@ -112,6 +112,9 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
                     localHandler.post(new Runnable() {
                         @Override
                         public void run() {
+                            if (deviceManager == null) {
+                                return;
+                            }
                             logger.info("Started scanning");
                             deviceManager.startScanning();
                             isScanning = true;
