@@ -19,6 +19,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.SparseIntArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,7 +52,9 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
@@ -64,11 +67,11 @@ import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
 import static org.radarcns.RadarConfiguration.UI_REFRESH_RATE_KEY;
+import static org.radarcns.android.DeviceService.DEVICE_CONNECT_FAILED;
+import static org.radarcns.android.DeviceService.DEVICE_STATUS_NAME;
 import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_NUMBER;
 import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_TOPIC;
-import static org.radarcns.empaticaE4.E4Service.DEVICE_CONNECT_FAILED;
-import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
-import static org.radarcns.empaticaE4.E4Service.SERVER_STATUS_CHANGED;
+import static org.radarcns.android.DeviceService.SERVER_STATUS_CHANGED;
 
 public class MainActivity extends AppCompatActivity {
     private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
@@ -106,52 +109,26 @@ public class MainActivity extends AppCompatActivity {
     private TextView[] mRecordsSentLabels;
     private ImageView[] mBatteryLabels;
     private Button[] mDeviceInputButtons;
-    private String[] mInputDeviceKeys = new String[4];
-    private int[] mTotalRecordsSent = new int[4];
-    private Long[] mLastRecordsSentTimeMillis = new Long[4];
+    private final String[] mInputDeviceKeys = new String[4];
+    private final int[] mTotalRecordsSent = new int[4];
+    private final long[] mLastRecordsSentTimeMillis = {-1L, -1L, -1L, -1L};
 
     private View mServerStatusIcon;
     private TextView mServerMessage;
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
 
-    static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
+    private final Map<DeviceStatusListener.Status, Integer> deviceStatusIconMap;
+    private final static int deviceStatusIconDefault = R.drawable.status_searching;
+    private final Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
+    private final static int serverStatusIconDefault = R.drawable.status_disconnected;
+    private final SparseIntArray rowMap;
+
+    private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     public RadarConfiguration radarConfiguration;
 
-    private final Runnable bindServicesRunner = new Runnable() {
-        @Override
-        public void run() {
-            if (!mConnectionIsBound[0]) {
-                Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                Bundle extras = new Bundle();
-                configureEmpatica(extras);
-                e4serviceIntent.putExtras(extras);
-
-                mE4Connection.bind(e4serviceIntent);
-                mConnectionIsBound[0] = true;
-            }
-            if (!mConnectionIsBound[2]) {
-                Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                Bundle extras = new Bundle();
-                configurePebble2(extras);
-                pebble2Intent.putExtras(extras);
-
-                pebble2Connection.bind(pebble2Intent);
-                mConnectionIsBound[2] = true;
-            }
-            if (!mConnectionIsBound[3]) {
-                Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
-                Bundle extras = new Bundle();
-                configureServiceExtras(extras);
-                phoneIntent.putExtras(extras);
-
-                phoneConnection.bind(phoneIntent);
-                mConnectionIsBound[3] = true;
-            }
-        }
-
-    };
+    private final Runnable bindServicesRunner;
 
     private void configureEmpatica(Bundle bundle) {
         configureServiceExtras(bundle);
@@ -178,6 +155,61 @@ public class MainActivity extends AppCompatActivity {
         phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorsDeviceStatus.CREATOR, PhoneSensorsService.class.getName());
         mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection};
         mConnectionIsBound = new boolean[] {false, false, false, false};
+
+        deviceStatusIconMap = new EnumMap<>(DeviceStatusListener.Status.class);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTED, R.drawable.status_connected);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.DISCONNECTED, R.drawable.status_disconnected);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.READY, R.drawable.status_searching);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTING, R.drawable.status_searching);
+
+        serverStatusIconMap = new EnumMap<>(ServerStatusListener.Status.class);
+        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTED, R.drawable.status_connected);
+        serverStatusIconMap.put(ServerStatusListener.Status.DISCONNECTED, R.drawable.status_disconnected);
+        serverStatusIconMap.put(ServerStatusListener.Status.DISABLED, R.drawable.status_disconnected);
+        serverStatusIconMap.put(ServerStatusListener.Status.READY, R.drawable.status_searching);
+        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, R.drawable.status_searching);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_uploading_failed);
+
+        rowMap = new SparseIntArray(4);
+        rowMap.put(R.id.row1, 0);
+        rowMap.put(R.id.row2, 1);
+        rowMap.put(R.id.row3, 2);
+        rowMap.put(R.id.row4, 3);
+
+        bindServicesRunner = new Runnable() {
+            @Override
+            public void run() {
+                if (!mConnectionIsBound[0]) {
+                    Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
+                    Bundle extras = new Bundle();
+                    configureEmpatica(extras);
+                    e4serviceIntent.putExtras(extras);
+
+                    mE4Connection.bind(e4serviceIntent);
+                    mConnectionIsBound[0] = true;
+                }
+                if (!mConnectionIsBound[2]) {
+                    Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
+                    Bundle extras = new Bundle();
+                    configurePebble2(extras);
+                    pebble2Intent.putExtras(extras);
+
+                    pebble2Connection.bind(pebble2Intent);
+                    mConnectionIsBound[2] = true;
+                }
+                if (!mConnectionIsBound[3]) {
+                    Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
+                    Bundle extras = new Bundle();
+                    configureServiceExtras(extras);
+                    phoneIntent.putExtras(extras);
+
+                    phoneConnection.bind(phoneIntent);
+                    mConnectionIsBound[3] = true;
+                }
+            }
+
+        };
 
         serverStatusListener = new BroadcastReceiver() {
             @Override
@@ -386,9 +418,9 @@ public class MainActivity extends AppCompatActivity {
         logger.info("mainActivity onStart");
         super.onStart();
         registerReceiver(bluetoothReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_STATUS_CHANGED));
-        registerReceiver(serverStatusListener, new IntentFilter(E4Service.SERVER_RECORDS_SENT_TOPIC));
-        registerReceiver(deviceFailedReceiver, new IntentFilter(E4Service.DEVICE_CONNECT_FAILED));
+        registerReceiver(serverStatusListener, new IntentFilter(SERVER_STATUS_CHANGED));
+        registerReceiver(serverStatusListener, new IntentFilter(SERVER_RECORDS_SENT_TOPIC));
+        registerReceiver(deviceFailedReceiver, new IntentFilter(DEVICE_CONNECT_FAILED));
 
         mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
         mHandlerThread.start();
@@ -519,7 +551,7 @@ public class MainActivity extends AppCompatActivity {
                     case DISCONNECTED:
                         startScanning();
                         break;
-                    case READY:
+                    default:
                         break;
                 }
             }
@@ -569,11 +601,11 @@ public class MainActivity extends AppCompatActivity {
 
     public class DeviceUIUpdater implements Runnable {
         /** Data formats **/
-        final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-        final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
-        final DecimalFormat noDecimals = new DecimalFormat("0");
-        final DeviceState[] deviceData;
-        final String[] deviceNames;
+        private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+        private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+        private final DecimalFormat noDecimals = new DecimalFormat("0");
+        private final DeviceState[] deviceData;
+        private final String[] deviceNames;
 
         DeviceUIUpdater() {
             deviceData = new DeviceState[mConnections.length];
@@ -585,8 +617,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mConnections[i] != null && mConnections[i].hasService()) {
                     deviceData[i] = mConnections[i].getDeviceData();
                     switch (deviceData[i].getStatus()) {
-                        case CONNECTED:
-                        case CONNECTING:
+                        case CONNECTED: case CONNECTING:
                             deviceNames[i] = mConnections[i].getDeviceName();
                             break;
                         default:
@@ -617,20 +648,15 @@ public class MainActivity extends AppCompatActivity {
 
         public void updateDeviceStatus(DeviceState deviceData, int row ) {
             // Connection status. Change icon used.
-            switch (deviceData == null ? DeviceStatusListener.Status.DISCONNECTED : deviceData.getStatus()) {
-                case CONNECTED:
-                    mStatusIcons[row].setBackgroundResource( R.drawable.status_connected );
-                    break;
-                case DISCONNECTED:
-                    mStatusIcons[row].setBackgroundResource( R.drawable.status_disconnected );
-                    break;
-                case READY:
-                case CONNECTING:
-                    mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
-                    break;
-                default:
-                    mStatusIcons[row].setBackgroundResource( R.drawable.status_searching );
+            DeviceStatusListener.Status status;
+            if (deviceData == null) {
+                status = DeviceStatusListener.Status.DISCONNECTED;
+            } else {
+                status = deviceData.getStatus();
             }
+            Integer statusIcon = deviceStatusIconMap.get(status);
+            int resource = statusIcon != null ? statusIcon : deviceStatusIconDefault;
+            mStatusIcons[row].setBackgroundResource(resource);
         }
 
         public void updateTemperature(DeviceState deviceData, int row ) {
@@ -679,7 +705,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void updateDeviceTotalRecordsSent(int row) {
-            if (mLastRecordsSentTimeMillis[row] == null) {
+            if (mLastRecordsSentTimeMillis[row] == -1L) {
                 mRecordsSentLabels[row].setText( R.string.emptyText );
             } else {
                 String message;
@@ -753,53 +779,22 @@ public class MainActivity extends AppCompatActivity {
 
     private int getRowIndexFromView(View v) throws IndexOutOfBoundsException {
         // Assume all elements are direct descendants from the TableRow
-        View parent = (View) v.getParent();
-        switch ( parent.getId() ) {
-
-            case R.id.row1:
-                return 0;
-
-            case R.id.row2:
-                return 1;
-
-            case R.id.row3:
-                return 2;
-
-            case R.id.row4:
-                return 3;
-
-            default:
-                throw new IndexOutOfBoundsException("Could not find row index of the given view.");
+        int rowId = ((View) v.getParent()).getId();
+        int ret = rowMap.get(rowId, -1);
+        if (ret == -1) {
+            throw new IndexOutOfBoundsException("Could not find row index of the given view.");
         }
+        return ret;
     }
-
 
     public void updateServerStatus( final ServerStatusListener.Status status ) {
         // Update server status
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                switch (status) {
-                    case CONNECTED:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_connected );
-                        break;
-                    case DISCONNECTED:
-                    case DISABLED:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
-                        break;
-                    case READY:
-                    case CONNECTING:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_searching );
-                        break;
-                    case UPLOADING:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading );
-                        break;
-                    case UPLOADING_FAILED:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_uploading_failed );
-                        break;
-                    default:
-                        mServerStatusIcon.setBackgroundResource( R.drawable.status_disconnected );
-                }
+                Integer statusIcon = serverStatusIconMap.get(status);
+                int resource = statusIcon != null ? statusIcon : serverStatusIconDefault;
+                mServerStatusIcon.setBackgroundResource(resource);
             }
         });
     }
