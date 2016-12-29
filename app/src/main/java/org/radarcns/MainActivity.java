@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final TimedInt[] mTotalRecordsSent;
     private String latestTopicSent;
-    private int latestNumberOfRecordsSent;
+    private final TimedInt latestNumberOfRecordsSent;
 
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
@@ -217,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+        latestNumberOfRecordsSent = new TimedInt();
     }
 
     @Override
@@ -561,7 +562,7 @@ public class MainActivity extends AppCompatActivity {
         int row = getRow(connection);
         mTotalRecordsSent[row].add(numberOfRecords);
         latestTopicSent = topic;
-        latestNumberOfRecordsSent = numberOfRecords;
+        latestNumberOfRecordsSent.set(numberOfRecords);
     }
 
     public void dialogInputDeviceName(final View v) {
@@ -646,7 +647,7 @@ public class MainActivity extends AppCompatActivity {
         return latestTopicSent;
     }
 
-    public int getLatestNumberOfRecordsSent() {
+    public TimedInt getLatestNumberOfRecordsSent() {
         return latestNumberOfRecordsSent;
     }
 

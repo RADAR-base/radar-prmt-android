@@ -19,4 +19,9 @@ public class TimedInt {
         value.addAndGet(delta);
         time.set(System.currentTimeMillis());
     }
+
+    public void set(int value) {
+        this.value.set(value);
+        time.set(System.currentTimeMillis());
+    }
 }

@@ -180,16 +180,16 @@ public class MainActivityUIUpdater implements Runnable {
         topic = topic.replaceFirst("_?android_?","");
         topic = topic.replaceFirst("_?empatica_?(e4)?","E4");
 
-        String messageTimeStamp = timeFormat.format(System.currentTimeMillis());
         String message;
-        int numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
+        TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
+        String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
 
-        if (numberOfRecords < 0) {
+        if (numberOfRecords.getValue() < 0) {
             message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
                     topic, messageTimeStamp);
         } else {
             message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
-                    topic, numberOfRecords, messageTimeStamp);
+                    topic, numberOfRecords.getValue(), messageTimeStamp);
         }
         mServerMessage.setText( message );
 
