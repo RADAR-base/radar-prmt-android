@@ -33,8 +33,13 @@ public class PhoneSensorsService extends DeviceService {
     private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
     private PhoneSensorsTopics topics;
     private String groupId;
-    private String sourceIdFilename = this.getClass().getName() + "_source_id.txt";
+    private final String sourceIdFilename;
     private String sourceId;
+
+    public PhoneSensorsService() {
+        super();
+        sourceIdFilename = getClass().getName() + "_source_id.txt";
+    }
 
     @Override
     public void onCreate() {

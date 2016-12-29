@@ -384,7 +384,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
     }
 
     /** Create this table in the database. */
-    void createTable(SQLiteDatabase db) {
+    private void createTable(SQLiteDatabase db) {
         String query = "CREATE TABLE " + topic.getName() + " (offset INTEGER PRIMARY KEY AUTOINCREMENT, userId TEXT, sourceId TEXT, sent INTEGER DEFAULT 0";
         for (Schema.Field f : topic.getValueSchema().getFields()) {
             query += ", " + f.name() + " ";
@@ -417,7 +417,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
     }
 
     /** Drop this table from the database. */
-    void dropTable(SQLiteDatabase db) {
+    private void dropTable(SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS " + topic.getName());
     }
 

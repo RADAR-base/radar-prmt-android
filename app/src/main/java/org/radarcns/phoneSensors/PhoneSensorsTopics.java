@@ -1,6 +1,5 @@
 package org.radarcns.phoneSensors;
 
-import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
