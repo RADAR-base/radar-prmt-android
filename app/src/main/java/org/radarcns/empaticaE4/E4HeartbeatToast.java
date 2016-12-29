@@ -18,10 +18,12 @@ import java.util.List;
 /**
  * Shows recently collected heartbeats in a Toast.
  */
-public class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection<E4DeviceStatus>, Void, String[]> {
+public class E4HeartbeatToast extends
+        AsyncTask<DeviceServiceConnection<E4DeviceStatus>, Void, String[]> {
     private final Context context;
-    static final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    static final AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics.getInstance().getInterBeatIntervalTopic();
+    private static final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+    private static final AvroTopic<MeasurementKey, EmpaticaE4InterBeatInterval> topic = E4Topics
+            .getInstance().getInterBeatIntervalTopic();
 
     public E4HeartbeatToast(Context context) {
         this.context = context;
@@ -33,25 +35,33 @@ public class E4HeartbeatToast extends AsyncTask<DeviceServiceConnection<E4Device
         String[] results = new String[params.length];
         for (int i = 0; i < params.length; i++) {
             try {
-                List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = params[i].getRecords(topic, 2);
-                if (!measurements.isEmpty()) {
-                    StringBuilder sb = new StringBuilder(3200); // <32 chars * 100 measurements
-                    for (Record<MeasurementKey, EmpaticaE4InterBeatInterval> measurement : measurements) {
-                        long diffTimeMillis = System.currentTimeMillis() - (long) (1000d * measurement.value.getTimeReceived());
-                        sb.append(singleDecimal.format(diffTimeMillis / 1000d));
-                        sb.append(" sec. ago: ");
-                        sb.append(singleDecimal.format(60d / measurement.value.getInterBeatInterval()));
-                        sb.append(" bpm\n");
-                    }
-                    results[i] = sb.toString();
-                } else {
-                    results[i] = null;
-                }
+                results[i] = doOne(params[i], 2);
             } catch (RemoteException | IOException e) {
                 results[i] = null;
             }
         }
         return results;
+    }
+
+    private String doOne(DeviceServiceConnection<E4DeviceStatus> param, int numRecords)
+            throws IOException, RemoteException {
+        List<Record<MeasurementKey, EmpaticaE4InterBeatInterval>> measurements = param
+                .getRecords(topic, numRecords);
+
+        if (!measurements.isEmpty()) {
+            StringBuilder sb = new StringBuilder(numRecords * 32);
+            for (Record<MeasurementKey, EmpaticaE4InterBeatInterval> measurement : measurements) {
+                long timeMs = Math.round(1000d * measurement.value.getTimeReceived());
+                double diffTime = (System.currentTimeMillis() - timeMs) / 1000d;
+                sb.append(singleDecimal.format(diffTime));
+                sb.append(" sec. ago: ");
+                sb.append(singleDecimal.format(60d / measurement.value.getInterBeatInterval()));
+                sb.append(" bpm\n");
+            }
+            return sb.toString();
+        } else {
+            return null;
+        }
     }
 
     @Override
