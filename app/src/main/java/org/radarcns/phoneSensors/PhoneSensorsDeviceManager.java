@@ -38,7 +38,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
     private final PhoneSensorsDeviceStatus deviceStatus;
 
-    private String deviceName;
+    private final String deviceName;
     private boolean isRegistered = false;
     private SensorManager sensorManager;
 

@@ -78,10 +78,10 @@ public class ThreadedKafkaSender<K, V> implements KafkaSender<K, V> {
     }
 
     private class ThreadedTopicSender<L extends K, W extends V> implements KafkaTopicSender<L, W>, Runnable {
-        final KafkaTopicSender<L, W> topicSender;
-        final List<List<Record<L, W>>> topicQueue;
-        final List<List<Record<L, W>>> threadLocalQueue;
-        Future<?> topicFuture;
+        private final KafkaTopicSender<L, W> topicSender;
+        private final List<List<Record<L, W>>> topicQueue;
+        private final List<List<Record<L, W>>> threadLocalQueue;
+        private Future<?> topicFuture;
 
         private ThreadedTopicSender(AvroTopic<L, W> topic) throws IOException {
             topicSender = sender.sender(topic);

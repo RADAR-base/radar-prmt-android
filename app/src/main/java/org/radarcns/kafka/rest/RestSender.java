@@ -120,10 +120,10 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     }
 
     class RestTopicSender<L extends K, W extends V> implements KafkaTopicSender<L, W> {
-        long lastOffsetSent = -1L;
-        final AvroTopic<L, W> topic;
-        final HttpUrl url;
-        final TopicRequestBody requestBody;
+        private long lastOffsetSent = -1L;
+        private final AvroTopic<L, W> topic;
+        private final HttpUrl url;
+        private final TopicRequestBody requestBody;
 
         RestTopicSender(AvroTopic<L, W> topic) throws IOException {
             this.topic = topic;

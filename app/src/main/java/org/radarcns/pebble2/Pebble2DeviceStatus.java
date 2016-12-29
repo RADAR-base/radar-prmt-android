@@ -3,8 +3,6 @@ package org.radarcns.pebble2;
 import android.os.Parcel;
 
 import org.radarcns.android.DeviceState;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.Serialization;
 
 import java.util.Arrays;
