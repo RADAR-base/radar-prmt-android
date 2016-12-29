@@ -34,6 +34,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.radarcns.android.DeviceService.DEVICE_SERVICE_CLASS;
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_NUMBER;
+import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_TOPIC;
+import static org.radarcns.android.DeviceService.SERVER_STATUS_CHANGED;
 import static org.radarcns.android.DeviceService.TRANSACT_GET_DEVICE_NAME;
 import static org.radarcns.android.DeviceService.TRANSACT_UPDATE_CONFIG;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
@@ -52,7 +55,6 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
     private DeviceStatusListener.Status deviceStatus;
     public String deviceName;
     private IBinder serviceBinder;
-    private Intent serviceIntent;
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
@@ -71,6 +73,24 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
         }
     };
 
+    private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
+                if (serviceClassName.equals(intent.getStringExtra(DEVICE_SERVICE_CLASS))) {
+                    final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
+                    mainActivity.updateServerStatus(DeviceServiceConnection.this, status);
+                }
+            } else if (intent.getAction().equals(SERVER_RECORDS_SENT_TOPIC)) {
+                if (serviceClassName.equals(intent.getStringExtra(DEVICE_SERVICE_CLASS))) {
+                    String topic = intent.getStringExtra(SERVER_RECORDS_SENT_TOPIC); // topicName that updated
+                    int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);
+                    mainActivity.updateServerRecordsSent(DeviceServiceConnection.this, topic, numberOfRecordsSent);
+                }
+            }
+        }
+    };
+
     public DeviceServiceConnection(@NonNull MainActivity mainActivity, @NonNull Parcelable.Creator<S> deviceStateCreator, String serviceClassName) {
         this.mainActivity = mainActivity;
         this.serviceBinder = null;
@@ -84,7 +104,12 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
     @Override
     public void onServiceConnected(final ComponentName className,
                                    IBinder service) {
-        mainActivity.registerReceiver(statusReceiver, new IntentFilter(DEVICE_STATUS_CHANGED));
+        mainActivity.registerReceiver(statusReceiver,
+                new IntentFilter(DEVICE_STATUS_CHANGED));
+        mainActivity.registerReceiver(serverStatusListener,
+                new IntentFilter(SERVER_STATUS_CHANGED));
+        mainActivity.registerReceiver(serverStatusListener,
+                new IntentFilter(SERVER_RECORDS_SENT_TOPIC));
 
         if (serviceBinder == null) {
             logger.info("Bound to service {}", className);
@@ -208,15 +233,16 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
 
     @Override
     public void onServiceDisconnected(ComponentName className) {
+        // Do NOT set deviceName to null. This causes loss of the name if application loses
+        // focus [MM 2016-11-16]
         serviceBinder = null;
-//        deviceName = null; // Do NOT set deviceName to null. This causes loss of the name if application loses focus [MM 2016-11-16]
         deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         mainActivity.unregisterReceiver(statusReceiver);
+        mainActivity.unregisterReceiver(serverStatusListener);
         mainActivity.serviceDisconnected(this);
     }
 
     public void bind(@NonNull Intent intent) {
-        serviceIntent = intent;
         logger.info("Intending to start E4 service");
 
         mainActivity.startService(intent);
@@ -276,11 +302,11 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
         }
     }
 
-    public DeviceStatusListener.Status getDeviceStatus() {
-        return deviceStatus;
+    public String getServiceClassName() {
+        return serviceClassName;
     }
 
-    public Intent getServiceIntent() {
-        return serviceIntent;
+    public DeviceStatusListener.Status getDeviceStatus() {
+        return deviceStatus;
     }
 }
