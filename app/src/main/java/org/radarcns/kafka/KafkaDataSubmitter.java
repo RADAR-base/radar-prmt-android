@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -158,8 +157,9 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                                 future.cancel(true);
                             }
                             trySendFuture.clear();
+
                             for (Map.Entry<AvroTopic<K, V>, Queue<Record<K, V>>> records : trySendCache.entrySet()) {
-                                sender(records.getKey()).send(new ArrayList<>(records.getValue()));
+                                doImmediateSend(records.getKey(), listPool.get(records.getValue()));
                             }
                             trySendCache.clear();
                         }
@@ -246,7 +246,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * Upload some data from a single table.
      * @return number of records sent.
      */
-    private int uploadCache(AvroTopic<K, V> topic, DataCache<K, V> cache, int limit, boolean uploadingNotified) throws IOException {
+    private int uploadCache(AvroTopic<K, V> topic, DataCache<K, V> cache, int limit,
+                            boolean uploadingNotified) throws IOException {
         List<Record<K, V>> measurements = cache.unsentRecords(limit);
         int numberOfRecords = measurements.size();
 
@@ -268,14 +269,15 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                 throw ioe;
             }
 
-            long lastOffset = cacheSender.getLastSentOffset();
-            cache.markSent(lastOffset);
+            long lastOffsetSent = cacheSender.getLastSentOffset();
+            cache.markSent(lastOffsetSent);
 
             dataHandler.updateRecordsSent(topic.getName(), numberOfRecords);
 
             logger.debug("uploaded {} {} records", numberOfRecords, topic.getName());
 
-            if (lastOffset == measurements.get(numberOfRecords - 1).offset) {
+            long lastOffsetPut = measurements.get(numberOfRecords - 1).offset;
+            if (lastOffsetSent == lastOffsetPut) {
                 cache.returnList(measurements);
             }
         } else {
@@ -290,7 +292,8 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
      * messages to be lost. If the sender is disconnected, messages are immediately discarded.
      * @return whether the message was queued for sending.
      */
-    public <W extends V> boolean trySend(final AvroTopic<K, W> topic, final long offset, final K deviceId, final W record) {
+    public <W extends V> boolean trySend(final AvroTopic<K, W> topic, final long offset,
+                                         final K deviceId, final W record) {
         if (!connection.isConnected()) {
             return false;
         }
@@ -313,21 +316,17 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                             return;
                         }
 
-                        List<Record<K, V>> localRecords = listPool.get();
+                        List<Record<K, V>> localRecords;
+
                         synchronized (trySendFuture) {
                             Queue<Record<K, V>> queue = trySendCache.get(topic);
                             trySendFuture.remove(topic);
-                            localRecords.addAll(queue);
+                            localRecords = listPool.get(queue);
                         }
 
                         try {
-                            KafkaTopicSender<K, V> localSender = sender(castTopic);
-                            localSender.send(localRecords);
+                            doImmediateSend(castTopic, localRecords);
                             connection.didConnect();
-                            dataHandler.updateRecordsSent(topic.getName(), localRecords.size());
-                            if (localSender.getLastSentOffset() == localRecords.get(localRecords.size() - 1).offset) {
-                                listPool.add(localRecords);
-                            }
                         } catch (IOException e) {
                             dataHandler.updateRecordsSent(topic.getName(), -1);
                             connection.didDisconnect(e);
@@ -337,5 +336,17 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             }
         }
         return true;
+    }
+
+    /** Immediately send given records, without any error recovery. */
+    private void doImmediateSend(AvroTopic<K, V> topic, List<Record<K, V>> records)
+            throws IOException {
+        KafkaTopicSender<K, V> localSender = sender(topic);
+        localSender.send(records);
+        dataHandler.updateRecordsSent(topic.getName(), records.size());
+        long lastOffset = records.get(records.size() - 1).offset;
+        if (localSender.getLastSentOffset() == lastOffset) {
+            listPool.add(records);
+        }
     }
 }

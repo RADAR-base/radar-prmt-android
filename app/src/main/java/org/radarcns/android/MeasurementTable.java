@@ -28,6 +28,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -164,8 +165,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                     if (queue.isEmpty()) {
                         return;
                     }
-                    localQueue = listPool.get();
-                    localQueue.addAll(queue);
+                    localQueue = listPool.get(queue);
                     queue.clear();
                 }
 
@@ -333,7 +333,9 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
      * Converts a database rows into a measurement.
      */
     private List<Record<MeasurementKey, V>> cursorToRecords(Cursor cursor) {
-        List<Record<MeasurementKey, V>> records = listPool.get();
+        List<Record<MeasurementKey, V>> records = listPool.get(
+                Collections.<Record<MeasurementKey,V>>emptyList());
+
         Schema.Type[] fieldTypes = topic.getValueFieldTypes();
 
         while (cursor.moveToNext()) {
