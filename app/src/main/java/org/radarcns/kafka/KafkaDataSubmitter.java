@@ -324,10 +324,12 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
                             KafkaTopicSender<K, V> localSender = sender(castTopic);
                             localSender.send(localRecords);
                             connection.didConnect();
+                            dataHandler.updateRecordsSent(topic.getName(), localRecords.size());
                             if (localSender.getLastSentOffset() == localRecords.get(localRecords.size() - 1).offset) {
                                 listPool.add(localRecords);
                             }
                         } catch (IOException e) {
+                            dataHandler.updateRecordsSent(topic.getName(), -1);
                             connection.didDisconnect(e);
                         }
                     }

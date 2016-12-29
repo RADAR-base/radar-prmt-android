@@ -683,14 +683,14 @@ public class MainActivity extends AppCompatActivity {
                 mRecordsSentLabels[row].setText( R.string.emptyText );
             } else {
                 String message;
-                Long timeSinceLastUpdate = ( System.currentTimeMillis() - mLastRecordsSentTimeMillis[row] )/1000;
+                long timeSinceLastUpdate = (System.currentTimeMillis() - mLastRecordsSentTimeMillis[row]) / 1000;
                 // Small test for Firebase Remote config.
                 if (radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true)) {
                     message = String.format(Locale.US, "%1$4dk (%2$d)", mTotalRecordsSent[row]/1000, timeSinceLastUpdate);
                 } else {
                     message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)", mTotalRecordsSent[row], timeSinceLastUpdate);
                 }
-                mRecordsSentLabels[row].setText( message );
+                mRecordsSentLabels[row].setText(message);
             }
 
         }
