@@ -441,7 +441,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                     kafkaUrl = new URL(urlString);
                 } catch (MalformedURLException e) {
                     logger.error("Malformed Kafka server URL {}", urlString);
-                    throw new RuntimeException(e);
+                    throw new IllegalArgumentException(e);
                 }
             }
         }

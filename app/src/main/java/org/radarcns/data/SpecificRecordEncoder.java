@@ -33,8 +33,8 @@ public class SpecificRecordEncoder implements AvroEncoder {
     }
 
     class AvroRecordWriter<T> implements AvroEncoder.AvroWriter<T> {
-        final Encoder encoder;
-        final ByteArrayOutputStream out;
+        private final Encoder encoder;
+        private final ByteArrayOutputStream out;
         private final DatumWriter<T> writer;
 
         AvroRecordWriter(EncoderFactory encoderFactory, Schema schema, DatumWriter<T> writer) throws IOException {

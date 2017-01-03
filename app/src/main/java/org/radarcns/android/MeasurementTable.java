@@ -28,6 +28,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -164,8 +165,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                     if (queue.isEmpty()) {
                         return;
                     }
-                    localQueue = listPool.get();
-                    localQueue.addAll(queue);
+                    localQueue = listPool.get(queue);
                     queue.clear();
                 }
 
@@ -333,7 +333,9 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
      * Converts a database rows into a measurement.
      */
     private List<Record<MeasurementKey, V>> cursorToRecords(Cursor cursor) {
-        List<Record<MeasurementKey, V>> records = listPool.get();
+        List<Record<MeasurementKey, V>> records = listPool.get(
+                Collections.<Record<MeasurementKey,V>>emptyList());
+
         Schema.Type[] fieldTypes = topic.getValueFieldTypes();
 
         while (cursor.moveToNext()) {
@@ -388,7 +390,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
     }
 
     /** Create this table in the database. */
-    void createTable(SQLiteDatabase db) {
+    private void createTable(SQLiteDatabase db) {
         String query = "CREATE TABLE " + topic.getName() + " (offset INTEGER PRIMARY KEY AUTOINCREMENT, userId TEXT, sourceId TEXT, sent INTEGER DEFAULT 0";
         for (Schema.Field f : topic.getValueSchema().getFields()) {
             query += ", " + f.name() + " ";
@@ -421,7 +423,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
     }
 
     /** Drop this table from the database. */
-    void dropTable(SQLiteDatabase db) {
+    private void dropTable(SQLiteDatabase db) {
         db.execSQL("DROP TABLE IF EXISTS " + topic.getName());
     }
 

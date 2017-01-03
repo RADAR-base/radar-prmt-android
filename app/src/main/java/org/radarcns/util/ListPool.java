@@ -1,13 +1,14 @@
 package org.radarcns.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /** Pool to prevent too many objects being created and garbage collected. */
 public class ListPool {
-    private final Queue<List> pool;
+    private final Queue<List<?>> pool;
 
     /**
      * Create a fixed-size pool
@@ -17,34 +18,39 @@ public class ListPool {
         pool = new ArrayBlockingQueue<>(capacity);
     }
 
+
     /**
-     * Create a new List.
+     * Create a new List with given initial values.
      * This implementation creates an ArrayList. Override to create a different type of list.
      */
-    protected List newObject() {
-        return new ArrayList();
+    protected <V> List<V> newObject(Collection<V> initialValues) {
+        return new ArrayList<>(initialValues);
     }
 
     /**
-     * Get a new or cached empty List
+     * Get a new or cached List
      * @param <V> type in the list
+     * @param initialValues initial values in the list
      */
-    @SuppressWarnings("unchecked")
-    public <V> List<V> get() {
+    public <V> List<V> get(Collection<V> initialValues) {
         List obj = pool.poll();
         if (obj != null) {
-            return (List<V>)obj;
+            @SuppressWarnings("unchecked")
+            List<V> value = (List<V>)obj;
+            value.addAll(initialValues);
+            return value;
         } else {
-            return (List<V>)newObject();
+            return newObject(initialValues);
         }
     }
+
 
     /**
      * Add a new list to the pool.
      * The list may not be read or modified after this call.
      * @param list list to add the pool.
      */
-    public void add(List list) {
+    public void add(List<?> list) {
         list.clear();
         pool.offer(list);
     }
