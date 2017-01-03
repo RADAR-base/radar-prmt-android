@@ -244,7 +244,8 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
                         lastIsProcessed = processSMS(timeStamp,
                                        c.getString(c.getColumnIndex(Telephony.Sms.ADDRESS)),
-                                       c.getInt(c.getColumnIndex(Telephony.Sms.TYPE)) );
+                                       c.getInt(c.getColumnIndex(Telephony.Sms.TYPE)),
+                                       c.getString(c.getColumnIndex(Telephony.Sms.BODY)));
 
                         nextIsAvailable = c.moveToNext();
                     }
@@ -343,7 +344,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 return false;
             }
         } catch (IndexOutOfBoundsException iobe) {
-            logger.warn("Call log: could not find any persisted call records");
+            logger.info("Call log: could not find any persisted call records");
         }
 
         // 1 = incoming, 2 = outgoing, 3 is unanswered incoming (missed/rejected/blocked/etc)
@@ -368,7 +369,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         return true;
     }
 
-    public boolean processSMS(long eventTimestamp, String target, int typeCode) {
+    public boolean processSMS(long eventTimestamp, String target, int typeCode, String message) {
         target = normalizePhoneTarget(target);
         String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
 
@@ -380,7 +381,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 return false;
             }
         } catch (IndexOutOfBoundsException iobe) {
-            logger.warn("SMS log: could not find any persisted sms records");
+            logger.info("SMS log: could not find any persisted sms records");
         }
 
         // 1 = incoming, 2 = outgoing, 3 is not sent (draft/failed/queued)
@@ -397,12 +398,14 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 type = 3;
         }
 
+        int length = message.length();
+
         double timestamp = System.currentTimeMillis() / 1000d;
         PhoneSensorSms value = new PhoneSensorSms(
-                (double) eventTimestamp, timestamp, targetKey, type);
+                (double) eventTimestamp, timestamp, targetKey, type, length);
         dataHandler.addMeasurement(smsTable, deviceStatus.getId(), value);
 
-        logger.info(String.format("SMS log: %s, %s, %s, %s, %s", target, targetKey, type, eventTimestamp, timestamp));
+        logger.info(String.format("SMS log: %s, %s, %s, %s, %s, %s chars", target, targetKey, type, eventTimestamp, timestamp, length));
         return true;
     }
 

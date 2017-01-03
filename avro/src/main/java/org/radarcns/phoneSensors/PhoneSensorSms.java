@@ -8,7 +8,7 @@ package org.radarcns.phoneSensors;
 /** Data from log sent and received text messages. */
 @org.apache.avro.specific.AvroGenerated
 public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorSms\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from log sent and received text messages.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"target\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"SHA-256 one-way source/target of the text\"},{\"name\":\"sms_type\",\"type\":\"int\",\"doc\":\"1-Incoming, 2-Outgoing, 3-Other\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorSms\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from log sent and received text messages.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"target\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"SHA-256 one-way source/target of the text\"},{\"name\":\"sms_type\",\"type\":\"int\",\"doc\":\"1-Incoming, 2-Outgoing, 3-Other\"},{\"name\":\"length\",\"type\":\"int\",\"doc\":\"Number of characters in the message\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -18,6 +18,8 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
   @Deprecated public java.lang.String target;
   /** 1-Incoming, 2-Outgoing, 3-Other */
   @Deprecated public int sms_type;
+  /** Number of characters in the message */
+  @Deprecated public int length;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -29,11 +31,12 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * All-args constructor.
    */
-  public PhoneSensorSms(java.lang.Double time, java.lang.Double timeReceived, java.lang.String target, java.lang.Integer sms_type) {
+  public PhoneSensorSms(java.lang.Double time, java.lang.Double timeReceived, java.lang.String target, java.lang.Integer sms_type, java.lang.Integer length) {
     this.time = time;
     this.timeReceived = timeReceived;
     this.target = target;
     this.sms_type = sms_type;
+    this.length = length;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -44,6 +47,7 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
     case 1: return timeReceived;
     case 2: return target;
     case 3: return sms_type;
+    case 4: return length;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -55,6 +59,7 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
     case 1: timeReceived = (java.lang.Double)value$; break;
     case 2: target = (java.lang.String)value$; break;
     case 3: sms_type = (java.lang.Integer)value$; break;
+    case 4: length = (java.lang.Integer)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -119,6 +124,21 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
     this.sms_type = value;
   }
 
+  /**
+   * Gets the value of the 'length' field.
+   * Number of characters in the message   */
+  public java.lang.Integer getLength() {
+    return length;
+  }
+
+  /**
+   * Sets the value of the 'length' field.
+   * Number of characters in the message   * @param value the value to set.
+   */
+  public void setLength(java.lang.Integer value) {
+    this.length = value;
+  }
+
   /** Creates a new PhoneSensorSms RecordBuilder */
   public static org.radarcns.phoneSensors.PhoneSensorSms.Builder newBuilder() {
     return new org.radarcns.phoneSensors.PhoneSensorSms.Builder();
@@ -144,6 +164,7 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
     private double timeReceived;
     private java.lang.String target;
     private int sms_type;
+    private int length;
 
     /** Creates a new Builder */
     private Builder() {
@@ -169,6 +190,10 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
         this.sms_type = data().deepCopy(fields()[3].schema(), other.sms_type);
         fieldSetFlags()[3] = true;
       }
+      if (isValidValue(fields()[4], other.length)) {
+        this.length = data().deepCopy(fields()[4].schema(), other.length);
+        fieldSetFlags()[4] = true;
+      }
     }
     
     /** Creates a Builder by copying an existing PhoneSensorSms instance */
@@ -189,6 +214,10 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
       if (isValidValue(fields()[3], other.sms_type)) {
         this.sms_type = data().deepCopy(fields()[3].schema(), other.sms_type);
         fieldSetFlags()[3] = true;
+      }
+      if (isValidValue(fields()[4], other.length)) {
+        this.length = data().deepCopy(fields()[4].schema(), other.length);
+        fieldSetFlags()[4] = true;
       }
     }
 
@@ -289,6 +318,30 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
       return this;
     }
 
+    /** Gets the value of the 'length' field */
+    public java.lang.Integer getLength() {
+      return length;
+    }
+    
+    /** Sets the value of the 'length' field */
+    public org.radarcns.phoneSensors.PhoneSensorSms.Builder setLength(int value) {
+      validate(fields()[4], value);
+      this.length = value;
+      fieldSetFlags()[4] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'length' field has been set */
+    public boolean hasLength() {
+      return fieldSetFlags()[4];
+    }
+    
+    /** Clears the value of the 'length' field */
+    public org.radarcns.phoneSensors.PhoneSensorSms.Builder clearLength() {
+      fieldSetFlags()[4] = false;
+      return this;
+    }
+
     @Override
     public PhoneSensorSms build() {
       try {
@@ -297,6 +350,7 @@ public class PhoneSensorSms extends org.apache.avro.specific.SpecificRecordBase 
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
         record.target = fieldSetFlags()[2] ? this.target : (java.lang.String) defaultValue(fields()[2]);
         record.sms_type = fieldSetFlags()[3] ? this.sms_type : (java.lang.Integer) defaultValue(fields()[3]);
+        record.length = fieldSetFlags()[4] ? this.length : (java.lang.Integer) defaultValue(fields()[4]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
