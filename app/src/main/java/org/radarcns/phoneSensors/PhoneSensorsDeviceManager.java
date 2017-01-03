@@ -27,9 +27,13 @@ import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -64,6 +68,11 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private ScheduledFuture<?> callLogReadFuture;
     private ScheduledFuture<?> smsLogReadFuture;
     private final ScheduledExecutorService executor;
+
+    private static final String LATITUDE_REFERENCE = "latitude.reference";
+    private static final String LONGITUDE_REFERENCE = "longitude.reference";
+    private double latitudeReference = Double.NaN;
+    private double longitudeReference = Double.NaN;
 
     private final long CALL_SMS_LOG_INTERVAL_DEFAULT = 24*60*60;
     private final long LOCATION_NETWORK_INTERVAL_DEFAULT = 10*60;
@@ -427,6 +436,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 provider = 3;
         }
 
+        double latitude = location.getLatitude() - getLatitudeReference();
+        double longitude = location.getLongitude() - getLongitudeReference();
+
         float altitude = location.hasAltitude() ? (float) location.getAltitude() : Float.NaN;
         float accuracy = location.hasAccuracy() ? location.getAccuracy() : Float.NaN;
         float speed = location.hasSpeed() ? location.getSpeed() : Float.NaN;
@@ -434,7 +446,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         PhoneSensorLocation value = new PhoneSensorLocation(
                 eventTimestamp, timestamp, provider,
-                location.getLatitude(), location.getLongitude(),
+                latitude, longitude,
                 altitude, accuracy, speed, bearing);
         dataHandler.addMeasurement(locationTable, deviceStatus.getId(), value);
 
@@ -469,6 +481,51 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         }
 
         return phoneTarget.substring(length-9,length);
+    }
+
+    public double getLatitudeReference() {
+        if (Double.isNaN(latitudeReference)) {
+            setLatitudeReference(getLocationReferenceFromFile(LATITUDE_REFERENCE));
+        }
+        return latitudeReference;
+    }
+
+    public void setLatitudeReference(double latitude) {
+        latitudeReference = latitude;
+    }
+
+    public double getLongitudeReference() {
+        if (Double.isNaN(longitudeReference)) {
+            setLongitudeReference(getLocationReferenceFromFile(LONGITUDE_REFERENCE));
+        }
+        return longitudeReference;
+    }
+
+    public void setLongitudeReference(double longitude) {
+        longitudeReference = longitude;
+    }
+
+    /**
+     * Generate random number of degrees in the range [-180,180)
+     * and persist to storage.
+     * If already persisted to storage, retrieve this value.
+     * @param key either referencing longitude or latitude
+     * @return number of degrees
+     */
+    private double getLocationReferenceFromFile(String key) {
+        Random generator = new Random();
+        double degreesRandom = generator.nextDouble() * 360d - 180d;
+
+        Properties defaults = new Properties();
+        defaults.setProperty(key, Double.toString(degreesRandom));
+        try {
+            Properties props = PersistentStorage.loadOrStore(getClass(), defaults);
+            return Double.valueOf(props.getProperty(key));
+        } catch (IOException ex) {
+            logger.error("Failed to retrieve or store persistent location reference. "
+                       + "Using a newly generated location reference.", ex);
+            return Double.valueOf(defaults.getProperty(key));
+        }
     }
 
     @Override

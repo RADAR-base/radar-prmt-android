@@ -8,7 +8,7 @@ package org.radarcns.phoneSensors;
 /** Data from the gps and network location providers. */
 @org.apache.avro.specific.AvroGenerated
 public class PhoneSensorLocation extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorLocation\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from the gps and network location providers.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"provider\",\"type\":\"int\",\"doc\":\"1-GPS, 2-Network, 3-Other\"},{\"name\":\"latitude\",\"type\":\"double\",\"doc\":\"from the Equator (degrees)\"},{\"name\":\"longitude\",\"type\":\"double\",\"doc\":\"from the Prime Meridian (degrees)\"},{\"name\":\"altitude\",\"type\":\"float\",\"doc\":\"height above the WGS 84 (m)\"},{\"name\":\"accuracy\",\"type\":\"float\",\"doc\":\"accuracy of location (m)\"},{\"name\":\"speed\",\"type\":\"float\",\"doc\":\"speed over ground (m/s)\"},{\"name\":\"bearing\",\"type\":\"float\",\"doc\":\"the horizontal direction of travel of this device (degrees)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorLocation\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"Data from the gps and network location providers.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"provider\",\"type\":\"int\",\"doc\":\"1-GPS, 2-Network, 3-Other\"},{\"name\":\"latitude\",\"type\":\"double\",\"doc\":\"from a random reference latitude\"},{\"name\":\"longitude\",\"type\":\"double\",\"doc\":\"from a random reference longitude\"},{\"name\":\"altitude\",\"type\":\"float\",\"doc\":\"height above the WGS 84 (m)\"},{\"name\":\"accuracy\",\"type\":\"float\",\"doc\":\"accuracy of location (m)\"},{\"name\":\"speed\",\"type\":\"float\",\"doc\":\"speed over ground (m/s)\"},{\"name\":\"bearing\",\"type\":\"float\",\"doc\":\"the horizontal direction of travel of this device (degrees)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -16,9 +16,9 @@ public class PhoneSensorLocation extends org.apache.avro.specific.SpecificRecord
   @Deprecated public double timeReceived;
   /** 1-GPS, 2-Network, 3-Other */
   @Deprecated public int provider;
-  /** from the Equator (degrees) */
+  /** from a random reference latitude */
   @Deprecated public double latitude;
-  /** from the Prime Meridian (degrees) */
+  /** from a random reference longitude */
   @Deprecated public double longitude;
   /** height above the WGS 84 (m) */
   @Deprecated public float altitude;
@@ -131,14 +131,14 @@ public class PhoneSensorLocation extends org.apache.avro.specific.SpecificRecord
 
   /**
    * Gets the value of the 'latitude' field.
-   * from the Equator (degrees)   */
+   * from a random reference latitude   */
   public java.lang.Double getLatitude() {
     return latitude;
   }
 
   /**
    * Sets the value of the 'latitude' field.
-   * from the Equator (degrees)   * @param value the value to set.
+   * from a random reference latitude   * @param value the value to set.
    */
   public void setLatitude(java.lang.Double value) {
     this.latitude = value;
@@ -146,14 +146,14 @@ public class PhoneSensorLocation extends org.apache.avro.specific.SpecificRecord
 
   /**
    * Gets the value of the 'longitude' field.
-   * from the Prime Meridian (degrees)   */
+   * from a random reference longitude   */
   public java.lang.Double getLongitude() {
     return longitude;
   }
 
   /**
    * Sets the value of the 'longitude' field.
-   * from the Prime Meridian (degrees)   * @param value the value to set.
+   * from a random reference longitude   * @param value the value to set.
    */
   public void setLongitude(java.lang.Double value) {
     this.longitude = value;
