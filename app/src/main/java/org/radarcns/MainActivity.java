@@ -305,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         logger.info("mainActivity onResume");
         super.onResume();
-        mHandler.postDelayed(bindServicesRunner, 300L);
+        getHandler().postDelayed(bindServicesRunner, 300L);
 
         radarConfiguration.fetch();
     }
@@ -314,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         logger.info("mainActivity onPause");
         super.onPause();
-        mHandler.removeCallbacks(mUIScheduler);
+        getHandler().removeCallbacks(mUIScheduler);
     }
 
     @Override
@@ -326,11 +326,12 @@ public class MainActivity extends AppCompatActivity {
 
         mHandlerThread = new HandlerThread("E4Service connection", Process.THREAD_PRIORITY_BACKGROUND);
         mHandlerThread.start();
+        Handler localHandler = new Handler(mHandlerThread.getLooper());
         synchronized (this) {
-            mHandler = new Handler(mHandlerThread.getLooper());
+            mHandler = localHandler;
         }
-        mHandler.post(mUIScheduler);
-        mHandler.post(new Runnable() {
+        localHandler.post(mUIScheduler);
+        localHandler.post(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < mConnections.length; i++) {
@@ -346,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         unregisterReceiver(deviceFailedReceiver);
         unregisterReceiver(bluetoothReceiver);
-        mHandler.post(new Runnable() {
+        getHandler().post(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < mConnections.length; i++) {
@@ -357,6 +358,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        synchronized (this) {
+            mHandler = null;
+        }
         mHandlerThread.quitSafely();
     }
 
@@ -423,7 +427,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public synchronized void serviceDisconnected(final DeviceServiceConnection<?> connection) {
-        mHandler.post(bindServicesRunner);
+        if (mHandler != null) {
+            mHandler.post(bindServicesRunner);
+        }
     }
 
     public void deviceStatusUpdated(final DeviceServiceConnection connection, final DeviceStatusListener.Status status) {
@@ -520,7 +526,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        mHandler.post(new Runnable() {
+        getHandler().post(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -599,7 +605,7 @@ public class MainActivity extends AppCompatActivity {
                     !mInputDeviceKeys[row].isEmpty()        &&
                     !mConnections[row].isAllowedDevice( mInputDeviceKeys[row] ) )
                 {
-                    mHandler.post(new Runnable() {
+                    getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             try {

@@ -235,11 +235,15 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
     public void onServiceDisconnected(ComponentName className) {
         // Do NOT set deviceName to null. This causes loss of the name if application loses
         // focus [MM 2016-11-16]
-        serviceBinder = null;
-        deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
-        mainActivity.unregisterReceiver(statusReceiver);
-        mainActivity.unregisterReceiver(serverStatusListener);
-        mainActivity.serviceDisconnected(this);
+
+        // only do these steps once
+        if (serviceBinder != null) {
+            serviceBinder = null;
+            deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
+            mainActivity.unregisterReceiver(statusReceiver);
+            mainActivity.unregisterReceiver(serverStatusListener);
+            mainActivity.serviceDisconnected(this);
+        }
     }
 
     public void bind(@NonNull Intent intent) {
