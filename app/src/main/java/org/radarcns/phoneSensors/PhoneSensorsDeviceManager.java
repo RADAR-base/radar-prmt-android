@@ -344,19 +344,19 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     }
 
     public boolean processCall(long eventTimestamp, String target, float duration, int typeCode) {
-        target = normalizePhoneTarget(target);
-        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
-
         // Check whether a newer call has already been stored
         try {
             PhoneSensorCall lastValue = callTable.getRecords(1, "time", "desc").get(0).value;
             if (eventTimestamp <= lastValue.getTime()) {
-                logger.info(String.format("Call log already stored this call: %s, %s, %s, %s", target, targetKey, duration, eventTimestamp));
+                logger.info("Call log already stored this call: {}, {}, {}", target, duration, eventTimestamp);
                 return false;
             }
         } catch (IndexOutOfBoundsException iobe) {
             logger.info("Call log: could not find any persisted call records");
         }
+
+        target = normalizePhoneTarget(target);
+        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
 
         // 1 = incoming, 2 = outgoing, 3 is unanswered incoming (missed/rejected/blocked/etc)
         int type;
@@ -376,24 +376,24 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 (double) eventTimestamp, timestamp, duration, targetKey, type);
         dataHandler.addMeasurement(callTable, deviceStatus.getId(), value);
 
-        logger.info(String.format("Call log: %s, %s, %s, %s, %s, %s", target, targetKey, duration, type, eventTimestamp, timestamp));
+        logger.info("Call log: {}, {}, {}, {}, {}, {}", target, targetKey, duration, type, eventTimestamp, timestamp);
         return true;
     }
 
     public boolean processSMS(long eventTimestamp, String target, int typeCode, String message) {
-        target = normalizePhoneTarget(target);
-        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
-
         // Check whether a newer sms has already been stored
         try {
             PhoneSensorSms lastValue = smsTable.getRecords(1, "time", "desc").get(0).value;
             if (eventTimestamp <= lastValue.getTime()) {
-                logger.info(String.format("SMS log already stored this sms: %s, %s, %s", target, targetKey, eventTimestamp));
+                logger.info("SMS log already stored this sms: {}, {}", target, eventTimestamp);
                 return false;
             }
         } catch (IndexOutOfBoundsException iobe) {
             logger.info("SMS log: could not find any persisted sms records");
         }
+
+        target = normalizePhoneTarget(target);
+        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
 
         // 1 = incoming, 2 = outgoing, 3 is not sent (draft/failed/queued)
         int type;
@@ -416,8 +416,24 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 (double) eventTimestamp, timestamp, targetKey, type, length);
         dataHandler.addMeasurement(smsTable, deviceStatus.getId(), value);
 
-        logger.info(String.format("SMS log: %s, %s, %s, %s, %s, %s chars", target, targetKey, type, eventTimestamp, timestamp, length));
+        logger.info("SMS log: {}, {}, {}, {}, {}, {} chars", target, targetKey, type, eventTimestamp, timestamp, length);
         return true;
+    }
+
+    /**
+     * Removes area code from phone number.
+     * By returning last 9 characters of input, if input contains more than 9 characters.
+     * e.g. +31232014111 becomes 232014111 and 0612345678 becomes 612345678
+     * @param phoneTarget String
+     * @return String
+     */
+    public static String normalizePhoneTarget(String phoneTarget) {
+        int length = phoneTarget.length();
+        if (length <= 9) {
+            return phoneTarget;
+        }
+
+        return phoneTarget.substring(length-9,length);
     }
 
     public void processLocation(Location location) {
@@ -436,9 +452,11 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 provider = 3;
         }
 
+        // Coordinates in degrees from a new (random) reference point
         double latitude = location.getLatitude() - getLatitudeReference();
         double longitude = location.getLongitude() - getLongitudeReference();
 
+        // Meta data from GPS
         float altitude = location.hasAltitude() ? (float) location.getAltitude() : Float.NaN;
         float accuracy = location.hasAccuracy() ? location.getAccuracy() : Float.NaN;
         float speed = location.hasSpeed() ? location.getSpeed() : Float.NaN;
@@ -450,7 +468,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 altitude, accuracy, speed, bearing);
         dataHandler.addMeasurement(locationTable, deviceStatus.getId(), value);
 
-        logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,eventTimestamp,location.getLatitude(),location.getLongitude(),accuracy,altitude,speed,bearing,timestamp);
+        logger.info("Location: {} {} {} {} {} {} {} {} {}",provider,eventTimestamp,latitude,longitude,accuracy,altitude,speed,bearing,timestamp);
     }
 
     public void processInteractionState(Intent intent) {
@@ -465,22 +483,6 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         dataHandler.addMeasurement(userInteractionTable, deviceStatus.getId(), value);
 
         logger.info("Interaction State: {} {}", timestamp, state);
-    }
-
-    /**
-     * Removes area code from phone number.
-     * By returning last 9 characters of input, if input contains more than 9 characters.
-     * e.g. +31232014111 becomes 232014111 and 0612345678 becomes 612345678
-     * @param phoneTarget String
-     * @return String
-     */
-    public static String normalizePhoneTarget(String phoneTarget) {
-        int length = phoneTarget.length();
-        if (length <= 9) {
-            return phoneTarget;
-        }
-
-        return phoneTarget.substring(length-9,length);
     }
 
     public double getLatitudeReference() {
