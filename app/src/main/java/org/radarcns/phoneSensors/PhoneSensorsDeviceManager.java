@@ -355,8 +355,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
             logger.info("Call log: could not find any persisted call records");
         }
 
-        target = normalizePhoneTarget(target);
-        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
+        String targetKey = createTargetHashKey(target);
 
         // 1 = incoming, 2 = outgoing, 3 is unanswered incoming (missed/rejected/blocked/etc)
         int type;
@@ -392,8 +391,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
             logger.info("SMS log: could not find any persisted sms records");
         }
 
-        target = normalizePhoneTarget(target);
-        String targetKey = new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
+        String targetKey = createTargetHashKey(target);
 
         // 1 = incoming, 2 = outgoing, 3 is not sent (draft/failed/queued)
         int type;
@@ -421,22 +419,25 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     }
 
     /**
-     * Removes area code from phone number.
-     * By returning last 9 characters of input, if input contains more than 9 characters.
-     * e.g. +31232014111 becomes 232014111 and 0612345678 becomes 612345678
-     * @param phoneTarget String
+     * Extracts last 9 characters and hashes the result with a salt.
+     * For phone numbers this means that the area code is removed
+     * E.g.:+31232014111 becomes 232014111 and 0612345678 becomes 612345678 (before hashing)
+     * @param target String
      * @return String
      */
-    public static String normalizePhoneTarget(String phoneTarget) {
-        int length = phoneTarget.length();
-        if (length <= 9) {
-            return phoneTarget;
+    public String createTargetHashKey(String target) {
+        int length = target.length();
+        if (length > 9) {
+            target = target.substring(length-9,length);
         }
 
-        return phoneTarget.substring(length-9,length);
+        return new String(Hex.encodeHex(DigestUtils.sha256(target + deviceStatus.getId().getSourceId())));
     }
 
     public void processLocation(Location location) {
+        if (location == null) {
+            return;
+        }
         double eventTimestamp = location.getTime() / 1000d;
         double timestamp = System.currentTimeMillis() / 1000d;
 
