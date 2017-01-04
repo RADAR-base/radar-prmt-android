@@ -62,7 +62,8 @@ public class PersistentStorage {
             }
         }
 
-        Properties combinedProperties = new Properties(defaults);
+        Properties combinedProperties = new Properties();
+        combinedProperties.putAll(defaults);
         combinedProperties.putAll(loadedProps);
 
         try (FileOutputStream fout = new FileOutputStream(file);
