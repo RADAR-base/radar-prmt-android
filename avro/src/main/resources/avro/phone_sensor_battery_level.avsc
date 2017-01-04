@@ -7,6 +7,6 @@
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
     {"name": "batteryLevel", "type": "float", "doc": "battery level from 0 to 1"},
-    {"name": "charging", "type": "int", "doc": "0 if on battery, 1 if on a power source"}
+    {"name": "isPlugged", "type": "boolean", "doc": "whether the phone is connected to a power source"}
   ]
 }

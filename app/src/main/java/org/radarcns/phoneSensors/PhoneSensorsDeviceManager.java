@@ -334,12 +334,12 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         float batteryPct = level / (float)scale;
 
-        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) > 0 ? 1 : 0;
+        boolean isPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) > 0;
 
         deviceStatus.setBatteryLevel(batteryPct);
 
         double time = System.currentTimeMillis() / 1000d;
-        PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(time, time, batteryPct, plugged);
+        PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(time, time, batteryPct, isPlugged);
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
