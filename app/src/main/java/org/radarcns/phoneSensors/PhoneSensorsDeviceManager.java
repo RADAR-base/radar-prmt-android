@@ -26,6 +26,7 @@ import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
+import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
@@ -39,6 +40,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.radarcns.android.DeviceService.SERVER_STATUS_CHANGED;
 
 /** Manages Phone sensors */
 public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
@@ -56,6 +59,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private final MeasurementTable<PhoneSensorSms> smsTable;
     private final MeasurementTable<PhoneSensorLocation> locationTable;
     private final MeasurementTable<PhoneSensorUserInteraction> userInteractionTable;
+    private final MeasurementTable<AndroidStatusServer> serverStatusTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
 
     private final PhoneSensorsDeviceStatus deviceStatus;
@@ -87,6 +91,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         this.locationTable = dataHandler.getCache(topics.getLocationTopic());
         this.userInteractionTable = dataHandler.getCache(topics.getUserInteractionTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
+        this.serverStatusTable = dataHandler.getCache(topics.getAndroidServerStatusTopic());
 
         this.phoneService = phoneService;
 
@@ -143,6 +148,17 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
                 }
             }
         }, batteryFilter));
+
+        // Server Status
+        IntentFilter serverStatusFilter = new IntentFilter(SERVER_STATUS_CHANGED);
+        processServerStatus(context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals(SERVER_STATUS_CHANGED)) {
+                    processServerStatus(intent);
+                }
+            }
+        }, serverStatusFilter));
 
         // Calls and sms, in and outgoing
         setCallLogUpdateRate(CALL_SMS_LOG_INTERVAL_DEFAULT);
@@ -341,6 +357,40 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         double time = System.currentTimeMillis() / 1000d;
         PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(time, time, batteryPct, isPlugged);
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
+    }
+
+    public void processServerStatus(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
+
+        // Send to server
+        int state;
+        switch(status) {
+            case DISABLED:
+            case DISCONNECTED:
+                state = 0;
+                break;
+            case CONNECTED:
+            case CONNECTING:
+            case READY:
+                state = 1;
+                break;
+            case UPLOADING_FAILED:
+                state = 2;
+                break;
+            case UPLOADING:
+                // When uploading, do not edit status
+                return;
+            default:
+                state = 3;
+        }
+        logger.info("Status Server changed to: {} {}", state, status);
+        double timestamp = System.currentTimeMillis() / 1000d;
+        AndroidStatusServer value = new AndroidStatusServer(
+                timestamp, timestamp, state);
+        dataHandler.addMeasurement(serverStatusTable, deviceStatus.getId(), value);
     }
 
     public boolean processCall(long eventTimestamp, String target, float duration, int typeCode) {
