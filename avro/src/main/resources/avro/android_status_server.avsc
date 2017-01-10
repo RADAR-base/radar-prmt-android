@@ -6,6 +6,6 @@
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
-    {"name": "serverStatus", "type": "int", "doc": "0-disconnected,1-connected,2-other status"}
+    {"name": "serverStatus", "type": "int", "doc": "0-disconnected,1-connected,2-failed uploading,3-other"}
   ]
 }

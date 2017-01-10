@@ -78,6 +78,8 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private double latitudeReference = Double.NaN;
     private double longitudeReference = Double.NaN;
 
+    int previousServerState;
+
     private final long CALL_SMS_LOG_INTERVAL_DEFAULT = 24*60*60;
     private final long LOCATION_NETWORK_INTERVAL_DEFAULT = 10*60;
     private final long LOCATION_GPS_INTERVAL_DEFAULT = 60*60;
@@ -375,22 +377,25 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
             case CONNECTED:
             case CONNECTING:
             case READY:
+            case UPLOADING:
                 state = 1;
                 break;
             case UPLOADING_FAILED:
                 state = 2;
                 break;
-            case UPLOADING:
-                // When uploading, do not edit status
-                return;
             default:
                 state = 3;
         }
-        logger.info("Status Server changed to: {} {}", state, status);
-        double timestamp = System.currentTimeMillis() / 1000d;
-        AndroidStatusServer value = new AndroidStatusServer(
-                timestamp, timestamp, state);
-        dataHandler.addMeasurement(serverStatusTable, deviceStatus.getId(), value);
+
+        // Only report if server state changed
+        if (state != previousServerState) {
+            double timestamp = System.currentTimeMillis() / 1000d;
+            AndroidStatusServer value = new AndroidStatusServer(
+                    timestamp, timestamp, state);
+            dataHandler.addMeasurement(serverStatusTable, deviceStatus.getId(), value);
+        }
+
+        previousServerState = state;
     }
 
     public boolean processCall(long eventTimestamp, String target, float duration, int typeCode) {
