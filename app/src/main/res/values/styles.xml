@@ -77,22 +77,22 @@
     <style name="ServerStatusLabel">
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">normal|bold</item>
-        <item name="android:gravity">top</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:textColor">@android:color/background_dark</item>
+        <item name="android:layout_gravity">end|center_horizontal</item>
     </style>
 
     <style name="StatusMessage">
         <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">italic</item>
-        <item name="android:gravity">top</item>
+        <item name="android:textStyle">normal|italic</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:paddingStart">5dp</item>
-        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingTop">8dp</item>
         <item name="android:fontFamily">monospace</item>
+        <item name="android:layout_gravity">center_horizontal</item>
     </style>
-
 
 </resources>

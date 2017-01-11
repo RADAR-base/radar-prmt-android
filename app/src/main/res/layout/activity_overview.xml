@@ -356,71 +356,66 @@
                     </TableRow>
                 </TableLayout>
 
-                <!-- Server status -->
-                <RelativeLayout
-                    android:id="@+id/serverStatusLayout"
-                    android:layout_width="match_parent"
+                <TableLayout
+                    android:layout_width="fill_parent"
                     android:layout_height="match_parent"
-                    android:layout_below="@id/deviceTable">
+                    android:layout_below="@id/deviceTable"
+                    android:layout_marginTop="20dp"
+                    >
+                    <!-- Server status -->
+                    <TableRow
+                        android:id="@+id/serverStatusLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
 
-                    <TextView
-                        android:id="@+id/statusServerLabel"
-                        style="@style/ServerStatusLabel"
-                        android:layout_marginEnd="11dp"
-                        android:text="@string/header_server_status"
-                        android:layout_alignParentBottom="true"
-                        android:textColor="@android:color/background_dark" />
+                        <TextView
+                            android:id="@+id/statusServerLabel"
+                            style="@style/ServerStatusLabel"
+                            android:text="@string/header_server_status" />
 
-                    <View
-                        android:id="@+id/statusServer"
-                        style="@style/StatusCircle"
-                        android:layout_margin="0dp"
-                        android:layout_alignParentBottom="true"
-                        android:layout_toEndOf="@id/statusServerLabel"
-                        android:background="@drawable/status_disconnected"/>
+                        <FrameLayout
+                            android:layout_height="match_parent"
+                            android:layout_width="match_parent">
+                            <View
+                                android:id="@+id/statusServer"
+                                style="@style/StatusCircle"
+                                android:background="@drawable/status_disconnected" />
+                        </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/statusServerMessage"
-                        style="@style/StatusMessage"
-                        android:text="@string/emptyText"
-                        android:layout_marginStart="11dp"
-                        android:layout_toEndOf="@id/statusServer"
-                        android:layout_alignParentBottom="true" />
-                </RelativeLayout>
+                        <TextView
+                            android:id="@+id/statusServerMessage"
+                            style="@style/StatusMessage"
+                            android:text="@string/emptyText" />
+                    </TableRow>
 
-                <!-- Firebase status -->
-                <RelativeLayout
-                    android:id="@+id/firebaseStatusLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_below="@id/serverStatusLayout"
-                    android:layout_marginTop="20dp" >
+                    <!-- Firebase status -->
+                    <TableRow
+                        android:id="@+id/firebaseStatusLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="20dp" >
 
-                    <TextView
-                        android:id="@+id/firbaseStatusLabel"
-                        style="@style/ServerStatusLabel"
-                        android:layout_marginEnd="11dp"
-                        android:text="@string/label_firebase_status"
-                        android:layout_alignParentBottom="true"
-                        android:textColor="@android:color/background_dark" />
+                        <TextView
+                            android:id="@+id/firebaseStatusLabel"
+                            style="@style/ServerStatusLabel"
+                            android:text="@string/label_firebase_status"/>
 
-                    <View
-                        android:id="@+id/firebaseStatus"
-                        style="@style/StatusCircle"
-                        android:layout_margin="0dp"
-                        android:layout_alignParentBottom="true"
-                        android:layout_toEndOf="@id/firbaseStatusLabel"
-                        android:background="@drawable/status_disconnected"/>
+                        <FrameLayout
+                            android:layout_height="match_parent"
+                            android:layout_width="match_parent">
+                            <View
+                                android:id="@+id/firebaseStatus"
+                                style="@style/StatusCircle"
+                                android:background="@drawable/status_disconnected" />
+                        </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/firebaseStatusMessage"
-                        style="@style/StatusMessage"
-                        android:text="@string/emptyText"
-                        android:layout_marginStart="11dp"
-                        android:layout_toEndOf="@id/firebaseStatus"
-                        android:layout_alignParentBottom="true" />
+                        <TextView
+                            android:id="@+id/firebaseStatusMessage"
+                            style="@style/StatusMessage"
+                            android:text="@string/emptyText" />
+                    </TableRow>
+                </TableLayout>
 
-                </RelativeLayout>
         </RelativeLayout>
     </HorizontalScrollView>
 </ScrollView>
