@@ -32,7 +32,7 @@
     <string name="header_hr">HR</string>
     <string name="header_acceleration">Accel.</string>
     <string name="header_device_key"></string>
-    <string name="header_scan">Controls</string>
+    <string name="header_scan"></string>
     <string name="header_details"></string>
     <string name="header_records_sent"># Records Sent</string>
     <string name="label_firebase_status">Firebase</string>
