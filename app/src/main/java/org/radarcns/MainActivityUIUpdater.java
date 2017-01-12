@@ -185,8 +185,13 @@ public class MainActivityUIUpdater implements Runnable {
         String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
 
         if (numberOfRecords.getValue() < 0) {
-            message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
-                    topic, messageTimeStamp);
+            if (topic.contains("battery_level")) {
+                message = String.format(Locale.US, "%1$25s is being uploaded (%2$s)",
+                        topic, messageTimeStamp);
+            } else {
+                message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
+                        topic, messageTimeStamp);
+            }
         } else {
             message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
                     topic, numberOfRecords.getValue(), messageTimeStamp);
@@ -269,7 +274,7 @@ public class MainActivityUIUpdater implements Runnable {
                         recordsSent.getValue() / 1000, timeSinceLastUpdate);
             } else {
                 message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)",
-                        recordsSent.getValue(), timeSinceLastUpdate);
+                        Math.abs(recordsSent.getValue()), timeSinceLastUpdate);
             }
             mRecordsSentLabels[row].setText(message);
         }
