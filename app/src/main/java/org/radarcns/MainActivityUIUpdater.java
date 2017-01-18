@@ -268,7 +268,7 @@ public class MainActivityUIUpdater implements Runnable {
                         recordsSent.getValue() / 1000, timeSinceLastUpdate);
             } else {
                 message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)",
-                        Math.abs(recordsSent.getValue()), timeSinceLastUpdate);
+                        recordsSent.getValue(), timeSinceLastUpdate);
             }
             mRecordsSentLabels[row].setText(message);
         }
