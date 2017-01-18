@@ -566,7 +566,9 @@ public class MainActivity extends AppCompatActivity {
     public void updateServerRecordsSent(DeviceServiceConnection<?> connection, String topic,
                                         int numberOfRecords) {
         int row = getRow(connection);
-        mTotalRecordsSent[row].add(numberOfRecords);
+        if (numberOfRecords >= 0){
+            mTotalRecordsSent[row].add(numberOfRecords);
+        }
         latestTopicSent = topic;
         latestNumberOfRecordsSent.set(numberOfRecords);
     }

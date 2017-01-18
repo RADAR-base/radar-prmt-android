@@ -173,30 +173,24 @@ public class MainActivityUIUpdater implements Runnable {
 
     private void updateServerStatus() {
         String topic = mainActivity.getLatestTopicSent();
-        if (topic == null) {
-            return;
-        }
-        // Condensing the message
-        topic = topic.replaceFirst("_?android_?","");
-        topic = topic.replaceFirst("_?empatica_?(e4)?","E4");
+        if (topic != null) {
+            // Condensing the message
+            topic = topic.replaceFirst("_?android_?", "");
+            topic = topic.replaceFirst("_?empatica_?(e4)?", "E4");
 
-        String message;
-        TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
-        String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
+            String message;
+            TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
+            String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
 
-        if (numberOfRecords.getValue() < 0) {
-            if (topic.contains("battery_level")) {
-                message = String.format(Locale.US, "%1$25s is being uploaded (%2$s)",
-                        topic, messageTimeStamp);
-            } else {
+            if (numberOfRecords.getValue() < 0) {
                 message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
                         topic, messageTimeStamp);
+            } else {
+                message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
+                        topic, numberOfRecords.getValue(), messageTimeStamp);
             }
-        } else {
-            message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
-                    topic, numberOfRecords.getValue(), messageTimeStamp);
+            mServerMessage.setText(message);
         }
-        mServerMessage.setText( message );
 
         Integer statusIcon = serverStatusIconMap.get(mainActivity.getServerStatus());
         int resource = statusIcon != null ? statusIcon : serverStatusIconDefault;
