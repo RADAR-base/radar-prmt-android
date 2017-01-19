@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
 
     private long uiRefreshRate;
+    private String groupId;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
@@ -87,12 +88,13 @@ public class MainActivity extends AppCompatActivity {
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    /** Connections. 0 = Empatica, 1 = Angel sensor, 2 = Pebble sensor **/
+    /** Connections. 0 = Empatica, 1 = Angel sensor, 2 = Pebble sensor, 3 = Phone sensor **/
     private DeviceServiceConnection[] mConnections;
 
     /** Overview UI **/
     private Button[] mDeviceInputButtons;
     private final String[] mInputDeviceKeys = new String[4];
+    private Button mGroupIdInputButton;
 
     private final TimedInt[] mTotalRecordsSent;
     private String latestTopicSent;
@@ -229,6 +231,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the UI thread
         uiRefreshRate = radarConfiguration.getLong(UI_REFRESH_RATE_KEY);
+        groupId = radarConfiguration.getString(DEVICE_GROUP_ID_KEY);
+        mGroupIdInputButton.setText(groupId);
         mUIUpdater = new MainActivityUIUpdater(this, radarConfiguration);
         mUIScheduler = new Runnable() {
             @Override
@@ -261,6 +265,8 @@ public class MainActivity extends AppCompatActivity {
                 (Button) findViewById(R.id.inputDeviceNameButtonRow3),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow4)
         };
+
+        mGroupIdInputButton = (Button) findViewById(R.id.inputGroupId);
 
         // Firebase
         mFirebaseStatusIcon = findViewById(R.id.firebaseStatus);
@@ -595,6 +601,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Set up the buttons
+        input.setText(mInputDeviceKeys[row]);
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -620,6 +627,47 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     });
+                }
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    public void dialogInputGroupId(final View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Patient Identifier:");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        input.setText(groupId);
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                groupId = input.getText().toString();
+                // TODO: set the radarconfiguration DEVICE_GROUP_ID_KEY. Such that new connections will get this groupId
+                mGroupIdInputButton.setText(groupId);
+
+                // Set group/user id for each active connection
+                try {
+                    for (DeviceServiceConnection connection : mConnections) {
+                        if (connection != null && connection.hasService()) {
+                            connection.getDeviceData().getId().setUserId(groupId);
+                        }
+                    }
+                } catch (RemoteException re) {
+                    Boast.makeText(MainActivity.this, "Could not set the patient id", Toast.LENGTH_LONG).show();
                 }
             }
         });

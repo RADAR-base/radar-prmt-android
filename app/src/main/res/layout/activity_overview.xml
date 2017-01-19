@@ -56,11 +56,11 @@
 
                     <TextView
                         style="@style/Header"
-                        android:text="@string/header_scan" />
+                        android:text="@string/header_device_key" />
 
                     <TextView
                         style="@style/Header"
-                        android:text="@string/header_details" />
+                        android:text="@string/header_scan" />
 
                     <TextView
                         style="@style/Header"
@@ -115,7 +115,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow1"
-                        style="@style/ButtonDeviceKeyColumn"
+                        style="@style/ButtonInputColumn"
                         android:text="@string/request_E4_key"
                         android:onClick="dialogInputDeviceName" />
 
@@ -180,7 +180,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow2"
-                        style="@style/ButtonDeviceKeyColumn"
+                        style="@style/ButtonInputColumn"
                         android:text="@string/button_input"
                         android:onClick="dialogInputDeviceName" />
 
@@ -244,7 +244,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow3"
-                        style="@style/ButtonDeviceKeyColumn"
+                        style="@style/ButtonInputColumn"
                         android:text="@string/disabledText"
                         android:onClick="dialogInputDeviceName"
                         android:clickable="false"
@@ -310,7 +310,7 @@
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow4"
-                        style="@style/ButtonDeviceKeyColumn"
+                        style="@style/ButtonInputColumn"
                         android:text="@string/disabledText"
                         android:onClick="dialogInputDeviceName"
                         android:clickable="false"
@@ -395,6 +395,28 @@
                         style="@style/StatusMessage"
                         android:text="@string/emptyText" />
                 </TableRow>
+
+                <!-- Source identifier input for all devices -->
+                <TableRow
+                    android:id="@+id/inputGroupIdRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp" >
+
+                    <TextView
+                        style="@style/ServerStatusLabel"
+                        android:text="@string/label_group_id_input"/>
+
+                    <Button
+                        android:id="@+id/inputGroupId"
+                        style="@style/ButtonInputColumn"
+                        android:layout_span="2"
+                        android:layout_gravity="start"
+                        android:text="@string/request_group_id"
+                        android:onClick="dialogInputGroupId" />
+
+                </TableRow>
+
             </TableLayout>
         </RelativeLayout>
     </HorizontalScrollView>
