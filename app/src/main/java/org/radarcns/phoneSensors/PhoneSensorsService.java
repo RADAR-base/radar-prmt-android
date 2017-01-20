@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
-import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
 /**
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
@@ -69,7 +69,7 @@ public class PhoneSensorsService extends DeviceService {
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
         if (groupId == null) {
-            groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, DEFAULT_GROUP_ID_KEY);
         }
     }
 

@@ -53,7 +53,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 
-import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
     private void configureServiceExtras(Bundle bundle) {
         // Add the default configuration parameters given to the service intents
         radarConfiguration.putExtras(bundle,
-                KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEVICE_GROUP_ID_KEY,
+                KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEFAULT_GROUP_ID_KEY,
                 KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
                 SENDER_CONNECTION_TIMEOUT_KEY);
     }
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the UI thread
         uiRefreshRate = radarConfiguration.getLong(UI_REFRESH_RATE_KEY);
-        groupId = radarConfiguration.getString(DEVICE_GROUP_ID_KEY);
+        groupId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
         mGroupIdInputButton.setText(groupId);
         mUIUpdater = new MainActivityUIUpdater(this, radarConfiguration);
         mUIScheduler = new Runnable() {
@@ -656,7 +656,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 groupId = input.getText().toString();
-                // TODO: set the radarconfiguration DEVICE_GROUP_ID_KEY. Such that new connections will get this groupId
                 mGroupIdInputButton.setText(groupId);
 
                 // Set group/user id for each active connection

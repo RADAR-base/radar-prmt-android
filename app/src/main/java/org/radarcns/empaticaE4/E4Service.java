@@ -14,7 +14,7 @@ import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
 
 /**
@@ -68,7 +68,7 @@ public class E4Service extends DeviceService {
         if (apiKey == null) {
             apiKey = RadarConfiguration.getStringExtra(bundle, EMPATICA_API_KEY);
             logger.info("Using API key {}", apiKey);
-            groupId = RadarConfiguration.getStringExtra(bundle, DEVICE_GROUP_ID_KEY);
+            groupId = RadarConfiguration.getStringExtra(bundle, DEFAULT_GROUP_ID_KEY);
         }
     }
 }
