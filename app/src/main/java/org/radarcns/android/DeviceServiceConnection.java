@@ -292,18 +292,26 @@ public class DeviceServiceConnection<S extends DeviceState> implements ServiceCo
     /**
      * True if given string is a substring of the device name.
      */
-    public boolean isAllowedDevice(String value) {
-        Pattern pattern = Strings.containsIgnoreCasePattern(value);
-        String deviceName = getDeviceName();
-        if (deviceName != null && pattern.matcher(deviceName).find()) {
-            return true;
+    public boolean isAllowedDevice(String[] values) {
+        for(String value : values) {
+            Pattern pattern = Strings.containsIgnoreCasePattern(value);
+            String deviceName = getDeviceName();
+            if (deviceName != null && pattern.matcher(deviceName).find()) {
+                return true;
+            }
+
+            String sourceId;
+            try {
+                sourceId = getDeviceData().getId().getSourceId();
+            } catch (RemoteException ex) {
+                return false;
+            }
+
+            if (sourceId != null && pattern.matcher(sourceId).find()) {
+                return true;
+            }
         }
-        try {
-            String sourceId = getDeviceData().getId().getSourceId();
-            return sourceId != null && pattern.matcher(sourceId).find();
-        } catch (RemoteException ex) {
-            return false;
-        }
+        return false;
     }
 
     public String getServiceClassName() {

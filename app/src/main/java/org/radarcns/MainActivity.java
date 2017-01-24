@@ -49,7 +49,10 @@ import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     /** Overview UI **/
     private Button[] mDeviceInputButtons;
     private final String[] mInputDeviceKeys = new String[4];
+    private final String[][] deviceKeys = new String[4][];
     private Button mGroupIdInputButton;
 
     private final TimedInt[] mTotalRecordsSent;
@@ -408,7 +412,8 @@ public class MainActivity extends AppCompatActivity {
             }
             Set<String> acceptableIds;
             if (mInputDeviceKeys[i] != null && !mInputDeviceKeys[i].isEmpty()) {
-                acceptableIds = Collections.singleton(mInputDeviceKeys[i]);
+                acceptableIds = new HashSet<>();
+                Collections.addAll(acceptableIds, deviceKeys[i]);
             } else {
                 acceptableIds = Collections.emptySet();
             }
@@ -454,8 +459,8 @@ public class MainActivity extends AppCompatActivity {
                                 continue;
                             }
                             // Reject if device name inputted does not equal device nameA
-                            if (mInputDeviceKeys[i] != null && !connection.isAllowedDevice(mInputDeviceKeys[i])) {
-                                logger.info("Device name '{}' is not equal to '{}'", connection.getDeviceName(), mInputDeviceKeys[i]);
+                            if (mInputDeviceKeys[i] != null && !connection.isAllowedDevice(deviceKeys[i])) {
+                                logger.info("Device name '{}' is not in the list of keys '{}'", connection.getDeviceName(), deviceKeys[i]);
                                 Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName()), Toast.LENGTH_LONG).show();
                                 disconnect();
                             }
@@ -605,14 +610,18 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                // Remember previous value
                 String oldValue = mInputDeviceKeys[row];
+
+                // Set new value and process
                 mInputDeviceKeys[row] = input.getText().toString();
+                deviceKeys[row] = mInputDeviceKeys[row].split(getString(R.string.deviceKeySplitRegex));
                 mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
 
                 // Do NOT disconnect if input has not changed, is empty or equals the connected device.
                 if (!mInputDeviceKeys[row].equals(oldValue) &&
                     !mInputDeviceKeys[row].isEmpty()        &&
-                    !mConnections[row].isAllowedDevice( mInputDeviceKeys[row] ) )
+                    !mConnections[row].isAllowedDevice( deviceKeys[row] ) )
                 {
                     getHandler().post(new Runnable() {
                         @Override
