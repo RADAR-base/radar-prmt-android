@@ -2,7 +2,7 @@ package org.radarcns.data;
 
 import junit.framework.TestCase;
 
-import org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse;
+import org.radarcns.empatica.EmpaticaE4BloodVolumePulse;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 

@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
 /** Sensor status according to the device. */
 @org.apache.avro.specific.AvroGenerated
 public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4SensorStatus\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Sensor status according to the device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"sensor\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor name; one of BVP, GSR, ACC, TEMP.\"},{\"name\":\"status\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4SensorStatus\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Sensor status according to the device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"sensor\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor name; one of BVP, GSR, ACC, TEMP.\"},{\"name\":\"status\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -120,18 +120,18 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
   }
 
   /** Creates a new EmpaticaE4SensorStatus RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder();
+  public static org.radarcns.empatica.EmpaticaE4SensorStatus.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4SensorStatus.Builder();
   }
   
   /** Creates a new EmpaticaE4SensorStatus RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4SensorStatus.Builder newBuilder(org.radarcns.empatica.EmpaticaE4SensorStatus.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4SensorStatus.Builder(other);
   }
   
   /** Creates a new EmpaticaE4SensorStatus RecordBuilder by copying an existing EmpaticaE4SensorStatus instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4SensorStatus other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4SensorStatus.Builder newBuilder(org.radarcns.empatica.EmpaticaE4SensorStatus other) {
+    return new org.radarcns.empatica.EmpaticaE4SensorStatus.Builder(other);
   }
   
   /**
@@ -147,11 +147,11 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4SensorStatus.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4SensorStatus.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4SensorStatus.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -172,8 +172,8 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Creates a Builder by copying an existing EmpaticaE4SensorStatus instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4SensorStatus other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4SensorStatus.SCHEMA$);
+    private Builder(org.radarcns.empatica.EmpaticaE4SensorStatus other) {
+            super(org.radarcns.empatica.EmpaticaE4SensorStatus.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -198,7 +198,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -211,7 +211,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -222,7 +222,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -235,7 +235,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -246,7 +246,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'sensor' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder setSensor(java.lang.String value) {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setSensor(java.lang.String value) {
       validate(fields()[2], value);
       this.sensor = value;
       fieldSetFlags()[2] = true;
@@ -259,7 +259,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Clears the value of the 'sensor' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder clearSensor() {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearSensor() {
       sensor = null;
       fieldSetFlags()[2] = false;
       return this;
@@ -271,7 +271,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'status' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder setStatus(java.lang.String value) {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setStatus(java.lang.String value) {
       validate(fields()[3], value);
       this.status = value;
       fieldSetFlags()[3] = true;
@@ -284,7 +284,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     }
     
     /** Clears the value of the 'status' field */
-    public org.radarcns.empaticaE4.EmpaticaE4SensorStatus.Builder clearStatus() {
+    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearStatus() {
       status = null;
       fieldSetFlags()[3] = false;
       return this;

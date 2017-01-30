@@ -1,4 +1,4 @@
-package org.radarcns.phoneSensors;
+package org.radarcns.phonesensors;
 
 import android.os.Bundle;
 

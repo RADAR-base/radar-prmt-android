@@ -1,7 +1,7 @@
 {
-  "namespace": "org.radarcns.phoneSensors",
+  "namespace": "org.radarcns.empatica",
   "type": "record",
-  "name": "PhoneSensorAcceleration",
+  "name": "EmpaticaE4Acceleration",
   "doc": "Data from 3-axis accelerometer sensor with gravitational constant g as unit.",
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},

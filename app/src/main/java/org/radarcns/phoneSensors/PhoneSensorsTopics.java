@@ -1,10 +1,10 @@
-package org.radarcns.phoneSensors;
+package org.radarcns.phonesensors;
 
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
-/** Topic manager for topics concerning the Empatica E4. */
+/** Topic manager for topics concerning the Phone sensors. */
 public class PhoneSensorsTopics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, PhoneSensorAcceleration> accelerationTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryLevelTopic;

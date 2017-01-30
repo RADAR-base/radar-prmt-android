@@ -28,7 +28,7 @@
         </activity>
         <service android:name=".empaticaE4.E4Service"/>
         <service android:name=".pebble2.Pebble2Service"/>
-        <service android:name=".phoneSensors.PhoneSensorsService"/>
+        <service android:name=".phonesensors.PhoneSensorsService"/>
 
         <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->

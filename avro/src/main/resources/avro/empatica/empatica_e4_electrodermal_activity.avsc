@@ -1,5 +1,5 @@
 {
-  "namespace": "org.radarcns.empaticaE4",
+  "namespace": "org.radarcns.empatica",
   "type": "record",
   "name": "EmpaticaE4ElectroDermalActivity",
   "doc": "Data from the electrodermal activity sensor expressed as microsiemens (µS). Uses a galvanic skin response sensor.",

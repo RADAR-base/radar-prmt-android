@@ -41,16 +41,14 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
-import org.radarcns.phoneSensors.PhoneSensorsDeviceStatus;
-import org.radarcns.phoneSensors.PhoneSensorsService;
+import org.radarcns.phonesensors.PhoneSensorsDeviceStatus;
+import org.radarcns.phonesensors.PhoneSensorsService;
 import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;

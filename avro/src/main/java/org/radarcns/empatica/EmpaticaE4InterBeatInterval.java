@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
 /** Time between individuals heart beats extracted from the BVP signal. You can compute the heart rate as (60 / ibi). */
 @org.apache.avro.specific.AvroGenerated
 public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4InterBeatInterval\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Time between individuals heart beats extracted from the BVP signal. You can compute the heart rate as (60 / ibi).\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"interBeatInterval\",\"type\":\"float\",\"doc\":\"the duration (s) of the detected inter-beat interval (i.e., the distance in seconds from the previous beat)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4InterBeatInterval\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Time between individuals heart beats extracted from the BVP signal. You can compute the heart rate as (60 / ibi).\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"interBeatInterval\",\"type\":\"float\",\"doc\":\"the duration (s) of the detected inter-beat interval (i.e., the distance in seconds from the previous beat)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -100,18 +100,18 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
   }
 
   /** Creates a new EmpaticaE4InterBeatInterval RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder();
+  public static org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder();
   }
   
   /** Creates a new EmpaticaE4InterBeatInterval RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder newBuilder(org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder(other);
   }
   
   /** Creates a new EmpaticaE4InterBeatInterval RecordBuilder by copying an existing EmpaticaE4InterBeatInterval instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder newBuilder(org.radarcns.empatica.EmpaticaE4InterBeatInterval other) {
+    return new org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder(other);
   }
   
   /**
@@ -126,11 +126,11 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4InterBeatInterval.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -147,8 +147,8 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Creates a Builder by copying an existing EmpaticaE4InterBeatInterval instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.SCHEMA$);
+    private Builder(org.radarcns.empatica.EmpaticaE4InterBeatInterval other) {
+            super(org.radarcns.empatica.EmpaticaE4InterBeatInterval.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -169,7 +169,7 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +182,7 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +193,7 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,7 +206,7 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -217,7 +217,7 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Sets the value of the 'interBeatInterval' field */
-    public org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder setInterBeatInterval(float value) {
+    public org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder setInterBeatInterval(float value) {
       validate(fields()[2], value);
       this.interBeatInterval = value;
       fieldSetFlags()[2] = true;
@@ -230,7 +230,7 @@ public class EmpaticaE4InterBeatInterval extends org.apache.avro.specific.Specif
     }
     
     /** Clears the value of the 'interBeatInterval' field */
-    public org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval.Builder clearInterBeatInterval() {
+    public org.radarcns.empatica.EmpaticaE4InterBeatInterval.Builder clearInterBeatInterval() {
       fieldSetFlags()[2] = false;
       return this;
     }

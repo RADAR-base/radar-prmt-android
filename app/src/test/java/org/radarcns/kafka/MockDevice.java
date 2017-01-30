@@ -2,13 +2,13 @@ package org.radarcns.kafka;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.empaticaE4.EmpaticaE4Acceleration;
-import org.radarcns.empaticaE4.EmpaticaE4BatteryLevel;
-import org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse;
-import org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity;
-import org.radarcns.empaticaE4.EmpaticaE4InterBeatInterval;
-import org.radarcns.empaticaE4.EmpaticaE4Tag;
-import org.radarcns.empaticaE4.EmpaticaE4Temperature;
+import org.radarcns.empatica.EmpaticaE4Acceleration;
+import org.radarcns.empatica.EmpaticaE4BatteryLevel;
+import org.radarcns.empatica.EmpaticaE4BloodVolumePulse;
+import org.radarcns.empatica.EmpaticaE4ElectroDermalActivity;
+import org.radarcns.empatica.EmpaticaE4InterBeatInterval;
+import org.radarcns.empatica.EmpaticaE4Tag;
+import org.radarcns.empatica.EmpaticaE4Temperature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

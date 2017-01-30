@@ -1,11 +1,11 @@
 {
-  "namespace": "org.radarcns.empaticaE4",
+  "namespace": "org.radarcns.phonesensors",
   "type": "record",
-  "name": "EmpaticaE4BloodVolumePulse",
-  "doc": "Data from photoplethysmograph.",
+  "name": "PhoneSensorBatteryLevel",
+  "doc": "Phone battery level.",
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
-    {"name": "bloodVolumePulse", "type": "float", "doc": "light absorption (nW)"}
+    {"name": "batteryLevel", "type": "float", "doc": "battery level from 0 to 1"}
   ]
 }

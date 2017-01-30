@@ -1,5 +1,5 @@
 {
-  "namespace": "org.radarcns.pebble2",
+  "namespace": "org.radarcns.pebble",
   "type": "record",
   "name": "Pebble2BatteryLevel",
   "doc": "Device battery level.",

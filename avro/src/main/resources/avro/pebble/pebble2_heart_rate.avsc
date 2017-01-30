@@ -1,5 +1,5 @@
 {
-  "namespace": "org.radarcns.pebble2",
+  "namespace": "org.radarcns.pebble",
   "type": "record",
   "name": "Pebble2HeartRate",
   "doc": "Raw heart rate from the Pebble 2 Heart Monitor. You can compute the inter beat interval rate as (60 / heartRate).",

@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
 /** Data from the electrodermal activity sensor expressed as microsiemens (µS). Uses a galvanic skin response sensor. */
 @org.apache.avro.specific.AvroGenerated
 public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4ElectroDermalActivity\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Data from the electrodermal activity sensor expressed as microsiemens (µS). Uses a galvanic skin response sensor.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"electroDermalActivity\",\"type\":\"float\",\"doc\":\"electrodermal activity (µS)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4ElectroDermalActivity\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Data from the electrodermal activity sensor expressed as microsiemens (µS). Uses a galvanic skin response sensor.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"electroDermalActivity\",\"type\":\"float\",\"doc\":\"electrodermal activity (µS)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -100,18 +100,18 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
   }
 
   /** Creates a new EmpaticaE4ElectroDermalActivity RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder();
+  public static org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder();
   }
   
   /** Creates a new EmpaticaE4ElectroDermalActivity RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder newBuilder(org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder(other);
   }
   
   /** Creates a new EmpaticaE4ElectroDermalActivity RecordBuilder by copying an existing EmpaticaE4ElectroDermalActivity instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder newBuilder(org.radarcns.empatica.EmpaticaE4ElectroDermalActivity other) {
+    return new org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder(other);
   }
   
   /**
@@ -126,11 +126,11 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -147,8 +147,8 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Creates a Builder by copying an existing EmpaticaE4ElectroDermalActivity instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.SCHEMA$);
+    private Builder(org.radarcns.empatica.EmpaticaE4ElectroDermalActivity other) {
+            super(org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -169,7 +169,7 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +182,7 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +193,7 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,7 +206,7 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -217,7 +217,7 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Sets the value of the 'electroDermalActivity' field */
-    public org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder setElectroDermalActivity(float value) {
+    public org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder setElectroDermalActivity(float value) {
       validate(fields()[2], value);
       this.electroDermalActivity = value;
       fieldSetFlags()[2] = true;
@@ -230,7 +230,7 @@ public class EmpaticaE4ElectroDermalActivity extends org.apache.avro.specific.Sp
     }
     
     /** Clears the value of the 'electroDermalActivity' field */
-    public org.radarcns.empaticaE4.EmpaticaE4ElectroDermalActivity.Builder clearElectroDermalActivity() {
+    public org.radarcns.empatica.EmpaticaE4ElectroDermalActivity.Builder clearElectroDermalActivity() {
       fieldSetFlags()[2] = false;
       return this;
     }

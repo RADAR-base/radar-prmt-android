@@ -1,7 +1,7 @@
 {
-  "namespace": "org.radarcns.pebble2",
+  "namespace": "org.radarcns.phonesensors",
   "type": "record",
-  "name": "Pebble2Acceleration",
+  "name": "PhoneSensorAcceleration",
   "doc": "Data from 3-axis accelerometer sensor with gravitational constant g as unit.",
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},

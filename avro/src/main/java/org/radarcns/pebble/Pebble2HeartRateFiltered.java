@@ -3,34 +3,34 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.pebble;  
 @SuppressWarnings("all")
-/** Device battery level. */
+/** Filtered and smoothed heart rate from the Pebble 2 Heart Monitor. You can compute the inter beat interval rate as (60 / heartRate). */
 @org.apache.avro.specific.AvroGenerated
-public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4BatteryLevel\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Device battery level.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"batteryLevel\",\"type\":\"float\",\"doc\":\"battery level from 0 to 1\"}]}");
+public class Pebble2HeartRateFiltered extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2HeartRateFiltered\",\"namespace\":\"org.radarcns.pebble\",\"doc\":\"Filtered and smoothed heart rate from the Pebble 2 Heart Monitor. You can compute the inter beat interval rate as (60 / heartRate).\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"heartRate\",\"type\":\"float\",\"doc\":\"heart rate (bpm)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** battery level from 0 to 1 */
-  @Deprecated public float batteryLevel;
+  /** heart rate (bpm) */
+  @Deprecated public float heartRate;
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>. 
    */
-  public EmpaticaE4BatteryLevel() {}
+  public Pebble2HeartRateFiltered() {}
 
   /**
    * All-args constructor.
    */
-  public EmpaticaE4BatteryLevel(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float batteryLevel) {
+  public Pebble2HeartRateFiltered(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float heartRate) {
     this.time = time;
     this.timeReceived = timeReceived;
-    this.batteryLevel = batteryLevel;
+    this.heartRate = heartRate;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -39,7 +39,7 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
-    case 2: return batteryLevel;
+    case 2: return heartRate;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -49,7 +49,7 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: batteryLevel = (java.lang.Float)value$; break;
+    case 2: heartRate = (java.lang.Float)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -85,52 +85,52 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
   }
 
   /**
-   * Gets the value of the 'batteryLevel' field.
-   * battery level from 0 to 1   */
-  public java.lang.Float getBatteryLevel() {
-    return batteryLevel;
+   * Gets the value of the 'heartRate' field.
+   * heart rate (bpm)   */
+  public java.lang.Float getHeartRate() {
+    return heartRate;
   }
 
   /**
-   * Sets the value of the 'batteryLevel' field.
-   * battery level from 0 to 1   * @param value the value to set.
+   * Sets the value of the 'heartRate' field.
+   * heart rate (bpm)   * @param value the value to set.
    */
-  public void setBatteryLevel(java.lang.Float value) {
-    this.batteryLevel = value;
+  public void setHeartRate(java.lang.Float value) {
+    this.heartRate = value;
   }
 
-  /** Creates a new EmpaticaE4BatteryLevel RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder();
+  /** Creates a new Pebble2HeartRateFiltered RecordBuilder */
+  public static org.radarcns.pebble.Pebble2HeartRateFiltered.Builder newBuilder() {
+    return new org.radarcns.pebble.Pebble2HeartRateFiltered.Builder();
   }
   
-  /** Creates a new EmpaticaE4BatteryLevel RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder(other);
+  /** Creates a new Pebble2HeartRateFiltered RecordBuilder by copying an existing Builder */
+  public static org.radarcns.pebble.Pebble2HeartRateFiltered.Builder newBuilder(org.radarcns.pebble.Pebble2HeartRateFiltered.Builder other) {
+    return new org.radarcns.pebble.Pebble2HeartRateFiltered.Builder(other);
   }
   
-  /** Creates a new EmpaticaE4BatteryLevel RecordBuilder by copying an existing EmpaticaE4BatteryLevel instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4BatteryLevel other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder(other);
+  /** Creates a new Pebble2HeartRateFiltered RecordBuilder by copying an existing Pebble2HeartRateFiltered instance */
+  public static org.radarcns.pebble.Pebble2HeartRateFiltered.Builder newBuilder(org.radarcns.pebble.Pebble2HeartRateFiltered other) {
+    return new org.radarcns.pebble.Pebble2HeartRateFiltered.Builder(other);
   }
   
   /**
-   * RecordBuilder for EmpaticaE4BatteryLevel instances.
+   * RecordBuilder for Pebble2HeartRateFiltered instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<EmpaticaE4BatteryLevel>
-    implements org.apache.avro.data.RecordBuilder<EmpaticaE4BatteryLevel> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Pebble2HeartRateFiltered>
+    implements org.apache.avro.data.RecordBuilder<Pebble2HeartRateFiltered> {
 
     private double time;
     private double timeReceived;
-    private float batteryLevel;
+    private float heartRate;
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.SCHEMA$);
+      super(org.radarcns.pebble.Pebble2HeartRateFiltered.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder other) {
+    private Builder(org.radarcns.pebble.Pebble2HeartRateFiltered.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -140,15 +140,15 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.batteryLevel)) {
-        this.batteryLevel = data().deepCopy(fields()[2].schema(), other.batteryLevel);
+      if (isValidValue(fields()[2], other.heartRate)) {
+        this.heartRate = data().deepCopy(fields()[2].schema(), other.heartRate);
         fieldSetFlags()[2] = true;
       }
     }
     
-    /** Creates a Builder by copying an existing EmpaticaE4BatteryLevel instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4BatteryLevel other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.SCHEMA$);
+    /** Creates a Builder by copying an existing Pebble2HeartRateFiltered instance */
+    private Builder(org.radarcns.pebble.Pebble2HeartRateFiltered other) {
+            super(org.radarcns.pebble.Pebble2HeartRateFiltered.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -157,8 +157,8 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.batteryLevel)) {
-        this.batteryLevel = data().deepCopy(fields()[2].schema(), other.batteryLevel);
+      if (isValidValue(fields()[2], other.heartRate)) {
+        this.heartRate = data().deepCopy(fields()[2].schema(), other.heartRate);
         fieldSetFlags()[2] = true;
       }
     }
@@ -169,7 +169,7 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder setTime(double value) {
+    public org.radarcns.pebble.Pebble2HeartRateFiltered.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +182,7 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder clearTime() {
+    public org.radarcns.pebble.Pebble2HeartRateFiltered.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +193,7 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder setTimeReceived(double value) {
+    public org.radarcns.pebble.Pebble2HeartRateFiltered.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,42 +206,42 @@ public class EmpaticaE4BatteryLevel extends org.apache.avro.specific.SpecificRec
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder clearTimeReceived() {
+    public org.radarcns.pebble.Pebble2HeartRateFiltered.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
-    /** Gets the value of the 'batteryLevel' field */
-    public java.lang.Float getBatteryLevel() {
-      return batteryLevel;
+    /** Gets the value of the 'heartRate' field */
+    public java.lang.Float getHeartRate() {
+      return heartRate;
     }
     
-    /** Sets the value of the 'batteryLevel' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder setBatteryLevel(float value) {
+    /** Sets the value of the 'heartRate' field */
+    public org.radarcns.pebble.Pebble2HeartRateFiltered.Builder setHeartRate(float value) {
       validate(fields()[2], value);
-      this.batteryLevel = value;
+      this.heartRate = value;
       fieldSetFlags()[2] = true;
       return this; 
     }
     
-    /** Checks whether the 'batteryLevel' field has been set */
-    public boolean hasBatteryLevel() {
+    /** Checks whether the 'heartRate' field has been set */
+    public boolean hasHeartRate() {
       return fieldSetFlags()[2];
     }
     
-    /** Clears the value of the 'batteryLevel' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BatteryLevel.Builder clearBatteryLevel() {
+    /** Clears the value of the 'heartRate' field */
+    public org.radarcns.pebble.Pebble2HeartRateFiltered.Builder clearHeartRate() {
       fieldSetFlags()[2] = false;
       return this;
     }
 
     @Override
-    public EmpaticaE4BatteryLevel build() {
+    public Pebble2HeartRateFiltered build() {
       try {
-        EmpaticaE4BatteryLevel record = new EmpaticaE4BatteryLevel();
+        Pebble2HeartRateFiltered record = new Pebble2HeartRateFiltered();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.batteryLevel = fieldSetFlags()[2] ? this.batteryLevel : (java.lang.Float) defaultValue(fields()[2]);
+        record.heartRate = fieldSetFlags()[2] ? this.heartRate : (java.lang.Float) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

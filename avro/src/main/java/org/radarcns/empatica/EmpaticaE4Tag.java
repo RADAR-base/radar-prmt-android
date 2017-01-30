@@ -3,34 +3,31 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.phonesensors;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
-/** Data from the light sensor in luminous flux per unit area. */
+/** Event mark corresponding to a physical button press on the device; the same time as the status LED is first illuminated. The time is synchronized with initial time of the session indicated in the related data files from the corresponding session. */
 @org.apache.avro.specific.AvroGenerated
-public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneSensorLight\",\"namespace\":\"org.radarcns.phonesensors\",\"doc\":\"Data from the light sensor in luminous flux per unit area.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"light\",\"type\":\"float\",\"doc\":\"illuminance (lx)\"}]}");
+public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4Tag\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Event mark corresponding to a physical button press on the device; the same time as the status LED is first illuminated. The time is synchronized with initial time of the session indicated in the related data files from the corresponding session.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** illuminance (lx) */
-  @Deprecated public float light;
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>. 
    */
-  public PhoneSensorLight() {}
+  public EmpaticaE4Tag() {}
 
   /**
    * All-args constructor.
    */
-  public PhoneSensorLight(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float light) {
+  public EmpaticaE4Tag(java.lang.Double time, java.lang.Double timeReceived) {
     this.time = time;
     this.timeReceived = timeReceived;
-    this.light = light;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -39,7 +36,6 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
-    case 2: return light;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -49,7 +45,6 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: light = (java.lang.Float)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -84,53 +79,37 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     this.timeReceived = value;
   }
 
-  /**
-   * Gets the value of the 'light' field.
-   * illuminance (lx)   */
-  public java.lang.Float getLight() {
-    return light;
+  /** Creates a new EmpaticaE4Tag RecordBuilder */
+  public static org.radarcns.empatica.EmpaticaE4Tag.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4Tag.Builder();
   }
-
+  
+  /** Creates a new EmpaticaE4Tag RecordBuilder by copying an existing Builder */
+  public static org.radarcns.empatica.EmpaticaE4Tag.Builder newBuilder(org.radarcns.empatica.EmpaticaE4Tag.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4Tag.Builder(other);
+  }
+  
+  /** Creates a new EmpaticaE4Tag RecordBuilder by copying an existing EmpaticaE4Tag instance */
+  public static org.radarcns.empatica.EmpaticaE4Tag.Builder newBuilder(org.radarcns.empatica.EmpaticaE4Tag other) {
+    return new org.radarcns.empatica.EmpaticaE4Tag.Builder(other);
+  }
+  
   /**
-   * Sets the value of the 'light' field.
-   * illuminance (lx)   * @param value the value to set.
+   * RecordBuilder for EmpaticaE4Tag instances.
    */
-  public void setLight(java.lang.Float value) {
-    this.light = value;
-  }
-
-  /** Creates a new PhoneSensorLight RecordBuilder */
-  public static org.radarcns.phonesensors.PhoneSensorLight.Builder newBuilder() {
-    return new org.radarcns.phonesensors.PhoneSensorLight.Builder();
-  }
-  
-  /** Creates a new PhoneSensorLight RecordBuilder by copying an existing Builder */
-  public static org.radarcns.phonesensors.PhoneSensorLight.Builder newBuilder(org.radarcns.phonesensors.PhoneSensorLight.Builder other) {
-    return new org.radarcns.phonesensors.PhoneSensorLight.Builder(other);
-  }
-  
-  /** Creates a new PhoneSensorLight RecordBuilder by copying an existing PhoneSensorLight instance */
-  public static org.radarcns.phonesensors.PhoneSensorLight.Builder newBuilder(org.radarcns.phonesensors.PhoneSensorLight other) {
-    return new org.radarcns.phonesensors.PhoneSensorLight.Builder(other);
-  }
-  
-  /**
-   * RecordBuilder for PhoneSensorLight instances.
-   */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<PhoneSensorLight>
-    implements org.apache.avro.data.RecordBuilder<PhoneSensorLight> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<EmpaticaE4Tag>
+    implements org.apache.avro.data.RecordBuilder<EmpaticaE4Tag> {
 
     private double time;
     private double timeReceived;
-    private float light;
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.phonesensors.PhoneSensorLight.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4Tag.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.phonesensors.PhoneSensorLight.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4Tag.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -140,15 +119,11 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.light)) {
-        this.light = data().deepCopy(fields()[2].schema(), other.light);
-        fieldSetFlags()[2] = true;
-      }
     }
     
-    /** Creates a Builder by copying an existing PhoneSensorLight instance */
-    private Builder(org.radarcns.phonesensors.PhoneSensorLight other) {
-            super(org.radarcns.phonesensors.PhoneSensorLight.SCHEMA$);
+    /** Creates a Builder by copying an existing EmpaticaE4Tag instance */
+    private Builder(org.radarcns.empatica.EmpaticaE4Tag other) {
+            super(org.radarcns.empatica.EmpaticaE4Tag.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -156,10 +131,6 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
       if (isValidValue(fields()[1], other.timeReceived)) {
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
-      }
-      if (isValidValue(fields()[2], other.light)) {
-        this.light = data().deepCopy(fields()[2].schema(), other.light);
-        fieldSetFlags()[2] = true;
       }
     }
 
@@ -169,7 +140,7 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.phonesensors.PhoneSensorLight.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4Tag.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +153,7 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.phonesensors.PhoneSensorLight.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4Tag.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +164,7 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.phonesensors.PhoneSensorLight.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4Tag.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,42 +177,17 @@ public class PhoneSensorLight extends org.apache.avro.specific.SpecificRecordBas
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.phonesensors.PhoneSensorLight.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4Tag.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
-    /** Gets the value of the 'light' field */
-    public java.lang.Float getLight() {
-      return light;
-    }
-    
-    /** Sets the value of the 'light' field */
-    public org.radarcns.phonesensors.PhoneSensorLight.Builder setLight(float value) {
-      validate(fields()[2], value);
-      this.light = value;
-      fieldSetFlags()[2] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'light' field has been set */
-    public boolean hasLight() {
-      return fieldSetFlags()[2];
-    }
-    
-    /** Clears the value of the 'light' field */
-    public org.radarcns.phonesensors.PhoneSensorLight.Builder clearLight() {
-      fieldSetFlags()[2] = false;
-      return this;
-    }
-
     @Override
-    public PhoneSensorLight build() {
+    public EmpaticaE4Tag build() {
       try {
-        PhoneSensorLight record = new PhoneSensorLight();
+        EmpaticaE4Tag record = new EmpaticaE4Tag();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.light = fieldSetFlags()[2] ? this.light : (java.lang.Float) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

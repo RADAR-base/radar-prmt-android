@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
 /** Data from photoplethysmograph. */
 @org.apache.avro.specific.AvroGenerated
 public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4BloodVolumePulse\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Data from photoplethysmograph.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"bloodVolumePulse\",\"type\":\"float\",\"doc\":\"light absorption (nW)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4BloodVolumePulse\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Data from photoplethysmograph.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"bloodVolumePulse\",\"type\":\"float\",\"doc\":\"light absorption (nW)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -100,18 +100,18 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
   }
 
   /** Creates a new EmpaticaE4BloodVolumePulse RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder();
+  public static org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder();
   }
   
   /** Creates a new EmpaticaE4BloodVolumePulse RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder newBuilder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder(other);
   }
   
   /** Creates a new EmpaticaE4BloodVolumePulse RecordBuilder by copying an existing EmpaticaE4BloodVolumePulse instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder newBuilder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse other) {
+    return new org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder(other);
   }
   
   /**
@@ -126,11 +126,11 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4BloodVolumePulse.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -147,8 +147,8 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Creates a Builder by copying an existing EmpaticaE4BloodVolumePulse instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.SCHEMA$);
+    private Builder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse other) {
+            super(org.radarcns.empatica.EmpaticaE4BloodVolumePulse.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -169,7 +169,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +182,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +193,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,7 +206,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -217,7 +217,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Sets the value of the 'bloodVolumePulse' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder setBloodVolumePulse(float value) {
+    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder setBloodVolumePulse(float value) {
       validate(fields()[2], value);
       this.bloodVolumePulse = value;
       fieldSetFlags()[2] = true;
@@ -230,7 +230,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     }
     
     /** Clears the value of the 'bloodVolumePulse' field */
-    public org.radarcns.empaticaE4.EmpaticaE4BloodVolumePulse.Builder clearBloodVolumePulse() {
+    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder clearBloodVolumePulse() {
       fieldSetFlags()[2] = false;
       return this;
     }

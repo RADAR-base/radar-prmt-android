@@ -1,6 +1,13 @@
 package org.radarcns.empaticaE4;
 
 import org.radarcns.android.DeviceTopics;
+import org.radarcns.empatica.EmpaticaE4Acceleration;
+import org.radarcns.empatica.EmpaticaE4BatteryLevel;
+import org.radarcns.empatica.EmpaticaE4BloodVolumePulse;
+import org.radarcns.empatica.EmpaticaE4ElectroDermalActivity;
+import org.radarcns.empatica.EmpaticaE4InterBeatInterval;
+import org.radarcns.empatica.EmpaticaE4SensorStatus;
+import org.radarcns.empatica.EmpaticaE4Temperature;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 

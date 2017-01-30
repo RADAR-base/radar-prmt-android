@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.pebble2;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
 /** Data from 3-axis accelerometer sensor with gravitational constant g as unit. */
 @org.apache.avro.specific.AvroGenerated
-public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2Acceleration\",\"namespace\":\"org.radarcns.pebble2\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
+public class EmpaticaE4Acceleration extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4Acceleration\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -26,12 +26,12 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>. 
    */
-  public Pebble2Acceleration() {}
+  public EmpaticaE4Acceleration() {}
 
   /**
    * All-args constructor.
    */
-  public Pebble2Acceleration(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float x, java.lang.Float y, java.lang.Float z) {
+  public EmpaticaE4Acceleration(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float x, java.lang.Float y, java.lang.Float z) {
     this.time = time;
     this.timeReceived = timeReceived;
     this.x = x;
@@ -139,26 +139,26 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     this.z = value;
   }
 
-  /** Creates a new Pebble2Acceleration RecordBuilder */
-  public static org.radarcns.pebble2.Pebble2Acceleration.Builder newBuilder() {
-    return new org.radarcns.pebble2.Pebble2Acceleration.Builder();
+  /** Creates a new EmpaticaE4Acceleration RecordBuilder */
+  public static org.radarcns.empatica.EmpaticaE4Acceleration.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4Acceleration.Builder();
   }
   
-  /** Creates a new Pebble2Acceleration RecordBuilder by copying an existing Builder */
-  public static org.radarcns.pebble2.Pebble2Acceleration.Builder newBuilder(org.radarcns.pebble2.Pebble2Acceleration.Builder other) {
-    return new org.radarcns.pebble2.Pebble2Acceleration.Builder(other);
+  /** Creates a new EmpaticaE4Acceleration RecordBuilder by copying an existing Builder */
+  public static org.radarcns.empatica.EmpaticaE4Acceleration.Builder newBuilder(org.radarcns.empatica.EmpaticaE4Acceleration.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4Acceleration.Builder(other);
   }
   
-  /** Creates a new Pebble2Acceleration RecordBuilder by copying an existing Pebble2Acceleration instance */
-  public static org.radarcns.pebble2.Pebble2Acceleration.Builder newBuilder(org.radarcns.pebble2.Pebble2Acceleration other) {
-    return new org.radarcns.pebble2.Pebble2Acceleration.Builder(other);
+  /** Creates a new EmpaticaE4Acceleration RecordBuilder by copying an existing EmpaticaE4Acceleration instance */
+  public static org.radarcns.empatica.EmpaticaE4Acceleration.Builder newBuilder(org.radarcns.empatica.EmpaticaE4Acceleration other) {
+    return new org.radarcns.empatica.EmpaticaE4Acceleration.Builder(other);
   }
   
   /**
-   * RecordBuilder for Pebble2Acceleration instances.
+   * RecordBuilder for EmpaticaE4Acceleration instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Pebble2Acceleration>
-    implements org.apache.avro.data.RecordBuilder<Pebble2Acceleration> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<EmpaticaE4Acceleration>
+    implements org.apache.avro.data.RecordBuilder<EmpaticaE4Acceleration> {
 
     private double time;
     private double timeReceived;
@@ -168,11 +168,11 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.pebble2.Pebble2Acceleration.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4Acceleration.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.pebble2.Pebble2Acceleration.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4Acceleration.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -196,9 +196,9 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       }
     }
     
-    /** Creates a Builder by copying an existing Pebble2Acceleration instance */
-    private Builder(org.radarcns.pebble2.Pebble2Acceleration other) {
-            super(org.radarcns.pebble2.Pebble2Acceleration.SCHEMA$);
+    /** Creates a Builder by copying an existing EmpaticaE4Acceleration instance */
+    private Builder(org.radarcns.empatica.EmpaticaE4Acceleration other) {
+            super(org.radarcns.empatica.EmpaticaE4Acceleration.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -227,7 +227,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -240,7 +240,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -251,7 +251,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -264,7 +264,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -275,7 +275,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'x' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder setX(float value) {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder setX(float value) {
       validate(fields()[2], value);
       this.x = value;
       fieldSetFlags()[2] = true;
@@ -288,7 +288,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'x' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder clearX() {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder clearX() {
       fieldSetFlags()[2] = false;
       return this;
     }
@@ -299,7 +299,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'y' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder setY(float value) {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder setY(float value) {
       validate(fields()[3], value);
       this.y = value;
       fieldSetFlags()[3] = true;
@@ -312,7 +312,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'y' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder clearY() {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder clearY() {
       fieldSetFlags()[3] = false;
       return this;
     }
@@ -323,7 +323,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'z' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder setZ(float value) {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder setZ(float value) {
       validate(fields()[4], value);
       this.z = value;
       fieldSetFlags()[4] = true;
@@ -336,15 +336,15 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'z' field */
-    public org.radarcns.pebble2.Pebble2Acceleration.Builder clearZ() {
+    public org.radarcns.empatica.EmpaticaE4Acceleration.Builder clearZ() {
       fieldSetFlags()[4] = false;
       return this;
     }
 
     @Override
-    public Pebble2Acceleration build() {
+    public EmpaticaE4Acceleration build() {
       try {
-        Pebble2Acceleration record = new Pebble2Acceleration();
+        EmpaticaE4Acceleration record = new EmpaticaE4Acceleration();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
         record.x = fieldSetFlags()[2] ? this.x : (java.lang.Float) defaultValue(fields()[2]);

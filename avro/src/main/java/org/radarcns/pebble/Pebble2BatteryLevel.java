@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.pebble2;  
+package org.radarcns.pebble;  
 @SuppressWarnings("all")
 /** Device battery level. */
 @org.apache.avro.specific.AvroGenerated
 public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2BatteryLevel\",\"namespace\":\"org.radarcns.pebble2\",\"doc\":\"Device battery level.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"batteryLevel\",\"type\":\"float\",\"doc\":\"battery level from 0 to 1\"},{\"name\":\"batteryIsCharging\",\"type\":\"boolean\",\"doc\":\"whether the battery is being charged\"},{\"name\":\"batteryIsPlugged\",\"type\":\"boolean\",\"doc\":\"whether the battery charger cable is plugged in\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2BatteryLevel\",\"namespace\":\"org.radarcns.pebble\",\"doc\":\"Device battery level.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"batteryLevel\",\"type\":\"float\",\"doc\":\"battery level from 0 to 1\"},{\"name\":\"batteryIsCharging\",\"type\":\"boolean\",\"doc\":\"whether the battery is being charged\"},{\"name\":\"batteryIsPlugged\",\"type\":\"boolean\",\"doc\":\"whether the battery charger cable is plugged in\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -140,18 +140,18 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
   }
 
   /** Creates a new Pebble2BatteryLevel RecordBuilder */
-  public static org.radarcns.pebble2.Pebble2BatteryLevel.Builder newBuilder() {
-    return new org.radarcns.pebble2.Pebble2BatteryLevel.Builder();
+  public static org.radarcns.pebble.Pebble2BatteryLevel.Builder newBuilder() {
+    return new org.radarcns.pebble.Pebble2BatteryLevel.Builder();
   }
   
   /** Creates a new Pebble2BatteryLevel RecordBuilder by copying an existing Builder */
-  public static org.radarcns.pebble2.Pebble2BatteryLevel.Builder newBuilder(org.radarcns.pebble2.Pebble2BatteryLevel.Builder other) {
-    return new org.radarcns.pebble2.Pebble2BatteryLevel.Builder(other);
+  public static org.radarcns.pebble.Pebble2BatteryLevel.Builder newBuilder(org.radarcns.pebble.Pebble2BatteryLevel.Builder other) {
+    return new org.radarcns.pebble.Pebble2BatteryLevel.Builder(other);
   }
   
   /** Creates a new Pebble2BatteryLevel RecordBuilder by copying an existing Pebble2BatteryLevel instance */
-  public static org.radarcns.pebble2.Pebble2BatteryLevel.Builder newBuilder(org.radarcns.pebble2.Pebble2BatteryLevel other) {
-    return new org.radarcns.pebble2.Pebble2BatteryLevel.Builder(other);
+  public static org.radarcns.pebble.Pebble2BatteryLevel.Builder newBuilder(org.radarcns.pebble.Pebble2BatteryLevel other) {
+    return new org.radarcns.pebble.Pebble2BatteryLevel.Builder(other);
   }
   
   /**
@@ -168,11 +168,11 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.pebble2.Pebble2BatteryLevel.SCHEMA$);
+      super(org.radarcns.pebble.Pebble2BatteryLevel.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.pebble2.Pebble2BatteryLevel.Builder other) {
+    private Builder(org.radarcns.pebble.Pebble2BatteryLevel.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -197,8 +197,8 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Creates a Builder by copying an existing Pebble2BatteryLevel instance */
-    private Builder(org.radarcns.pebble2.Pebble2BatteryLevel other) {
-            super(org.radarcns.pebble2.Pebble2BatteryLevel.SCHEMA$);
+    private Builder(org.radarcns.pebble.Pebble2BatteryLevel other) {
+            super(org.radarcns.pebble.Pebble2BatteryLevel.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -227,7 +227,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setTime(double value) {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -240,7 +240,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearTime() {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -251,7 +251,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setTimeReceived(double value) {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -264,7 +264,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearTimeReceived() {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -275,7 +275,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'batteryLevel' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setBatteryLevel(float value) {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder setBatteryLevel(float value) {
       validate(fields()[2], value);
       this.batteryLevel = value;
       fieldSetFlags()[2] = true;
@@ -288,7 +288,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'batteryLevel' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearBatteryLevel() {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder clearBatteryLevel() {
       fieldSetFlags()[2] = false;
       return this;
     }
@@ -299,7 +299,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'batteryIsCharging' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setBatteryIsCharging(boolean value) {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder setBatteryIsCharging(boolean value) {
       validate(fields()[3], value);
       this.batteryIsCharging = value;
       fieldSetFlags()[3] = true;
@@ -312,7 +312,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'batteryIsCharging' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearBatteryIsCharging() {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder clearBatteryIsCharging() {
       fieldSetFlags()[3] = false;
       return this;
     }
@@ -323,7 +323,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Sets the value of the 'batteryIsPlugged' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder setBatteryIsPlugged(boolean value) {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder setBatteryIsPlugged(boolean value) {
       validate(fields()[4], value);
       this.batteryIsPlugged = value;
       fieldSetFlags()[4] = true;
@@ -336,7 +336,7 @@ public class Pebble2BatteryLevel extends org.apache.avro.specific.SpecificRecord
     }
     
     /** Clears the value of the 'batteryIsPlugged' field */
-    public org.radarcns.pebble2.Pebble2BatteryLevel.Builder clearBatteryIsPlugged() {
+    public org.radarcns.pebble.Pebble2BatteryLevel.Builder clearBatteryIsPlugged() {
       fieldSetFlags()[4] = false;
       return this;
     }

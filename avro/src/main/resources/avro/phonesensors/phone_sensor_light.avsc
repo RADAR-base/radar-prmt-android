@@ -1,5 +1,5 @@
 {
-  "namespace": "org.radarcns.phoneSensors",
+  "namespace": "org.radarcns.phonesensors",
   "type": "record",
   "name": "PhoneSensorLight",
   "doc": "Data from the light sensor in luminous flux per unit area.",

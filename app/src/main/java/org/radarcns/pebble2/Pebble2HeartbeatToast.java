@@ -9,6 +9,7 @@ import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.pebble.Pebble2HeartRateFiltered;
 import org.radarcns.util.Boast;
 
 import java.io.IOException;

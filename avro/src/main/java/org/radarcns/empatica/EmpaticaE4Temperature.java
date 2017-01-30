@@ -3,12 +3,12 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.empatica;  
 @SuppressWarnings("all")
 /** Data from temperature sensor expressed degrees on the Celsius (°C) scale. */
 @org.apache.avro.specific.AvroGenerated
 public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4Temperature\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Data from temperature sensor expressed degrees on the Celsius (°C) scale.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"temperature\",\"type\":\"float\",\"doc\":\"temperature (°C)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4Temperature\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Data from temperature sensor expressed degrees on the Celsius (°C) scale.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"temperature\",\"type\":\"float\",\"doc\":\"temperature (°C)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -100,18 +100,18 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
   }
 
   /** Creates a new EmpaticaE4Temperature RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder();
+  public static org.radarcns.empatica.EmpaticaE4Temperature.Builder newBuilder() {
+    return new org.radarcns.empatica.EmpaticaE4Temperature.Builder();
   }
   
   /** Creates a new EmpaticaE4Temperature RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4Temperature.Builder newBuilder(org.radarcns.empatica.EmpaticaE4Temperature.Builder other) {
+    return new org.radarcns.empatica.EmpaticaE4Temperature.Builder(other);
   }
   
   /** Creates a new EmpaticaE4Temperature RecordBuilder by copying an existing EmpaticaE4Temperature instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4Temperature other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder(other);
+  public static org.radarcns.empatica.EmpaticaE4Temperature.Builder newBuilder(org.radarcns.empatica.EmpaticaE4Temperature other) {
+    return new org.radarcns.empatica.EmpaticaE4Temperature.Builder(other);
   }
   
   /**
@@ -126,11 +126,11 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4Temperature.SCHEMA$);
+      super(org.radarcns.empatica.EmpaticaE4Temperature.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder other) {
+    private Builder(org.radarcns.empatica.EmpaticaE4Temperature.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -147,8 +147,8 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Creates a Builder by copying an existing EmpaticaE4Temperature instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4Temperature other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4Temperature.SCHEMA$);
+    private Builder(org.radarcns.empatica.EmpaticaE4Temperature other) {
+            super(org.radarcns.empatica.EmpaticaE4Temperature.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -169,7 +169,7 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder setTime(double value) {
+    public org.radarcns.empatica.EmpaticaE4Temperature.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -182,7 +182,7 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder clearTime() {
+    public org.radarcns.empatica.EmpaticaE4Temperature.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -193,7 +193,7 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder setTimeReceived(double value) {
+    public org.radarcns.empatica.EmpaticaE4Temperature.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -206,7 +206,7 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder clearTimeReceived() {
+    public org.radarcns.empatica.EmpaticaE4Temperature.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -217,7 +217,7 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Sets the value of the 'temperature' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder setTemperature(float value) {
+    public org.radarcns.empatica.EmpaticaE4Temperature.Builder setTemperature(float value) {
       validate(fields()[2], value);
       this.temperature = value;
       fieldSetFlags()[2] = true;
@@ -230,7 +230,7 @@ public class EmpaticaE4Temperature extends org.apache.avro.specific.SpecificReco
     }
     
     /** Clears the value of the 'temperature' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Temperature.Builder clearTemperature() {
+    public org.radarcns.empatica.EmpaticaE4Temperature.Builder clearTemperature() {
       fieldSetFlags()[2] = false;
       return this;
     }

@@ -1,7 +1,7 @@
 {
-  "namespace": "org.radarcns.empaticaE4",
+  "namespace": "org.radarcns.pebble",
   "type": "record",
-  "name": "EmpaticaE4Acceleration",
+  "name": "Pebble2Acceleration",
   "doc": "Data from 3-axis accelerometer sensor with gravitational constant g as unit.",
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},

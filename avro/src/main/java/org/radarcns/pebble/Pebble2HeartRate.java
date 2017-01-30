@@ -3,31 +3,34 @@
  * 
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empaticaE4;  
+package org.radarcns.pebble;  
 @SuppressWarnings("all")
-/** Event mark corresponding to a physical button press on the device; the same time as the status LED is first illuminated. The time is synchronized with initial time of the session indicated in the related data files from the corresponding session. */
+/** Raw heart rate from the Pebble 2 Heart Monitor. You can compute the inter beat interval rate as (60 / heartRate). */
 @org.apache.avro.specific.AvroGenerated
-public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4Tag\",\"namespace\":\"org.radarcns.empaticaE4\",\"doc\":\"Event mark corresponding to a physical button press on the device; the same time as the status LED is first illuminated. The time is synchronized with initial time of the session indicated in the related data files from the corresponding session.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"}]}");
+public class Pebble2HeartRate extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2HeartRate\",\"namespace\":\"org.radarcns.pebble\",\"doc\":\"Raw heart rate from the Pebble 2 Heart Monitor. You can compute the inter beat interval rate as (60 / heartRate).\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"heartRate\",\"type\":\"float\",\"doc\":\"heart rate (bpm)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
+  /** heart rate (bpm) */
+  @Deprecated public float heartRate;
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>. 
    */
-  public EmpaticaE4Tag() {}
+  public Pebble2HeartRate() {}
 
   /**
    * All-args constructor.
    */
-  public EmpaticaE4Tag(java.lang.Double time, java.lang.Double timeReceived) {
+  public Pebble2HeartRate(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float heartRate) {
     this.time = time;
     this.timeReceived = timeReceived;
+    this.heartRate = heartRate;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -36,6 +39,7 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
+    case 2: return heartRate;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -45,6 +49,7 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
+    case 2: heartRate = (java.lang.Float)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -79,37 +84,53 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     this.timeReceived = value;
   }
 
-  /** Creates a new EmpaticaE4Tag RecordBuilder */
-  public static org.radarcns.empaticaE4.EmpaticaE4Tag.Builder newBuilder() {
-    return new org.radarcns.empaticaE4.EmpaticaE4Tag.Builder();
+  /**
+   * Gets the value of the 'heartRate' field.
+   * heart rate (bpm)   */
+  public java.lang.Float getHeartRate() {
+    return heartRate;
+  }
+
+  /**
+   * Sets the value of the 'heartRate' field.
+   * heart rate (bpm)   * @param value the value to set.
+   */
+  public void setHeartRate(java.lang.Float value) {
+    this.heartRate = value;
+  }
+
+  /** Creates a new Pebble2HeartRate RecordBuilder */
+  public static org.radarcns.pebble.Pebble2HeartRate.Builder newBuilder() {
+    return new org.radarcns.pebble.Pebble2HeartRate.Builder();
   }
   
-  /** Creates a new EmpaticaE4Tag RecordBuilder by copying an existing Builder */
-  public static org.radarcns.empaticaE4.EmpaticaE4Tag.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4Tag.Builder other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4Tag.Builder(other);
+  /** Creates a new Pebble2HeartRate RecordBuilder by copying an existing Builder */
+  public static org.radarcns.pebble.Pebble2HeartRate.Builder newBuilder(org.radarcns.pebble.Pebble2HeartRate.Builder other) {
+    return new org.radarcns.pebble.Pebble2HeartRate.Builder(other);
   }
   
-  /** Creates a new EmpaticaE4Tag RecordBuilder by copying an existing EmpaticaE4Tag instance */
-  public static org.radarcns.empaticaE4.EmpaticaE4Tag.Builder newBuilder(org.radarcns.empaticaE4.EmpaticaE4Tag other) {
-    return new org.radarcns.empaticaE4.EmpaticaE4Tag.Builder(other);
+  /** Creates a new Pebble2HeartRate RecordBuilder by copying an existing Pebble2HeartRate instance */
+  public static org.radarcns.pebble.Pebble2HeartRate.Builder newBuilder(org.radarcns.pebble.Pebble2HeartRate other) {
+    return new org.radarcns.pebble.Pebble2HeartRate.Builder(other);
   }
   
   /**
-   * RecordBuilder for EmpaticaE4Tag instances.
+   * RecordBuilder for Pebble2HeartRate instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<EmpaticaE4Tag>
-    implements org.apache.avro.data.RecordBuilder<EmpaticaE4Tag> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Pebble2HeartRate>
+    implements org.apache.avro.data.RecordBuilder<Pebble2HeartRate> {
 
     private double time;
     private double timeReceived;
+    private float heartRate;
 
     /** Creates a new Builder */
     private Builder() {
-      super(org.radarcns.empaticaE4.EmpaticaE4Tag.SCHEMA$);
+      super(org.radarcns.pebble.Pebble2HeartRate.SCHEMA$);
     }
     
     /** Creates a Builder by copying an existing Builder */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4Tag.Builder other) {
+    private Builder(org.radarcns.pebble.Pebble2HeartRate.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -119,11 +140,15 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
+      if (isValidValue(fields()[2], other.heartRate)) {
+        this.heartRate = data().deepCopy(fields()[2].schema(), other.heartRate);
+        fieldSetFlags()[2] = true;
+      }
     }
     
-    /** Creates a Builder by copying an existing EmpaticaE4Tag instance */
-    private Builder(org.radarcns.empaticaE4.EmpaticaE4Tag other) {
-            super(org.radarcns.empaticaE4.EmpaticaE4Tag.SCHEMA$);
+    /** Creates a Builder by copying an existing Pebble2HeartRate instance */
+    private Builder(org.radarcns.pebble.Pebble2HeartRate other) {
+            super(org.radarcns.pebble.Pebble2HeartRate.SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
         fieldSetFlags()[0] = true;
@@ -131,6 +156,10 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
       if (isValidValue(fields()[1], other.timeReceived)) {
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
+      }
+      if (isValidValue(fields()[2], other.heartRate)) {
+        this.heartRate = data().deepCopy(fields()[2].schema(), other.heartRate);
+        fieldSetFlags()[2] = true;
       }
     }
 
@@ -140,7 +169,7 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     }
     
     /** Sets the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Tag.Builder setTime(double value) {
+    public org.radarcns.pebble.Pebble2HeartRate.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -153,7 +182,7 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     }
     
     /** Clears the value of the 'time' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Tag.Builder clearTime() {
+    public org.radarcns.pebble.Pebble2HeartRate.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -164,7 +193,7 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     }
     
     /** Sets the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Tag.Builder setTimeReceived(double value) {
+    public org.radarcns.pebble.Pebble2HeartRate.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -177,17 +206,42 @@ public class EmpaticaE4Tag extends org.apache.avro.specific.SpecificRecordBase i
     }
     
     /** Clears the value of the 'timeReceived' field */
-    public org.radarcns.empaticaE4.EmpaticaE4Tag.Builder clearTimeReceived() {
+    public org.radarcns.pebble.Pebble2HeartRate.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
+    /** Gets the value of the 'heartRate' field */
+    public java.lang.Float getHeartRate() {
+      return heartRate;
+    }
+    
+    /** Sets the value of the 'heartRate' field */
+    public org.radarcns.pebble.Pebble2HeartRate.Builder setHeartRate(float value) {
+      validate(fields()[2], value);
+      this.heartRate = value;
+      fieldSetFlags()[2] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'heartRate' field has been set */
+    public boolean hasHeartRate() {
+      return fieldSetFlags()[2];
+    }
+    
+    /** Clears the value of the 'heartRate' field */
+    public org.radarcns.pebble.Pebble2HeartRate.Builder clearHeartRate() {
+      fieldSetFlags()[2] = false;
+      return this;
+    }
+
     @Override
-    public EmpaticaE4Tag build() {
+    public Pebble2HeartRate build() {
       try {
-        EmpaticaE4Tag record = new EmpaticaE4Tag();
+        Pebble2HeartRate record = new Pebble2HeartRate();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
+        record.heartRate = fieldSetFlags()[2] ? this.heartRate : (java.lang.Float) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
