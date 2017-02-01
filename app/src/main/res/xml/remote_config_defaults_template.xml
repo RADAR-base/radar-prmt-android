@@ -19,7 +19,7 @@
     </entry>
     <entry>
         <key>device_data_retention_ms</key>
-        <value>82800000</value>
+        <value>86400000</value>
     </entry>
     <entry>
         <key>ui_refresh_rate_millis</key>
