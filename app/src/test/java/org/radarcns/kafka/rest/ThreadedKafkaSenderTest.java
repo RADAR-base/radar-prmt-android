@@ -19,6 +19,8 @@ import java.util.Properties;
 public class ThreadedKafkaSenderTest extends TestCase {
     private static final Logger logger = LoggerFactory.getLogger(ThreadedKafkaSenderTest.class);
 
+    public ThreadedKafkaSenderTest() throws Exception{}
+
     public void testMain() throws Exception {
         Properties props = new Properties();
         try (InputStream in = getClass().getResourceAsStream("../kafka.properties")) {
@@ -31,7 +33,7 @@ public class ThreadedKafkaSenderTest extends TestCase {
             return;
         }
 
-        int numberOfDevices = 50;
+        int numberOfDevices = 1;
 
         logger.info("Simulating the load of {}", numberOfDevices);
         MockDevice[] threads = new MockDevice[numberOfDevices];
