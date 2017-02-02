@@ -51,7 +51,7 @@ public class ThreadedKafkaSenderTest extends TestCase {
         String userID = "UserID_";
         String sourceID = "SourceID_";
 
-        try (KafkaSender<MeasurementKey, SpecificRecord> sender = new BatchedKafkaSender<>(kafkaThread, 1000, 250)) {
+        try (KafkaSender<MeasurementKey, SpecificRecord> sender = new BatchedKafkaSender<>(directSender, 1000, 250)) {
             for (int i = 0; i < numberOfDevices; i++) {
                 threads[i] = new MockDevice<>(sender, new MeasurementKey(userID+i, sourceID+i), MeasurementKey.getClassSchema(), MeasurementKey.class);
                 threads[i].start();
