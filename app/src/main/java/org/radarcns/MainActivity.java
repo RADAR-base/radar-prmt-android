@@ -151,8 +151,8 @@ public class MainActivity extends AppCompatActivity {
         rowMap.put(R.id.row3, 2);
         rowMap.put(R.id.row4, 3);
 
-        mTotalRecordsSent = new TimedInt[4];
-        for (int i = 0; i < 4; i++) {
+        mTotalRecordsSent = new TimedInt[5];
+        for (int i = 0; i < 5; i++) {
             mTotalRecordsSent[i] = new TimedInt();
         }
 
@@ -605,13 +605,14 @@ public class MainActivity extends AppCompatActivity {
 
         // Send new server status to the appStatusConnection
         if (appStatusConnection != null && appStatusConnection.hasService()) {
-            int combinedTotalRecordsSent = 0;
+            // Sum of all totals
+            int summedTotalRecordsSent = 0;
             for (TimedInt n: mTotalRecordsSent) {
-                combinedTotalRecordsSent += n.getValue();
+                summedTotalRecordsSent += n.getValue();
             }
 
             try {
-                appStatusConnection.getDeviceData().updateCombinedTotalRecordsSent(combinedTotalRecordsSent);
+                appStatusConnection.getDeviceData().updateCombinedTotalRecordsSent(summedTotalRecordsSent);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
