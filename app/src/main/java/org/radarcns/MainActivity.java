@@ -33,6 +33,8 @@ import com.google.android.gms.tasks.Task;
 
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.applicationstatus.ApplicationStatusService;
+import org.radarcns.applicationstatus.ApplicationStatusState;
 import org.radarcns.data.TimedInt;
 import org.radarcns.empaticaE4.E4DeviceStatus;
 import org.radarcns.empaticaE4.E4HeartbeatToast;
@@ -86,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
     private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
     private final DeviceServiceConnection<PhoneSensorsDeviceStatus> phoneConnection;
+    private final DeviceServiceConnection<ApplicationStatusState> appStatusConnection;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
@@ -94,8 +97,8 @@ public class MainActivity extends AppCompatActivity {
 
     /** Overview UI **/
     private Button[] mDeviceInputButtons;
-    private final String[] mInputDeviceKeys = new String[4];
-    private final String[][] deviceKeys = new String[4][];
+    private final String[] mInputDeviceKeys = new String[5];
+    private final String[][] deviceKeys = new String[5][];
     private Button mGroupIdInputButton;
 
     private final TimedInt[] mTotalRecordsSent;
@@ -137,8 +140,9 @@ public class MainActivity extends AppCompatActivity {
         mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
         pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
         phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorsDeviceStatus.CREATOR, PhoneSensorsService.class.getName());
-        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection};
-        mConnectionIsBound = new boolean[] {false, false, false, false};
+        appStatusConnection = new DeviceServiceConnection<>(this, ApplicationStatusState.CREATOR, ApplicationStatusService.class.getName());
+        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection, appStatusConnection};
+        mConnectionIsBound = new boolean[] {false, false, false, false, false};
         serverStatus = null;
 
         rowMap = new SparseIntArray(4);
@@ -181,6 +185,15 @@ public class MainActivity extends AppCompatActivity {
 
                     phoneConnection.bind(phoneIntent);
                     mConnectionIsBound[3] = true;
+                }
+                if (!mConnectionIsBound[4]) {
+                    Intent appStatusIntent = new Intent(MainActivity.this, ApplicationStatusService.class);
+                    Bundle extras = new Bundle();
+                    configureServiceExtras(extras);
+                    appStatusIntent.putExtras(extras);
+
+                    appStatusConnection.bind(appStatusIntent);
+                    mConnectionIsBound[4] = true;
                 }
             }
 
@@ -570,6 +583,15 @@ public class MainActivity extends AppCompatActivity {
     public void updateServerStatus(DeviceServiceConnection<?> connection,
                                    final ServerStatusListener.Status status) {
         this.serverStatus = status;
+
+        // Send new server status to the appStatusConnection
+        if (appStatusConnection != null && appStatusConnection.hasService()) {
+            try {
+                appStatusConnection.getDeviceData().updateServerStatus(status);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void updateServerRecordsSent(DeviceServiceConnection<?> connection, String topic,

@@ -3,6 +3,7 @@ package org.radarcns.android;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 
 /** Current state of a wearable device. */
@@ -76,4 +77,6 @@ public abstract class DeviceState implements Parcelable {
                                 + Math.pow(acceleration[1],2)
                                 + Math.pow(acceleration[2],2) );
     }
+
+    public void updateServerStatus(ServerStatusListener.Status status) {}
 }

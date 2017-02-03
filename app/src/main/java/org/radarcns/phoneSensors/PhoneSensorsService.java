@@ -27,10 +27,10 @@ import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
  */
 public class PhoneSensorsService extends DeviceService {
     private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
-    private static final String SOURCE_ID_KEY = "source.id";
+    protected static final String SOURCE_ID_KEY = "source.id";
     private PhoneSensorsTopics topics;
-    private String groupId;
-    private String sourceId;
+    protected String groupId;
+    protected String sourceId;
 
     @Override
     public void onCreate() {
