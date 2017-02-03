@@ -79,4 +79,6 @@ public abstract class DeviceState implements Parcelable {
     }
 
     public void updateServerStatus(ServerStatusListener.Status status) {}
+
+    public void updateCombinedTotalRecordsSent(int n) {}
 }

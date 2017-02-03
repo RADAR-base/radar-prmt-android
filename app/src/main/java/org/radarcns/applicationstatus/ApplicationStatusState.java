@@ -11,6 +11,7 @@ import org.radarcns.util.Serialization;
 public class ApplicationStatusState extends DeviceState {
 
     private ServerStatusListener.Status serverStatus;
+    private int combinedTotalRecordsSent;
 
     public static final Parcelable.Creator<ApplicationStatusState> CREATOR = new Parcelable.Creator<ApplicationStatusState>() {
         public ApplicationStatusState createFromParcel(Parcel in) {
@@ -38,9 +39,19 @@ public class ApplicationStatusState extends DeviceState {
         serverStatus = status;
     }
 
+    @Override
+    public void updateCombinedTotalRecordsSent(int nRecords) {
+        combinedTotalRecordsSent = nRecords;
+    }
+
     public ServerStatusListener.Status getServerStatus() {
+        if (serverStatus == null) {
+            return ServerStatusListener.Status.DISCONNECTED;
+        }
         return serverStatus;
     }
 
-
+    public int getCombinedTotalRecordsSent() {
+        return combinedTotalRecordsSent;
+    }
 }

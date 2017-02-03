@@ -8,14 +8,14 @@ package org.radarcns.applicationstatus;
 /** Length of application uptime */
 @org.apache.avro.specific.AvroGenerated
 public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ApplicationStatusUptime\",\"namespace\":\"org.radarcns.applicationstatus\",\"doc\":\"Length of application uptime\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"applicationUptime\",\"type\":\"float\",\"doc\":\"Time since last app start (s)\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ApplicationStatusUptime\",\"namespace\":\"org.radarcns.applicationstatus\",\"doc\":\"Length of application uptime\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"applicationUptime\",\"type\":\"double\",\"doc\":\"Time since last app start (s)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
   /** Time since last app start (s) */
-  @Deprecated public float applicationUptime;
+  @Deprecated public double applicationUptime;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -27,7 +27,7 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
   /**
    * All-args constructor.
    */
-  public ApplicationStatusUptime(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float applicationUptime) {
+  public ApplicationStatusUptime(java.lang.Double time, java.lang.Double timeReceived, java.lang.Double applicationUptime) {
     this.time = time;
     this.timeReceived = timeReceived;
     this.applicationUptime = applicationUptime;
@@ -49,7 +49,7 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: applicationUptime = (java.lang.Float)value$; break;
+    case 2: applicationUptime = (java.lang.Double)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -87,7 +87,7 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
   /**
    * Gets the value of the 'applicationUptime' field.
    * Time since last app start (s)   */
-  public java.lang.Float getApplicationUptime() {
+  public java.lang.Double getApplicationUptime() {
     return applicationUptime;
   }
 
@@ -95,7 +95,7 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
    * Sets the value of the 'applicationUptime' field.
    * Time since last app start (s)   * @param value the value to set.
    */
-  public void setApplicationUptime(java.lang.Float value) {
+  public void setApplicationUptime(java.lang.Double value) {
     this.applicationUptime = value;
   }
 
@@ -122,7 +122,7 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
 
     private double time;
     private double timeReceived;
-    private float applicationUptime;
+    private double applicationUptime;
 
     /** Creates a new Builder */
     private Builder() {
@@ -212,12 +212,12 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
     }
 
     /** Gets the value of the 'applicationUptime' field */
-    public java.lang.Float getApplicationUptime() {
+    public java.lang.Double getApplicationUptime() {
       return applicationUptime;
     }
     
     /** Sets the value of the 'applicationUptime' field */
-    public org.radarcns.applicationstatus.ApplicationStatusUptime.Builder setApplicationUptime(float value) {
+    public org.radarcns.applicationstatus.ApplicationStatusUptime.Builder setApplicationUptime(double value) {
       validate(fields()[2], value);
       this.applicationUptime = value;
       fieldSetFlags()[2] = true;
@@ -241,7 +241,7 @@ public class ApplicationStatusUptime extends org.apache.avro.specific.SpecificRe
         ApplicationStatusUptime record = new ApplicationStatusUptime();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.applicationUptime = fieldSetFlags()[2] ? this.applicationUptime : (java.lang.Float) defaultValue(fields()[2]);
+        record.applicationUptime = fieldSetFlags()[2] ? this.applicationUptime : (java.lang.Double) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

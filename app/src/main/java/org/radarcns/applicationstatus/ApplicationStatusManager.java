@@ -17,8 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,7 +34,9 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
 
     private final DeviceStatusListener applicationStatusService;
 
-    private final MeasurementTable<ApplicationStatusServer> applicationStatus;
+    private final MeasurementTable<ApplicationStatusServer> serverStatusTable;
+    private final MeasurementTable<ApplicationStatusUptime> uptimeTable;
+    private final MeasurementTable<ApplicationStatusRecordCounts> recordCountsTable;
 
     private final ApplicationStatusState deviceStatus;
 
@@ -45,11 +45,15 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
     private ScheduledFuture<?> serverStatusUpdateFuture;
     private final ScheduledExecutorService executor;
 
+    private final long creationTimeStamp;
+
     private final long APPLICATION_UPDATE_INTERVAL_DEFAULT = 5;//*60; // seconds
 
     public ApplicationStatusManager(Context context, DeviceStatusListener applicationStatusService, String groupId, String sourceId, TableDataHandler dataHandler, ApplicationStatusTopics topics) {
         this.dataHandler = dataHandler;
-        this.applicationStatus = dataHandler.getCache(topics.getServerTopic());
+        this.serverStatusTable = dataHandler.getCache(topics.getServerTopic());
+        this.uptimeTable = dataHandler.getCache(topics.getUptimeTopic());
+        this.recordCountsTable = dataHandler.getCache(topics.getRecordCountsTopic());
 
         this.applicationStatusService = applicationStatusService;
 
@@ -60,6 +64,8 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
         this.deviceStatus.getId().setSourceId(sourceId);
         deviceName = context.getString(R.string.app_name);
 //        updateStatus(DeviceStatusListener.Status.READY);
+
+        creationTimeStamp = System.currentTimeMillis();
 
         // Scheduler TODO: run executor with existing thread pool/factory
         executor = Executors.newSingleThreadScheduledExecutor();
@@ -91,17 +97,12 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
         serverStatusUpdateFuture = executor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                WifiManager wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
-                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                int ip = wifiInfo.getIpAddress();
-
-                String ipAddress = Formatter.formatIpAddress(ip);
-                logger.info("Server Status: {}", deviceStatus.getServerStatus());
                 try {
-                    logger.info("IP: {}", InetAddress.getLocalHost());
-                    logger.info("IP2: {}", ipAddress);
-                } catch (UnknownHostException ex) {
-
+                    processServerStatus();
+                    processUptime();
+                    processRecordsSent();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }, 0, period, TimeUnit.SECONDS);
@@ -122,6 +123,63 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
     @Override
     public String getName() {
         return deviceName;
+    }
+
+    public void processServerStatus() {
+        double timeReceived = System.currentTimeMillis() / 1_000d;
+
+        String status;
+        switch(deviceStatus.getServerStatus()) {
+            case CONNECTED:
+            case READY:
+            case UPLOADING:
+                status = "Connected";
+                break;
+            case DISCONNECTED:
+            case DISABLED:
+            case UPLOADING_FAILED:
+                status = "Disconnected";
+                break;
+            default:
+                status = "Unknown";
+        }
+        logger.info("Server Status: {}", status);
+        logger.info("IP: {}", getIpAddress());
+
+        ApplicationStatusServer value = new ApplicationStatusServer(timeReceived, timeReceived, status, getIpAddress());
+
+        dataHandler.addMeasurement(serverStatusTable, deviceStatus.getId(), value);
+    }
+
+    public String getIpAddress() {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ip = wifiInfo.getIpAddress();
+        String ipAddress = Formatter.formatIpAddress(ip);
+        return ipAddress;
+    }
+
+    public void processUptime() {
+        double timeReceived = System.currentTimeMillis() / 1_000d;
+
+        double uptime = (System.currentTimeMillis() - creationTimeStamp)/1000d;
+        ApplicationStatusUptime value = new ApplicationStatusUptime(timeReceived, timeReceived, uptime);
+
+        logger.info("Uptime: {}", (System.currentTimeMillis() - creationTimeStamp)/1000d);
+
+        dataHandler.addMeasurement(uptimeTable, deviceStatus.getId(), value);
+    }
+
+    public void processRecordsSent() {
+        double timeReceived = System.currentTimeMillis() / 1_000d;
+
+        int recordsSent = deviceStatus.getCombinedTotalRecordsSent();
+        logger.info("N records: {}", recordsSent);
+
+        int cachedRecords = 0; //TODO
+
+        ApplicationStatusRecordCounts value = new ApplicationStatusRecordCounts(timeReceived, timeReceived, cachedRecords,recordsSent);
+        dataHandler.addMeasurement(recordCountsTable, deviceStatus.getId(), value);
     }
 
     @Override

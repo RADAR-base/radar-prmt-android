@@ -602,6 +602,20 @@ public class MainActivity extends AppCompatActivity {
         }
         latestTopicSent = topic;
         latestNumberOfRecordsSent.set(numberOfRecords);
+
+        // Send new server status to the appStatusConnection
+        if (appStatusConnection != null && appStatusConnection.hasService()) {
+            int combinedTotalRecordsSent = 0;
+            for (TimedInt n: mTotalRecordsSent) {
+                combinedTotalRecordsSent += n.getValue();
+            }
+
+            try {
+                appStatusConnection.getDeviceData().updateCombinedTotalRecordsSent(combinedTotalRecordsSent);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void dialogInputDeviceName(final View v) {

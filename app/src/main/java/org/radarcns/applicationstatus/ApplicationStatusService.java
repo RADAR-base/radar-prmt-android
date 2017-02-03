@@ -14,6 +14,7 @@ import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.phonesensors.PhoneSensorsService;
 import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +23,10 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
+import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
 
-public class ApplicationStatusService extends DeviceService {
-
+public class ApplicationStatusService extends PhoneSensorsService {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationStatusService.class);
     private static final String SOURCE_ID_KEY = "source.id";
     private ApplicationStatusTopics topics;
@@ -68,32 +69,8 @@ public class ApplicationStatusService extends DeviceService {
     @Override
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
-    }
-
-    public String getSourceId() {
-        if (sourceId == null) {
-            setSourceId(getSourceIdFromFile());
+        if (groupId == null) {
+            groupId = RadarConfiguration.getStringExtra(bundle, DEFAULT_GROUP_ID_KEY);
         }
-        return sourceId;
     }
-
-    public void setSourceId(String sourceId) {
-        this.sourceId = sourceId;
-    }
-
-    private String getSourceIdFromFile() {
-//        TOTO what should be the source id
-        return "SourceID";
-//        Properties defaults = new Properties();
-//        defaults.setProperty(SOURCE_ID_KEY, UUID.randomUUID().toString());
-//        try {
-//            Properties props = PersistentStorage.retrieveOrStore(getClass(), defaults);
-//            return props.getProperty(SOURCE_ID_KEY);
-//        } catch (IOException ex) {
-//            logger.error("Failed to retrieve or store persistent source ID key. "
-//                    + "Using a newly generated UUID.", ex);
-//            return defaults.getProperty(SOURCE_ID_KEY);
-//        }
-    }
-
 }

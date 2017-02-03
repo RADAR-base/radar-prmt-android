@@ -8,16 +8,16 @@ package org.radarcns.applicationstatus;
 /** Server connection status with android client. */
 @org.apache.avro.specific.AvroGenerated
 public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ApplicationStatusServer\",\"namespace\":\"org.radarcns.applicationstatus\",\"doc\":\"Server connection status with android client.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"clientIP\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Hardware identifier of client application\"},{\"name\":\"serverStatus\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"server connection status.\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ApplicationStatusServer\",\"namespace\":\"org.radarcns.applicationstatus\",\"doc\":\"Server connection status with android client.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"serverStatus\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"server connection status.\"},{\"name\":\"clientIP\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"Hardware identifier of client application\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** Hardware identifier of client application */
-  @Deprecated public java.lang.String clientIP;
   /** server connection status. */
   @Deprecated public java.lang.String serverStatus;
+  /** Hardware identifier of client application */
+  @Deprecated public java.lang.String clientIP;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -29,11 +29,11 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
   /**
    * All-args constructor.
    */
-  public ApplicationStatusServer(java.lang.Double time, java.lang.Double timeReceived, java.lang.String clientIP, java.lang.String serverStatus) {
+  public ApplicationStatusServer(java.lang.Double time, java.lang.Double timeReceived, java.lang.String serverStatus, java.lang.String clientIP) {
     this.time = time;
     this.timeReceived = timeReceived;
-    this.clientIP = clientIP;
     this.serverStatus = serverStatus;
+    this.clientIP = clientIP;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -42,8 +42,8 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
-    case 2: return clientIP;
-    case 3: return serverStatus;
+    case 2: return serverStatus;
+    case 3: return clientIP;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -53,8 +53,8 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: clientIP = (java.lang.String)value$; break;
-    case 3: serverStatus = (java.lang.String)value$; break;
+    case 2: serverStatus = (java.lang.String)value$; break;
+    case 3: clientIP = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -90,21 +90,6 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
   }
 
   /**
-   * Gets the value of the 'clientIP' field.
-   * Hardware identifier of client application   */
-  public java.lang.String getClientIP() {
-    return clientIP;
-  }
-
-  /**
-   * Sets the value of the 'clientIP' field.
-   * Hardware identifier of client application   * @param value the value to set.
-   */
-  public void setClientIP(java.lang.String value) {
-    this.clientIP = value;
-  }
-
-  /**
    * Gets the value of the 'serverStatus' field.
    * server connection status.   */
   public java.lang.String getServerStatus() {
@@ -117,6 +102,21 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
    */
   public void setServerStatus(java.lang.String value) {
     this.serverStatus = value;
+  }
+
+  /**
+   * Gets the value of the 'clientIP' field.
+   * Hardware identifier of client application   */
+  public java.lang.String getClientIP() {
+    return clientIP;
+  }
+
+  /**
+   * Sets the value of the 'clientIP' field.
+   * Hardware identifier of client application   * @param value the value to set.
+   */
+  public void setClientIP(java.lang.String value) {
+    this.clientIP = value;
   }
 
   /** Creates a new ApplicationStatusServer RecordBuilder */
@@ -142,8 +142,8 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
 
     private double time;
     private double timeReceived;
-    private java.lang.String clientIP;
     private java.lang.String serverStatus;
+    private java.lang.String clientIP;
 
     /** Creates a new Builder */
     private Builder() {
@@ -161,12 +161,12 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.clientIP)) {
-        this.clientIP = data().deepCopy(fields()[2].schema(), other.clientIP);
+      if (isValidValue(fields()[2], other.serverStatus)) {
+        this.serverStatus = data().deepCopy(fields()[2].schema(), other.serverStatus);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.serverStatus)) {
-        this.serverStatus = data().deepCopy(fields()[3].schema(), other.serverStatus);
+      if (isValidValue(fields()[3], other.clientIP)) {
+        this.clientIP = data().deepCopy(fields()[3].schema(), other.clientIP);
         fieldSetFlags()[3] = true;
       }
     }
@@ -182,12 +182,12 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.clientIP)) {
-        this.clientIP = data().deepCopy(fields()[2].schema(), other.clientIP);
+      if (isValidValue(fields()[2], other.serverStatus)) {
+        this.serverStatus = data().deepCopy(fields()[2].schema(), other.serverStatus);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.serverStatus)) {
-        this.serverStatus = data().deepCopy(fields()[3].schema(), other.serverStatus);
+      if (isValidValue(fields()[3], other.clientIP)) {
+        this.clientIP = data().deepCopy(fields()[3].schema(), other.clientIP);
         fieldSetFlags()[3] = true;
       }
     }
@@ -240,31 +240,6 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
       return this;
     }
 
-    /** Gets the value of the 'clientIP' field */
-    public java.lang.String getClientIP() {
-      return clientIP;
-    }
-    
-    /** Sets the value of the 'clientIP' field */
-    public org.radarcns.applicationstatus.ApplicationStatusServer.Builder setClientIP(java.lang.String value) {
-      validate(fields()[2], value);
-      this.clientIP = value;
-      fieldSetFlags()[2] = true;
-      return this; 
-    }
-    
-    /** Checks whether the 'clientIP' field has been set */
-    public boolean hasClientIP() {
-      return fieldSetFlags()[2];
-    }
-    
-    /** Clears the value of the 'clientIP' field */
-    public org.radarcns.applicationstatus.ApplicationStatusServer.Builder clearClientIP() {
-      clientIP = null;
-      fieldSetFlags()[2] = false;
-      return this;
-    }
-
     /** Gets the value of the 'serverStatus' field */
     public java.lang.String getServerStatus() {
       return serverStatus;
@@ -272,20 +247,45 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
     
     /** Sets the value of the 'serverStatus' field */
     public org.radarcns.applicationstatus.ApplicationStatusServer.Builder setServerStatus(java.lang.String value) {
-      validate(fields()[3], value);
+      validate(fields()[2], value);
       this.serverStatus = value;
-      fieldSetFlags()[3] = true;
+      fieldSetFlags()[2] = true;
       return this; 
     }
     
     /** Checks whether the 'serverStatus' field has been set */
     public boolean hasServerStatus() {
-      return fieldSetFlags()[3];
+      return fieldSetFlags()[2];
     }
     
     /** Clears the value of the 'serverStatus' field */
     public org.radarcns.applicationstatus.ApplicationStatusServer.Builder clearServerStatus() {
       serverStatus = null;
+      fieldSetFlags()[2] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'clientIP' field */
+    public java.lang.String getClientIP() {
+      return clientIP;
+    }
+    
+    /** Sets the value of the 'clientIP' field */
+    public org.radarcns.applicationstatus.ApplicationStatusServer.Builder setClientIP(java.lang.String value) {
+      validate(fields()[3], value);
+      this.clientIP = value;
+      fieldSetFlags()[3] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'clientIP' field has been set */
+    public boolean hasClientIP() {
+      return fieldSetFlags()[3];
+    }
+    
+    /** Clears the value of the 'clientIP' field */
+    public org.radarcns.applicationstatus.ApplicationStatusServer.Builder clearClientIP() {
+      clientIP = null;
       fieldSetFlags()[3] = false;
       return this;
     }
@@ -296,8 +296,8 @@ public class ApplicationStatusServer extends org.apache.avro.specific.SpecificRe
         ApplicationStatusServer record = new ApplicationStatusServer();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.clientIP = fieldSetFlags()[2] ? this.clientIP : (java.lang.String) defaultValue(fields()[2]);
-        record.serverStatus = fieldSetFlags()[3] ? this.serverStatus : (java.lang.String) defaultValue(fields()[3]);
+        record.serverStatus = fieldSetFlags()[2] ? this.serverStatus : (java.lang.String) defaultValue(fields()[2]);
+        record.clientIP = fieldSetFlags()[3] ? this.clientIP : (java.lang.String) defaultValue(fields()[3]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

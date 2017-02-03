@@ -6,7 +6,7 @@
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
-    {"name": "clientIP", "type": "string", "doc": "Hardware identifier of client application"},
-    {"name": "serverStatus", "type": "string", "doc": "server connection status."}
+    {"name": "serverStatus", "type": "string", "doc": "server connection status."},
+    {"name": "clientIP", "type": "string", "doc": "Hardware identifier of client application"}
   ]
 }

@@ -6,6 +6,6 @@
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
-    {"name": "applicationUptime", "type": "float", "doc": "Time since last app start (s)"}
+    {"name": "applicationUptime", "type": "double", "doc": "Time since last app start (s)"}
   ]
 }
