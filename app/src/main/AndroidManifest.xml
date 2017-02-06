@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <!--Write permission needed for persisting phone source id. e.g. between new installations-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:allowBackup="true"
@@ -29,6 +30,7 @@
         <service android:name=".empaticaE4.E4Service"/>
         <service android:name=".pebble2.Pebble2Service"/>
         <service android:name=".phonesensors.PhoneSensorsService"/>
+        <service android:name=".applicationstatus.ApplicationStatusService"/>
 
         <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->

@@ -1,0 +1,11 @@
+{
+  "namespace": "org.radarcns.applicationstatus",
+  "type": "record",
+  "name": "ApplicationStatusUptime",
+  "doc": "Length of application uptime",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "applicationUptime", "type": "double", "doc": "Time since last app start (s)"}
+  ]
+}
