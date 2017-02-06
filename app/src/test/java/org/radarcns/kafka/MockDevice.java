@@ -17,7 +17,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.DoubleBuffer;
+import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -76,14 +79,23 @@ public class MockDevice<K> extends Thread {
     }
 
     public void run() {
+        List<KafkaTopicSender> senders = new LinkedList<>();
+
         try {
             KafkaTopicSender<K, EmpaticaE4Acceleration> accelerationSender = sender.sender(acceleration);
+            senders.add(accelerationSender);
             KafkaTopicSender<K, EmpaticaE4BatteryLevel> batterySender = sender.sender(battery);
+            senders.add(batterySender);
             KafkaTopicSender<K, EmpaticaE4BloodVolumePulse> bvpSender = sender.sender(bvp);
+            senders.add(bvpSender);
             KafkaTopicSender<K, EmpaticaE4ElectroDermalActivity> edaSender = sender.sender(eda);
+            senders.add(edaSender);
             KafkaTopicSender<K, EmpaticaE4InterBeatInterval> ibiSender = sender.sender(ibi);
+            senders.add(ibiSender);
             KafkaTopicSender<K, EmpaticaE4Tag> tagSender = sender.sender(tags);
+            senders.add(tagSender);
             KafkaTopicSender<K, EmpaticaE4Temperature> temperatureSender = sender.sender(temperature);
+            senders.add(temperatureSender);
 
             for (int t = 0; t < Integer.MAX_VALUE; t++) {
                 for (int i = 0; i <= hertz_modulus; i++) {
@@ -106,6 +118,7 @@ public class MockDevice<K> extends Thread {
                 }
                 logger.debug("Single time step {}", key);
             }
+
         } catch (InterruptedException ex) {
             // do nothing, just exit the loop
         } catch (IOException e) {
@@ -115,14 +128,23 @@ public class MockDevice<K> extends Thread {
             logger.error("MockDevice {} failed to send message", key, e);
         }
 
-        getResultOneMin();
+        for(KafkaTopicSender s : senders){
+            try {
+                s.flush();
+            } catch (IOException e) {
+                synchronized (this) {
+                    this.exception = e;
+                }
+                logger.error("MockDevice {} failed to send message", key, e);
+            }
+        }
+
     }
 
     private <V extends SpecificRecord> void sendIfNeeded(int timeStep, int frequency, KafkaTopicSender<K, V> topicSender, V avroRecord) throws IOException {
         if (frequency > 0 && timeStep % (hertz_modulus / frequency) == 0) {
             synchronized (offset) {
                 topicSender.send(offset.incrementAndGet(), key, avroRecord);
-                count(avroRecord);
             }
         }
     }
@@ -135,41 +157,6 @@ public class MockDevice<K> extends Thread {
         }
         else{
             logger.info("Time need to one complete send: {}msec",((double)(endTime - startTime) / 1000000d));
-        }
-    }
-
-    private <V extends SpecificRecord> void count(V avroRecord){
-        String sensorClass = avroRecord.getClass().getCanonicalName();
-        Integer count = counter.get(sensorClass);
-        counter.put(sensorClass, count == null ? 1 : count + 1);
-    }
-
-    public void getResultOneMin(){
-        for (String sensor : counter.keySet()) {
-            if(sensor.equals("org.radarcns.empatica.EmpaticaE4Temperature")){
-                logger.info("Temperature: expected {} find {}. Loss-rate {}", temperatureFrequency,
-                        (counter.get(sensor)), 1.0 - (counter.get(sensor).doubleValue())/(double)temperatureFrequency);
-            }
-            else if(sensor.equals("org.radarcns.empatica.EmpaticaE4BloodVolumePulse")){
-                logger.info("BVP: expected {} find {}. Loss-rate {}", bvpFrequency,
-                        (counter.get(sensor)), 1.0 - (counter.get(sensor).doubleValue())/(double)bvpFrequency);
-            }
-            else if(sensor.equals("org.radarcns.empatica.EmpaticaE4ElectroDermalActivity")){
-                logger.info("EDA: expected {} find {}. Loss-rate {}", edaFrequency,
-                        (counter.get(sensor)), 1.0 - (counter.get(sensor).doubleValue())/(double)edaFrequency);
-            }
-            else if(sensor.equals("org.radarcns.empatica.EmpaticaE4InterBeatInterval")){
-                logger.info("IBI: expected {} find {}. Loss-rate {}", ibiFrequency,
-                        (counter.get(sensor)), 1.0 - (counter.get(sensor).doubleValue())/(double)ibiFrequency);
-            }
-            else if(sensor.equals("org.radarcns.empatica.EmpaticaE4Acceleration")){
-                logger.info("Acceleration: expected {} find {}. Loss-rate {}", accelerationFrequency,
-                        (counter.get(sensor)), 1.0 - (counter.get(sensor).doubleValue())/(double)accelerationFrequency);
-            }
-            else if(sensor.equals("org.radarcns.empatica.EmpaticaE4BatteryLevel")){
-                logger.info("Battery: expected {} find {}. Loss-rate {}", batteryFrequency,
-                        (counter.get(sensor)), 1.0 - (counter.get(sensor).doubleValue())/(double)batteryFrequency);
-            }
         }
     }
 
