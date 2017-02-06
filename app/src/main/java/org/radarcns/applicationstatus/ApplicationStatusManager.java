@@ -1,10 +1,7 @@
 package org.radarcns.applicationstatus;
 
 import android.content.Context;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
-import android.text.format.Formatter;
 
 import org.radarcns.R;
 import org.radarcns.android.DeviceManager;
@@ -17,13 +14,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import static android.content.Context.WIFI_SERVICE;
 
 public class ApplicationStatusManager implements ServerStatusListener, DeviceManager {
 
@@ -41,13 +40,12 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
     private final ApplicationStatusState deviceStatus;
 
     private String deviceName;
-    private boolean isRegistered = false;
     private ScheduledFuture<?> serverStatusUpdateFuture;
     private final ScheduledExecutorService executor;
 
     private final long creationTimeStamp;
 
-    private final long APPLICATION_UPDATE_INTERVAL_DEFAULT = 5;//*60; // seconds
+    private final long APPLICATION_UPDATE_INTERVAL_DEFAULT = 5*60; // seconds
 
     public ApplicationStatusManager(Context context, DeviceStatusListener applicationStatusService, String groupId, String sourceId, TableDataHandler dataHandler, ApplicationStatusTopics topics) {
         this.dataHandler = dataHandler;
@@ -144,18 +142,30 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
                 status = "Unknown";
         }
         logger.info("Server Status: {}", status);
-        logger.info("IP: {}", getIpAddress());
+        logger.info("Device IP: {}", getIpAddress());
 
         ApplicationStatusServer value = new ApplicationStatusServer(timeReceived, timeReceived, status, getIpAddress());
 
         dataHandler.addMeasurement(serverStatusTable, deviceStatus.getId(), value);
     }
 
-    public String getIpAddress() {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int ip = wifiInfo.getIpAddress();
-        String ipAddress = Formatter.formatIpAddress(ip);
+    private String getIpAddress() {
+        // Find Ip via NetworkInterfaces. Works via wifi, ethernet and mobile network
+        String ipAddress = null;
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        // This finds both xx.xx.xx ip and rmnet. Last one is always ip.
+                        ipAddress = inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            return null;
+        }
         return ipAddress;
     }
 
@@ -165,8 +175,6 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
         double uptime = (System.currentTimeMillis() - creationTimeStamp)/1000d;
         ApplicationStatusUptime value = new ApplicationStatusUptime(timeReceived, timeReceived, uptime);
 
-        logger.info("Uptime: {}", (System.currentTimeMillis() - creationTimeStamp)/1000d);
-
         dataHandler.addMeasurement(uptimeTable, deviceStatus.getId(), value);
     }
 
@@ -174,11 +182,9 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
         double timeReceived = System.currentTimeMillis() / 1_000d;
 
         int recordsSent = deviceStatus.getCombinedTotalRecordsSent();
-        logger.info("N records: {}", recordsSent);
+        int cachedRecordsSent = 0; //TODO
 
-        int cachedRecords = 0; //TODO
-
-        ApplicationStatusRecordCounts value = new ApplicationStatusRecordCounts(timeReceived, timeReceived, cachedRecords,recordsSent);
+        ApplicationStatusRecordCounts value = new ApplicationStatusRecordCounts(timeReceived, timeReceived, cachedRecordsSent,recordsSent);
         dataHandler.addMeasurement(recordCountsTable, deviceStatus.getId(), value);
     }
 
