@@ -11,13 +11,9 @@ import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
-import org.radarcns.util.PersistentStorage;
+import org.radarcns.util.ApplicationSourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Properties;
-import java.util.UUID;
 
 import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
@@ -27,7 +23,6 @@ import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
  */
 public class PhoneSensorsService extends DeviceService {
     private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
-    private static final String SOURCE_ID_KEY = "source.id";
     private PhoneSensorsTopics topics;
     private String groupId;
     private String sourceId;
@@ -75,25 +70,8 @@ public class PhoneSensorsService extends DeviceService {
 
     public String getSourceId() {
         if (sourceId == null) {
-            setSourceId(getSourceIdFromFile());
+            sourceId = ApplicationSourceId.getSourceIdFromFile(getClass());
         }
         return sourceId;
-    }
-
-    public void setSourceId(String sourceId) {
-        this.sourceId = sourceId;
-    }
-
-    private String getSourceIdFromFile() {
-        Properties defaults = new Properties();
-        defaults.setProperty(SOURCE_ID_KEY, UUID.randomUUID().toString());
-        try {
-            Properties props = PersistentStorage.loadOrStore(getClass(), defaults);
-            return props.getProperty(SOURCE_ID_KEY);
-        } catch (IOException ex) {
-            logger.error("Failed to retrieve or store persistent source ID key. "
-                    + "Using a newly generated UUID.", ex);
-            return defaults.getProperty(SOURCE_ID_KEY);
-        }
     }
 }
