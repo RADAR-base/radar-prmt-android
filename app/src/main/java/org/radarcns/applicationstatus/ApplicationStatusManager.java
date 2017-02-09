@@ -44,6 +44,7 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
     private final ScheduledExecutorService executor;
 
     private final long creationTimeStamp;
+    private boolean isRegistered = false;
 
     private final long APPLICATION_UPDATE_INTERVAL_DEFAULT = 5*60; // seconds
 
@@ -84,6 +85,7 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
         // Application status
         setApplicationStatusUpdateRate(APPLICATION_UPDATE_INTERVAL_DEFAULT);
 
+        isRegistered = true;
         updateStatus(DeviceStatusListener.Status.CONNECTED);
     }
 
@@ -110,7 +112,7 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
 
     @Override
     public boolean isClosed() {
-        return false;
+        return !isRegistered;
     }
 
     @Override
@@ -190,7 +192,8 @@ public class ApplicationStatusManager implements ServerStatusListener, DeviceMan
 
     @Override
     public void close() throws IOException {
-
+        isRegistered = false;
+        updateStatus(DeviceStatusListener.Status.DISCONNECTED);
     }
 
     private synchronized void updateStatus(DeviceStatusListener.Status status) {
