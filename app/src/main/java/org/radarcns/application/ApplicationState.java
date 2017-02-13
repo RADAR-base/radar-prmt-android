@@ -1,27 +1,26 @@
-package org.radarcns.applicationstatus;
+package org.radarcns.application;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import org.radarcns.android.DeviceState;
 import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.util.Serialization;
 
 
-public class ApplicationStatusState extends DeviceState {
+public class ApplicationState extends DeviceState {
 
     private ServerStatusListener.Status serverStatus;
     private int combinedTotalRecordsSent;
 
-    public static final Parcelable.Creator<ApplicationStatusState> CREATOR = new Parcelable.Creator<ApplicationStatusState>() {
-        public ApplicationStatusState createFromParcel(Parcel in) {
-            ApplicationStatusState result = new ApplicationStatusState();
+    public static final Parcelable.Creator<ApplicationState> CREATOR = new Parcelable.Creator<ApplicationState>() {
+        public ApplicationState createFromParcel(Parcel in) {
+            ApplicationState result = new ApplicationState();
             result.updateFromParcel(in);
             return result;
         }
 
-        public ApplicationStatusState[] newArray(int size) {
-            return new ApplicationStatusState[size];
+        public ApplicationState[] newArray(int size) {
+            return new ApplicationState[size];
         }
     };
 

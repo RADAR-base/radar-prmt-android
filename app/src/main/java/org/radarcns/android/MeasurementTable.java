@@ -14,11 +14,11 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.DataCache;
-import org.radarcns.util.ListPool;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.ListPool;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -383,6 +383,27 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         try (Cursor cursor = db.rawQuery(sql, null)) {
             return cursorToRecords(cursor);
         }
+    }
+
+    @Override
+    public Pair<Long, Long> numberOfRecords() {
+        long c1 = -1L;
+        long c2 = -1L;
+        try (Cursor records = dbHelper.getReadableDatabase().rawQuery("SELECT sent, COUNT(sent) FROM " + topic.getName() + " GROUP BY sent;", null)) {
+            records.moveToNext();
+            if (records.getInt(0) == 0) {
+                c1 = records.getLong(1);
+            } else {
+                c2 = records.getLong(1);
+            }
+            records.moveToNext();
+            if (records.getInt(0) == 0) {
+                c1 = records.getLong(1);
+            } else {
+                c2 = records.getLong(1);
+            }
+        }
+        return new Pair<>(c1, c2);
     }
 
     /** Create this table in the database. */

@@ -2,6 +2,7 @@ package org.radarcns.android;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.Record;
@@ -32,4 +33,6 @@ public interface DeviceServiceBinder {
     Map<String, Integer> getServerRecordsSent();
     /** Update the configuration of the service */
     void updateConfiguration(Bundle bundle);
+    /** Number of records in cache [unsent] and [sent] */
+    Pair<Long, Long> numberOfRecords();
 }

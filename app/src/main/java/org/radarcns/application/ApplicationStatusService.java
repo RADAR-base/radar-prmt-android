@@ -1,4 +1,4 @@
-package org.radarcns.phonesensors;
+package org.radarcns.application;
 
 import android.os.Bundle;
 
@@ -17,32 +17,29 @@ import org.slf4j.LoggerFactory;
 
 import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
-/**
- * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
- * the phone sensors and send it to a Kafka REST proxy.
- */
-public class PhoneSensorsService extends DeviceService {
-    private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
-    private PhoneSensorsTopics topics;
+
+public class ApplicationStatusService extends DeviceService {
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationStatusService.class);
+    private ApplicationStatusTopics topics;
     private String groupId;
     private String sourceId;
 
     @Override
     public void onCreate() {
-        logger.info("Creating Phone Sensor service {}", this);
+        logger.info("Creating Application Status service {}", this);
         super.onCreate();
 
-        topics = PhoneSensorsTopics.getInstance();
+        topics = ApplicationStatusTopics.getInstance();
     }
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new PhoneSensorsDeviceManager(this, this, groupId, getSourceId(), getDataHandler(), topics);
+        return new ApplicationStatusManager(this, this, groupId, getSourceId(), getDataHandler(), topics);
     }
 
     @Override
     protected DeviceState getDefaultState() {
-        PhoneSensorsDeviceStatus newStatus = new PhoneSensorsDeviceStatus();
+        ApplicationState newStatus = new ApplicationState();
         newStatus.setStatus(DeviceStatusListener.Status.CONNECTED);
         return newStatus;
     }
@@ -56,7 +53,7 @@ public class PhoneSensorsService extends DeviceService {
     @Override
     protected AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics() {
         return new AvroTopic[] {
-                topics.getAccelerationTopic(), topics.getLightTopic(),
+                topics.getServerTopic(), topics.getRecordCountsTopic(), topics.getUptimeTopic()
         };
     }
 
@@ -74,4 +71,5 @@ public class PhoneSensorsService extends DeviceService {
         }
         return sourceId;
     }
+
 }

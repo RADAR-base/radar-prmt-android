@@ -1,4 +1,4 @@
-package org.radarcns.applicationstatus;
+package org.radarcns.phone;
 
 import android.os.Bundle;
 
@@ -17,29 +17,32 @@ import org.slf4j.LoggerFactory;
 
 import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
-
-public class ApplicationStatusService extends DeviceService {
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationStatusService.class);
-    private ApplicationStatusTopics topics;
+/**
+ * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
+ * the phone sensors and send it to a Kafka REST proxy.
+ */
+public class PhoneSensorsService extends DeviceService {
+    private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsService.class);
+    private PhoneTopics topics;
     private String groupId;
     private String sourceId;
 
     @Override
     public void onCreate() {
-        logger.info("Creating Application Status service {}", this);
+        logger.info("Creating Phone Sensor service {}", this);
         super.onCreate();
 
-        topics = ApplicationStatusTopics.getInstance();
+        topics = PhoneTopics.getInstance();
     }
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new ApplicationStatusManager(this, this, groupId, getSourceId(), getDataHandler(), topics);
+        return new PhoneSensorsManager(this, this, groupId, getSourceId(), getDataHandler(), topics);
     }
 
     @Override
     protected DeviceState getDefaultState() {
-        ApplicationStatusState newStatus = new ApplicationStatusState();
+        PhoneState newStatus = new PhoneState();
         newStatus.setStatus(DeviceStatusListener.Status.CONNECTED);
         return newStatus;
     }
@@ -53,7 +56,7 @@ public class ApplicationStatusService extends DeviceService {
     @Override
     protected AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics() {
         return new AvroTopic[] {
-                topics.getServerTopic(), topics.getRecordCountsTopic(), topics.getUptimeTopic()
+                topics.getAccelerationTopic(), topics.getLightTopic(),
         };
     }
 
@@ -71,5 +74,4 @@ public class ApplicationStatusService extends DeviceService {
         }
         return sourceId;
     }
-
 }

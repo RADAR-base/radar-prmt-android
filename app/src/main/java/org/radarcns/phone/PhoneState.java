@@ -1,4 +1,4 @@
-package org.radarcns.phonesensors;
+package org.radarcns.phone;
 
 import android.os.Parcel;
 
@@ -7,7 +7,7 @@ import org.radarcns.android.DeviceState;
 /**
  * The status on a single point in time
  */
-public class PhoneSensorsDeviceStatus extends DeviceState {
+public class PhoneState extends DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float light = Float.NaN;
@@ -17,15 +17,15 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
         return 0;
     }
 
-    public static final Creator<PhoneSensorsDeviceStatus> CREATOR = new Creator<PhoneSensorsDeviceStatus>() {
-        public PhoneSensorsDeviceStatus createFromParcel(Parcel in) {
-            PhoneSensorsDeviceStatus result = new PhoneSensorsDeviceStatus();
+    public static final Creator<PhoneState> CREATOR = new Creator<PhoneState>() {
+        public PhoneState createFromParcel(Parcel in) {
+            PhoneState result = new PhoneState();
             result.updateFromParcel(in);
             return result;
         }
 
-        public PhoneSensorsDeviceStatus[] newArray(int size) {
-            return new PhoneSensorsDeviceStatus[size];
+        public PhoneState[] newArray(int size) {
+            return new PhoneState[size];
         }
     };
 
