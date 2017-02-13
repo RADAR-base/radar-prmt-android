@@ -9,6 +9,7 @@ import android.util.Pair;
 import org.radarcns.R;
 import org.radarcns.android.BaseServiceConnection;
 import org.radarcns.android.DeviceManager;
+import org.radarcns.android.DeviceServiceBinder;
 import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.MeasurementTable;
@@ -139,6 +140,8 @@ public class ApplicationStatusManager implements DeviceManager {
     public void processServerStatus() {
         double timeReceived = System.currentTimeMillis() / 1_000d;
 
+        deviceStatus.updateServerStatus(((DeviceServiceBinder)applicationStatusService.getBinder()).getServerStatus());
+
         for (BaseServiceConnection<?> conn : services) {
             if (conn.hasService()) {
                 try {
@@ -204,15 +207,16 @@ public class ApplicationStatusManager implements DeviceManager {
     public void processRecordsSent() {
         double timeReceived = System.currentTimeMillis() / 1_000d;
 
-        int recordsCachedUnsent = 0;
-        int recordsCachedSent = 0;
+        Pair<Long, Long> localRecords = ((DeviceServiceBinder)applicationStatusService.getBinder()).numberOfRecords();
+        int recordsCachedUnsent = localRecords.first.intValue();
+        int recordsCachedSent = localRecords.second.intValue();
 
         for (BaseServiceConnection<?> conn : services) {
             if (conn.hasService()) {
                 try {
                     Pair<Long, Long> numRecords = conn.numberOfRecords();
-                    recordsCachedUnsent += numRecords.first;
-                    recordsCachedSent += numRecords.second;
+                    recordsCachedUnsent += numRecords.first.intValue();
+                    recordsCachedSent += numRecords.second.intValue();
                 } catch (RemoteException e) {
                     logger.warn("Failed to get server status from connection");
                 }
