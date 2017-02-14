@@ -11,11 +11,12 @@ import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
-import org.radarcns.util.ApplicationSourceId;
+import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
+import static org.radarcns.RadarConfiguration.SOURCE_ID_KEY;
 
 /**
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of
@@ -70,7 +71,7 @@ public class PhoneSensorsService extends DeviceService {
 
     public String getSourceId() {
         if (sourceId == null) {
-            sourceId = ApplicationSourceId.getSourceIdFromFile(getClass());
+            sourceId = PersistentStorage.loadOrStoreUUID(getClass(), SOURCE_ID_KEY);
         }
         return sourceId;
     }
