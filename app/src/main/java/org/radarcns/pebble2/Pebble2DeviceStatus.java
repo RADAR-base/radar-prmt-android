@@ -2,7 +2,7 @@ package org.radarcns.pebble2;
 
 import android.os.Parcel;
 
-import org.radarcns.android.DeviceState;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.util.Serialization;
 
 import java.util.Arrays;
@@ -10,18 +10,13 @@ import java.util.Arrays;
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
-public class Pebble2DeviceStatus extends DeviceState {
+public class Pebble2DeviceStatus extends BaseDeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private Boolean batteryIsCharging = null;
     private Boolean batteryIsPlugged = null;
     private float heartRate = Float.NaN;
     private float heartRateFiltered = Float.NaN;
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
     public static final Creator<Pebble2DeviceStatus> CREATOR = new Creator<Pebble2DeviceStatus>() {
         public Pebble2DeviceStatus createFromParcel(Parcel in) {

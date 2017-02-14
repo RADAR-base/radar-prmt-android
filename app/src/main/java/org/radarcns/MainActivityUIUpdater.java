@@ -6,7 +6,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.radarcns.android.DeviceServiceConnection;
-import org.radarcns.android.DeviceState;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.data.TimedInt;
 import org.radarcns.kafka.rest.ServerStatusListener;
@@ -32,7 +32,7 @@ public class MainActivityUIUpdater implements Runnable {
     private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
     private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
     private final DecimalFormat noDecimals = new DecimalFormat("0");
-    private final DeviceState[] deviceData;
+    private final BaseDeviceState[] deviceData;
     private final String[] deviceNames;
 
     private TextView[] mDeviceNameLabels;
@@ -55,7 +55,7 @@ public class MainActivityUIUpdater implements Runnable {
 
     MainActivityUIUpdater(MainActivity mainActivity, RadarConfiguration radarConfiguration) {
         this.mainActivity = mainActivity;
-        deviceData = new DeviceState[NUM_ROWS];
+        deviceData = new BaseDeviceState[NUM_ROWS];
         deviceNames = new String[NUM_ROWS];
         initializeViews();
 
@@ -197,7 +197,7 @@ public class MainActivityUIUpdater implements Runnable {
         mServerStatusIcon.setBackgroundResource(resource);
     }
 
-    public void updateDeviceStatus(DeviceState deviceData, int row) {
+    public void updateDeviceStatus(BaseDeviceState deviceData, int row) {
         // Connection status. Change icon used.
         DeviceStatusListener.Status status;
         if (deviceData == null) {
@@ -210,20 +210,20 @@ public class MainActivityUIUpdater implements Runnable {
         mStatusIcons[row].setBackgroundResource(resource);
     }
 
-    public void updateTemperature(DeviceState deviceData, int row) {
+    public void updateTemperature(BaseDeviceState deviceData, int row) {
         // \u2103 == ℃
         setText(mTemperatureLabels[row], deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
     }
 
-    public void updateHeartRate(DeviceState deviceData, int row) {
+    public void updateHeartRate(BaseDeviceState deviceData, int row) {
         setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
     }
 
-    public void updateAcceleration(DeviceState deviceData, int row) {
+    public void updateAcceleration(BaseDeviceState deviceData, int row) {
         setText(mAccelerationLabels[row], deviceData == null ? Float.NaN : deviceData.getAccelerationMagnitude(), "g", doubleDecimal);
     }
 
-    public void updateBattery(DeviceState deviceData, int row) {
+    public void updateBattery(BaseDeviceState deviceData, int row) {
         // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
         Float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
 //            if ( row == 0 ) {logger.info("Battery: {}", batteryLevel);}

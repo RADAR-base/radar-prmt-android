@@ -7,7 +7,21 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 
 /** Current state of a wearable device. */
-public abstract class DeviceState implements Parcelable {
+public class BaseDeviceState implements Parcelable {
+    public static final Parcelable.Creator<BaseDeviceState> CREATOR = new Parcelable.Creator<BaseDeviceState>() {
+        @Override
+        public BaseDeviceState createFromParcel(Parcel source) {
+            BaseDeviceState state = new BaseDeviceState();
+            state.updateFromParcel(source);
+            return state;
+        }
+
+        @Override
+        public BaseDeviceState[] newArray(int size) {
+            return new BaseDeviceState[size];
+        }
+    };
+
     private final MeasurementKey id = new MeasurementKey(null, null);
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
 
@@ -17,6 +31,11 @@ public abstract class DeviceState implements Parcelable {
 
     public MeasurementKey getId() {
         return id;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public void writeToParcel(Parcel dest, int flags) {
@@ -73,12 +92,9 @@ public abstract class DeviceState implements Parcelable {
      */
     public float getAccelerationMagnitude() {
         float[] acceleration = getAcceleration();
-        return (float) Math.sqrt( Math.pow(acceleration[0],2)
-                                + Math.pow(acceleration[1],2)
-                                + Math.pow(acceleration[2],2) );
+        return (float) Math.sqrt(
+                acceleration[0] * acceleration[0]
+                + acceleration[1] * acceleration[1]
+                + acceleration[2] * acceleration[2]);
     }
-
-    public void updateServerStatus(ServerStatusListener.Status status) {}
-
-    public void updateCombinedTotalRecordsSent(int n) {}
 }

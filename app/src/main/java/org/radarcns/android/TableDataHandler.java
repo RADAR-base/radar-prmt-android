@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -66,9 +67,8 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     /**
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
-    @SafeVarargs
     public TableDataHandler(Context context, URL kafkaUrl, SchemaRetriever schemaRetriever,
-                            AvroTopic<MeasurementKey, ? extends SpecificRecord>... topics) {
+                            List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> topics) {
         this.context = context;
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
@@ -77,7 +77,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         this.kafkaRecordsSendLimit = SEND_LIMIT_DEFAULT;
         this.senderConnectionTimeout = SENDER_CONNECTION_TIMEOUT_DEFAULT;
 
-        tables = new HashMap<>(topics.length * 2);
+        tables = new HashMap<>(topics.size() * 2);
         for (AvroTopic<MeasurementKey, ? extends SpecificRecord> topic : topics) {
             tables.put(topic, new MeasurementTable<>(context, topic, DATABASE_COMMIT_RATE_DEFAULT));
         }

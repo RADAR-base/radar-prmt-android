@@ -583,15 +583,6 @@ public class MainActivity extends AppCompatActivity {
     public void updateServerStatus(DeviceServiceConnection<?> connection,
                                    final ServerStatusListener.Status status) {
         this.serverStatus = status;
-
-        // Send new server status to the appStatusConnection
-        if (appStatusConnection != null && appStatusConnection.hasService()) {
-            try {
-                appStatusConnection.getDeviceData().updateServerStatus(status);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public void updateServerRecordsSent(DeviceServiceConnection<?> connection, String topic,
@@ -602,21 +593,6 @@ public class MainActivity extends AppCompatActivity {
         }
         latestTopicSent = topic;
         latestNumberOfRecordsSent.set(numberOfRecords);
-
-        // Send new server status to the appStatusConnection
-        if (appStatusConnection != null && appStatusConnection.hasService()) {
-            // Sum of all totals
-            int summedTotalRecordsSent = 0;
-            for (TimedInt n: mTotalRecordsSent) {
-                summedTotalRecordsSent += n.getValue();
-            }
-
-            try {
-                appStatusConnection.getDeviceData().updateCombinedTotalRecordsSent(summedTotalRecordsSent);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public void dialogInputDeviceName(final View v) {

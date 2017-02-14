@@ -2,20 +2,15 @@ package org.radarcns.phone;
 
 import android.os.Parcel;
 
-import org.radarcns.android.DeviceState;
+import org.radarcns.android.BaseDeviceState;
 
 /**
  * The status on a single point in time
  */
-public class PhoneState extends DeviceState {
+public class PhoneState extends BaseDeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float light = Float.NaN;
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
     public static final Creator<PhoneState> CREATOR = new Creator<PhoneState>() {
         public PhoneState createFromParcel(Parcel in) {

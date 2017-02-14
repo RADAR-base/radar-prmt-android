@@ -303,11 +303,11 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     protected abstract DeviceManager createDeviceManager();
 
-    protected abstract DeviceState getDefaultState();
+    protected abstract BaseDeviceState getDefaultState();
 
     protected abstract DeviceTopics getTopics();
 
-    protected abstract AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics();
+    protected abstract List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics();
 
     private class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
@@ -317,7 +317,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public DeviceState getDeviceStatus() {
+        public BaseDeviceState getDeviceStatus() {
             DeviceManager localManager = getDeviceManager();
             if (localManager == null) {
                 return getDefaultState();
@@ -337,7 +337,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public DeviceState startRecording(@NonNull Set<String> acceptableIds) {
+        public BaseDeviceState startRecording(@NonNull Set<String> acceptableIds) {
             DeviceManager localManager = getDeviceManager();
             if (localManager == null) {
                 logger.info("Starting recording");
@@ -380,12 +380,24 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
         @Override
         public Pair<Long, Long> numberOfRecords() {
-            long unsent = 0L;
-            long sent = 0L;
+            long unsent = -1L;
+            long sent = -1L;
             for (DataCache<?, ?> cache : getDataHandler().getCaches().values()) {
                 Pair<Long, Long> pair = cache.numberOfRecords();
-                unsent += pair.first;
-                sent = pair.second;
+                if (pair.first != -1L) {
+                    if (unsent == -1L) {
+                        unsent = pair.first;
+                    } else {
+                        unsent += pair.first;
+                    }
+                }
+                if (pair.second != -1L) {
+                    if (sent == -1L) {
+                        sent = pair.second;
+                    } else {
+                        sent += pair.second;
+                    }
+                }
             }
             return new Pair<>(unsent, sent);
         }

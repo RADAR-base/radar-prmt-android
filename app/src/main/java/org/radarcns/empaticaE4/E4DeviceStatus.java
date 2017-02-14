@@ -6,9 +6,7 @@ import android.os.Parcelable;
 import com.empatica.empalink.config.EmpaSensorStatus;
 import com.empatica.empalink.config.EmpaSensorType;
 
-import org.radarcns.android.DeviceState;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.key.MeasurementKey;
+import org.radarcns.android.BaseDeviceState;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -16,7 +14,7 @@ import java.util.Map;
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
-public class E4DeviceStatus extends DeviceState {
+public class E4DeviceStatus extends BaseDeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float bloodVolumePulse = Float.NaN;
@@ -24,11 +22,6 @@ public class E4DeviceStatus extends DeviceState {
     private float interBeatInterval = Float.NaN;
     private float temperature = Float.NaN;
     private final Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = new EnumMap<>(EmpaSensorType.class);
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
     public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
         public E4DeviceStatus createFromParcel(Parcel in) {

@@ -22,10 +22,9 @@ import static org.radarcns.android.DeviceService.SERVER_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_CHANGED;
 import static org.radarcns.empaticaE4.E4Service.DEVICE_STATUS_NAME;
 
-public class DeviceServiceConnection<S extends DeviceState> extends BaseServiceConnection<S> {
+public class DeviceServiceConnection<S extends BaseDeviceState> extends BaseServiceConnection<S> {
     private static final Logger logger = LoggerFactory.getLogger(DeviceServiceConnection.class);
     private final MainActivity mainActivity;
-    private final String serviceClassName;
 
     private final BroadcastReceiver statusReceiver = new BroadcastReceiver() {
         @Override
@@ -64,9 +63,8 @@ public class DeviceServiceConnection<S extends DeviceState> extends BaseServiceC
     }
 
     public DeviceServiceConnection(@NonNull MainActivity mainActivity, @NonNull Parcelable.Creator<S> deviceStateCreator, String serviceClassName) {
-        super(deviceStateCreator);
+        super(deviceStateCreator, serviceClassName);
         this.mainActivity = mainActivity;
-        this.serviceClassName = serviceClassName;
     }
 
     @Override
@@ -74,10 +72,11 @@ public class DeviceServiceConnection<S extends DeviceState> extends BaseServiceC
                                    IBinder service) {
         mainActivity.registerReceiver(statusReceiver,
                 new IntentFilter(DEVICE_STATUS_CHANGED));
-        mainActivity.registerReceiver(serverStatusListener,
-                new IntentFilter(SERVER_STATUS_CHANGED));
-        mainActivity.registerReceiver(serverStatusListener,
-                new IntentFilter(SERVER_RECORDS_SENT_TOPIC));
+
+        IntentFilter serverStatusFilter = new IntentFilter();
+        serverStatusFilter.addAction(SERVER_STATUS_CHANGED);
+        serverStatusFilter.addAction(SERVER_RECORDS_SENT_TOPIC);
+        mainActivity.registerReceiver(serverStatusListener, serverStatusFilter);
 
         if (!hasService()) {
             super.onServiceConnected(className, service);
@@ -121,9 +120,5 @@ public class DeviceServiceConnection<S extends DeviceState> extends BaseServiceC
     public void unbind() {
         mainActivity.unbindService(this);
         onServiceDisconnected(null);
-    }
-
-    public String getServiceClassName() {
-        return serviceClassName;
     }
 }

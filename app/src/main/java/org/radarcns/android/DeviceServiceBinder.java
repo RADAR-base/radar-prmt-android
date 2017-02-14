@@ -19,12 +19,12 @@ public interface DeviceServiceBinder {
      * @param acceptableIds a set of source IDs that may be connected to.
      *                      If empty, no selection is made.
      */
-    DeviceState startRecording(@NonNull Set<String> acceptableIds);
+    BaseDeviceState startRecording(@NonNull Set<String> acceptableIds);
     /** Stop scanning and recording */
     void stopRecording();
     <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit);
     /** Get the current device status */
-    DeviceState getDeviceStatus();
+    BaseDeviceState getDeviceStatus();
     /** Get the current device name, or null if unknown. */
     String getDeviceName();
     /** Get the current server status */

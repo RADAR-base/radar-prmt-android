@@ -3,14 +3,14 @@ package org.radarcns.application;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.radarcns.android.DeviceState;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.kafka.rest.ServerStatusListener;
 
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class ApplicationState extends DeviceState {
-
+public class ApplicationState extends BaseDeviceState {
     private ServerStatusListener.Status serverStatus;
-    private int combinedTotalRecordsSent;
+    private final AtomicInteger recordsSent = new AtomicInteger(0);
 
     public static final Parcelable.Creator<ApplicationState> CREATOR = new Parcelable.Creator<ApplicationState>() {
         public ApplicationState createFromParcel(Parcel in) {
@@ -24,33 +24,35 @@ public class ApplicationState extends DeviceState {
         }
     };
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
     protected void updateFromParcel(Parcel in) {
         super.updateFromParcel(in);
+        serverStatus = ServerStatusListener.Status.values()[in.readInt()];
+        recordsSent.set(in.readInt());
     }
 
     @Override
-    public void updateServerStatus(ServerStatusListener.Status status) {
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeInt(getServerStatus().ordinal());
+        dest.writeInt(getRecordsSent());
+    }
+
+    public synchronized void setServerStatus(ServerStatusListener.Status status) {
         serverStatus = status;
     }
 
-    @Override
-    public void updateCombinedTotalRecordsSent(int nRecords) {
-        combinedTotalRecordsSent = nRecords;
+    public void addRecordsSent(int nRecords) {
+        recordsSent.addAndGet(nRecords);
     }
 
-    public ServerStatusListener.Status getServerStatus() {
+    public synchronized ServerStatusListener.Status getServerStatus() {
         if (serverStatus == null) {
             return ServerStatusListener.Status.DISCONNECTED;
         }
         return serverStatus;
     }
 
-    public int getCombinedTotalRecordsSent() {
-        return combinedTotalRecordsSent;
+    public int getRecordsSent() {
+        return recordsSent.get();
     }
 }

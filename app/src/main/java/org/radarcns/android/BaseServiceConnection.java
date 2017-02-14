@@ -37,20 +37,22 @@ import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_SERVER_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_START_RECORDING;
 
-public class BaseServiceConnection<S extends DeviceState> implements ServiceConnection {
+public class BaseServiceConnection<S extends BaseDeviceState> implements ServiceConnection {
     private static final Logger logger = LoggerFactory.getLogger(BaseServiceConnection.class);
     private final Parcelable.Creator<S> deviceStateCreator;
     private boolean isRemote;
     private DeviceStatusListener.Status deviceStatus;
     public String deviceName;
     private IBinder serviceBinder;
+    private final String serviceClassName;
 
-    public BaseServiceConnection(Parcelable.Creator<S> deviceStateCreator) {
+    public BaseServiceConnection(Parcelable.Creator<S> deviceStateCreator, String serviceClassName) {
         this.serviceBinder = null;
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         this.isRemote = false;
         this.deviceStateCreator = deviceStateCreator;
+        this.serviceClassName = serviceClassName;
     }
 
     @Override
@@ -261,5 +263,9 @@ public class BaseServiceConnection<S extends DeviceState> implements ServiceConn
 
     protected IBinder getServiceBinder() {
         return serviceBinder;
+    }
+
+    public String getServiceClassName() {
+        return serviceClassName;
     }
 }

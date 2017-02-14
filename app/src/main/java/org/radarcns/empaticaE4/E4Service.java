@@ -6,13 +6,16 @@ import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
-import org.radarcns.android.DeviceState;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
@@ -41,7 +44,7 @@ public class E4Service extends DeviceService {
     }
 
     @Override
-    protected DeviceState getDefaultState() {
+    protected BaseDeviceState getDefaultState() {
         E4DeviceStatus newStatus = new E4DeviceStatus();
         newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
         return newStatus;
@@ -52,14 +55,12 @@ public class E4Service extends DeviceService {
         return topics;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics() {
-        return new AvroTopic[] {
+    protected List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics() {
+        return Arrays.<AvroTopic<MeasurementKey, ? extends SpecificRecord>>asList(
                 topics.getAccelerationTopic(), topics.getBloodVolumePulseTopic(),
                 topics.getElectroDermalActivityTopic(), topics.getInterBeatIntervalTopic(),
-                topics.getTemperatureTopic(), topics.getSensorStatusTopic()
-        };
+                topics.getTemperatureTopic(), topics.getSensorStatusTopic());
     }
 
     @Override
