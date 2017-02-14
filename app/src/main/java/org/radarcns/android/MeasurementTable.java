@@ -36,6 +36,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.avro.Schema.Type.NULL;
+import static org.apache.avro.Schema.Type.UNION;
+import static org.apache.avro.Schema.Type.ARRAY;
+import static org.apache.avro.Schema.Type.FIXED;
+import static org.apache.avro.Schema.Type.MAP;
+import static org.apache.avro.Schema.Type.RECORD;
+
 /**
  * Sqlite table for measurements.
  *
@@ -87,17 +94,24 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                 "MeasurementTable-" + MeasurementTable.this.topic.getName(),
                 Process.THREAD_PRIORITY_BACKGROUND);
 
-        for (Schema.Type fieldType : this.topic.getValueFieldTypes()) {
-            switch (fieldType) {
-                case RECORD:
-                case ENUM:
-                case ARRAY:
-                case MAP:
-                case UNION:
-                case FIXED:
-                    throw new IllegalArgumentException("Cannot handle type " + fieldType);
-                default:
-                    // nothing
+        for (Schema.Field field : this.topic.getValueSchema().getFields()) {
+            Schema.Type fieldType = field.schema().getType();
+            if (fieldType == UNION) {
+                List<Schema> unionTypes = field.schema().getTypes();
+                if (unionTypes.size() != 2) {
+                    throw new IllegalArgumentException("Cannot handle UNION type with other than 2 types, not " + unionTypes + " in " + field.schema());
+                }
+                if (unionTypes.get(0).getType() == NULL) {
+                    fieldType = unionTypes.get(1).getType();
+                } else if (unionTypes.get(1).getType() == NULL) {
+                    fieldType = unionTypes.get(0).getType();
+                } else {
+                    throw new IllegalArgumentException("Can only handle UNION that contains a null "
+                            + "type, not a UNION with types " + unionTypes + " in " + field.schema());
+                }
+            }
+            if (fieldType == RECORD || fieldType == ARRAY || fieldType == MAP || fieldType == FIXED || fieldType == UNION) {
+                throw new IllegalArgumentException("Cannot handle type " + fieldType + " in schema " + field.schema());
             }
         }
     }
@@ -169,13 +183,13 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                     queue.clear();
                 }
 
-                Schema.Type[] fieldTypes = topic.getValueFieldTypes();
+                List<Schema.Field> fields = topic.getValueSchema().getFields();
 
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
                 db.beginTransaction();
                 try {
                     for (Pair<MeasurementKey, V> values : localQueue) {
-                        insertRecord(values.first, values.second, fieldTypes);
+                        insertRecord(values.first, values.second, fields);
                         db.yieldIfContendedSafely();
                     }
                     db.setTransactionSuccessful();
@@ -189,35 +203,46 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
                 logger.info("Committing {} records per second to topic {}", Math.round(average.getAverage()), topic.getName());
             }
 
-            private void insertRecord(MeasurementKey key, SpecificRecord record, Schema.Type[] fieldTypes) {
+            private void insertRecord(MeasurementKey key, SpecificRecord record, List<Schema.Field> fields) {
                 statement.clearBindings();
                 // bindings are 1-indexed
                 statement.bindString(1, key.getUserId());
                 statement.bindString(2, key.getSourceId());
-                for (int i = 0; i < fieldTypes.length; i++) {
+                for (int i = 0; i < fields.size(); i++) {
                     Object value = record.get(i);
+                    int idx = i + 3;
                     if (value == null) {
-                        statement.bindNull(i + 3);
-                    } else switch (fieldTypes[i]) {
-                        case DOUBLE:
-                        case FLOAT:
-                            statement.bindDouble(i + 3, ((Number) value).doubleValue());
-                            break;
-                        case LONG:
-                        case INT:
-                            statement.bindLong(i + 3, ((Number) value).longValue());
-                            break;
-                        case STRING:
-                            statement.bindString(i + 3, value.toString());
-                            break;
-                        case BOOLEAN:
-                            statement.bindLong(i + 3, value.equals(Boolean.TRUE) ? 1L : 0L);
-                            break;
-                        case BYTES:
-                            statement.bindBlob(i + 3, (byte[]) value);
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Field type " + fieldTypes[i] + " cannot be processed");
+                        statement.bindNull(idx);
+                    } else {
+                        Schema.Type fieldType = fields.get(i).schema().getType();
+                        if (fieldType == UNION) {
+                            fieldType = getNonNullUnionType(fields.get(i).schema());
+                        }
+                        switch (fieldType) {
+                            case DOUBLE:
+                            case FLOAT:
+                                statement.bindDouble(idx, ((Number) value).doubleValue());
+                                break;
+                            case LONG:
+                            case INT:
+                                statement.bindLong(idx, ((Number) value).longValue());
+                                break;
+                            case STRING:
+                                statement.bindString(idx, value.toString());
+                                break;
+                            case BOOLEAN:
+                                statement.bindLong(idx, value.equals(Boolean.TRUE) ? 1L : 0L);
+                                break;
+                            case BYTES:
+                                statement.bindBlob(idx, (byte[]) value);
+                                break;
+                            case ENUM:
+                                statement.bindString(idx, enumToString((Enum)value));
+                                break;
+                            default:
+                                throw new IllegalArgumentException("Field cannot be processed, "
+                                        + "with type " + fieldType + " in " + fields.get(i).schema());
+                        }
                     }
                 }
                 if (statement.executeInsert() == -1) {
@@ -242,6 +267,15 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         void close() {
             this.executor.shutdown();
         }
+    }
+
+    private static Schema.Type getNonNullUnionType(Schema unionSchema) {
+        for (Schema subTypes : unionSchema.getTypes()) {
+            if (subTypes.getType() != NULL) {
+                return subTypes.getType();
+            }
+        }
+        throw new IllegalArgumentException("UNION schema does not have non-null subtype: " + unionSchema);
     }
 
     /** Flush all pending measurements to the table */
@@ -336,44 +370,69 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         List<Record<MeasurementKey, V>> records = listPool.get(
                 Collections.<Record<MeasurementKey,V>>emptyList());
 
-        Schema.Type[] fieldTypes = topic.getValueFieldTypes();
+        List<Schema.Field> fields = topic.getValueSchema().getFields();
 
         while (cursor.moveToNext()) {
             V avroRecord = topic.newValueInstance();
 
-            for (int i = 0; i < fieldTypes.length; i++) {
-                switch (fieldTypes[i]) {
+            for (int i = 0; i < fields.size(); i++) {
+                int idx = i + 4;
+                Schema.Type fieldType = fields.get(i).schema().getType();
+                if (fieldType == UNION) {
+                    fieldType = getNonNullUnionType(fields.get(i).schema());
+                }
+                switch (fieldType) {
                     case STRING:
-                        avroRecord.put(i, cursor.getString(i + 4));
+                        avroRecord.put(i, cursor.getString(idx));
                         break;
                     case BYTES:
-                        avroRecord.put(i, cursor.getBlob(i + 4));
+                        avroRecord.put(i, cursor.getBlob(idx));
                         break;
                     case LONG:
-                        avroRecord.put(i, cursor.getLong(i + 4));
+                        avroRecord.put(i, cursor.getLong(idx));
                         break;
                     case INT:
-                        avroRecord.put(i, cursor.getInt(i + 4));
+                        avroRecord.put(i, cursor.getInt(idx));
                         break;
                     case BOOLEAN:
-                        avroRecord.put(i, cursor.getInt(i + 4) > 0);
+                        avroRecord.put(i, cursor.getInt(idx) > 0);
                         break;
                     case FLOAT:
-                        avroRecord.put(i, cursor.getFloat(i + 4));
+                        avroRecord.put(i, cursor.getFloat(idx));
                         break;
                     case DOUBLE:
-                        avroRecord.put(i, cursor.getDouble(i + 4));
+                        avroRecord.put(i, cursor.getDouble(idx));
+                        break;
+                    case ENUM:
+                        avroRecord.put(i, parseEnum(cursor.getString(idx)));
                         break;
                     case NULL:
                         avroRecord.put(i, null);
                         break;
                     default:
-                        throw new IllegalStateException("Cannot handle type " + fieldTypes[i]);
+                        throw new IllegalStateException("Cannot handle type " + fieldType);
                 }
             }
             records.add(new Record<>(cursor.getLong(0), new MeasurementKey(cursor.getString(1), cursor.getString(2)), avroRecord));
         }
         return records;
+    }
+
+    private String enumToString(Enum value) {
+        return value.getClass().getName() + ":" + value.name();
+    }
+
+    private Enum parseEnum(String value) {
+        String[] classEnum = value.split(":");
+        if (classEnum.length != 2) {
+            throw new IllegalStateException("Cannot parse ENUM " + value + " which does not adhere to a class:value format.");
+        }
+        try {
+            Class enumClass = Class.forName(classEnum[0]);
+            return Enum.valueOf(enumClass, classEnum[1]);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Cannot instantiate ENUM " + value + " of which the class " + classEnum[0] + " cannot be found");
+        }
     }
 
     @Override
@@ -390,17 +449,12 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         long c1 = -1L;
         long c2 = -1L;
         try (Cursor records = dbHelper.getReadableDatabase().rawQuery("SELECT sent, COUNT(sent) FROM " + topic.getName() + " GROUP BY sent;", null)) {
-            records.moveToNext();
-            if (records.getInt(0) == 0) {
-                c1 = records.getLong(1);
-            } else {
-                c2 = records.getLong(1);
-            }
-            records.moveToNext();
-            if (records.getInt(0) == 0) {
-                c1 = records.getLong(1);
-            } else {
-                c2 = records.getLong(1);
+            while (records.moveToNext()) {
+                if (records.getInt(0) == 0) {
+                    c1 = records.getLong(1);
+                } else {
+                    c2 = records.getLong(1);
+                }
             }
         }
         return new Pair<>(c1, c2);
@@ -411,8 +465,13 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         String query = "CREATE TABLE " + topic.getName() + " (offset INTEGER PRIMARY KEY AUTOINCREMENT, userId TEXT, sourceId TEXT, sent INTEGER DEFAULT 0";
         for (Schema.Field f : topic.getValueSchema().getFields()) {
             query += ", " + f.name() + " ";
-            switch (f.schema().getType()) {
+            Schema.Type fieldType = f.schema().getType();
+            if (fieldType == UNION) {
+                fieldType = getNonNullUnionType(f.schema());
+            }
+            switch (fieldType) {
                 case STRING:
+                case ENUM:
                     query += "TEXT";
                     break;
                 case BYTES:
