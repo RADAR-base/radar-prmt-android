@@ -3,41 +3,41 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empatica;
+package org.radarcns.phone;
 
 import org.apache.avro.specific.SpecificData;
 
 @SuppressWarnings("all")
-/** Data from photoplethysmograph. */
+/** Data from the light sensor in luminous flux per unit area. */
 @org.apache.avro.specific.AvroGenerated
-public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 8834927438966135504L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4BloodVolumePulse\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Data from photoplethysmograph.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"bloodVolumePulse\",\"type\":\"float\",\"doc\":\"light absorption (nW)\"}]}");
+public class PhoneLight extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  private static final long serialVersionUID = 8427282721596005518L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneLight\",\"namespace\":\"org.radarcns.phone\",\"doc\":\"Data from the light sensor in luminous flux per unit area.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"light\",\"type\":\"float\",\"doc\":\"illuminance (lx)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** light absorption (nW) */
-  @Deprecated public float bloodVolumePulse;
+  /** illuminance (lx) */
+  @Deprecated public float light;
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>.
    */
-  public EmpaticaE4BloodVolumePulse() {}
+  public PhoneLight() {}
 
   /**
    * All-args constructor.
    * @param time device timestamp in UTC (s)
    * @param timeReceived device receiver timestamp in UTC (s)
-   * @param bloodVolumePulse light absorption (nW)
+   * @param light illuminance (lx)
    */
-  public EmpaticaE4BloodVolumePulse(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float bloodVolumePulse) {
+  public PhoneLight(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float light) {
     this.time = time;
     this.timeReceived = timeReceived;
-    this.bloodVolumePulse = bloodVolumePulse;
+    this.light = light;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -46,7 +46,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
-    case 2: return bloodVolumePulse;
+    case 2: return light;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -57,7 +57,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: bloodVolumePulse = (java.lang.Float)value$; break;
+    case 2: light = (java.lang.Float)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -97,60 +97,60 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
   }
 
   /**
-   * Gets the value of the 'bloodVolumePulse' field.
-   * @return light absorption (nW)
+   * Gets the value of the 'light' field.
+   * @return illuminance (lx)
    */
-  public java.lang.Float getBloodVolumePulse() {
-    return bloodVolumePulse;
+  public java.lang.Float getLight() {
+    return light;
   }
 
   /**
-   * Sets the value of the 'bloodVolumePulse' field.
-   * light absorption (nW)
+   * Sets the value of the 'light' field.
+   * illuminance (lx)
    * @param value the value to set.
    */
-  public void setBloodVolumePulse(java.lang.Float value) {
-    this.bloodVolumePulse = value;
+  public void setLight(java.lang.Float value) {
+    this.light = value;
   }
 
   /**
-   * Creates a new EmpaticaE4BloodVolumePulse RecordBuilder.
-   * @return A new EmpaticaE4BloodVolumePulse RecordBuilder
+   * Creates a new PhoneLight RecordBuilder.
+   * @return A new PhoneLight RecordBuilder
    */
-  public static org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder newBuilder() {
-    return new org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder();
+  public static org.radarcns.phone.PhoneLight.Builder newBuilder() {
+    return new org.radarcns.phone.PhoneLight.Builder();
   }
 
   /**
-   * Creates a new EmpaticaE4BloodVolumePulse RecordBuilder by copying an existing Builder.
+   * Creates a new PhoneLight RecordBuilder by copying an existing Builder.
    * @param other The existing builder to copy.
-   * @return A new EmpaticaE4BloodVolumePulse RecordBuilder
+   * @return A new PhoneLight RecordBuilder
    */
-  public static org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder newBuilder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder other) {
-    return new org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder(other);
+  public static org.radarcns.phone.PhoneLight.Builder newBuilder(org.radarcns.phone.PhoneLight.Builder other) {
+    return new org.radarcns.phone.PhoneLight.Builder(other);
   }
 
   /**
-   * Creates a new EmpaticaE4BloodVolumePulse RecordBuilder by copying an existing EmpaticaE4BloodVolumePulse instance.
+   * Creates a new PhoneLight RecordBuilder by copying an existing PhoneLight instance.
    * @param other The existing instance to copy.
-   * @return A new EmpaticaE4BloodVolumePulse RecordBuilder
+   * @return A new PhoneLight RecordBuilder
    */
-  public static org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder newBuilder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse other) {
-    return new org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder(other);
+  public static org.radarcns.phone.PhoneLight.Builder newBuilder(org.radarcns.phone.PhoneLight other) {
+    return new org.radarcns.phone.PhoneLight.Builder(other);
   }
 
   /**
-   * RecordBuilder for EmpaticaE4BloodVolumePulse instances.
+   * RecordBuilder for PhoneLight instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<EmpaticaE4BloodVolumePulse>
-    implements org.apache.avro.data.RecordBuilder<EmpaticaE4BloodVolumePulse> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<PhoneLight>
+    implements org.apache.avro.data.RecordBuilder<PhoneLight> {
 
     /** device timestamp in UTC (s) */
     private double time;
     /** device receiver timestamp in UTC (s) */
     private double timeReceived;
-    /** light absorption (nW) */
-    private float bloodVolumePulse;
+    /** illuminance (lx) */
+    private float light;
 
     /** Creates a new Builder */
     private Builder() {
@@ -161,7 +161,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder other) {
+    private Builder(org.radarcns.phone.PhoneLight.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -171,17 +171,17 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.bloodVolumePulse)) {
-        this.bloodVolumePulse = data().deepCopy(fields()[2].schema(), other.bloodVolumePulse);
+      if (isValidValue(fields()[2], other.light)) {
+        this.light = data().deepCopy(fields()[2].schema(), other.light);
         fieldSetFlags()[2] = true;
       }
     }
 
     /**
-     * Creates a Builder by copying an existing EmpaticaE4BloodVolumePulse instance
+     * Creates a Builder by copying an existing PhoneLight instance
      * @param other The existing instance to copy.
      */
-    private Builder(org.radarcns.empatica.EmpaticaE4BloodVolumePulse other) {
+    private Builder(org.radarcns.phone.PhoneLight other) {
             super(SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -191,8 +191,8 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.bloodVolumePulse)) {
-        this.bloodVolumePulse = data().deepCopy(fields()[2].schema(), other.bloodVolumePulse);
+      if (isValidValue(fields()[2], other.light)) {
+        this.light = data().deepCopy(fields()[2].schema(), other.light);
         fieldSetFlags()[2] = true;
       }
     }
@@ -212,7 +212,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
       * @param value The value of 'time'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder setTime(double value) {
+    public org.radarcns.phone.PhoneLight.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -234,7 +234,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
       * device timestamp in UTC (s)
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder clearTime() {
+    public org.radarcns.phone.PhoneLight.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -254,7 +254,7 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
       * @param value The value of 'timeReceived'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder setTimeReceived(double value) {
+    public org.radarcns.phone.PhoneLight.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -276,60 +276,60 @@ public class EmpaticaE4BloodVolumePulse extends org.apache.avro.specific.Specifi
       * device receiver timestamp in UTC (s)
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder clearTimeReceived() {
+    public org.radarcns.phone.PhoneLight.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
     /**
-      * Gets the value of the 'bloodVolumePulse' field.
-      * light absorption (nW)
+      * Gets the value of the 'light' field.
+      * illuminance (lx)
       * @return The value.
       */
-    public java.lang.Float getBloodVolumePulse() {
-      return bloodVolumePulse;
+    public java.lang.Float getLight() {
+      return light;
     }
 
     /**
-      * Sets the value of the 'bloodVolumePulse' field.
-      * light absorption (nW)
-      * @param value The value of 'bloodVolumePulse'.
+      * Sets the value of the 'light' field.
+      * illuminance (lx)
+      * @param value The value of 'light'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder setBloodVolumePulse(float value) {
+    public org.radarcns.phone.PhoneLight.Builder setLight(float value) {
       validate(fields()[2], value);
-      this.bloodVolumePulse = value;
+      this.light = value;
       fieldSetFlags()[2] = true;
       return this;
     }
 
     /**
-      * Checks whether the 'bloodVolumePulse' field has been set.
-      * light absorption (nW)
-      * @return True if the 'bloodVolumePulse' field has been set, false otherwise.
+      * Checks whether the 'light' field has been set.
+      * illuminance (lx)
+      * @return True if the 'light' field has been set, false otherwise.
       */
-    public boolean hasBloodVolumePulse() {
+    public boolean hasLight() {
       return fieldSetFlags()[2];
     }
 
 
     /**
-      * Clears the value of the 'bloodVolumePulse' field.
-      * light absorption (nW)
+      * Clears the value of the 'light' field.
+      * illuminance (lx)
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4BloodVolumePulse.Builder clearBloodVolumePulse() {
+    public org.radarcns.phone.PhoneLight.Builder clearLight() {
       fieldSetFlags()[2] = false;
       return this;
     }
 
     @Override
-    public EmpaticaE4BloodVolumePulse build() {
+    public PhoneLight build() {
       try {
-        EmpaticaE4BloodVolumePulse record = new EmpaticaE4BloodVolumePulse();
+        PhoneLight record = new PhoneLight();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.bloodVolumePulse = fieldSetFlags()[2] ? this.bloodVolumePulse : (java.lang.Float) defaultValue(fields()[2]);
+        record.light = fieldSetFlags()[2] ? this.light : (java.lang.Float) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

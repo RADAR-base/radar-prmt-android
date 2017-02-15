@@ -6,9 +6,8 @@ import android.os.Parcelable;
 import com.empatica.empalink.config.EmpaSensorStatus;
 import com.empatica.empalink.config.EmpaSensorType;
 
-import org.radarcns.android.DeviceState;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.key.MeasurementKey;
+import org.radarcns.android.BaseDeviceState;
+import org.radarcns.util.DeviceStateCreator;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -16,7 +15,7 @@ import java.util.Map;
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
-public class E4DeviceStatus extends DeviceState {
+public class E4DeviceStatus extends BaseDeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float bloodVolumePulse = Float.NaN;
@@ -25,22 +24,7 @@ public class E4DeviceStatus extends DeviceState {
     private float temperature = Float.NaN;
     private final Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = new EnumMap<>(EmpaSensorType.class);
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
-        public E4DeviceStatus createFromParcel(Parcel in) {
-            E4DeviceStatus result = new E4DeviceStatus();
-            result.updateFromParcel(in);
-            return result;
-        }
-
-        public E4DeviceStatus[] newArray(int size) {
-            return new E4DeviceStatus[size];
-        }
-    };
+    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new DeviceStateCreator<>(E4DeviceStatus.class);
 
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
@@ -60,7 +44,7 @@ public class E4DeviceStatus extends DeviceState {
         }
     }
 
-    protected void updateFromParcel(Parcel in) {
+    public void updateFromParcel(Parcel in) {
         super.updateFromParcel(in);
         acceleration[0] = in.readFloat();
         acceleration[1] = in.readFloat();

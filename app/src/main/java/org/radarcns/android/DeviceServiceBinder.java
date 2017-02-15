@@ -2,6 +2,7 @@ package org.radarcns.android;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.Record;
@@ -18,12 +19,12 @@ public interface DeviceServiceBinder {
      * @param acceptableIds a set of source IDs that may be connected to.
      *                      If empty, no selection is made.
      */
-    DeviceState startRecording(@NonNull Set<String> acceptableIds);
+    BaseDeviceState startRecording(@NonNull Set<String> acceptableIds);
     /** Stop scanning and recording */
     void stopRecording();
     <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit);
     /** Get the current device status */
-    DeviceState getDeviceStatus();
+    BaseDeviceState getDeviceStatus();
     /** Get the current device name, or null if unknown. */
     String getDeviceName();
     /** Get the current server status */
@@ -32,4 +33,6 @@ public interface DeviceServiceBinder {
     Map<String, Integer> getServerRecordsSent();
     /** Update the configuration of the service */
     void updateConfiguration(Bundle bundle);
+    /** Number of records in cache [unsent] and [sent] */
+    Pair<Long, Long> numberOfRecords();
 }

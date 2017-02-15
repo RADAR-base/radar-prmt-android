@@ -1,6 +1,7 @@
 package org.radarcns.data;
 
 import android.os.Parcel;
+import android.util.Pair;
 
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
@@ -24,6 +25,11 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      * @return records.
      */
     List<Record<K, V>> getRecords(int limit);
+
+    /**
+     * Get a pair with the number of [unsent records], [sent records]
+     */
+    Pair<Long, Long> numberOfRecords();
 
     /**
      * Remove all records before a given offset.

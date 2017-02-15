@@ -18,6 +18,7 @@ import java.io.Writer;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 
 public class PersistentStorage {
     private static Logger logger = LoggerFactory.getLogger(PersistentStorage.class);
@@ -73,5 +74,23 @@ public class PersistentStorage {
             logger.debug("Stored persistent properties to {}", file);
         }
         return combinedProperties;
+    }
+
+    /**
+     * Load or store a single persistent UUID value.
+     * @param clazz class name
+     * @param key key to store the UUID with.
+     * @return The generated UUID value
+     */
+    public static String loadOrStoreUUID(Class<?> clazz, String key) {
+        Properties defaults = new Properties();
+        defaults.setProperty(key, UUID.randomUUID().toString());
+        try {
+            Properties props = PersistentStorage.loadOrStore(clazz, defaults);
+            return props.getProperty(key);
+        } catch (IOException ex) {
+            // Use newly generated UUID
+            return defaults.getProperty(key);
+        }
     }
 }

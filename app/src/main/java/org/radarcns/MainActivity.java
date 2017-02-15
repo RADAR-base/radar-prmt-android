@@ -33,8 +33,8 @@ import com.google.android.gms.tasks.Task;
 
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.applicationstatus.ApplicationStatusService;
-import org.radarcns.applicationstatus.ApplicationStatusState;
+import org.radarcns.application.ApplicationStatusService;
+import org.radarcns.application.ApplicationState;
 import org.radarcns.data.TimedInt;
 import org.radarcns.empaticaE4.E4DeviceStatus;
 import org.radarcns.empaticaE4.E4HeartbeatToast;
@@ -43,8 +43,8 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
-import org.radarcns.phonesensors.PhoneSensorsDeviceStatus;
-import org.radarcns.phonesensors.PhoneSensorsService;
+import org.radarcns.phone.PhoneState;
+import org.radarcns.phone.PhoneSensorsService;
 import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
     /** Defines callbacks for service binding, passed to bindService() */
     private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
     private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
-    private final DeviceServiceConnection<PhoneSensorsDeviceStatus> phoneConnection;
-    private final DeviceServiceConnection<ApplicationStatusState> appStatusConnection;
+    private final DeviceServiceConnection<PhoneState> phoneConnection;
+    private final DeviceServiceConnection<ApplicationState> appStatusConnection;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
@@ -139,8 +139,8 @@ public class MainActivity extends AppCompatActivity {
         isForcedDisconnected = false;
         mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
         pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
-        phoneConnection = new DeviceServiceConnection<>(this, PhoneSensorsDeviceStatus.CREATOR, PhoneSensorsService.class.getName());
-        appStatusConnection = new DeviceServiceConnection<>(this, ApplicationStatusState.CREATOR, ApplicationStatusService.class.getName());
+        phoneConnection = new DeviceServiceConnection<>(this, PhoneState.CREATOR, PhoneSensorsService.class.getName());
+        appStatusConnection = new DeviceServiceConnection<>(this, ApplicationState.CREATOR, ApplicationStatusService.class.getName());
         mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection, appStatusConnection};
         mConnectionIsBound = new boolean[] {false, false, false, false, false};
         serverStatus = null;
@@ -583,15 +583,6 @@ public class MainActivity extends AppCompatActivity {
     public void updateServerStatus(DeviceServiceConnection<?> connection,
                                    final ServerStatusListener.Status status) {
         this.serverStatus = status;
-
-        // Send new server status to the appStatusConnection
-        if (appStatusConnection != null && appStatusConnection.hasService()) {
-            try {
-                appStatusConnection.getDeviceData().updateServerStatus(status);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public void updateServerRecordsSent(DeviceServiceConnection<?> connection, String topic,
@@ -602,21 +593,6 @@ public class MainActivity extends AppCompatActivity {
         }
         latestTopicSent = topic;
         latestNumberOfRecordsSent.set(numberOfRecords);
-
-        // Send new server status to the appStatusConnection
-        if (appStatusConnection != null && appStatusConnection.hasService()) {
-            // Sum of all totals
-            int summedTotalRecordsSent = 0;
-            for (TimedInt n: mTotalRecordsSent) {
-                summedTotalRecordsSent += n.getValue();
-            }
-
-            try {
-                appStatusConnection.getDeviceData().updateCombinedTotalRecordsSent(summedTotalRecordsSent);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public void dialogInputDeviceName(final View v) {

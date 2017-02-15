@@ -2,7 +2,8 @@ package org.radarcns.pebble2;
 
 import android.os.Parcel;
 
-import org.radarcns.android.DeviceState;
+import org.radarcns.android.BaseDeviceState;
+import org.radarcns.util.DeviceStateCreator;
 import org.radarcns.util.Serialization;
 
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import java.util.Arrays;
 /**
  * The status on a single point in time of an Empatica E4 device.
  */
-public class Pebble2DeviceStatus extends DeviceState {
+public class Pebble2DeviceStatus extends BaseDeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private Boolean batteryIsCharging = null;
@@ -18,22 +19,7 @@ public class Pebble2DeviceStatus extends DeviceState {
     private float heartRate = Float.NaN;
     private float heartRateFiltered = Float.NaN;
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<Pebble2DeviceStatus> CREATOR = new Creator<Pebble2DeviceStatus>() {
-        public Pebble2DeviceStatus createFromParcel(Parcel in) {
-            Pebble2DeviceStatus result = new Pebble2DeviceStatus();
-            result.updateFromParcel(in);
-            return result;
-        }
-
-        public Pebble2DeviceStatus[] newArray(int size) {
-            return new Pebble2DeviceStatus[size];
-        }
-    };
+    public static final Creator<Pebble2DeviceStatus> CREATOR = new DeviceStateCreator<>(Pebble2DeviceStatus.class);
 
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
@@ -48,7 +34,7 @@ public class Pebble2DeviceStatus extends DeviceState {
         dest.writeFloat(this.heartRateFiltered);
     }
 
-    protected void updateFromParcel(Parcel in) {
+    public void updateFromParcel(Parcel in) {
         super.updateFromParcel(in);
         acceleration[0] = in.readFloat();
         acceleration[1] = in.readFloat();

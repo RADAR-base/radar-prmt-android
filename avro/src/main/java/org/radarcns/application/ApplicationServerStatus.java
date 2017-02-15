@@ -3,45 +3,45 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.empatica;
+package org.radarcns.application;
 
 import org.apache.avro.specific.SpecificData;
 
 @SuppressWarnings("all")
-/** Sensor status according to the device. */
+/** Server connection status with android client. */
 @org.apache.avro.specific.AvroGenerated
-public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 5668661274809752052L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"EmpaticaE4SensorStatus\",\"namespace\":\"org.radarcns.empatica\",\"doc\":\"Sensor status according to the device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"sensor\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor name; one of BVP, GSR, ACC, TEMP.\"},{\"name\":\"status\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.\"}]}");
+public class ApplicationServerStatus extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  private static final long serialVersionUID = -8512963403158628805L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ApplicationServerStatus\",\"namespace\":\"org.radarcns.application\",\"doc\":\"Server connection status with android client.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"serverStatus\",\"type\":{\"type\":\"enum\",\"name\":\"ServerStatus\",\"symbols\":[\"CONNECTED\",\"DISCONNECTED\",\"UNKNOWN\"]},\"doc\":\"server connection status\",\"default\":\"UNKNOWN\"},{\"name\":\"ipAddress\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"doc\":\"Hardware identifier of client application\",\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** sensor name; one of BVP, GSR, ACC, TEMP. */
-  @Deprecated public java.lang.String sensor;
-  /** sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD. */
-  @Deprecated public java.lang.String status;
+  /** server connection status */
+  @Deprecated public org.radarcns.application.ServerStatus serverStatus;
+  /** Hardware identifier of client application */
+  @Deprecated public java.lang.String ipAddress;
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>.
    */
-  public EmpaticaE4SensorStatus() {}
+  public ApplicationServerStatus() {}
 
   /**
    * All-args constructor.
    * @param time device timestamp in UTC (s)
    * @param timeReceived device receiver timestamp in UTC (s)
-   * @param sensor sensor name; one of BVP, GSR, ACC, TEMP.
-   * @param status sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
+   * @param serverStatus server connection status
+   * @param ipAddress Hardware identifier of client application
    */
-  public EmpaticaE4SensorStatus(java.lang.Double time, java.lang.Double timeReceived, java.lang.String sensor, java.lang.String status) {
+  public ApplicationServerStatus(java.lang.Double time, java.lang.Double timeReceived, org.radarcns.application.ServerStatus serverStatus, java.lang.String ipAddress) {
     this.time = time;
     this.timeReceived = timeReceived;
-    this.sensor = sensor;
-    this.status = status;
+    this.serverStatus = serverStatus;
+    this.ipAddress = ipAddress;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -50,8 +50,8 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     switch (field$) {
     case 0: return time;
     case 1: return timeReceived;
-    case 2: return sensor;
-    case 3: return status;
+    case 2: return serverStatus;
+    case 3: return ipAddress;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -62,8 +62,8 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: sensor = (java.lang.String)value$; break;
-    case 3: status = (java.lang.String)value$; break;
+    case 2: serverStatus = (org.radarcns.application.ServerStatus)value$; break;
+    case 3: ipAddress = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -103,79 +103,79 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
   }
 
   /**
-   * Gets the value of the 'sensor' field.
-   * @return sensor name; one of BVP, GSR, ACC, TEMP.
+   * Gets the value of the 'serverStatus' field.
+   * @return server connection status
    */
-  public java.lang.String getSensor() {
-    return sensor;
+  public org.radarcns.application.ServerStatus getServerStatus() {
+    return serverStatus;
   }
 
   /**
-   * Sets the value of the 'sensor' field.
-   * sensor name; one of BVP, GSR, ACC, TEMP.
+   * Sets the value of the 'serverStatus' field.
+   * server connection status
    * @param value the value to set.
    */
-  public void setSensor(java.lang.String value) {
-    this.sensor = value;
+  public void setServerStatus(org.radarcns.application.ServerStatus value) {
+    this.serverStatus = value;
   }
 
   /**
-   * Gets the value of the 'status' field.
-   * @return sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
+   * Gets the value of the 'ipAddress' field.
+   * @return Hardware identifier of client application
    */
-  public java.lang.String getStatus() {
-    return status;
+  public java.lang.String getIpAddress() {
+    return ipAddress;
   }
 
   /**
-   * Sets the value of the 'status' field.
-   * sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
+   * Sets the value of the 'ipAddress' field.
+   * Hardware identifier of client application
    * @param value the value to set.
    */
-  public void setStatus(java.lang.String value) {
-    this.status = value;
+  public void setIpAddress(java.lang.String value) {
+    this.ipAddress = value;
   }
 
   /**
-   * Creates a new EmpaticaE4SensorStatus RecordBuilder.
-   * @return A new EmpaticaE4SensorStatus RecordBuilder
+   * Creates a new ApplicationServerStatus RecordBuilder.
+   * @return A new ApplicationServerStatus RecordBuilder
    */
-  public static org.radarcns.empatica.EmpaticaE4SensorStatus.Builder newBuilder() {
-    return new org.radarcns.empatica.EmpaticaE4SensorStatus.Builder();
+  public static org.radarcns.application.ApplicationServerStatus.Builder newBuilder() {
+    return new org.radarcns.application.ApplicationServerStatus.Builder();
   }
 
   /**
-   * Creates a new EmpaticaE4SensorStatus RecordBuilder by copying an existing Builder.
+   * Creates a new ApplicationServerStatus RecordBuilder by copying an existing Builder.
    * @param other The existing builder to copy.
-   * @return A new EmpaticaE4SensorStatus RecordBuilder
+   * @return A new ApplicationServerStatus RecordBuilder
    */
-  public static org.radarcns.empatica.EmpaticaE4SensorStatus.Builder newBuilder(org.radarcns.empatica.EmpaticaE4SensorStatus.Builder other) {
-    return new org.radarcns.empatica.EmpaticaE4SensorStatus.Builder(other);
+  public static org.radarcns.application.ApplicationServerStatus.Builder newBuilder(org.radarcns.application.ApplicationServerStatus.Builder other) {
+    return new org.radarcns.application.ApplicationServerStatus.Builder(other);
   }
 
   /**
-   * Creates a new EmpaticaE4SensorStatus RecordBuilder by copying an existing EmpaticaE4SensorStatus instance.
+   * Creates a new ApplicationServerStatus RecordBuilder by copying an existing ApplicationServerStatus instance.
    * @param other The existing instance to copy.
-   * @return A new EmpaticaE4SensorStatus RecordBuilder
+   * @return A new ApplicationServerStatus RecordBuilder
    */
-  public static org.radarcns.empatica.EmpaticaE4SensorStatus.Builder newBuilder(org.radarcns.empatica.EmpaticaE4SensorStatus other) {
-    return new org.radarcns.empatica.EmpaticaE4SensorStatus.Builder(other);
+  public static org.radarcns.application.ApplicationServerStatus.Builder newBuilder(org.radarcns.application.ApplicationServerStatus other) {
+    return new org.radarcns.application.ApplicationServerStatus.Builder(other);
   }
 
   /**
-   * RecordBuilder for EmpaticaE4SensorStatus instances.
+   * RecordBuilder for ApplicationServerStatus instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<EmpaticaE4SensorStatus>
-    implements org.apache.avro.data.RecordBuilder<EmpaticaE4SensorStatus> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<ApplicationServerStatus>
+    implements org.apache.avro.data.RecordBuilder<ApplicationServerStatus> {
 
     /** device timestamp in UTC (s) */
     private double time;
     /** device receiver timestamp in UTC (s) */
     private double timeReceived;
-    /** sensor name; one of BVP, GSR, ACC, TEMP. */
-    private java.lang.String sensor;
-    /** sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD. */
-    private java.lang.String status;
+    /** server connection status */
+    private org.radarcns.application.ServerStatus serverStatus;
+    /** Hardware identifier of client application */
+    private java.lang.String ipAddress;
 
     /** Creates a new Builder */
     private Builder() {
@@ -186,7 +186,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(org.radarcns.empatica.EmpaticaE4SensorStatus.Builder other) {
+    private Builder(org.radarcns.application.ApplicationServerStatus.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -196,21 +196,21 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.sensor)) {
-        this.sensor = data().deepCopy(fields()[2].schema(), other.sensor);
+      if (isValidValue(fields()[2], other.serverStatus)) {
+        this.serverStatus = data().deepCopy(fields()[2].schema(), other.serverStatus);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.status)) {
-        this.status = data().deepCopy(fields()[3].schema(), other.status);
+      if (isValidValue(fields()[3], other.ipAddress)) {
+        this.ipAddress = data().deepCopy(fields()[3].schema(), other.ipAddress);
         fieldSetFlags()[3] = true;
       }
     }
 
     /**
-     * Creates a Builder by copying an existing EmpaticaE4SensorStatus instance
+     * Creates a Builder by copying an existing ApplicationServerStatus instance
      * @param other The existing instance to copy.
      */
-    private Builder(org.radarcns.empatica.EmpaticaE4SensorStatus other) {
+    private Builder(org.radarcns.application.ApplicationServerStatus other) {
             super(SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -220,12 +220,12 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
         this.timeReceived = data().deepCopy(fields()[1].schema(), other.timeReceived);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.sensor)) {
-        this.sensor = data().deepCopy(fields()[2].schema(), other.sensor);
+      if (isValidValue(fields()[2], other.serverStatus)) {
+        this.serverStatus = data().deepCopy(fields()[2].schema(), other.serverStatus);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.status)) {
-        this.status = data().deepCopy(fields()[3].schema(), other.status);
+      if (isValidValue(fields()[3], other.ipAddress)) {
+        this.ipAddress = data().deepCopy(fields()[3].schema(), other.ipAddress);
         fieldSetFlags()[3] = true;
       }
     }
@@ -245,7 +245,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
       * @param value The value of 'time'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setTime(double value) {
+    public org.radarcns.application.ApplicationServerStatus.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -267,7 +267,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
       * device timestamp in UTC (s)
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearTime() {
+    public org.radarcns.application.ApplicationServerStatus.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -287,7 +287,7 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
       * @param value The value of 'timeReceived'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setTimeReceived(double value) {
+    public org.radarcns.application.ApplicationServerStatus.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -309,105 +309,105 @@ public class EmpaticaE4SensorStatus extends org.apache.avro.specific.SpecificRec
       * device receiver timestamp in UTC (s)
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearTimeReceived() {
+    public org.radarcns.application.ApplicationServerStatus.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
 
     /**
-      * Gets the value of the 'sensor' field.
-      * sensor name; one of BVP, GSR, ACC, TEMP.
+      * Gets the value of the 'serverStatus' field.
+      * server connection status
       * @return The value.
       */
-    public java.lang.String getSensor() {
-      return sensor;
+    public org.radarcns.application.ServerStatus getServerStatus() {
+      return serverStatus;
     }
 
     /**
-      * Sets the value of the 'sensor' field.
-      * sensor name; one of BVP, GSR, ACC, TEMP.
-      * @param value The value of 'sensor'.
+      * Sets the value of the 'serverStatus' field.
+      * server connection status
+      * @param value The value of 'serverStatus'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setSensor(java.lang.String value) {
+    public org.radarcns.application.ApplicationServerStatus.Builder setServerStatus(org.radarcns.application.ServerStatus value) {
       validate(fields()[2], value);
-      this.sensor = value;
+      this.serverStatus = value;
       fieldSetFlags()[2] = true;
       return this;
     }
 
     /**
-      * Checks whether the 'sensor' field has been set.
-      * sensor name; one of BVP, GSR, ACC, TEMP.
-      * @return True if the 'sensor' field has been set, false otherwise.
+      * Checks whether the 'serverStatus' field has been set.
+      * server connection status
+      * @return True if the 'serverStatus' field has been set, false otherwise.
       */
-    public boolean hasSensor() {
+    public boolean hasServerStatus() {
       return fieldSetFlags()[2];
     }
 
 
     /**
-      * Clears the value of the 'sensor' field.
-      * sensor name; one of BVP, GSR, ACC, TEMP.
+      * Clears the value of the 'serverStatus' field.
+      * server connection status
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearSensor() {
-      sensor = null;
+    public org.radarcns.application.ApplicationServerStatus.Builder clearServerStatus() {
+      serverStatus = null;
       fieldSetFlags()[2] = false;
       return this;
     }
 
     /**
-      * Gets the value of the 'status' field.
-      * sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
+      * Gets the value of the 'ipAddress' field.
+      * Hardware identifier of client application
       * @return The value.
       */
-    public java.lang.String getStatus() {
-      return status;
+    public java.lang.String getIpAddress() {
+      return ipAddress;
     }
 
     /**
-      * Sets the value of the 'status' field.
-      * sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
-      * @param value The value of 'status'.
+      * Sets the value of the 'ipAddress' field.
+      * Hardware identifier of client application
+      * @param value The value of 'ipAddress'.
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder setStatus(java.lang.String value) {
+    public org.radarcns.application.ApplicationServerStatus.Builder setIpAddress(java.lang.String value) {
       validate(fields()[3], value);
-      this.status = value;
+      this.ipAddress = value;
       fieldSetFlags()[3] = true;
       return this;
     }
 
     /**
-      * Checks whether the 'status' field has been set.
-      * sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
-      * @return True if the 'status' field has been set, false otherwise.
+      * Checks whether the 'ipAddress' field has been set.
+      * Hardware identifier of client application
+      * @return True if the 'ipAddress' field has been set, false otherwise.
       */
-    public boolean hasStatus() {
+    public boolean hasIpAddress() {
       return fieldSetFlags()[3];
     }
 
 
     /**
-      * Clears the value of the 'status' field.
-      * sensor status; one of NOT_ON_WRIST, ON_WRIST, DEAD.
+      * Clears the value of the 'ipAddress' field.
+      * Hardware identifier of client application
       * @return This builder.
       */
-    public org.radarcns.empatica.EmpaticaE4SensorStatus.Builder clearStatus() {
-      status = null;
+    public org.radarcns.application.ApplicationServerStatus.Builder clearIpAddress() {
+      ipAddress = null;
       fieldSetFlags()[3] = false;
       return this;
     }
 
     @Override
-    public EmpaticaE4SensorStatus build() {
+    public ApplicationServerStatus build() {
       try {
-        EmpaticaE4SensorStatus record = new EmpaticaE4SensorStatus();
+        ApplicationServerStatus record = new ApplicationServerStatus();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.sensor = fieldSetFlags()[2] ? this.sensor : (java.lang.String) defaultValue(fields()[2]);
-        record.status = fieldSetFlags()[3] ? this.status : (java.lang.String) defaultValue(fields()[3]);
+        record.serverStatus = fieldSetFlags()[2] ? this.serverStatus : (org.radarcns.application.ServerStatus) defaultValue(fields()[2]);
+        record.ipAddress = fieldSetFlags()[3] ? this.ipAddress : (java.lang.String) defaultValue(fields()[3]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

@@ -1,11 +1,11 @@
 {
-  "namespace": "org.radarcns.phonesensors",
+  "namespace": "org.radarcns.phone",
   "type": "record",
-  "name": "PhoneSensorLight",
-  "doc": "Data from the light sensor in luminous flux per unit area.",
+  "name": "PhoneBatteryLevel",
+  "doc": "Phone battery level.",
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
-    {"name": "light", "type": "float", "doc": "illuminance (lx)"}
+    {"name": "batteryLevel", "type": "float", "doc": "battery level from 0 to 1"}
   ]
 }

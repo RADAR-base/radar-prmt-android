@@ -3,16 +3,16 @@
  *
  * DO NOT EDIT DIRECTLY
  */
-package org.radarcns.pebble;
+package org.radarcns.phone;
 
 import org.apache.avro.specific.SpecificData;
 
 @SuppressWarnings("all")
 /** Data from 3-axis accelerometer sensor with gravitational constant g as unit. */
 @org.apache.avro.specific.AvroGenerated
-public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 1792663504196156094L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Pebble2Acceleration\",\"namespace\":\"org.radarcns.pebble\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
+public class PhoneAcceleration extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
+  private static final long serialVersionUID = 1420550905487466114L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"PhoneAcceleration\",\"namespace\":\"org.radarcns.phone\",\"doc\":\"Data from 3-axis accelerometer sensor with gravitational constant g as unit.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"x\",\"type\":\"float\",\"doc\":\"acceleration in the x-axis (g)\"},{\"name\":\"y\",\"type\":\"float\",\"doc\":\"acceleration in the y-axis (g)\"},{\"name\":\"z\",\"type\":\"float\",\"doc\":\"acceleration in the z-axis (g)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
@@ -30,7 +30,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
    * to their default values from the schema.  If that is desired then
    * one should use <code>newBuilder()</code>.
    */
-  public Pebble2Acceleration() {}
+  public PhoneAcceleration() {}
 
   /**
    * All-args constructor.
@@ -40,7 +40,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
    * @param y acceleration in the y-axis (g)
    * @param z acceleration in the z-axis (g)
    */
-  public Pebble2Acceleration(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float x, java.lang.Float y, java.lang.Float z) {
+  public PhoneAcceleration(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float x, java.lang.Float y, java.lang.Float z) {
     this.time = time;
     this.timeReceived = timeReceived;
     this.x = x;
@@ -160,36 +160,36 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
   }
 
   /**
-   * Creates a new Pebble2Acceleration RecordBuilder.
-   * @return A new Pebble2Acceleration RecordBuilder
+   * Creates a new PhoneAcceleration RecordBuilder.
+   * @return A new PhoneAcceleration RecordBuilder
    */
-  public static org.radarcns.pebble.Pebble2Acceleration.Builder newBuilder() {
-    return new org.radarcns.pebble.Pebble2Acceleration.Builder();
+  public static org.radarcns.phone.PhoneAcceleration.Builder newBuilder() {
+    return new org.radarcns.phone.PhoneAcceleration.Builder();
   }
 
   /**
-   * Creates a new Pebble2Acceleration RecordBuilder by copying an existing Builder.
+   * Creates a new PhoneAcceleration RecordBuilder by copying an existing Builder.
    * @param other The existing builder to copy.
-   * @return A new Pebble2Acceleration RecordBuilder
+   * @return A new PhoneAcceleration RecordBuilder
    */
-  public static org.radarcns.pebble.Pebble2Acceleration.Builder newBuilder(org.radarcns.pebble.Pebble2Acceleration.Builder other) {
-    return new org.radarcns.pebble.Pebble2Acceleration.Builder(other);
+  public static org.radarcns.phone.PhoneAcceleration.Builder newBuilder(org.radarcns.phone.PhoneAcceleration.Builder other) {
+    return new org.radarcns.phone.PhoneAcceleration.Builder(other);
   }
 
   /**
-   * Creates a new Pebble2Acceleration RecordBuilder by copying an existing Pebble2Acceleration instance.
+   * Creates a new PhoneAcceleration RecordBuilder by copying an existing PhoneAcceleration instance.
    * @param other The existing instance to copy.
-   * @return A new Pebble2Acceleration RecordBuilder
+   * @return A new PhoneAcceleration RecordBuilder
    */
-  public static org.radarcns.pebble.Pebble2Acceleration.Builder newBuilder(org.radarcns.pebble.Pebble2Acceleration other) {
-    return new org.radarcns.pebble.Pebble2Acceleration.Builder(other);
+  public static org.radarcns.phone.PhoneAcceleration.Builder newBuilder(org.radarcns.phone.PhoneAcceleration other) {
+    return new org.radarcns.phone.PhoneAcceleration.Builder(other);
   }
 
   /**
-   * RecordBuilder for Pebble2Acceleration instances.
+   * RecordBuilder for PhoneAcceleration instances.
    */
-  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Pebble2Acceleration>
-    implements org.apache.avro.data.RecordBuilder<Pebble2Acceleration> {
+  public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<PhoneAcceleration>
+    implements org.apache.avro.data.RecordBuilder<PhoneAcceleration> {
 
     /** device timestamp in UTC (s) */
     private double time;
@@ -211,7 +211,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(org.radarcns.pebble.Pebble2Acceleration.Builder other) {
+    private Builder(org.radarcns.phone.PhoneAcceleration.Builder other) {
       super(other);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -236,10 +236,10 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
     }
 
     /**
-     * Creates a Builder by copying an existing Pebble2Acceleration instance
+     * Creates a Builder by copying an existing PhoneAcceleration instance
      * @param other The existing instance to copy.
      */
-    private Builder(org.radarcns.pebble.Pebble2Acceleration other) {
+    private Builder(org.radarcns.phone.PhoneAcceleration other) {
             super(SCHEMA$);
       if (isValidValue(fields()[0], other.time)) {
         this.time = data().deepCopy(fields()[0].schema(), other.time);
@@ -278,7 +278,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * @param value The value of 'time'.
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder setTime(double value) {
+    public org.radarcns.phone.PhoneAcceleration.Builder setTime(double value) {
       validate(fields()[0], value);
       this.time = value;
       fieldSetFlags()[0] = true;
@@ -300,7 +300,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * device timestamp in UTC (s)
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder clearTime() {
+    public org.radarcns.phone.PhoneAcceleration.Builder clearTime() {
       fieldSetFlags()[0] = false;
       return this;
     }
@@ -320,7 +320,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * @param value The value of 'timeReceived'.
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder setTimeReceived(double value) {
+    public org.radarcns.phone.PhoneAcceleration.Builder setTimeReceived(double value) {
       validate(fields()[1], value);
       this.timeReceived = value;
       fieldSetFlags()[1] = true;
@@ -342,7 +342,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * device receiver timestamp in UTC (s)
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder clearTimeReceived() {
+    public org.radarcns.phone.PhoneAcceleration.Builder clearTimeReceived() {
       fieldSetFlags()[1] = false;
       return this;
     }
@@ -362,7 +362,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * @param value The value of 'x'.
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder setX(float value) {
+    public org.radarcns.phone.PhoneAcceleration.Builder setX(float value) {
       validate(fields()[2], value);
       this.x = value;
       fieldSetFlags()[2] = true;
@@ -384,7 +384,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * acceleration in the x-axis (g)
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder clearX() {
+    public org.radarcns.phone.PhoneAcceleration.Builder clearX() {
       fieldSetFlags()[2] = false;
       return this;
     }
@@ -404,7 +404,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * @param value The value of 'y'.
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder setY(float value) {
+    public org.radarcns.phone.PhoneAcceleration.Builder setY(float value) {
       validate(fields()[3], value);
       this.y = value;
       fieldSetFlags()[3] = true;
@@ -426,7 +426,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * acceleration in the y-axis (g)
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder clearY() {
+    public org.radarcns.phone.PhoneAcceleration.Builder clearY() {
       fieldSetFlags()[3] = false;
       return this;
     }
@@ -446,7 +446,7 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * @param value The value of 'z'.
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder setZ(float value) {
+    public org.radarcns.phone.PhoneAcceleration.Builder setZ(float value) {
       validate(fields()[4], value);
       this.z = value;
       fieldSetFlags()[4] = true;
@@ -468,15 +468,15 @@ public class Pebble2Acceleration extends org.apache.avro.specific.SpecificRecord
       * acceleration in the z-axis (g)
       * @return This builder.
       */
-    public org.radarcns.pebble.Pebble2Acceleration.Builder clearZ() {
+    public org.radarcns.phone.PhoneAcceleration.Builder clearZ() {
       fieldSetFlags()[4] = false;
       return this;
     }
 
     @Override
-    public Pebble2Acceleration build() {
+    public PhoneAcceleration build() {
       try {
-        Pebble2Acceleration record = new Pebble2Acceleration();
+        PhoneAcceleration record = new PhoneAcceleration();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
         record.x = fieldSetFlags()[2] ? this.x : (java.lang.Float) defaultValue(fields()[2]);

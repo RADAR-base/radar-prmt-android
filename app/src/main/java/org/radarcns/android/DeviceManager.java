@@ -23,7 +23,7 @@ public interface DeviceManager extends Closeable {
      * status.
      * @return device state
      */
-    DeviceState getState();
+    BaseDeviceState getState();
 
     /**
      * Get the name of a connected wearable device.

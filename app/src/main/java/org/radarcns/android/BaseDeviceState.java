@@ -5,9 +5,12 @@ import android.os.Parcelable;
 
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.DeviceStateCreator;
 
 /** Current state of a wearable device. */
-public abstract class DeviceState implements Parcelable {
+public class BaseDeviceState implements Parcelable {
+    public static final Parcelable.Creator<BaseDeviceState> CREATOR = new DeviceStateCreator<>(BaseDeviceState.class);
+
     private final MeasurementKey id = new MeasurementKey(null, null);
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
 
@@ -19,13 +22,18 @@ public abstract class DeviceState implements Parcelable {
         return id;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(id.getUserId());
         dest.writeString(id.getSourceId());
         dest.writeInt(status.ordinal());
     }
 
-    protected void updateFromParcel(Parcel in) {
+    public void updateFromParcel(Parcel in) {
         id.setUserId(in.readString());
         id.setSourceId(in.readString());
         status = DeviceStatusListener.Status.values()[in.readInt()];
@@ -73,12 +81,9 @@ public abstract class DeviceState implements Parcelable {
      */
     public float getAccelerationMagnitude() {
         float[] acceleration = getAcceleration();
-        return (float) Math.sqrt( Math.pow(acceleration[0],2)
-                                + Math.pow(acceleration[1],2)
-                                + Math.pow(acceleration[2],2) );
+        return (float) Math.sqrt(
+                acceleration[0] * acceleration[0]
+                + acceleration[1] * acceleration[1]
+                + acceleration[2] * acceleration[2]);
     }
-
-    public void updateServerStatus(ServerStatusListener.Status status) {}
-
-    public void updateCombinedTotalRecordsSent(int n) {}
 }

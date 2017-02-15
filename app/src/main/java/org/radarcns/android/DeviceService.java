@@ -17,10 +17,12 @@ import android.os.Parcel;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
+import org.radarcns.data.DataCache;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.SchemaRetriever;
@@ -62,6 +64,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public static final int TRANSACT_GET_SERVER_STATUS = 16;
     public static final int TRANSACT_GET_DEVICE_NAME = 17;
     public static final int TRANSACT_UPDATE_CONFIG = 18;
+    public static final int TRANSACT_GET_CACHE_SIZE = 19;
     private static final String PREFIX = "org.radarcns.android.";
     public static final String SERVER_STATUS_CHANGED = PREFIX + "ServerStatusListener.Status";
     public static final String SERVER_RECORDS_SENT_TOPIC = PREFIX + "ServerStatusListener.topic";
@@ -300,13 +303,13 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     protected abstract DeviceManager createDeviceManager();
 
-    protected abstract DeviceState getDefaultState();
+    protected abstract BaseDeviceState getDefaultState();
 
     protected abstract DeviceTopics getTopics();
 
-    protected abstract AvroTopic<MeasurementKey, ? extends SpecificRecord>[] getCachedTopics();
+    protected abstract List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics();
 
-    class LocalBinder extends Binder implements DeviceServiceBinder {
+    private class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
         public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(
                 @NonNull AvroTopic<MeasurementKey, V> topic, int limit) {
@@ -314,7 +317,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public DeviceState getDeviceStatus() {
+        public BaseDeviceState getDeviceStatus() {
             DeviceManager localManager = getDeviceManager();
             if (localManager == null) {
                 return getDefaultState();
@@ -334,7 +337,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public DeviceState startRecording(@NonNull Set<String> acceptableIds) {
+        public BaseDeviceState startRecording(@NonNull Set<String> acceptableIds) {
             DeviceManager localManager = getDeviceManager();
             if (localManager == null) {
                 logger.info("Starting recording");
@@ -376,19 +379,44 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
+        public Pair<Long, Long> numberOfRecords() {
+            long unsent = -1L;
+            long sent = -1L;
+            for (DataCache<?, ?> cache : getDataHandler().getCaches().values()) {
+                Pair<Long, Long> pair = cache.numberOfRecords();
+                if (pair.first != -1L) {
+                    if (unsent == -1L) {
+                        unsent = pair.first;
+                    } else {
+                        unsent += pair.first;
+                    }
+                }
+                if (pair.second != -1L) {
+                    if (sent == -1L) {
+                        sent = pair.second;
+                    } else {
+                        sent += pair.second;
+                    }
+                }
+            }
+            return new Pair<>(unsent, sent);
+        }
+
+        @Override
         public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
             try {
                 switch (code) {
-                    case TRANSACT_GET_RECORDS:
+                    case TRANSACT_GET_RECORDS: {
                         AvroTopic<MeasurementKey, ? extends SpecificRecord> topic = getTopics()
                                 .getTopic(data.readString());
                         int limit = data.readInt();
                         dataHandler.getCache(topic).writeRecordsToParcel(reply, limit);
                         break;
+                    }
                     case TRANSACT_GET_DEVICE_STATUS:
                         getDeviceStatus().writeToParcel(reply, 0);
                         break;
-                    case TRANSACT_START_RECORDING:
+                    case TRANSACT_START_RECORDING: {
                         int setSize = data.readInt();
                         Set<String> acceptableIds = new HashSet<>();
                         for (int i = 0; i < setSize; i++) {
@@ -396,6 +424,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         }
                         startRecording(acceptableIds).writeToParcel(reply, 0);
                         break;
+                    }
                     case TRANSACT_STOP_RECORDING:
                         stopRecording();
                         break;
@@ -408,6 +437,12 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                     case TRANSACT_UPDATE_CONFIG:
                         updateConfiguration(data.readBundle(getClass().getClassLoader()));
                         break;
+                    case TRANSACT_GET_CACHE_SIZE: {
+                        Pair<Long, Long> value = numberOfRecords();
+                        reply.writeLong(value.first);
+                        reply.writeLong(value.second);
+                        break;
+                    }
                     default:
                         return false;
                 }
@@ -502,5 +537,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     public synchronized DeviceManager getDeviceManager() {
         return deviceScanner;
+    }
+
+    public Binder getBinder() {
+        return mBinder;
     }
 }

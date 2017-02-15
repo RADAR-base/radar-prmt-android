@@ -1,4 +1,4 @@
-package org.radarcns.phonesensors;
+package org.radarcns.phone;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 /** Manages Phone sensors */
-class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
-    private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsDeviceManager.class);
+class PhoneSensorsManager implements DeviceManager, SensorEventListener {
+    private static final Logger logger = LoggerFactory.getLogger(PhoneSensorsManager.class);
     private static final float EARTH_GRAVITATIONAL_ACCELERATION = 9.80665f;
 
     private final TableDataHandler dataHandler;
@@ -32,17 +32,17 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
 
     private final DeviceStatusListener phoneService;
 
-    private final MeasurementTable<PhoneSensorAcceleration> accelerationTable;
-    private final MeasurementTable<PhoneSensorLight> lightTable;
-    private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
+    private final MeasurementTable<PhoneAcceleration> accelerationTable;
+    private final MeasurementTable<PhoneLight> lightTable;
+    private final AvroTopic<MeasurementKey, PhoneBatteryLevel> batteryTopic;
 
-    private final PhoneSensorsDeviceStatus deviceStatus;
+    private final PhoneState deviceStatus;
 
     private final String deviceName;
     private boolean isRegistered = false;
     private SensorManager sensorManager;
 
-    public PhoneSensorsDeviceManager(Context context, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneSensorsTopics topics) {
+    public PhoneSensorsManager(Context context, DeviceStatusListener phoneService, String groupId, String sourceId, TableDataHandler dataHandler, PhoneTopics topics) {
         this.dataHandler = dataHandler;
         this.accelerationTable = dataHandler.getCache(topics.getAccelerationTopic());
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
@@ -53,7 +53,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         this.context = context;
         sensorManager = null;
         // Initialize the Device Manager using your API key. You need to have Internet access at this point.
-        this.deviceStatus = new PhoneSensorsDeviceStatus();
+        this.deviceStatus = new PhoneState();
         this.deviceStatus.getId().setUserId(groupId);
         this.deviceStatus.getId().setSourceId(sourceId);
         this.deviceName = android.os.Build.MODEL;
@@ -117,7 +117,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         double time = event.timestamp / 1_000_000_000d;
         double timeReceived = System.currentTimeMillis() / 1_000d;
 
-        PhoneSensorAcceleration value = new PhoneSensorAcceleration(time, timeReceived, x, y, z);
+        PhoneAcceleration value = new PhoneAcceleration(time, timeReceived, x, y, z);
 
         dataHandler.addMeasurement(accelerationTable, deviceStatus.getId(), value);
     }
@@ -129,7 +129,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         double time = event.timestamp / 1_000_000_000d;
         double timeReceived = System.currentTimeMillis() / 1000d;
 
-        PhoneSensorLight value = new PhoneSensorLight(time, timeReceived, lightValue);
+        PhoneLight value = new PhoneLight(time, timeReceived, lightValue);
         dataHandler.addMeasurement(lightTable, deviceStatus.getId(), value);
     }
 
@@ -145,7 +145,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
         deviceStatus.setBatteryLevel(batteryPct);
 
         double time = System.currentTimeMillis() / 1000d;
-        PhoneSensorBatteryLevel value = new PhoneSensorBatteryLevel(time, time, batteryPct);
+        PhoneBatteryLevel value = new PhoneBatteryLevel(time, time, batteryPct);
         dataHandler.trySend(batteryTopic, 0L, deviceStatus.getId(), value);
     }
 
@@ -173,7 +173,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
     }
 
     @Override
-    public PhoneSensorsDeviceStatus getState() {
+    public PhoneState getState() {
         return deviceStatus;
     }
 
@@ -193,7 +193,7 @@ class PhoneSensorsDeviceManager implements DeviceManager, SensorEventListener {
             return false;
         }
 
-        PhoneSensorsDeviceManager otherDevice = ((PhoneSensorsDeviceManager) other);
+        PhoneSensorsManager otherDevice = ((PhoneSensorsManager) other);
         return deviceStatus.getId().equals((otherDevice.deviceStatus.getId()));
     }
 
