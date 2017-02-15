@@ -7,6 +7,7 @@ import com.empatica.empalink.config.EmpaSensorStatus;
 import com.empatica.empalink.config.EmpaSensorType;
 
 import org.radarcns.android.BaseDeviceState;
+import org.radarcns.util.DeviceStateCreator;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -23,17 +24,7 @@ public class E4DeviceStatus extends BaseDeviceState {
     private float temperature = Float.NaN;
     private final Map<EmpaSensorType, EmpaSensorStatus> sensorStatus = new EnumMap<>(EmpaSensorType.class);
 
-    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new Parcelable.Creator<E4DeviceStatus>() {
-        public E4DeviceStatus createFromParcel(Parcel in) {
-            E4DeviceStatus result = new E4DeviceStatus();
-            result.updateFromParcel(in);
-            return result;
-        }
-
-        public E4DeviceStatus[] newArray(int size) {
-            return new E4DeviceStatus[size];
-        }
-    };
+    public static final Parcelable.Creator<E4DeviceStatus> CREATOR = new DeviceStateCreator<>(E4DeviceStatus.class);
 
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
@@ -53,7 +44,7 @@ public class E4DeviceStatus extends BaseDeviceState {
         }
     }
 
-    protected void updateFromParcel(Parcel in) {
+    public void updateFromParcel(Parcel in) {
         super.updateFromParcel(in);
         acceleration[0] = in.readFloat();
         acceleration[1] = in.readFloat();

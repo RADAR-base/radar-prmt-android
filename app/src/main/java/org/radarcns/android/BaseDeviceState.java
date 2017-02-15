@@ -5,22 +5,11 @@ import android.os.Parcelable;
 
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.DeviceStateCreator;
 
 /** Current state of a wearable device. */
 public class BaseDeviceState implements Parcelable {
-    public static final Parcelable.Creator<BaseDeviceState> CREATOR = new Parcelable.Creator<BaseDeviceState>() {
-        @Override
-        public BaseDeviceState createFromParcel(Parcel source) {
-            BaseDeviceState state = new BaseDeviceState();
-            state.updateFromParcel(source);
-            return state;
-        }
-
-        @Override
-        public BaseDeviceState[] newArray(int size) {
-            return new BaseDeviceState[size];
-        }
-    };
+    public static final Parcelable.Creator<BaseDeviceState> CREATOR = new DeviceStateCreator<>(BaseDeviceState.class);
 
     private final MeasurementKey id = new MeasurementKey(null, null);
     private DeviceStatusListener.Status status = DeviceStatusListener.Status.READY;
@@ -44,7 +33,7 @@ public class BaseDeviceState implements Parcelable {
         dest.writeInt(status.ordinal());
     }
 
-    protected void updateFromParcel(Parcel in) {
+    public void updateFromParcel(Parcel in) {
         id.setUserId(in.readString());
         id.setSourceId(in.readString());
         status = DeviceStatusListener.Status.values()[in.readInt()];
