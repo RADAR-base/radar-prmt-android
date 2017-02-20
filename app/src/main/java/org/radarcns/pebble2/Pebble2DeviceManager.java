@@ -14,12 +14,13 @@ import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2Acceleration;
 import org.radarcns.pebble.Pebble2BatteryLevel;
 import org.radarcns.pebble.Pebble2HeartRate;
 import org.radarcns.pebble.Pebble2HeartRateFiltered;
+import org.radarcns.topic.AvroTopic;
+import org.radarcns.util.BundleSerialization;
 import org.radarcns.util.Serialization;
 import org.radarcns.util.Strings;
 import org.slf4j.Logger;
@@ -175,7 +176,7 @@ class Pebble2DeviceManager implements DeviceManager {
                             }
                         }
                     }
-                    logger.info("Pebble connected with intent {}", Serialization.bundleToString(intent.getExtras()));
+                    logger.info("Pebble connected with intent {}", BundleSerialization.bundleToString(intent.getExtras()));
                     updateStatus(DeviceStatusListener.Status.CONNECTED);
                 }
             }
@@ -188,7 +189,7 @@ class Pebble2DeviceManager implements DeviceManager {
                         deviceStatus.getId().setSourceId(null);
                         deviceName = null;
                     }
-                    logger.info("Pebble disconnected with intent {}", Serialization.bundleToString(intent.getExtras()));
+                    logger.info("Pebble disconnected with intent {}", BundleSerialization.bundleToString(intent.getExtras()));
                     updateStatus(DeviceStatusListener.Status.DISCONNECTED);
                 }
             }

@@ -1,10 +1,22 @@
 # RADAR-pRMT
+
 Application to be run on an Android 4.4 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
 
 Currently the Empatica E4 and Pebble 2 are supported. Also note that the application only runs on an ARM architecture.
 
 ![Screenshot](/man/screen20161215_edited.png?raw=True "Screenshot 2016-12-15")
 
+To clone this respository, use the command
+
+```shell
+git clone --recursive https://github.com/RADAR-CNS/RADAR-AndroidApplication.git
+```
+
+If the repository is already cloned, go to the source directory and run
+
+```shell
+git submodule update --init --recursive
+```
 
 ## Setup Empatica E4
 

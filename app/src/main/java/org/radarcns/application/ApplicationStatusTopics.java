@@ -1,8 +1,8 @@
 package org.radarcns.application;
 
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 
 public class ApplicationStatusTopics extends DeviceTopics {
 

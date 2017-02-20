@@ -1,8 +1,8 @@
 package org.radarcns.phone;
 
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 
 /** Topic manager for topics concerning the Phone sensors. */
 public class PhoneTopics extends DeviceTopics {

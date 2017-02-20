@@ -6,9 +6,9 @@ import android.util.Pair;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.Record;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 
 import java.util.List;
 import java.util.Map;

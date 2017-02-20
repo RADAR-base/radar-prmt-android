@@ -10,6 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.radarcns.producer.KafkaSender;
 
 /**
  * Checks the connection of a sender.

@@ -8,16 +8,15 @@ import android.net.ConnectivityManager;
 import android.support.annotation.NonNull;
 
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.RadarConfiguration;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.data.SpecificRecordEncoder;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.KafkaDataSubmitter;
-import org.radarcns.kafka.SchemaRetriever;
-import org.radarcns.kafka.rest.RestSender;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.producer.rest.RestSender;
+import org.radarcns.producer.rest.SchemaRetriever;
+import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,7 +129,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         }
 
         updateServerStatus(Status.CONNECTING);
-        this.sender = new RestSender<>(kafkaUrl, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
+        this.sender = new RestSender<>(kafkaUrl.toExternalForm(), schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
         this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, kafkaRecordsSendLimit, kafkaUploadRate, kafkaCleanRate);
     }
 
@@ -331,7 +330,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
     public synchronized void setKafkaUrl(@NonNull URL kafkaUrl) {
         if (sender != null) {
-            sender.setKafkaUrl(kafkaUrl);
+            sender.setKafkaUrl(kafkaUrl.toExternalForm());
         }
         this.kafkaUrl = kafkaUrl;
     }

@@ -35,7 +35,6 @@ import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.application.ApplicationStatusService;
 import org.radarcns.application.ApplicationState;
-import org.radarcns.data.TimedInt;
 import org.radarcns.empaticaE4.E4DeviceStatus;
 import org.radarcns.empaticaE4.E4HeartbeatToast;
 import org.radarcns.empaticaE4.E4Service;
@@ -46,6 +45,7 @@ import org.radarcns.pebble2.Pebble2Service;
 import org.radarcns.phone.PhoneState;
 import org.radarcns.phone.PhoneSensorsService;
 import org.radarcns.util.Boast;
+import org.radarcns.data.TimedInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

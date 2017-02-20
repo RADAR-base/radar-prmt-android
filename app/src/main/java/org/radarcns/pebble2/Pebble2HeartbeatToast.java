@@ -6,11 +6,11 @@ import android.os.RemoteException;
 import android.widget.Toast;
 
 import org.radarcns.android.DeviceServiceConnection;
-import org.radarcns.data.Record;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2HeartRateFiltered;
+import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.Boast;
+import org.radarcns.data.Record;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
