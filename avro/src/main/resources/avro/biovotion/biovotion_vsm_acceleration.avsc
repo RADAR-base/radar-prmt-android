@@ -1,0 +1,13 @@
+{
+  "namespace": "org.radarcns.biovotion",
+  "type": "record",
+  "name": "BiovotionVSMAcceleration",
+  "doc": "Data from 3-axis accelerometer sensor with gravitational constant g as unit.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "x", "type": "float", "doc": "acceleration in the x-axis (g)"},
+    {"name": "y", "type": "float", "doc": "acceleration in the y-axis (g)"},
+    {"name": "z", "type": "float", "doc": "acceleration in the z-axis (g)"}
+  ]
+}

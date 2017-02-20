@@ -1,0 +1,12 @@
+{
+  "namespace": "org.radarcns.biovotion",
+  "type": "record",
+  "name": "BiovotionVSMBloodPulseWave",
+  "doc": "Raw blood pulse wave data.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "BloodPulseWaveValue", "type": "float", "doc": "Blood pulse wave value"},
+    {"name": "BloodPulseWaveQuality", "type": "int", "doc": "Blood pulse wave quality (%)"}
+  ]
+}
