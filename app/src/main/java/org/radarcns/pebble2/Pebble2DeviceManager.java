@@ -43,6 +43,8 @@ class Pebble2DeviceManager implements DeviceManager {
     private static final int BATTERY_LEVEL_LOG = 14;
 
     private static final Logger logger = LoggerFactory.getLogger(Pebble2DeviceManager.class);
+    private static final Pattern CONTAINS_PEBBLE_PATTERN =
+            Strings.containsIgnoreCasePattern("pebble");
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -208,9 +210,13 @@ class Pebble2DeviceManager implements DeviceManager {
         BluetoothManager btManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
 
         for (BluetoothDevice btDevice : btManager.getConnectedDevices(GATT_SERVER)) {
-            if (btDevice.getName().toLowerCase().contains("pebble")) {
+            String name = btDevice.getName();
+            if (name == null) {
+                continue;
+            }
+            if (CONTAINS_PEBBLE_PATTERN.matcher(name).find()) {
                 synchronized (this) {
-                    deviceName = btDevice.getName();
+                    deviceName = name;
                     deviceStatus.getId().setSourceId(btDevice.getAddress());
                     logger.info("Pebble device set to {} with address {}",
                             deviceName, deviceStatus.getId().getSourceId());

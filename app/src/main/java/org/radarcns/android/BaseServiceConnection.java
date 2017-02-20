@@ -228,7 +228,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
      * True if given string is a substring of the device name.
      */
     public boolean isAllowedDevice(String[] values) {
-        for(String value : values) {
+        for (String value : values) {
             Pattern pattern = Strings.containsIgnoreCasePattern(value);
             String deviceName = getDeviceName();
             if (deviceName != null && pattern.matcher(deviceName).find()) {
