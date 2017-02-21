@@ -6,7 +6,7 @@
   "fields": [
     {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
     {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
-    {"name": "HeartRateValue", "type": "float", "doc": "Heart rate value (bpm)"},
+    {"name": "HeartRateValue", "type": "int", "doc": "Heart rate value (bpm)"},
     {"name": "HeartRateQuality", "type": "int", "doc": "Heart rate quality (%)"}
   ]
 }

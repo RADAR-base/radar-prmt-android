@@ -11,15 +11,15 @@ import org.apache.avro.specific.SpecificData;
 /** Heart rate calculated by biovotion device. */
 @org.apache.avro.specific.AvroGenerated
 public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 6101405888794043353L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"BiovotionVSMHeartRate\",\"namespace\":\"org.radarcns.biovotion\",\"doc\":\"Heart rate calculated by biovotion device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"HeartRateValue\",\"type\":\"float\",\"doc\":\"Heart rate value (bpm)\"},{\"name\":\"HeartRateQuality\",\"type\":\"int\",\"doc\":\"Heart rate quality (%)\"}]}");
+  private static final long serialVersionUID = -1342807003936501815L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"BiovotionVSMHeartRate\",\"namespace\":\"org.radarcns.biovotion\",\"doc\":\"Heart rate calculated by biovotion device.\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"HeartRateValue\",\"type\":\"int\",\"doc\":\"Heart rate value (bpm)\"},{\"name\":\"HeartRateQuality\",\"type\":\"int\",\"doc\":\"Heart rate quality (%)\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
   /** Heart rate value (bpm) */
-  @Deprecated public float HeartRateValue;
+  @Deprecated public int HeartRateValue;
   /** Heart rate quality (%) */
   @Deprecated public int HeartRateQuality;
 
@@ -37,7 +37,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
    * @param HeartRateValue Heart rate value (bpm)
    * @param HeartRateQuality Heart rate quality (%)
    */
-  public BiovotionVSMHeartRate(java.lang.Double time, java.lang.Double timeReceived, java.lang.Float HeartRateValue, java.lang.Integer HeartRateQuality) {
+  public BiovotionVSMHeartRate(java.lang.Double time, java.lang.Double timeReceived, java.lang.Integer HeartRateValue, java.lang.Integer HeartRateQuality) {
     this.time = time;
     this.timeReceived = timeReceived;
     this.HeartRateValue = HeartRateValue;
@@ -62,7 +62,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
     switch (field$) {
     case 0: time = (java.lang.Double)value$; break;
     case 1: timeReceived = (java.lang.Double)value$; break;
-    case 2: HeartRateValue = (java.lang.Float)value$; break;
+    case 2: HeartRateValue = (java.lang.Integer)value$; break;
     case 3: HeartRateQuality = (java.lang.Integer)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
@@ -106,7 +106,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
    * Gets the value of the 'HeartRateValue' field.
    * @return Heart rate value (bpm)
    */
-  public java.lang.Float getHeartRateValue() {
+  public java.lang.Integer getHeartRateValue() {
     return HeartRateValue;
   }
 
@@ -115,7 +115,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
    * Heart rate value (bpm)
    * @param value the value to set.
    */
-  public void setHeartRateValue(java.lang.Float value) {
+  public void setHeartRateValue(java.lang.Integer value) {
     this.HeartRateValue = value;
   }
 
@@ -173,7 +173,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
     /** device receiver timestamp in UTC (s) */
     private double timeReceived;
     /** Heart rate value (bpm) */
-    private float HeartRateValue;
+    private int HeartRateValue;
     /** Heart rate quality (%) */
     private int HeartRateQuality;
 
@@ -319,7 +319,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
       * Heart rate value (bpm)
       * @return The value.
       */
-    public java.lang.Float getHeartRateValue() {
+    public java.lang.Integer getHeartRateValue() {
       return HeartRateValue;
     }
 
@@ -329,7 +329,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
       * @param value The value of 'HeartRateValue'.
       * @return This builder.
       */
-    public org.radarcns.biovotion.BiovotionVSMHeartRate.Builder setHeartRateValue(float value) {
+    public org.radarcns.biovotion.BiovotionVSMHeartRate.Builder setHeartRateValue(int value) {
       validate(fields()[2], value);
       this.HeartRateValue = value;
       fieldSetFlags()[2] = true;
@@ -404,7 +404,7 @@ public class BiovotionVSMHeartRate extends org.apache.avro.specific.SpecificReco
         BiovotionVSMHeartRate record = new BiovotionVSMHeartRate();
         record.time = fieldSetFlags()[0] ? this.time : (java.lang.Double) defaultValue(fields()[0]);
         record.timeReceived = fieldSetFlags()[1] ? this.timeReceived : (java.lang.Double) defaultValue(fields()[1]);
-        record.HeartRateValue = fieldSetFlags()[2] ? this.HeartRateValue : (java.lang.Float) defaultValue(fields()[2]);
+        record.HeartRateValue = fieldSetFlags()[2] ? this.HeartRateValue : (java.lang.Integer) defaultValue(fields()[2]);
         record.HeartRateQuality = fieldSetFlags()[3] ? this.HeartRateQuality : (java.lang.Integer) defaultValue(fields()[3]);
         return record;
       } catch (Exception e) {
