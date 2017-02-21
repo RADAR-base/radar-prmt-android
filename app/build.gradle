@@ -39,6 +39,8 @@ dependencies {
     compile 'com.getpebble:pebblekit:4.0.0'
     compile project(':empalink-2.0')
     compile project(':avro')
+    compile project(':vsm-5.1.0-release')
+    compile project(':hevs-ble-library-0.8.1-release')
     compile 'org.slf4j:slf4j-android:1.7.21'
     compile 'com.loopj.android:android-async-http:1.4.6'
     compile 'com.android.support:appcompat-v7:22.2.0'

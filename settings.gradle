@@ -1,1 +1,1 @@
-include ':app', ':empalink-2.0', ':avro'
+include ':app', ':empalink-2.0', ':avro', ':vsm-5.1.0-release', ':hevs-ble-library-0.8.1-release'
