@@ -1,0 +1,14 @@
+{
+  "namespace": "org.radarcns.biovotion",
+  "type": "record",
+  "name": "BiovotionVSMBatteryState",
+  "doc": "Device battery state.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "batteryCapacity", "type": "int", "doc": "battery level (%)"},
+    {"name": "batteryChargeRate", "type": "int", "doc": "battery charge rate (%)"},
+    {"name": "batteryVoltage", "type": "float", "doc": "battery voltage (V)"},
+    {"name": "batteryStatus", "type": "int", "doc": "battery status"}
+  ]
+}
