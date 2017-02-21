@@ -1,7 +1,7 @@
 package org.radarcns.data;
 
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.topic.AvroTopic;
 
 import java.util.Map;
 

@@ -8,8 +8,8 @@ import org.radarcns.empatica.EmpaticaE4ElectroDermalActivity;
 import org.radarcns.empatica.EmpaticaE4InterBeatInterval;
 import org.radarcns.empatica.EmpaticaE4SensorStatus;
 import org.radarcns.empatica.EmpaticaE4Temperature;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 
 /** Topic manager for topics concerning the Empatica E4. */
 public class E4Topics extends DeviceTopics {

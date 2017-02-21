@@ -15,8 +15,8 @@ import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

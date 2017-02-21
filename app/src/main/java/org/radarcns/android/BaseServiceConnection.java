@@ -15,9 +15,9 @@ import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,7 +228,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
      * True if given string is a substring of the device name.
      */
     public boolean isAllowedDevice(String[] values) {
-        for(String value : values) {
+        for (String value : values) {
             Pattern pattern = Strings.containsIgnoreCasePattern(value);
             String deviceName = getDeviceName();
             if (deviceName != null && pattern.matcher(deviceName).find()) {

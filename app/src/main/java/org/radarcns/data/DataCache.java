@@ -3,8 +3,7 @@ package org.radarcns.data;
 import android.os.Parcel;
 import android.util.Pair;
 
-import org.radarcns.kafka.AvroTopic;
-import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 
 import java.io.Closeable;
 import java.io.Flushable;
