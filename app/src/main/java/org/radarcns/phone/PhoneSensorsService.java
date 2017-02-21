@@ -47,7 +47,7 @@ public class PhoneSensorsService extends DeviceService {
     @Override
     protected BaseDeviceState getDefaultState() {
         PhoneState newStatus = new PhoneState();
-        newStatus.setStatus(DeviceStatusListener.Status.CONNECTED);
+        newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
         return newStatus;
     }
 
