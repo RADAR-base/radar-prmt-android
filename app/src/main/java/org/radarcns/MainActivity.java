@@ -3,6 +3,7 @@ package org.radarcns;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -313,6 +314,7 @@ public class MainActivity extends AppCompatActivity {
                     mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
                     mFirebaseMessage.setText("Remote config fetched from the server ("
                             + timeFormat.format( System.currentTimeMillis() ) + ")");
+                    configureAtBoot();
                 } else {
                     Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
                             Toast.LENGTH_SHORT).show();
@@ -320,6 +322,27 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        configureAtBoot();
+    }
+
+    private void configureAtBoot() {
+        ComponentName receiver = new ComponentName(
+                getApplicationContext(), MainActivityStarter.class);
+        PackageManager pm = getApplicationContext().getPackageManager();
+
+        boolean startAtBoot = radarConfiguration.getBoolean(RadarConfiguration.START_AT_BOOT, false);
+        boolean isStartedAtBoot = pm.getComponentEnabledSetting(receiver) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+        if (startAtBoot && !isStartedAtBoot) {
+            logger.info("From now on, this application will start at boot");
+            pm.setComponentEnabledSetting(receiver,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
+        } else if (!startAtBoot && isStartedAtBoot) {
+            logger.info("Not starting application at boot anymore");
+            pm.setComponentEnabledSetting(receiver,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        }
     }
 
     @Override

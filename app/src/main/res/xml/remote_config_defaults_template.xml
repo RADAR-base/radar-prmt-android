@@ -18,6 +18,10 @@
         <value></value>
     </entry>
     <entry>
+        <key>start_at_boot</key>
+        <value>true</value>
+    </entry>
+    <entry>
         <key>device_data_retention_ms</key>
         <value>86400000</value>
     </entry>
