@@ -4,7 +4,7 @@ import org.radarcns.android.DeviceTopics;
 import org.radarcns.biovotion.BiovotionVSMBatteryState;
 import org.radarcns.biovotion.BiovotionVSMBloodPulseWave;
 import org.radarcns.biovotion.BiovotionVSMHeartRate;
-import org.radarcns.kafka.AvroTopic;
+import org.radarcns.topic.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 
 /** Topic manager for topics concerning the Biovotion VSM. */
