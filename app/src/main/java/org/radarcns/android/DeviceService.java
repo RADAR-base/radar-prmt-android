@@ -24,10 +24,10 @@ import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.Record;
-import org.radarcns.kafka.AvroTopic;
-import org.radarcns.kafka.SchemaRetriever;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.producer.rest.SchemaRetriever;
+import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

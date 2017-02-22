@@ -1,12 +1,12 @@
 package org.radarcns.pebble2;
 
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2Acceleration;
 import org.radarcns.pebble.Pebble2BatteryLevel;
 import org.radarcns.pebble.Pebble2HeartRate;
 import org.radarcns.pebble.Pebble2HeartRateFiltered;
+import org.radarcns.topic.AvroTopic;
 
 /** Topic manager for topics concerning the Empatica E4. */
 public class Pebble2Topics extends DeviceTopics {

@@ -15,9 +15,9 @@ import org.radarcns.data.AvroDecoder;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordDecoder;
 import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,9 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
                                    IBinder service) {
         if (serviceBinder == null) {
             logger.info("Bound to service {}", className);
-            serviceBinder = service;
+            synchronized (this) {
+                serviceBinder = service;
+            }
 
             // We've bound to the running Service, cast the IBinder and get instance
             if (!(serviceBinder instanceof DeviceServiceBinder)) {
@@ -84,7 +86,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
             data.writeString(topic.getName());
             data.writeInt(limit);
             Parcel reply = Parcel.obtain();
-            serviceBinder.transact(TRANSACT_GET_RECORDS, data, reply, 0);
+            getServiceBinder().transact(TRANSACT_GET_RECORDS, data, reply, 0);
             AvroDecoder.AvroReader<MeasurementKey> keyDecoder = new SpecificRecordDecoder(true).reader(topic.getKeySchema(), MeasurementKey.class);
             AvroDecoder.AvroReader<V> valueDecoder = new SpecificRecordDecoder(true).reader(topic.getValueSchema(), topic.getValueClass());
 
@@ -96,7 +98,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
                 result.addFirst(new Record<>(offset, key, value));
             }
         } else {
-            for (Record<MeasurementKey, V> record : ((DeviceServiceBinder)serviceBinder).getRecords(topic, limit)) {
+            for (Record<MeasurementKey, V> record : getLocalServiceBinder().getRecords(topic, limit)) {
                 result.addFirst(record);
             }
         }
@@ -112,19 +114,19 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
                 data.writeString(acceptableId);
             }
             Parcel reply = Parcel.obtain();
-            serviceBinder.transact(TRANSACT_START_RECORDING, data, reply, 0);
+            getServiceBinder().transact(TRANSACT_START_RECORDING, data, reply, 0);
             deviceStatus = E4DeviceStatus.CREATOR.createFromParcel(reply).getStatus();
         } else {
-            deviceStatus = ((DeviceServiceBinder)serviceBinder).startRecording(acceptableIds).getStatus();
+            deviceStatus = getLocalServiceBinder().startRecording(acceptableIds).getStatus();
         }
     }
 
     public void stopRecording() throws RemoteException {
         if (isRemote) {
             Parcel data = Parcel.obtain();
-            serviceBinder.transact(TRANSACT_START_RECORDING, data, null, 0);
+            getServiceBinder().transact(TRANSACT_START_RECORDING, data, null, 0);
         } else {
-            ((DeviceServiceBinder)serviceBinder).stopRecording();
+            getLocalServiceBinder().stopRecording();
         }
     }
 
@@ -133,16 +135,16 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
     }
 
     public boolean hasService() {
-        return serviceBinder != null;
+        return getServiceBinder() != null;
     }
 
     public ServerStatusListener.Status getServerStatus() throws RemoteException {
         if (isRemote) {
             Parcel reply = Parcel.obtain();
-            serviceBinder.transact(TRANSACT_GET_SERVER_STATUS, Parcel.obtain(), reply, 0);
+            getServiceBinder().transact(TRANSACT_GET_SERVER_STATUS, Parcel.obtain(), reply, 0);
             return ServerStatusListener.Status.values()[reply.readInt()];
         } else {
-            return ((DeviceServiceBinder)serviceBinder).getServerStatus();
+            return getLocalServiceBinder().getServerStatus();
         }
     }
 
@@ -150,7 +152,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         if (isRemote) {
             throw new RemoteException("No parcel for server records sent implemented");
         } else {
-            return ((DeviceServiceBinder) serviceBinder).getServerRecordsSent();
+            return getLocalServiceBinder().getServerRecordsSent();
         }
     }
 
@@ -162,12 +164,12 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
             }
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
-            serviceBinder.transact(TRANSACT_GET_DEVICE_STATUS, data, reply, 0);
+            getServiceBinder().transact(TRANSACT_GET_DEVICE_STATUS, data, reply, 0);
 
             return deviceStateCreator.createFromParcel(reply);
         } else {
             //noinspection unchecked
-            return (S)((DeviceServiceBinder)serviceBinder).getDeviceStatus();
+            return (S)getLocalServiceBinder().getDeviceStatus();
         }
     }
 
@@ -177,9 +179,11 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         // focus [MM 2016-11-16]
 
         // only do these steps once
-        if (serviceBinder != null) {
-            serviceBinder = null;
-            deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
+        if (getServiceBinder() != null) {
+            synchronized (this) {
+                serviceBinder = null;
+                deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
+            }
         }
     }
 
@@ -187,13 +191,13 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         if (isRemote) {
             try {
                 Parcel reply = Parcel.obtain();
-                serviceBinder.transact(TRANSACT_GET_DEVICE_NAME, Parcel.obtain(), reply, 0);
+                getServiceBinder().transact(TRANSACT_GET_DEVICE_NAME, Parcel.obtain(), reply, 0);
                 deviceName = reply.readString();
             } catch (RemoteException ex) {
                 // return initial device name
             }
         } else {
-            deviceName = ((DeviceServiceBinder)serviceBinder).getDeviceName();
+            deviceName = getLocalServiceBinder().getDeviceName();
         }
         return deviceName;
     }
@@ -203,13 +207,13 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
             try {
                 Parcel data = Parcel.obtain();
                 data.writeBundle(bundle);
-                serviceBinder.transact(TRANSACT_UPDATE_CONFIG, data, Parcel.obtain(), 0);
+                getServiceBinder().transact(TRANSACT_UPDATE_CONFIG, data, Parcel.obtain(), 0);
             } catch (RemoteException ex) {
                 // keep old configuration
             }
         } else {
             if (serviceBinder != null) {
-                ((DeviceServiceBinder) serviceBinder).updateConfiguration(bundle);
+                getLocalServiceBinder().updateConfiguration(bundle);
             }
         }
     }
@@ -217,10 +221,10 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
     public Pair<Long, Long> numberOfRecords() throws RemoteException {
         if (isRemote) {
             Parcel reply = Parcel.obtain();
-            serviceBinder.transact(TRANSACT_GET_CACHE_SIZE, Parcel.obtain(), reply, 0);
+            getServiceBinder().transact(TRANSACT_GET_CACHE_SIZE, Parcel.obtain(), reply, 0);
             return new Pair<>(reply.readLong(), reply.readLong());
         } else {
-            return ((DeviceServiceBinder) serviceBinder).numberOfRecords();
+            return getLocalServiceBinder().numberOfRecords();
         }
     }
 
@@ -228,7 +232,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
      * True if given string is a substring of the device name.
      */
     public boolean isAllowedDevice(String[] values) {
-        for(String value : values) {
+        for (String value : values) {
             Pattern pattern = Strings.containsIgnoreCasePattern(value);
             String deviceName = getDeviceName();
             if (deviceName != null && pattern.matcher(deviceName).find()) {
@@ -249,11 +253,11 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         return false;
     }
 
-    public DeviceStatusListener.Status getDeviceStatus() {
+    public synchronized DeviceStatusListener.Status getDeviceStatus() {
         return deviceStatus;
     }
 
-    protected void setDeviceStatus(DeviceStatusListener.Status status) {
+    protected synchronized void setDeviceStatus(DeviceStatusListener.Status status) {
         this.deviceStatus = status;
     }
 
@@ -261,8 +265,15 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         return isRemote;
     }
 
-    protected IBinder getServiceBinder() {
+    protected synchronized IBinder getServiceBinder() {
         return serviceBinder;
+    }
+
+    protected synchronized DeviceServiceBinder getLocalServiceBinder() {
+        if (isRemote) {
+            throw new IllegalStateException("Cannot get local service binder for remote service");
+        }
+        return (DeviceServiceBinder)serviceBinder;
     }
 
     public String getServiceClassName() {

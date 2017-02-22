@@ -16,8 +16,8 @@ import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordEncoder;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.ListPool;
 import org.radarcns.util.RollingTimeAverage;
 import org.slf4j.Logger;
@@ -343,7 +343,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         }
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
-        content.put("sent", Boolean.TRUE);
+        content.put("sent", 1);
         return db.update(topic.getName(), content, "offset <= " + offset + " AND sent = 0", null);
     }
 

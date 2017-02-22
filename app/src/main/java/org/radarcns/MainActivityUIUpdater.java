@@ -5,11 +5,13 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.BaseDeviceState;
+import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.data.TimedInt;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -17,13 +19,14 @@ import java.text.SimpleDateFormat;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 
 public class MainActivityUIUpdater implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(MainActivityUIUpdater.class);
     private static final int NUM_ROWS = 4;
     private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
-    private final MainActivity mainActivity;
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     /**
@@ -32,6 +35,8 @@ public class MainActivityUIUpdater implements Runnable {
     private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
     private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
     private final DecimalFormat noDecimals = new DecimalFormat("0");
+    private final MainActivity mainActivity;
+    private final RadarConfiguration radarConfiguration;
     private final BaseDeviceState[] deviceData;
     private final String[] deviceNames;
 
@@ -44,7 +49,6 @@ public class MainActivityUIUpdater implements Runnable {
     private ImageView[] mBatteryLabels;
     private View mServerStatusIcon;
     private TextView mServerMessage;
-    private final RadarConfiguration radarConfiguration;
 
     private final Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
     private final static int serverStatusIconDefault = R.drawable.status_disconnected;
@@ -52,14 +56,25 @@ public class MainActivityUIUpdater implements Runnable {
     private final Map<DeviceStatusListener.Status, Integer> deviceStatusIconMap;
     private final static int deviceStatusIconDefault = R.drawable.status_searching;
 
+    private String previousTopic;
+    private TimedInt previousNumberOfTopicsSent;
+    private ServerStatusListener.Status previousServerStatus;
+    private DeviceStatusListener.Status[] previousDeviceStatus;
+    private String newServerStatus;
+    private float[] previousTemperature;
+    private float[] previousBatteryLevel;
+    private float[] previousHeartRate;
+    private float[] previousAcceleration;
+    private String previousName;
+    private TimedInt[] previousRecordsSent;
+    private int[] previousRecordsSentTimer;
 
-    MainActivityUIUpdater(MainActivity mainActivity, RadarConfiguration radarConfiguration) {
-        this.mainActivity = mainActivity;
+    MainActivityUIUpdater(MainActivity activity, RadarConfiguration radarConfiguration) {
+        this.radarConfiguration = radarConfiguration;
+        this.mainActivity = activity;
+
         deviceData = new BaseDeviceState[NUM_ROWS];
         deviceNames = new String[NUM_ROWS];
-        initializeViews();
-
-        this.radarConfiguration = radarConfiguration;
 
         deviceStatusIconMap = new EnumMap<>(DeviceStatusListener.Status.class);
         deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTED, R.drawable.status_connected);
@@ -75,6 +90,16 @@ public class MainActivityUIUpdater implements Runnable {
         serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, R.drawable.status_searching);
         serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
         serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_uploading_failed);
+
+        previousDeviceStatus = new DeviceStatusListener.Status[NUM_ROWS];
+        previousTemperature = new float[NUM_ROWS];
+        previousBatteryLevel = new float[NUM_ROWS];
+        previousHeartRate = new float[NUM_ROWS];
+        previousRecordsSent = new TimedInt[NUM_ROWS];
+        previousRecordsSentTimer = new int[NUM_ROWS];
+        previousAcceleration = new float[NUM_ROWS];
+
+        initializeViews();
     }
 
     public void update() throws RemoteException {
@@ -96,7 +121,38 @@ public class MainActivityUIUpdater implements Runnable {
                 deviceNames[i] = null;
             }
         }
+        String message = getServerStatusMessage();
+        synchronized (this) {
+            newServerStatus = message;
+        }
         mainActivity.runOnUiThread(this);
+    }
+
+    private String getServerStatusMessage() {
+        String topic = mainActivity.getLatestTopicSent();
+        TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
+
+        String message = null;
+        if (topic != null && (!Objects.equals(topic, previousTopic)
+                || !Objects.equals(previousNumberOfTopicsSent, numberOfRecords))) {
+            previousTopic = topic;
+            previousNumberOfTopicsSent = numberOfRecords;
+
+            // Condensing the message
+            topic = topic.replaceFirst("_?android_?", "");
+            topic = topic.replaceFirst("_?empatica_?(e4)?", "E4");
+
+            String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
+
+            if (numberOfRecords.getValue() < 0) {
+                message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
+                        topic, messageTimeStamp);
+            } else {
+                message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
+                        topic, numberOfRecords.getValue(), messageTimeStamp);
+            }
+        }
+        return message;
     }
 
     private void initializeViews() {
@@ -172,29 +228,21 @@ public class MainActivityUIUpdater implements Runnable {
     }
 
     private void updateServerStatus() {
-        String topic = mainActivity.getLatestTopicSent();
-        if (topic != null) {
-            // Condensing the message
-            topic = topic.replaceFirst("_?android_?", "");
-            topic = topic.replaceFirst("_?empatica_?(e4)?", "E4");
-
-            String message;
-            TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
-            String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
-
-            if (numberOfRecords.getValue() < 0) {
-                message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
-                        topic, messageTimeStamp);
-            } else {
-                message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
-                        topic, numberOfRecords.getValue(), messageTimeStamp);
-            }
+        String message;
+        synchronized (this) {
+            message = newServerStatus;
+        }
+        if (message != null) {
             mServerMessage.setText(message);
         }
 
-        Integer statusIcon = serverStatusIconMap.get(mainActivity.getServerStatus());
-        int resource = statusIcon != null ? statusIcon : serverStatusIconDefault;
-        mServerStatusIcon.setBackgroundResource(resource);
+        ServerStatusListener.Status status = mainActivity.getServerStatus();
+        if (!Objects.equals(status, previousServerStatus)) {
+            previousServerStatus = status;
+            Integer statusIcon = serverStatusIconMap.get(status);
+            int resource = statusIcon != null ? statusIcon : serverStatusIconDefault;
+            mServerStatusIcon.setBackgroundResource(resource);
+        }
     }
 
     public void updateDeviceStatus(BaseDeviceState deviceData, int row) {
@@ -205,30 +253,41 @@ public class MainActivityUIUpdater implements Runnable {
         } else {
             status = deviceData.getStatus();
         }
-        Integer statusIcon = deviceStatusIconMap.get(status);
-        int resource = statusIcon != null ? statusIcon : deviceStatusIconDefault;
-        mStatusIcons[row].setBackgroundResource(resource);
+        if (!Objects.equals(status, previousDeviceStatus[row])) {
+            logger.info("Device status of row {} is {}", row, status);
+            previousDeviceStatus[row] = status;
+            Integer statusIcon = deviceStatusIconMap.get(status);
+            int resource = statusIcon != null ? statusIcon : deviceStatusIconDefault;
+            mStatusIcons[row].setBackgroundResource(resource);
+        }
     }
 
     public void updateTemperature(BaseDeviceState deviceData, int row) {
         // \u2103 == ℃
-        setText(mTemperatureLabels[row], deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
+        setText(mTemperatureLabels, previousTemperature, row,
+                deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
     }
 
     public void updateHeartRate(BaseDeviceState deviceData, int row) {
-        setText(mHeartRateLabels[row], deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
+        setText(mHeartRateLabels, previousHeartRate, row,
+                deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
     }
 
     public void updateAcceleration(BaseDeviceState deviceData, int row) {
-        setText(mAccelerationLabels[row], deviceData == null ? Float.NaN : deviceData.getAccelerationMagnitude(), "g", doubleDecimal);
+        setText(mAccelerationLabels, previousAcceleration, row,
+                deviceData == null ? Float.NaN : deviceData.getAccelerationMagnitude(), "g", doubleDecimal);
     }
 
     public void updateBattery(BaseDeviceState deviceData, int row) {
         // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
-        Float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
+        float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
 //            if ( row == 0 ) {logger.info("Battery: {}", batteryLevel);}
-
-        if (batteryLevel.isNaN()) {
+        if (previousBatteryLevel[row] == batteryLevel
+                || (Float.isNaN(previousBatteryLevel[row]) && Float.isNaN(batteryLevel))) {
+            return;
+        }
+        previousBatteryLevel[row] = batteryLevel;
+        if (Float.isNaN(batteryLevel)) {
             mBatteryLabels[row].setImageResource(R.drawable.ic_battery_unknown);
             // up to 100%
         } else if (batteryLevel > 0.5) {
@@ -246,6 +305,10 @@ public class MainActivityUIUpdater implements Runnable {
     }
 
     public void updateDeviceName(String deviceName, int row) {
+        if (Objects.equals(deviceName, previousName)) {
+            return;
+        }
+        previousName = deviceName;
         // Restrict length of name that is shown.
         if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH - 3) {
             deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH) + "...";
@@ -258,11 +321,17 @@ public class MainActivityUIUpdater implements Runnable {
     public void updateDeviceTotalRecordsSent(int row) {
         TimedInt recordsSent = mainActivity.getTopicsSent(row);
         if (recordsSent.getTime() == -1L) {
+            if (previousRecordsSent[row] != null && previousRecordsSent[row].getTime() == -1L) {
+                return;
+            }
             mRecordsSentLabels[row].setText(R.string.emptyText);
         } else {
-            String message;
-            long timeSinceLastUpdate = (System.currentTimeMillis() - recordsSent.getTime()) / 1000;
+            int timeSinceLastUpdate = (int)((System.currentTimeMillis() - recordsSent.getTime()) / 1000L);
+            if (previousRecordsSent[row] != null && previousRecordsSent[row].equals(recordsSent) && previousRecordsSentTimer[row] == timeSinceLastUpdate) {
+                return;
+            }
             // Small test for Firebase Remote config.
+            String message;
             if (radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true)) {
                 message = String.format(Locale.US, "%1$4dk (%2$d)",
                         recordsSent.getValue() / 1000, timeSinceLastUpdate);
@@ -271,20 +340,24 @@ public class MainActivityUIUpdater implements Runnable {
                         recordsSent.getValue(), timeSinceLastUpdate);
             }
             mRecordsSentLabels[row].setText(message);
+            previousRecordsSentTimer[row] = timeSinceLastUpdate;
         }
-
+        previousRecordsSent[row] = recordsSent;
     }
 
-    private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+    private void setText(TextView[] labels, float[] previousValue, int row, float value, String suffix, DecimalFormat formatter) {
+        if (value == previousValue[row] || (Float.isNaN(value) && Float.isNaN(previousValue[row]))) {
+            return;
+        }
+        previousValue[row] = value;
         if (Float.isNaN(value)) {
             // Only overwrite default value if enabled.
-            if (label.isEnabled()) {
+            if (labels[row].isEnabled()) {
                 // em dash
-                label.setText("\u2014");
+                labels[row].setText("\u2014");
             }
         } else {
-            label.setText(formatter.format(value) + " " + suffix);
+            labels[row].setText(formatter.format(value) + " " + suffix);
         }
     }
-
 }

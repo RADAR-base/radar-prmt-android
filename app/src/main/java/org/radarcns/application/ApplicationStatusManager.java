@@ -66,6 +66,7 @@ public class ApplicationStatusManager implements DeviceManager {
 
     private final long creationTimeStamp;
     private boolean isRegistered = false;
+    private InetAddress previousInetAddress;
 
     private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
         @Override
@@ -75,7 +76,9 @@ public class ApplicationStatusManager implements DeviceManager {
                 deviceStatus.setServerStatus(status);
             } else if (intent.getAction().equals(SERVER_RECORDS_SENT_TOPIC)) {
                 int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);
-                deviceStatus.addRecordsSent(numberOfRecordsSent);
+                if (numberOfRecordsSent != -1) {
+                    deviceStatus.addRecordsSent(numberOfRecordsSent);
+                }
             }
         }
     };
@@ -101,6 +104,7 @@ public class ApplicationStatusManager implements DeviceManager {
 
         // Scheduler TODO: run executor with existing thread pool/factory
         executor = Executors.newSingleThreadScheduledExecutor();
+        previousInetAddress = null;
     }
 
     @Override
@@ -190,23 +194,29 @@ public class ApplicationStatusManager implements DeviceManager {
 
     private String getIpAddress() {
         // Find Ip via NetworkInterfaces. Works via wifi, ethernet and mobile network
-        String ipAddress = null;
         try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        // This finds both xx.xx.xx ip and rmnet. Last one is always ip.
-                        ipAddress = inetAddress.getHostAddress();
+            if (previousInetAddress == null ||
+                    NetworkInterface.getByInetAddress(previousInetAddress) == null) {
+                for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                    NetworkInterface intf = en.nextElement();
+                    for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                        InetAddress inetAddress = enumIpAddr.nextElement();
+                        if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()) {
+                            // This finds both xx.xx.xx ip and rmnet. Last one is always ip.
+                            previousInetAddress = inetAddress;
+                        }
                     }
                 }
             }
         } catch (SocketException ex) {
             logger.warn("No IP Address could be determined", ex);
-            return null;
+            previousInetAddress = null;
         }
-        return ipAddress;
+        if (previousInetAddress == null) {
+            return null;
+        } else {
+            return previousInetAddress.getHostAddress();
+        }
     }
 
     public void processUptime() {

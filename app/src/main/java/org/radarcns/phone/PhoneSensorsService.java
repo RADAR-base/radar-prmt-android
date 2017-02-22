@@ -9,8 +9,8 @@ import org.radarcns.android.DeviceService;
 import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class PhoneSensorsService extends DeviceService {
     @Override
     protected BaseDeviceState getDefaultState() {
         PhoneState newStatus = new PhoneState();
-        newStatus.setStatus(DeviceStatusListener.Status.CONNECTED);
+        newStatus.setStatus(DeviceStatusListener.Status.DISCONNECTED);
         return newStatus;
     }
 

@@ -14,12 +14,13 @@ import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2Acceleration;
 import org.radarcns.pebble.Pebble2BatteryLevel;
 import org.radarcns.pebble.Pebble2HeartRate;
 import org.radarcns.pebble.Pebble2HeartRateFiltered;
+import org.radarcns.topic.AvroTopic;
+import org.radarcns.util.BundleSerialization;
 import org.radarcns.util.Serialization;
 import org.radarcns.util.Strings;
 import org.slf4j.Logger;
@@ -42,6 +43,8 @@ class Pebble2DeviceManager implements DeviceManager {
     private static final int BATTERY_LEVEL_LOG = 14;
 
     private static final Logger logger = LoggerFactory.getLogger(Pebble2DeviceManager.class);
+    private static final Pattern CONTAINS_PEBBLE_PATTERN =
+            Strings.containsIgnoreCasePattern("pebble");
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -175,7 +178,7 @@ class Pebble2DeviceManager implements DeviceManager {
                             }
                         }
                     }
-                    logger.info("Pebble connected with intent {}", Serialization.bundleToString(intent.getExtras()));
+                    logger.info("Pebble connected with intent {}", BundleSerialization.bundleToString(intent.getExtras()));
                     updateStatus(DeviceStatusListener.Status.CONNECTED);
                 }
             }
@@ -188,7 +191,7 @@ class Pebble2DeviceManager implements DeviceManager {
                         deviceStatus.getId().setSourceId(null);
                         deviceName = null;
                     }
-                    logger.info("Pebble disconnected with intent {}", Serialization.bundleToString(intent.getExtras()));
+                    logger.info("Pebble disconnected with intent {}", BundleSerialization.bundleToString(intent.getExtras()));
                     updateStatus(DeviceStatusListener.Status.DISCONNECTED);
                 }
             }
@@ -207,9 +210,13 @@ class Pebble2DeviceManager implements DeviceManager {
         BluetoothManager btManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
 
         for (BluetoothDevice btDevice : btManager.getConnectedDevices(GATT_SERVER)) {
-            if (btDevice.getName().toLowerCase().contains("pebble")) {
+            String name = btDevice.getName();
+            if (name == null) {
+                continue;
+            }
+            if (CONTAINS_PEBBLE_PATTERN.matcher(name).find()) {
                 synchronized (this) {
-                    deviceName = btDevice.getName();
+                    deviceName = name;
                     deviceStatus.getId().setSourceId(btDevice.getAddress());
                     logger.info("Pebble device set to {} with address {}",
                             deviceName, deviceStatus.getId().getSourceId());

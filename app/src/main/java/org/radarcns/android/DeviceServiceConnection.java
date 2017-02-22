@@ -111,7 +111,7 @@ public class DeviceServiceConnection<S extends BaseDeviceState> extends BaseServ
     }
 
     public void bind(@NonNull Intent intent) {
-        logger.info("Intending to start E4 service");
+        logger.info("Intending to start " + intent.getComponent());
 
         mainActivity.startService(intent);
         mainActivity.bindService(intent, this, Context.BIND_ABOVE_CLIENT);

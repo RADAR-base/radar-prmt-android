@@ -2,8 +2,8 @@ package org.radarcns.android;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.kafka.AvroTopic;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.topic.AvroTopic;
 
 import java.util.HashMap;
 import java.util.Map;
