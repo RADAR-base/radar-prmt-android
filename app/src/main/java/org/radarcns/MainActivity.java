@@ -210,12 +210,10 @@ public class MainActivity extends AppCompatActivity {
                     logger.info("Bluetooth state {}", state);
                     // Upon state change, restart ui handler and restart Scanning.
                     if (state == BluetoothAdapter.STATE_ON) {
-                        logger.info("Bluetooth has turned on");
-                        getHandler().postDelayed(mUIScheduler, uiRefreshRate);
+                        logger.info("Bluetooth is on");
                         startScanning();
                     } else if (state == BluetoothAdapter.STATE_OFF) {
                         logger.warn("Bluetooth is off");
-                        getHandler().postDelayed(mUIScheduler, uiRefreshRate);
                         startScanning();
                     }
                 }
@@ -349,9 +347,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         logger.info("mainActivity onResume");
         super.onResume();
-        getHandler().postDelayed(bindServicesRunner, 300L);
-
+        getHandler().post(bindServicesRunner);
         radarConfiguration.fetch();
+        getHandler().post(mUIScheduler);
     }
 
     @Override
@@ -374,7 +372,6 @@ public class MainActivity extends AppCompatActivity {
         synchronized (this) {
             mHandler = localHandler;
         }
-        localHandler.post(mUIScheduler);
         localHandler.post(new Runnable() {
             @Override
             public void run() {
