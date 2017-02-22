@@ -343,7 +343,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         }
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
-        content.put("sent", Boolean.TRUE);
+        content.put("sent", 1);
         return db.update(topic.getName(), content, "offset <= " + offset + " AND sent = 0", null);
     }
 

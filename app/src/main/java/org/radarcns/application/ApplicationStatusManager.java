@@ -76,7 +76,9 @@ public class ApplicationStatusManager implements DeviceManager {
                 deviceStatus.setServerStatus(status);
             } else if (intent.getAction().equals(SERVER_RECORDS_SENT_TOPIC)) {
                 int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);
-                deviceStatus.addRecordsSent(numberOfRecordsSent);
+                if (numberOfRecordsSent != -1) {
+                    deviceStatus.addRecordsSent(numberOfRecordsSent);
+                }
             }
         }
     };
