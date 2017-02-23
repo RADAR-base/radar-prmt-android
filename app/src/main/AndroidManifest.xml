@@ -40,6 +40,7 @@
         </activity>
         <service android:name=".empaticaE4.E4Service"/>
         <service android:name=".pebble2.Pebble2Service"/>
+        <service android:name=".biovotionVSM.BiovotionService"/>
         <service android:name=".phone.PhoneSensorsService"/>
         <service android:name=".application.ApplicationStatusService"/>
 
