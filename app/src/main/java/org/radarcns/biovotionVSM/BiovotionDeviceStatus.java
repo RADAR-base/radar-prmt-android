@@ -10,59 +10,88 @@ import org.radarcns.util.DeviceStateCreator;
  * The status on a single point in time of a Biovotion VSM device.
  */
 public class BiovotionDeviceStatus extends BaseDeviceState {
-    private Integer batteryCapacity = null;
-    private Integer batteryChargeRate = null;
+    private Float batteryLevel = Float.NaN;
+    private Float batteryChargeRate = Float.NaN;
     private Float batteryVoltage = Float.NaN;
-    private Integer batteryStatus = null;
+    private Float batteryStatus = Float.NaN;
 
     private Float bloodPulseWaveValue = Float.NaN;
-    private Integer bloodPulseWaveQuality = null;
+    private Float bloodPulseWaveQuality = Float.NaN;
 
-    private Integer heartRateValue = null;
-    private Integer heartRateQuality = null;
+    private Float spo2Value = Float.NaN;
+    private Float spo2Quality = Float.NaN;
+
+    private Float heartRateValue = Float.NaN;
+    private Float heartRateQuality = Float.NaN;
+
+    private Float temperature = Float.NaN;
+    private Float temperatureObject = Float.NaN;
+    private Float temperatureBaro = Float.NaN;
 
     public static final Parcelable.Creator<BiovotionDeviceStatus> CREATOR = new DeviceStateCreator<>(BiovotionDeviceStatus.class);
 
     @Override
     public synchronized void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
-        dest.writeInt(this.batteryCapacity);
-        dest.writeInt(this.batteryChargeRate);
+        dest.writeFloat(this.batteryLevel);
+        dest.writeFloat(this.batteryChargeRate);
         dest.writeFloat(this.batteryVoltage);
-        dest.writeInt(this.batteryStatus);
+        dest.writeFloat(this.batteryStatus);
         dest.writeFloat(this.bloodPulseWaveValue);
-        dest.writeInt(this.bloodPulseWaveQuality);
-        dest.writeInt(this.heartRateValue);
-        dest.writeInt(this.heartRateQuality);
+        dest.writeFloat(this.bloodPulseWaveQuality);
+        dest.writeFloat(this.spo2Value);
+        dest.writeFloat(this.spo2Quality);
+        dest.writeFloat(this.heartRateValue);
+        dest.writeFloat(this.heartRateQuality);
+        dest.writeFloat(this.temperature);
+        dest.writeFloat(this.temperatureObject);
+        dest.writeFloat(this.temperatureBaro);
     }
 
     public void updateFromParcel(Parcel in) {
         super.updateFromParcel(in);
-        batteryCapacity = in.readInt();
-        batteryChargeRate = in.readInt();
+        batteryLevel = in.readFloat();
+        batteryChargeRate = in.readFloat();
         batteryVoltage = in.readFloat();
-        batteryStatus = in.readInt();
+        batteryStatus = in.readFloat();
         bloodPulseWaveValue = in.readFloat();
-        bloodPulseWaveQuality = in.readInt();
-        heartRateValue = in.readInt();
-        heartRateQuality = in.readInt();
+        bloodPulseWaveQuality = in.readFloat();
+        spo2Value = in.readFloat();
+        spo2Quality = in.readFloat();
+        heartRateValue = in.readFloat();
+        heartRateQuality = in.readFloat();
+        temperature = in.readFloat();
+        temperatureObject = in.readFloat();
+        temperatureBaro = in.readFloat();
     }
 
-    public int getBatteryCapacity() { return batteryCapacity; }
-    public int getBatteryChargeRate() { return batteryChargeRate; }
+    public float getBatteryLevel() { return batteryLevel; }
+    public float getBatteryChargeRate() { return batteryChargeRate; }
     public float getBatteryVoltage() { return batteryVoltage; }
-    public int getBatteryStatus() { return batteryStatus; }
+    public float getBatteryStatus() { return batteryStatus; }
     public float getBloodPulseWaveValue() { return bloodPulseWaveValue; }
-    public int getBloodPulseWaveQuality() { return bloodPulseWaveQuality; }
-    public int getHeartRateValue() { return heartRateValue; }
-    public int getHeartRateQuality() { return heartRateQuality; }
+    public float getBloodPulseWaveQuality() { return bloodPulseWaveQuality; }
+    public float getSpO2Value() { return spo2Value; }
+    public float getSpO2Quality() { return spo2Quality; }
+    public float getHeartRate() { return heartRateValue; }
+    public float getHeartRateValue() { return heartRateValue; }
+    public float getHeartRateQuality() { return heartRateQuality; }
+    public float getTemperature() { return temperature; }
+    public float getTemperatureObject() { return temperature; }
+    public float getTemperatureBaro() { return temperature; }
 
-    public void setBatteryCapacity(int cap) { this.batteryCapacity = cap; }
-    public void setBatteryChargeRate(int rate) { this.batteryChargeRate = rate; }
-    public void setBatteryVoltage(float volt) { this.batteryVoltage = volt; }
-    public void setBatteryStatus(int stat) { this.batteryStatus = stat; }
-    public void setBloodPulseWaveValue(float BPWvalue) { this.bloodPulseWaveValue = BPWvalue; }
-    public void setBloodPulseWaveQuality(int BPWquality) { this.bloodPulseWaveQuality = BPWquality; }
-    public void setHeartRateValue(int HRvalue) { this.heartRateValue = HRvalue; }
-    public void setHeartRateQuality(int HRquality) { this.heartRateQuality = HRquality; }
+
+    public void setBatteryLevel(float cap) { this.batteryLevel = cap / 100.0f; }
+    public void setBatteryChargeRate(float rate) { this.batteryChargeRate = rate / 100.0f; }
+    public void setBatteryVoltage(float volt) { this.batteryVoltage = volt / 10.0f; }
+    public void setBatteryStatus(float stat) { this.batteryStatus = stat; }
+    public void setBloodPulseWaveValue(float BPWvalue) { this.bloodPulseWaveValue = BPWvalue / 50.0f; }
+    public void setBloodPulseWaveQuality(float BPWquality) { this.bloodPulseWaveQuality = BPWquality / 100.0f; }
+    public void setSpO2Value(float spo2value) { this.spo2Value = spo2value / 100.0f; }
+    public void setSpO2Quality(float spo2quality) { this.spo2Quality = spo2quality / 100.0f; }
+    public void setHeartRateValue(float HRvalue) { this.heartRateValue = HRvalue; }
+    public void setHeartRateQuality(float HRquality) { this.heartRateQuality = HRquality / 100.0f; }
+    public void setTemperature(float temp) { this.temperature = temp / 100.0f; }
+    public void setTemperatureObject(float temp) { this.temperatureObject = temp / 100.0f; }
+    public void setTemperatureBaro(float temp) { this.temperatureBaro = temp / 100.0f; }
 }

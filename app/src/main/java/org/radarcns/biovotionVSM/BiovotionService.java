@@ -57,7 +57,7 @@ public class BiovotionService extends DeviceService {
     protected List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics() {
         return Arrays.<AvroTopic<MeasurementKey, ? extends SpecificRecord>>asList(
                 topics.getBatteryStateTopic(), topics.getBloodPulseWaveTopic(),
-                topics.getHeartRateTopic());
+                topics.getSpO2Topic(), topics.getHeartRateTopic(), topics.getTemperatureTopic());
     }
 
     @Override
