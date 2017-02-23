@@ -277,8 +277,8 @@
                         style="@style/DeviceNameColumn"
                         android:text="@string/emptyText" />
 
-                    <FrameLayout android:layout_height="match_parent"
-                        android:layout_width="match_parent">
+                    <FrameLayout android:layout_width="match_parent"
+                        android:layout_height="match_parent">
                         <View
                             android:id="@+id/statusRow4"
                             style="@style/StatusCircle"
@@ -295,18 +295,18 @@
 
                     <TextView
                         android:id="@+id/temperatureRow4"
-                        style="@style/DisabledColumn"
-                        android:text="@string/disabledText" />
+                        style="@style/NumberColumn"
+                        android:text="@string/emptyText" />
 
                     <TextView
                         android:id="@+id/heartRateRow4"
-                        style="@style/DisabledColumn"
-                        android:text="@string/disabledText" />
+                        style="@style/NumberColumn"
+                        android:text="@string/emptyText" />
 
                     <TextView
                         android:id="@+id/accelerationRow4"
-                        style="@style/NumberColumn"
-                        android:text="@string/emptyText" />
+                        style="@style/DisabledColumn"
+                        android:text="@string/disabledText" />
 
                     <Button
                         android:id="@+id/inputDeviceNameButtonRow4"
@@ -324,6 +324,73 @@
 
                     <TextView
                         android:id="@+id/recordsSentRow4"
+                        style="@style/NumberColumn"
+                        android:text="@string/emptyText" />
+
+                </TableRow>
+
+                <TableRow
+                    android:id="@+id/row5"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+
+                    <TextView
+                        android:id="@+id/deviceTypeRow5"
+                        style="@style/DeviceTypeLabel"
+                        android:text="@string/deviceTypeLabel5" />
+
+                    <TextView
+                        android:id="@+id/deviceNameRow5"
+                        style="@style/DeviceNameColumn"
+                        android:text="@string/emptyText" />
+
+                    <FrameLayout android:layout_height="match_parent"
+                        android:layout_width="match_parent">
+                        <View
+                            android:id="@+id/statusRow5"
+                            style="@style/StatusCircle"
+                            android:background="@drawable/status_disconnected" />
+                    </FrameLayout>
+
+                    <FrameLayout android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <ImageView
+                            android:id="@+id/batteryRow5"
+                            style="@style/BatteryColumn"
+                            android:src="@drawable/ic_battery_unknown" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/temperatureRow5"
+                        style="@style/DisabledColumn"
+                        android:text="@string/disabledText" />
+
+                    <TextView
+                        android:id="@+id/heartRateRow5"
+                        style="@style/DisabledColumn"
+                        android:text="@string/disabledText" />
+
+                    <TextView
+                        android:id="@+id/accelerationRow5"
+                        style="@style/NumberColumn"
+                        android:text="@string/emptyText" />
+
+                    <Button
+                        android:id="@+id/inputDeviceNameButtonRow5"
+                        style="@style/ButtonInputColumn"
+                        android:text="@string/disabledText"
+                        android:onClick="dialogInputDeviceName"
+                        android:clickable="false"
+                        android:enabled="false" />
+
+                    <Button
+                        android:id="@+id/refreshButtonRow5"
+                        style="@style/ButtonColumn"
+                        android:text="@string/button_connect"
+                        android:onClick="reconnectDevice" />
+
+                    <TextView
+                        android:id="@+id/recordsSentRow5"
                         style="@style/NumberColumn"
                         android:text="@string/emptyText" />
                 </TableRow>
