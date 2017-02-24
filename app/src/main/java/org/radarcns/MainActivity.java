@@ -150,19 +150,18 @@ public class MainActivity extends AppCompatActivity {
         phoneConnection = new DeviceServiceConnection<>(this, PhoneState.CREATOR, PhoneSensorsService.class.getName());
         biovotionConnection = new DeviceServiceConnection<>(this, BiovotionDeviceStatus.CREATOR, BiovotionService.class.getName());
         appStatusConnection = new DeviceServiceConnection<>(this, ApplicationState.CREATOR, ApplicationStatusService.class.getName());
-        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, biovotionConnection, phoneConnection, appStatusConnection};
-        mConnectionIsBound = new boolean[] {false, false, false, false, false, false};
+        mConnections = new DeviceServiceConnection[] {mE4Connection, biovotionConnection, pebble2Connection, phoneConnection, appStatusConnection};
+        mConnectionIsBound = new boolean[] {false, false, false, false, false};
         serverStatus = null;
 
-        rowMap = new SparseIntArray(5);
+        rowMap = new SparseIntArray(4);
         rowMap.put(R.id.row1, 0);
         rowMap.put(R.id.row2, 1);
         rowMap.put(R.id.row3, 2);
         rowMap.put(R.id.row4, 3);
-        rowMap.put(R.id.row5, 4);
 
-        mTotalRecordsSent = new TimedInt[6];
-        for (int i = 0; i < 6; i++) {
+        mTotalRecordsSent = new TimedInt[5];
+        for (int i = 0; i < 5; i++) {
             mTotalRecordsSent[i] = new TimedInt();
         }
 
@@ -178,6 +177,15 @@ public class MainActivity extends AppCompatActivity {
                     mE4Connection.bind(e4serviceIntent);
                     mConnectionIsBound[0] = true;
                 }
+                if (!mConnectionIsBound[1]) {
+                    Intent biovotionIntent = new Intent(MainActivity.this, BiovotionService.class);
+                    Bundle extras = new Bundle();
+                    configureBiovotion(extras);
+                    biovotionIntent.putExtras(extras);
+
+                    biovotionConnection.bind(biovotionIntent);
+                    mConnectionIsBound[1] = true;
+                }
                 if (!mConnectionIsBound[2]) {
                     Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
                     Bundle extras = new Bundle();
@@ -188,15 +196,6 @@ public class MainActivity extends AppCompatActivity {
                     mConnectionIsBound[2] = true;
                 }
                 if (!mConnectionIsBound[3]) {
-                    Intent biovotionIntent = new Intent(MainActivity.this, BiovotionService.class);
-                    Bundle extras = new Bundle();
-                    configureBiovotion(extras);
-                    biovotionIntent.putExtras(extras);
-
-                    biovotionConnection.bind(biovotionIntent);
-                    mConnectionIsBound[3] = true;
-                }
-                if (!mConnectionIsBound[4]) {
                     Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
                     Bundle extras = new Bundle();
                     configureServiceExtras(extras);
@@ -205,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
                     phoneConnection.bind(phoneIntent);
                     mConnectionIsBound[4] = true;
                 }
-                if (!mConnectionIsBound[5]) {
+                if (!mConnectionIsBound[4]) {
                     Intent appStatusIntent = new Intent(MainActivity.this, ApplicationStatusService.class);
                     Bundle extras = new Bundle();
                     configureServiceExtras(extras);
@@ -295,8 +294,7 @@ public class MainActivity extends AppCompatActivity {
                 (Button) findViewById(R.id.inputDeviceNameButtonRow1),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow2),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow3),
-                (Button) findViewById(R.id.inputDeviceNameButtonRow4),
-                (Button) findViewById(R.id.inputDeviceNameButtonRow5)
+                (Button) findViewById(R.id.inputDeviceNameButtonRow4)
         };
 
         mGroupIdInputButton = (Button) findViewById(R.id.inputGroupId);
@@ -321,15 +319,15 @@ public class MainActivity extends AppCompatActivity {
                         configureEmpatica(bundle);
                         mE4Connection.updateConfiguration(bundle);
                     }
+                    if (mConnectionIsBound[1]) {
+                        Bundle bundle = new Bundle();
+                        configureBiovotion(bundle);
+                        biovotionConnection.updateConfiguration(bundle);
+                    }
                     if (mConnectionIsBound[2]) {
                         Bundle bundle = new Bundle();
                         configurePebble2(bundle);
                         pebble2Connection.updateConfiguration(bundle);
-                    }
-                    if (mConnectionIsBound[3]) {
-                        Bundle bundle = new Bundle();
-                        configureBiovotion(bundle);
-                        biovotionConnection.updateConfiguration(bundle);
                     }
                     logger.info("Remote Config: Activate success.");
                     // Set global properties.

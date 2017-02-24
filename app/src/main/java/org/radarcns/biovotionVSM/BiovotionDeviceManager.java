@@ -85,8 +85,6 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             vsmBleService = ((BleService.LocalBinder) service).getService();
-
-            // FIXME: enable verbose mode (available only if you use the debug BLE library)
             vsmBleService.setVerbose(false);
 
             // The shared BLE service is now connected. Can be used by the watch.
@@ -134,10 +132,16 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
 
     public void close() {
+        synchronized (this) {
+            if (this.isClosed) {
+                return;
+            }
+            logger.info("Closing device {}", deviceName);
+            this.isClosed = true;
+        }
         if (vsmScanner != null && vsmScanner.isScanning()) vsmScanner.stopScanning();
         if (vsmDevice != null && vsmDevice.isConnected()) vsmDevice.disconnect();
         updateStatus(DeviceStatusListener.Status.DISCONNECTED);
-        this.isClosed = true;
     }
 
 
@@ -249,8 +253,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
     @Override
     public void onVsmDeviceFound(@NonNull Scanner scanner, @NonNull VsmDescriptor descriptor) {
-        // TODO: handle multiple devices / check for provided device id
-        logger.info("VSM device found.");
+        logger.info("Biovotion VSM device found.");
         vsmScanner.stopScanning();
 
         if (acceptableIds.length > 0

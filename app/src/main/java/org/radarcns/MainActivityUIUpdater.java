@@ -25,7 +25,7 @@ import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 
 public class MainActivityUIUpdater implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(MainActivityUIUpdater.class);
-    private static final int NUM_ROWS = 5;
+    private static final int NUM_ROWS = 4;
     private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
@@ -161,56 +161,49 @@ public class MainActivityUIUpdater implements Runnable {
                 (TextView) mainActivity.findViewById(R.id.deviceNameRow1),
                 (TextView) mainActivity.findViewById(R.id.deviceNameRow2),
                 (TextView) mainActivity.findViewById(R.id.deviceNameRow3),
-                (TextView) mainActivity.findViewById(R.id.deviceNameRow4),
-                (TextView) mainActivity.findViewById(R.id.deviceNameRow5)
+                (TextView) mainActivity.findViewById(R.id.deviceNameRow4)
         };
 
         mStatusIcons = new View[]{
                 mainActivity.findViewById(R.id.statusRow1),
                 mainActivity.findViewById(R.id.statusRow2),
                 mainActivity.findViewById(R.id.statusRow3),
-                mainActivity.findViewById(R.id.statusRow4),
-                mainActivity.findViewById(R.id.statusRow5)
+                mainActivity.findViewById(R.id.statusRow4)
         };
 
         mTemperatureLabels = new TextView[]{
                 (TextView) mainActivity.findViewById(R.id.temperatureRow1),
                 (TextView) mainActivity.findViewById(R.id.temperatureRow2),
                 (TextView) mainActivity.findViewById(R.id.temperatureRow3),
-                (TextView) mainActivity.findViewById(R.id.temperatureRow4),
-                (TextView) mainActivity.findViewById(R.id.temperatureRow5)
+                (TextView) mainActivity.findViewById(R.id.temperatureRow4)
         };
 
         mHeartRateLabels = new TextView[]{
                 (TextView) mainActivity.findViewById(R.id.heartRateRow1),
                 (TextView) mainActivity.findViewById(R.id.heartRateRow2),
                 (TextView) mainActivity.findViewById(R.id.heartRateRow3),
-                (TextView) mainActivity.findViewById(R.id.heartRateRow4),
-                (TextView) mainActivity.findViewById(R.id.heartRateRow5)
+                (TextView) mainActivity.findViewById(R.id.heartRateRow4)
         };
 
         mAccelerationLabels = new TextView[]{
                 (TextView) mainActivity.findViewById(R.id.accelerationRow1),
                 (TextView) mainActivity.findViewById(R.id.accelerationRow2),
                 (TextView) mainActivity.findViewById(R.id.accelerationRow3),
-                (TextView) mainActivity.findViewById(R.id.accelerationRow4),
-                (TextView) mainActivity.findViewById(R.id.accelerationRow5)
+                (TextView) mainActivity.findViewById(R.id.accelerationRow4)
         };
 
         mBatteryLabels = new ImageView[]{
                 (ImageView) mainActivity.findViewById(R.id.batteryRow1),
                 (ImageView) mainActivity.findViewById(R.id.batteryRow2),
                 (ImageView) mainActivity.findViewById(R.id.batteryRow3),
-                (ImageView) mainActivity.findViewById(R.id.batteryRow4),
-                (ImageView) mainActivity.findViewById(R.id.batteryRow5)
+                (ImageView) mainActivity.findViewById(R.id.batteryRow4)
         };
 
         mRecordsSentLabels = new TextView[]{
                 (TextView) mainActivity.findViewById(R.id.recordsSentRow1),
                 (TextView) mainActivity.findViewById(R.id.recordsSentRow2),
                 (TextView) mainActivity.findViewById(R.id.recordsSentRow3),
-                (TextView) mainActivity.findViewById(R.id.recordsSentRow4),
-                (TextView) mainActivity.findViewById(R.id.recordsSentRow5)
+                (TextView) mainActivity.findViewById(R.id.recordsSentRow4)
         };
 
         mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);

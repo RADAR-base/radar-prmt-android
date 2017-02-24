@@ -38,10 +38,9 @@
     <string name="label_firebase_status">Firebase</string>
     <string name="label_group_id_input">Patient ID</string>
     <string name="deviceTypeLabel1">E4</string>
-    <string name="deviceTypeLabel2">Angel</string>
+    <string name="deviceTypeLabel2">Biovotion</string>
     <string name="deviceTypeLabel3">Pebble</string>
-    <string name="deviceTypeLabel4">Biovotion</string>
-    <string name="deviceTypeLabel5">Phone</string>
+    <string name="deviceTypeLabel4">Phone</string>
     <string name="disabledText">NA</string>
 
     <!--Status texts-->
