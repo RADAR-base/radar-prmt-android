@@ -24,9 +24,21 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
     private Float heartRateValue = Float.NaN;
     private Float heartRateQuality = Float.NaN;
 
+    private Float hrvValue = Float.NaN;
+    private Float hrvQuality = Float.NaN;
+
+    private Float rrValue = Float.NaN;
+    private Float rrQuality = Float.NaN;
+
+    private Float energyValue = Float.NaN;
+    private Float energyQuality = Float.NaN;
+
     private Float temperature = Float.NaN;
     private Float temperatureObject = Float.NaN;
     private Float temperatureBaro = Float.NaN;
+
+    private Float gsrAmplitude = Float.NaN;
+    private Float gsrPhase = Float.NaN;
 
     public static final Parcelable.Creator<BiovotionDeviceStatus> CREATOR = new DeviceStateCreator<>(BiovotionDeviceStatus.class);
 
@@ -43,9 +55,17 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
         dest.writeFloat(this.spo2Quality);
         dest.writeFloat(this.heartRateValue);
         dest.writeFloat(this.heartRateQuality);
+        dest.writeFloat(this.hrvValue);
+        dest.writeFloat(this.hrvQuality);
+        dest.writeFloat(this.rrValue);
+        dest.writeFloat(this.rrQuality);
+        dest.writeFloat(this.energyValue);
+        dest.writeFloat(this.energyQuality);
         dest.writeFloat(this.temperature);
         dest.writeFloat(this.temperatureObject);
         dest.writeFloat(this.temperatureBaro);
+        dest.writeFloat(this.gsrAmplitude);
+        dest.writeFloat(this.gsrPhase);
     }
 
     public void updateFromParcel(Parcel in) {
@@ -60,9 +80,17 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
         spo2Quality = in.readFloat();
         heartRateValue = in.readFloat();
         heartRateQuality = in.readFloat();
+        hrvValue = in.readFloat();
+        hrvQuality = in.readFloat();
+        rrValue = in.readFloat();
+        rrQuality = in.readFloat();
+        energyValue = in.readFloat();
+        energyQuality = in.readFloat();
         temperature = in.readFloat();
         temperatureObject = in.readFloat();
         temperatureBaro = in.readFloat();
+        gsrAmplitude = in.readFloat();
+        gsrPhase = in.readFloat();
     }
 
     public float getBatteryLevel() { return batteryLevel; }
@@ -76,9 +104,17 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
     public float getHeartRate() { return heartRateValue; }
     public float getHeartRateValue() { return heartRateValue; }
     public float getHeartRateQuality() { return heartRateQuality; }
+    public float getHrvValue() { return hrvValue; }
+    public float getHrvQuality() { return hrvQuality; }
+    public float getRrValue() { return rrValue; }
+    public float getRrQuality() { return rrQuality; }
+    public float getEnergyValue() { return energyValue; }
+    public float getEnergyQuality() { return energyQuality; }
     public float getTemperature() { return temperature; }
     public float getTemperatureObject() { return temperature; }
     public float getTemperatureBaro() { return temperature; }
+    public float getGsrAmplitude() { return gsrAmplitude; }
+    public float getGsrPhase() { return gsrPhase; }
 
 
     public void setBatteryLevel(float cap) { this.batteryLevel = cap / 100.0f; }
@@ -91,7 +127,15 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
     public void setSpO2Quality(float spo2quality) { this.spo2Quality = spo2quality / 100.0f; }
     public void setHeartRateValue(float HRvalue) { this.heartRateValue = HRvalue; }
     public void setHeartRateQuality(float HRquality) { this.heartRateQuality = HRquality / 100.0f; }
+    public void setHrvValue(float HRVvalue) { this.hrvValue = HRVvalue; }
+    public void setHrvQuality(float HRVquality) { this.hrvQuality = HRVquality / 100.0f; }
+    public void setRrValue(float RRvalue) { this.rrValue = RRvalue; }
+    public void setRrQuality(float RRquality) { this.rrQuality = RRquality / 100.0f; }
+    public void setEnergyValue(float NRGvalue) { this.energyValue = NRGvalue * 2.0f; }
+    public void setEnergyQuality(float NRGquality) { this.energyQuality = NRGquality / 100.0f; }
     public void setTemperature(float temp) { this.temperature = temp / 100.0f; }
     public void setTemperatureObject(float temp) { this.temperatureObject = temp / 100.0f; }
     public void setTemperatureBaro(float temp) { this.temperatureBaro = temp / 100.0f; }
+    public void setGsrAmplitude(float GSRamp) { this.gsrAmplitude = GSRamp / 3000.0f; }
+    public void setGsrPhase(float GSRphase) { this.gsrPhase = GSRphase; }
 }
