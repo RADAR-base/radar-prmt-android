@@ -151,9 +151,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
     @Override
     public void start(@NonNull final Set<String> acceptableIds) {
-        // TODO: check for permissions and BLE supported
-
-        logger.info("searching for Biovotion VSM device.");
+        logger.info("Biovotion VSM searching for device.");
 
         // Initializes a Bluetooth adapter.
         final BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -280,7 +278,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
     @Override
     public void onScanStopped(@NonNull Scanner scanner) {
-        logger.info("VSM device scan stopped.");
+        logger.info("Biovotion VSM device scan stopped.");
     }
 
     @Override

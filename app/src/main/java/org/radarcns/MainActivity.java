@@ -37,6 +37,7 @@ import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.application.ApplicationStatusService;
 import org.radarcns.application.ApplicationState;
 import org.radarcns.biovotionVSM.BiovotionDeviceStatus;
+import org.radarcns.biovotionVSM.BiovotionHeartbeatToast;
 import org.radarcns.biovotionVSM.BiovotionService;
 import org.radarcns.empaticaE4.E4DeviceStatus;
 import org.radarcns.empaticaE4.E4HeartbeatToast;
@@ -600,6 +601,8 @@ public class MainActivity extends AppCompatActivity {
                         new E4HeartbeatToast(MainActivity.this).execute(connection);
                     } else if (connection == pebble2Connection) {
                         new Pebble2HeartbeatToast(MainActivity.this).execute(connection);
+                    } else if (connection == biovotionConnection) {
+                        new BiovotionHeartbeatToast(MainActivity.this).execute(connection);
                     }
                 } catch (RemoteException e) {
                     logger.warn("Failed to update view with device data");
