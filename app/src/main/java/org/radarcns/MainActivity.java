@@ -102,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
 
     /** Overview UI **/
     private Button[] mDeviceInputButtons;
-    private final String[] mInputDeviceKeys = new String[6];
-    private final String[][] deviceKeys = new String[6][];
+    private final String[] mInputDeviceKeys = new String[5];
+    private final String[][] deviceKeys = new String[5][];
     private Button mGroupIdInputButton;
 
     private final TimedInt[] mTotalRecordsSent;
@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                     phoneIntent.putExtras(extras);
 
                     phoneConnection.bind(phoneIntent);
-                    mConnectionIsBound[4] = true;
+                    mConnectionIsBound[3] = true;
                 }
                 if (!mConnectionIsBound[4]) {
                     Intent appStatusIntent = new Intent(MainActivity.this, ApplicationStatusService.class);
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                     appStatusIntent.putExtras(extras);
 
                     appStatusConnection.bind(appStatusIntent);
-                    mConnectionIsBound[5] = true;
+                    mConnectionIsBound[4] = true;
                 }
             }
 
