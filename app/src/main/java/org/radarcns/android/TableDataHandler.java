@@ -47,7 +47,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
     private final Context context;
     private final ThreadFactory threadFactory;
-    private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> tables;
+    private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, DataCache<MeasurementKey, ? extends SpecificRecord>> tables;
     private final Set<ServerStatusListener> statusListeners;
     private final BroadcastReceiver connectivityReceiver;
     private URL kafkaUrl;
@@ -67,7 +67,8 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
      */
     public TableDataHandler(Context context, URL kafkaUrl, SchemaRetriever schemaRetriever,
-                            List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> topics) {
+                            List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> topics)
+            throws IOException {
         this.context = context;
         this.kafkaUrl = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
@@ -78,7 +79,8 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
 
         tables = new HashMap<>(topics.size() * 2);
         for (AvroTopic<MeasurementKey, ? extends SpecificRecord> topic : topics) {
-            tables.put(topic, new MeasurementTable<>(context, topic, DATABASE_COMMIT_RATE_DEFAULT));
+//            tables.put(topic, new MeasurementTable<>(context, topic, DATABASE_COMMIT_RATE_DEFAULT));
+            tables.put(topic, new TapeCache<>(context, topic, DATABASE_COMMIT_RATE_DEFAULT));
         }
         dataRetention = new AtomicLong(DATA_RETENTION_DEFAULT);
 
@@ -228,8 +230,8 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <V extends SpecificRecord> MeasurementTable<V> getCache(AvroTopic<MeasurementKey, V> topic) {
-        return (MeasurementTable<V>)this.tables.get(topic);
+    public <V extends SpecificRecord> DataCache<MeasurementKey, V> getCache(AvroTopic<MeasurementKey, V> topic) {
+        return (DataCache<MeasurementKey, V>)this.tables.get(topic);
     }
 
     @Override
@@ -237,7 +239,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         table.addMeasurement(key, value);
     }
 
-    public Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, MeasurementTable<? extends SpecificRecord>> getCaches() {
+    public Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, DataCache<MeasurementKey, ? extends SpecificRecord>> getCaches() {
         return tables;
     }
 
@@ -295,7 +297,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     }
 
     public void setDatabaseCommitRate(long period) {
-        for (MeasurementTable<?> table : tables.values()) {
+        for (DataCache<?, ?> table : tables.values()) {
             table.setTimeWindow(period);
         }
     }

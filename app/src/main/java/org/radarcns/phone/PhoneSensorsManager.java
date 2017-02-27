@@ -13,8 +13,8 @@ import android.support.annotation.NonNull;
 
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
+import org.radarcns.data.DataCache;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
@@ -32,8 +32,8 @@ class PhoneSensorsManager implements DeviceManager, SensorEventListener {
 
     private final DeviceStatusListener phoneService;
 
-    private final MeasurementTable<PhoneAcceleration> accelerationTable;
-    private final MeasurementTable<PhoneLight> lightTable;
+    private final DataCache<MeasurementKey, PhoneAcceleration> accelerationTable;
+    private final DataCache<MeasurementKey, PhoneLight> lightTable;
     private final AvroTopic<MeasurementKey, PhoneBatteryLevel> batteryTopic;
 
     private final PhoneState deviceStatus;

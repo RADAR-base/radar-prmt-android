@@ -16,14 +16,14 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      *
      * @return records.
      */
-    List<Record<K, V>> unsentRecords(int limit);
+    List<Record<K, V>> unsentRecords(int limit) throws IOException;
 
     /**
      * Get latest records in the cache, from new to old.
      *
      * @return records.
      */
-    List<Record<K, V>> getRecords(int limit);
+    List<Record<K, V>> getRecords(int limit) throws IOException;
 
     /**
      * Get a pair with the number of [unsent records], [sent records]
@@ -35,7 +35,7 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      * @param offset offset (inclusive) to remove.
      * @return number of rows removed
      */
-    int markSent(long offset);
+    int markSent(long offset) throws IOException;
 
     /** Add a new measurement to the cache. */
     void addMeasurement(K key, V value);
@@ -57,4 +57,6 @@ public interface DataCache<K, V> extends Flushable, Closeable {
 
     /** Return a list to cache. It will be cleared immediately and should not be used again. */
     void returnList(List list);
+
+    void setTimeWindow(long period);
 }
