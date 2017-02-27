@@ -70,12 +70,12 @@ To send some mock data to a Confluent Kafka set up on localhost, run `./gradlew 
 
 To add additional device types to this application, make the following steps (see the `org.radarcns.pebble2` package as an example):
 
-- In the `avro/src/main/resources/avro` directory, create the Avro schemas for your record values. Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
+- Add the schemas of the data you intend to send to the [RADAR-CNS Schemas repository](https://github.com/RADAR-CNS/RADAR-Schemas) in the `common` directory. Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
 - Create a new package `org.radarcns.mydevicetype`. In that package, create classes that:
   - implement `org.radarcns.android.DeviceManager` to connect to a device and collect its data.
   - implement `org.radarcns.android.DeviceState` to keep the current state of the device.
   - subclass `org.radarcns.android.DeviceService` to run the device manager in.
-  - implement a singleton `org.radarcns.android.DeviceTopics` that contains all Kafka topics that the wearable will generate.
+  - subclass a singleton `org.radarcns.android.DeviceTopics` that contains all Kafka topics that the wearable will generate.
 - Add a new service element to `AndroidManifest.xml`, referencing the newly created device service.
 - Finally, modify `org.radarcns.MainActivity` to run a service for showing the device data and for controlling the recording.
 
