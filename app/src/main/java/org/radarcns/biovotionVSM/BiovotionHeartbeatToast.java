@@ -45,7 +45,7 @@ public class BiovotionHeartbeatToast extends AsyncTask<DeviceServiceConnection<B
                         long diffTimeMillis = System.currentTimeMillis() - (long) (1000d * measurement.value.getTimeReceived());
                         sb.append(singleDecimal.format(diffTimeMillis / 1000d));
                         sb.append(" sec. ago: ");
-                        sb.append(singleDecimal.format(measurement.value.getHeartRateValue()));
+                        sb.append(singleDecimal.format(measurement.value.getHeartRate()));
                         sb.append(" bpm\n");
                     }
                     results[i] = sb.toString();

@@ -313,19 +313,19 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
             case Algo1:
                 Algo1 algo1 = (Algo1) unit.unit;
-                deviceStatus.setBloodPulseWaveValue(algo1.bloodPulseWave);
+                deviceStatus.setBloodPulseWave(algo1.bloodPulseWave);
                 deviceStatus.setBloodPulseWaveQuality(0); // not available in algo1
-                deviceStatus.setSpO2Value(algo1.spO2);
+                deviceStatus.setSpO2(algo1.spO2);
                 deviceStatus.setSpO2Quality(algo1.spO2Quality);
-                deviceStatus.setHeartRateValue(algo1.hr);
+                deviceStatus.setHeartRate(algo1.hr);
                 deviceStatus.setHeartRateQuality(algo1.hrQuality);
 
                 BiovotionVSMBloodPulseWave bpwValue = new BiovotionVSMBloodPulseWave((double) unit.timestamp, System.currentTimeMillis() / 1000d,
-                        deviceStatus.getBloodPulseWaveValue(), deviceStatus.getBloodPulseWaveQuality());
+                        deviceStatus.getBloodPulseWave(), deviceStatus.getBloodPulseWaveQuality());
                 BiovotionVSMSpO2 spo2Value = new BiovotionVSMSpO2((double) unit.timestamp, System.currentTimeMillis() / 1000d,
-                        deviceStatus.getSpO2Value(), deviceStatus.getSpO2Quality());
+                        deviceStatus.getSpO2(), deviceStatus.getSpO2Quality());
                 BiovotionVSMHeartRate hrValue = new BiovotionVSMHeartRate((double) unit.timestamp, System.currentTimeMillis() / 1000d,
-                        deviceStatus.getHeartRateValue(), deviceStatus.getHeartRateQuality());
+                        deviceStatus.getHeartRate(), deviceStatus.getHeartRateQuality());
 
                 dataHandler.addMeasurement(bpwTable, deviceStatus.getId(), bpwValue);
                 dataHandler.addMeasurement(spo2Table, deviceStatus.getId(), spo2Value);
@@ -334,19 +334,19 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
             case Algo2:
                 Algo2 algo2 = (Algo2) unit.unit;
-                deviceStatus.setHrvValue(algo2.hrv);
+                deviceStatus.setHrv(algo2.hrv);
                 deviceStatus.setHrvQuality(algo2.hrvQuality);
-                deviceStatus.setRrValue(algo2.respirationRate);
+                deviceStatus.setRr(algo2.respirationRate);
                 deviceStatus.setRrQuality(algo2.respirationRateQuality);
-                deviceStatus.setEnergyValue(algo2.energy);
+                deviceStatus.setEnergy(algo2.energy);
                 deviceStatus.setEnergyQuality(algo2.energyQuality);
 
                 BiovotionVSMHeartRateVariability hrvValue = new BiovotionVSMHeartRateVariability((double) unit.timestamp, System.currentTimeMillis() / 1000d,
-                        deviceStatus.getHrvValue(), deviceStatus.getHrvQuality());
+                        deviceStatus.getHrv(), deviceStatus.getHrvQuality());
                 BiovotionVSMRespirationRate rrValue = new BiovotionVSMRespirationRate((double) unit.timestamp, System.currentTimeMillis() / 1000d,
-                        deviceStatus.getRrValue(), deviceStatus.getRrQuality());
+                        deviceStatus.getRr(), deviceStatus.getRrQuality());
                 BiovotionVSMEnergy energyValue = new BiovotionVSMEnergy((double) unit.timestamp, System.currentTimeMillis() / 1000d,
-                        deviceStatus.getEnergyValue(), deviceStatus.getEnergyQuality());
+                        deviceStatus.getEnergy(), deviceStatus.getEnergyQuality());
 
                 dataHandler.addMeasurement(hrvTable, deviceStatus.getId(), hrvValue);
                 dataHandler.addMeasurement(rrTable, deviceStatus.getId(), rrValue);

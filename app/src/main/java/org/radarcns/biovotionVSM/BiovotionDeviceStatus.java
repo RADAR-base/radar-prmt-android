@@ -97,18 +97,17 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
     public float getBatteryChargeRate() { return batteryChargeRate; }
     public float getBatteryVoltage() { return batteryVoltage; }
     public float getBatteryStatus() { return batteryStatus; }
-    public float getBloodPulseWaveValue() { return bloodPulseWaveValue; }
+    public float getBloodPulseWave() { return bloodPulseWaveValue; }
     public float getBloodPulseWaveQuality() { return bloodPulseWaveQuality; }
-    public float getSpO2Value() { return spo2Value; }
+    public float getSpO2() { return spo2Value; }
     public float getSpO2Quality() { return spo2Quality; }
     public float getHeartRate() { return heartRateValue; }
-    public float getHeartRateValue() { return heartRateValue; }
     public float getHeartRateQuality() { return heartRateQuality; }
-    public float getHrvValue() { return hrvValue; }
+    public float getHrv() { return hrvValue; }
     public float getHrvQuality() { return hrvQuality; }
-    public float getRrValue() { return rrValue; }
+    public float getRr() { return rrValue; }
     public float getRrQuality() { return rrQuality; }
-    public float getEnergyValue() { return energyValue; }
+    public float getEnergy() { return energyValue; }
     public float getEnergyQuality() { return energyQuality; }
     public float getTemperature() { return temperature; }
     public float getTemperatureObject() { return temperature; }
@@ -121,17 +120,17 @@ public class BiovotionDeviceStatus extends BaseDeviceState {
     public void setBatteryChargeRate(float rate) { this.batteryChargeRate = rate / 100.0f; }
     public void setBatteryVoltage(float volt) { this.batteryVoltage = volt / 10.0f; }
     public void setBatteryStatus(float stat) { this.batteryStatus = stat; }
-    public void setBloodPulseWaveValue(float BPWvalue) { this.bloodPulseWaveValue = BPWvalue / 50.0f; }
+    public void setBloodPulseWave(float BPWvalue) { this.bloodPulseWaveValue = BPWvalue / 50.0f; }
     public void setBloodPulseWaveQuality(float BPWquality) { this.bloodPulseWaveQuality = BPWquality / 100.0f; }
-    public void setSpO2Value(float spo2value) { this.spo2Value = spo2value / 100.0f; }
+    public void setSpO2(float spo2value) { this.spo2Value = spo2value / 100.0f; }
     public void setSpO2Quality(float spo2quality) { this.spo2Quality = spo2quality / 100.0f; }
-    public void setHeartRateValue(float HRvalue) { this.heartRateValue = HRvalue; }
+    public void setHeartRate(float HRvalue) { this.heartRateValue = HRvalue; }
     public void setHeartRateQuality(float HRquality) { this.heartRateQuality = HRquality / 100.0f; }
-    public void setHrvValue(float HRVvalue) { this.hrvValue = HRVvalue; }
+    public void setHrv(float HRVvalue) { this.hrvValue = HRVvalue; }
     public void setHrvQuality(float HRVquality) { this.hrvQuality = HRVquality / 100.0f; }
-    public void setRrValue(float RRvalue) { this.rrValue = RRvalue; }
+    public void setRr(float RRvalue) { this.rrValue = RRvalue; }
     public void setRrQuality(float RRquality) { this.rrQuality = RRquality / 100.0f; }
-    public void setEnergyValue(float NRGvalue) { this.energyValue = NRGvalue * 2.0f; }
+    public void setEnergy(float NRGvalue) { this.energyValue = NRGvalue * 2.0f; }
     public void setEnergyQuality(float NRGquality) { this.energyQuality = NRGquality / 100.0f; }
     public void setTemperature(float temp) { this.temperature = temp / 100.0f; }
     public void setTemperatureObject(float temp) { this.temperatureObject = temp / 100.0f; }
