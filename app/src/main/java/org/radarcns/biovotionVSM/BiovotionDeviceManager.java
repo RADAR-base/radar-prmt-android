@@ -80,7 +80,8 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
     private BleService vsmBleService;
 
     // Code to manage Service lifecycle.
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+    private boolean bleServiceConnectionIsBound;
+    private final ServiceConnection bleServiceConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -123,11 +124,15 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
         this.biovotionService = biovotionService;
         this.context = context;
 
-        this.deviceStatus = new BiovotionDeviceStatus();
-        this.deviceStatus.getId().setUserId(groupId);
-        this.deviceName = null;
-        this.isClosed = true;
-        this.acceptableIds = null;
+        this.bleServiceConnectionIsBound = false;
+
+        synchronized (this) {
+            this.deviceStatus = new BiovotionDeviceStatus();
+            this.deviceStatus.getId().setUserId(groupId);
+            this.deviceName = null;
+            this.isClosed = true;
+            this.acceptableIds = null;
+        }
     }
 
 
@@ -161,12 +166,14 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
         vsmScanner = new VsmScanner(vsmBluetoothAdapter, this);
         vsmScanner.startScanning();
 
-        this.acceptableIds = Strings.containsPatterns(acceptableIds);
-        this.isClosed = false;
+        synchronized (this) {
+            this.acceptableIds = Strings.containsPatterns(acceptableIds);
+            this.isClosed = false;
+        }
     }
 
     @Override
-    public boolean isClosed() {
+    public synchronized boolean isClosed() {
         return isClosed;
     }
 
@@ -176,12 +183,12 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
     }
 
     @Override
-    public String getName() {
+    public synchronized String getName() {
         return deviceName;
     }
 
     @Override
-    public boolean equals(Object other) {
+    public synchronized boolean equals(Object other) {
         return other == this
                 || other != null && getClass().equals(other.getClass())
                 && deviceStatus.getId().getSourceId() != null
@@ -196,6 +203,10 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
     private synchronized void updateStatus(DeviceStatusListener.Status status) {
         this.deviceStatus.setStatus(status);
         this.biovotionService.deviceStatusUpdated(this, status);
+        if (status == DeviceStatusListener.Status.DISCONNECTED && bleServiceConnectionIsBound) {
+            context.unbindService(bleServiceConnection);
+            bleServiceConnectionIsBound = false;
+        }
     }
 
 
@@ -226,13 +237,14 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
     @Override
     public void onVsmDeviceConnectionError(@NonNull VsmDevice device, VsmConnectionState errorState) {
-        logger.error("Biovotion VSM device connection error.");
+        logger.error("Biovotion VSM device connection error: {}", errorState.toString());
+        updateStatus(DeviceStatusListener.Status.DISCONNECTED);
         vsmStreamController = null;
     }
 
     @Override
     public void onVsmDeviceDisconnected(@NonNull VsmDevice device, int statusCode) {
-        logger.warn("Biovotion VSM device disconnected.");
+        logger.warn("Biovotion VSM device disconnected. ({})", statusCode);
         updateStatus(DeviceStatusListener.Status.DISCONNECTED);
         vsmStreamController = null;
     }
@@ -262,8 +274,10 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
             return;
         }
 
-        this.deviceName = descriptor.name();
-        deviceStatus.getId().setSourceId(descriptor.address());
+        synchronized (this) {
+            this.deviceName = descriptor.name();
+            this.deviceStatus.getId().setSourceId(descriptor.address());
+        }
         logger.info("Biovotion VSM device Name: {} ID: {}", this.deviceName, descriptor.address());
 
         vsmDevice = VsmDevice.sharedInstance();
@@ -271,7 +285,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
         // Bind the shared BLE service
         Intent gattServiceIntent = new Intent(context, BleService.class);
-        context.bindService(gattServiceIntent, mServiceConnection, context.BIND_AUTO_CREATE);
+        bleServiceConnectionIsBound = context.bindService(gattServiceIntent, bleServiceConnection, context.BIND_AUTO_CREATE);
 
         vsmDevice.addListener(this);
     }
