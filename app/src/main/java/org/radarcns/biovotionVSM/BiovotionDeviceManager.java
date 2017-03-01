@@ -45,6 +45,7 @@ import ch.hevs.biovotion.vsm.protocol.stream.units.RawBoard;
 import ch.hevs.biovotion.vsm.stream.StreamController;
 import ch.hevs.biovotion.vsm.stream.StreamListener;
 import ch.hevs.ble.lib.core.BleService;
+import ch.hevs.ble.lib.core.BleServiceObserver;
 import ch.hevs.ble.lib.exceptions.BleScanException;
 import ch.hevs.ble.lib.scanner.Scanner;
 
@@ -103,6 +104,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            logger.info("Biovotion VSM BLE service disconnected");
             vsmBleService = null;
         }
     };
@@ -141,11 +143,12 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
             if (this.isClosed) {
                 return;
             }
-            logger.info("Closing device {}", deviceName);
+            logger.info("Biovotion VSM Closing device {}", deviceName);
             this.isClosed = true;
         }
         if (vsmScanner != null && vsmScanner.isScanning()) vsmScanner.stopScanning();
         if (vsmDevice != null && vsmDevice.isConnected()) vsmDevice.disconnect();
+        if (vsmBleService != null && vsmBleService.connectionState() == BleServiceObserver.ConnectionState.GATT_CONNECTED) vsmBleService.disconnect();
         updateStatus(DeviceStatusListener.Status.DISCONNECTED);
     }
 
@@ -201,12 +204,13 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
     }
 
     private synchronized void updateStatus(DeviceStatusListener.Status status) {
-        this.deviceStatus.setStatus(status);
-        this.biovotionService.deviceStatusUpdated(this, status);
         if (status == DeviceStatusListener.Status.DISCONNECTED && bleServiceConnectionIsBound) {
             context.unbindService(bleServiceConnection);
             bleServiceConnectionIsBound = false;
+            logger.info("Biovotion VSM BLE service unbound.");
         }
+        this.deviceStatus.setStatus(status);
+        this.biovotionService.deviceStatusUpdated(this, status);
     }
 
 
@@ -239,6 +243,8 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
     public void onVsmDeviceConnectionError(@NonNull VsmDevice device, VsmConnectionState errorState) {
         logger.error("Biovotion VSM device connection error: {}", errorState.toString());
         updateStatus(DeviceStatusListener.Status.DISCONNECTED);
+        vsmDevice.removeListeners();
+        vsmStreamController.removeListeners();
         vsmStreamController = null;
     }
 
@@ -246,6 +252,8 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
     public void onVsmDeviceDisconnected(@NonNull VsmDevice device, int statusCode) {
         logger.warn("Biovotion VSM device disconnected. ({})", statusCode);
         updateStatus(DeviceStatusListener.Status.DISCONNECTED);
+        vsmDevice.removeListeners();
+        vsmStreamController.removeListeners();
         vsmStreamController = null;
     }
 
@@ -269,7 +277,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
         if (acceptableIds.length > 0
                 && !Strings.findAny(acceptableIds, descriptor.name())
                 && !Strings.findAny(acceptableIds, descriptor.address())) {
-            logger.info("Device {} with ID {} is not listed in acceptable device IDs", descriptor.name(), "");
+            logger.info("Biovotion VSM Device {} with ID {} is not listed in acceptable device IDs", descriptor.name(), "");
             biovotionService.deviceFailedToConnect(descriptor.name());
             return;
         }
@@ -297,7 +305,7 @@ public class BiovotionDeviceManager implements DeviceManager, VsmDeviceListener,
 
     @Override
     public void onScanError(@NonNull Scanner scanner, @NonNull BleScanException throwable) {
-        logger.error("Scanning error. Code: "+ throwable.getReason());
+        logger.error("Biovotion VSM Scanning error. Code: "+ throwable.getReason());
         // TODO: handle error
     }
 
