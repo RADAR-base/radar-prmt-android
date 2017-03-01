@@ -1,50 +1,71 @@
 package org.radarcns.data;
 
-import com.squareup.tape2.ObjectQueue;
-
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.topic.AvroTopic;
+import org.radarcns.util.BackedObjectQueue;
 import org.radarcns.util.Serialization;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.BufferOverflowException;
+
+import static org.radarcns.util.Serialization.bytesToLong;
+import static org.radarcns.util.Serialization.longToBytes;
 
 /**
  * Converts records from an AvroTopic for Tape
  */
 public class TapeAvroConverter<K extends SpecificRecord, V extends SpecificRecord>
-        implements ObjectQueue.Converter<Record<K, V>> {
-    private final byte[] headerBuffer = new byte[12];
-    private final AvroEncoder.AvroWriter<K> keyWriter;
-    private final AvroEncoder.AvroWriter<V> valueWriter;
-    private final AvroDecoder.AvroReader<K> keyReader;
-    private final AvroDecoder.AvroReader<V> valueReader;
+        implements BackedObjectQueue.Converter<Record<K, V>> {
+    private final EncoderFactory encoderFactory;
+    private final DecoderFactory decoderFactory;
+    private final SpecificDatumWriter<K> keyWriter;
+    private final SpecificDatumWriter<V> valueWriter;
+    private final SpecificDatumReader<K> keyReader;
+    private final SpecificDatumReader<V> valueReader;
+    private final byte[] headerBuffer = new byte[8];
+    private BinaryEncoder encoder;
+    private BinaryDecoder decoder;
 
     public TapeAvroConverter(AvroTopic<K, V> topic) throws IOException {
-        SpecificRecordEncoder specificEncoder = new SpecificRecordEncoder(true);
-        keyWriter = specificEncoder.writer(topic.getKeySchema(), topic.getKeyClass());
-        valueWriter = specificEncoder.writer(topic.getValueSchema(), topic.getValueClass());
-        SpecificRecordDecoder specificDecoder = new SpecificRecordDecoder(true);
-        keyReader = specificDecoder.reader(topic.getKeySchema(), topic.getKeyClass());
-        valueReader = specificDecoder.reader(topic.getValueSchema(), topic.getValueClass());
+        encoderFactory = EncoderFactory.get();
+        decoderFactory = DecoderFactory.get();
+        keyWriter = new SpecificDatumWriter<>(topic.getKeySchema());
+        valueWriter = new SpecificDatumWriter<>(topic.getValueSchema());
+        keyReader = new SpecificDatumReader<>(topic.getKeySchema());
+        valueReader = new SpecificDatumReader<>(topic.getValueSchema());
+        encoder = null;
+        decoder = null;
     }
 
-    @Override
-    public Record<K, V> from(byte[] bytes) throws IOException {
-        long offset = Serialization.bytesToLong(bytes, 0);
-        int keyLength = Serialization.bytesToInt(bytes, 8);
-        K key = keyReader.decode(bytes, 12);
-        V value = valueReader.decode(bytes, 12 + keyLength);
-        return new Record<>(offset, key, value);
+    public Record<K, V> deserialize(InputStream in) throws IOException {
+        int numRead = 0;
+        do {
+            numRead += in.read(headerBuffer, 0, 8);
+        } while (numRead < 8);
+        decoder = decoderFactory.binaryDecoder(in, decoder);
+
+        long kafkaOffset = bytesToLong(headerBuffer, 0);
+        K key = keyReader.read(null, decoder);
+        V value = valueReader.read(null, decoder);
+        return new Record<>(kafkaOffset, key, value);
     }
 
-    @Override
-    public void toStream(Record<K, V> o, OutputStream bytes) throws IOException {
-        Serialization.longToBytes(o.offset, headerBuffer, 0);
-        byte[] encodedKey = keyWriter.encode(o.key);
-        Serialization.intToBytes(encodedKey.length, headerBuffer, 8);
-        bytes.write(headerBuffer);
-        bytes.write(encodedKey);
-        bytes.write(valueWriter.encode(o.value));
+    public void serialize(Record<K, V> o, OutputStream out) throws IOException {
+        longToBytes(o.offset, headerBuffer, 0);
+        out.write(headerBuffer, 0, 8);
+        encoder = encoderFactory.binaryEncoder(out, encoder);
+        keyWriter.write(o.key, encoder);
+        valueWriter.write(o.value, encoder);
+        encoder.flush();
     }
 }

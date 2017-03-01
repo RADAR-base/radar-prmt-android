@@ -5,9 +5,6 @@ import android.os.Parcel;
 import android.os.Process;
 import android.util.Pair;
 
-import com.squareup.tape2.ObjectQueue;
-import com.squareup.tape2.QueueFile;
-
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.data.AvroEncoder;
 import org.radarcns.data.DataCache;
@@ -15,7 +12,9 @@ import org.radarcns.data.Record;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.data.TapeAvroConverter;
 import org.radarcns.topic.AvroTopic;
+import org.radarcns.util.BackedObjectQueue;
 import org.radarcns.util.ListPool;
+import org.radarcns.util.QueueFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,7 +37,7 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
     private static final ListPool listPool = new ListPool(10);
 
     private final AvroTopic<K, V> topic;
-    private final ObjectQueue<Record<K, V>> queue;
+    private final BackedObjectQueue<Record<K, V>> queue;
     private final ScheduledExecutorService executor;
     private final AtomicLong nextOffset;
     private final List<Record<K, V>> measurementsToAdd;
@@ -56,7 +54,7 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
         this.topic = topic;
         this.timeWindowMillis = timeWindowMillis;
         File outputFile = new File(context.getFilesDir(), topic.getName() + ".tape");
-        QueueFile queueFile = new QueueFile.Builder(outputFile).zero(false).build();
+        QueueFile queueFile = new QueueFile(outputFile);
         this.executor = Executors.newSingleThreadScheduledExecutor(new AndroidThreadFactory(
                 "TapeCache-" + TapeCache.this.topic.getName(),
                 Process.THREAD_PRIORITY_BACKGROUND));
@@ -70,7 +68,7 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
         tapeIsFlushed = tapeThreadLock.newCondition();
 
         tapeLock.lock();
-        this.queue = ObjectQueue.create(queueFile, new TapeAvroConverter<>(topic));
+        this.queue = new BackedObjectQueue<>(queueFile, new TapeAvroConverter<>(topic));
 
         long firstInQueue;
         if (queue.isEmpty()) {
@@ -92,12 +90,7 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
         readerIsActive.set(false);
         tapeWritingShouldPause.signalAll();
         try {
-            Iterator<Record<K, V>> iter = queue.iterator();
-
-            while (iter.hasNext() && records.size() < limit) {
-                Record<K, V> next = iter.next();
-                records.add(next);
-            }
+            records.addAll(queue.peek(limit));
         } finally {
             tapeLock.unlock();
         }
