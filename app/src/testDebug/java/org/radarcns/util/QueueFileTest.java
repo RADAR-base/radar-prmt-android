@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 public class QueueFileTest {
     private static final int MAX_SIZE = 8 * QueueFile.MINIMUM_SIZE;
     private static final Logger logger = LoggerFactory.getLogger(QueueFileTest.class);
+    private static final int ELEMENT_HEADER_LENGTH = 5;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -185,10 +187,11 @@ public class QueueFileTest {
         assertTrue(queue.isEmpty());
     }
 
-    private void writeAssertFileSize(int expectedSize, byte[] buffer, QueueFile queue) throws IOException {
+    private void writeAssertFileSize(int expectedSize, int expectedUsed, byte[] buffer, QueueFile queue) throws IOException {
         try (QueueFile.QueueFileOutputStream out = queue.elementOutputStream()) {
             out.write(buffer);
         }
+        assertEquals(expectedUsed, queue.usedBytes());
         assertEquals(expectedSize, queue.fileSize());
     }
 
@@ -196,29 +199,30 @@ public class QueueFileTest {
     public void fileSize() throws Exception {
         QueueFile queue = createQueue();
         assertEquals(QueueFile.MINIMUM_SIZE, queue.fileSize());
-        byte[] buffer = new byte[MAX_SIZE / 16 - 40];
+        int bufSize = MAX_SIZE / 16 - QueueFile.HEADER_LENGTH;
+        byte[] buffer = new byte[bufSize];
         // write buffer, assert that the file size increases with the stored size
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 2, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 2, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE, (bufSize + ELEMENT_HEADER_LENGTH) + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE, (bufSize + ELEMENT_HEADER_LENGTH)*2 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 2, (bufSize + ELEMENT_HEADER_LENGTH)*3 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 2, (bufSize + ELEMENT_HEADER_LENGTH)*4 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, (bufSize + ELEMENT_HEADER_LENGTH)*5 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, (bufSize + ELEMENT_HEADER_LENGTH)*6 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, (bufSize + ELEMENT_HEADER_LENGTH)*7 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, (bufSize + ELEMENT_HEADER_LENGTH)*8 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*9 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*10 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*11 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*12 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*13 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*14 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*15 + QueueFile.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*16 + QueueFile.HEADER_LENGTH, buffer, queue);
 
         // queue is full now
         Exception actualException = null;
         try {
-            writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+            writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*17 + QueueFile.HEADER_LENGTH, buffer, queue);
         } catch (IOException ex) {
             actualException = ex;
         }
@@ -226,52 +230,143 @@ public class QueueFileTest {
         // queue is full, remove elements to add new ones
         queue.remove(1);
         // this buffer is written in a circular way
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*16 + QueueFile.HEADER_LENGTH, buffer, queue);
         queue.remove(1);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*16 + QueueFile.HEADER_LENGTH, buffer, queue);
         queue.remove(1);
-        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, (bufSize + ELEMENT_HEADER_LENGTH)*16 + QueueFile.HEADER_LENGTH, buffer, queue);
         queue.remove(14);
         assertEquals(2, queue.size());
+        assertEquals((bufSize + ELEMENT_HEADER_LENGTH)*2 + QueueFile.HEADER_LENGTH, queue.usedBytes());
         assertEquals(QueueFile.MINIMUM_SIZE * 2, queue.fileSize());
     }
 
     @Test
-    public void enduranceTest() throws IOException {
+    public void enduranceTest() throws Throwable {
+        int size = QueueFile.MINIMUM_SIZE*2;
         Random random = new Random();
-        byte[] buffer = new byte[MAX_SIZE / 8];
-        QueueFile queue = createQueue();
+        byte[] buffer = new byte[size / 16];
+        File file = folder.newFile();
+        assertTrue(file.delete());
+        QueueFile queue = new QueueFile(file, size);
+        LinkedList<Element> list = new LinkedList<>();
+        int bytesUsed = 36;
 
-        for (int i = 0; i < 1000; i++) {
-            double choice = random.nextDouble();
-            if (choice < 0.25 && !queue.isEmpty()) {
-                int numRemove = random.nextInt(queue.size()) + 1;
-                logger.info("Removing {} elements", numRemove);
-                queue.remove(numRemove);
-            } else if (choice < 0.5 && !queue.isEmpty()) {
-                int numRead = random.nextInt(queue.size()) + 1;
-                logger.info("Reading {} elements", numRead);
-                Iterator<InputStream> iterator = queue.iterator();
-                for (int j = 0; j < numRead; j++) {
-                    try (InputStream in = iterator.next()) {
-                        assertTrue(in.read(buffer) > 0);
-                    }
+        try {
+            for (int i = 0; i < 1000; i++) {
+                double choice = random.nextDouble();
+                if (choice < 0.25 && !queue.isEmpty()) {
+                    bytesUsed -= remove(list, queue, random);
+                } else if (choice < 0.5 && !queue.isEmpty()) {
+                    read(list, queue, buffer, random);
+                } else {
+                    bytesUsed += write(list, queue, buffer, random, size);
                 }
-            } else {
-                int numAdd = random.nextInt(16) + 1;
-                logger.info("Adding {} elements", numAdd);
-                try (QueueFile.QueueFileOutputStream out = queue.elementOutputStream()) {
-                    for (int j = 0; j < numAdd; j++) {
-                        int numBytes = random.nextInt(buffer.length) + 1;
-                        if ((long)numBytes + QueueFile.HEADER_LENGTH + out.bytesNeeded() > MAX_SIZE) {
-                            logger.info("Not adding to full queue");
-                            break;
-                        }
-                        out.write(buffer, 0, numBytes);
-                        out.nextElement();
-                    }
-                }
+                assertEquals(bytesUsed, queue.usedBytes());
+                assertEquals(list.size(), queue.size());
             }
+        } catch (Throwable ex) {
+            logger.error("Current list: {} with used bytes {}; QueueFile {}", list, bytesUsed, queue);
+            throw ex;
+        }
+    }
+
+    /**
+     * Remove a random number of elements from a queue and a verification list
+     * @return bytes removed
+     */
+    private int remove(LinkedList<Element> list, QueueFile queue, Random random) throws IOException {
+        int numRemove = random.nextInt(queue.size()) + 1;
+        logger.info("Removing {} elements", numRemove);
+        queue.remove(numRemove);
+        int removedBytes = 0;
+        for (int j = 0; j < numRemove; j++) {
+            removedBytes += list.removeFirst().length + ELEMENT_HEADER_LENGTH;
+        }
+        return removedBytes;
+    }
+
+    /**
+     * Read a random number of elements from a queue and a verification list, using given buffer.
+     * The sizes read must match the verification list.
+     */
+    private void read(LinkedList<Element> list, QueueFile queue, byte[] buffer, Random random) throws Throwable {
+        int numRead = random.nextInt(queue.size()) + 1;
+        assertTrue(queue.size() >= numRead);
+        logger.info("Reading {} elements", numRead);
+        Iterator<InputStream> iterator = queue.iterator();
+        for (int j = 0; j < numRead; j++) {
+            Element expectedElement = list.get(j);
+            InputStream in = iterator.next();
+            try {
+                int readLength = 0;
+                int newlyRead = in.read(buffer, 0, buffer.length);
+                while (newlyRead != -1) {
+                    readLength += newlyRead;
+                    newlyRead = in.read(buffer, readLength, buffer.length - readLength);
+                }
+                assertEquals(expectedElement.length, readLength);
+            } catch (Throwable ex) {
+                logger.error("Inputstream {} of queuefile {} does not match element {}",
+                        in, queue, expectedElement);
+                throw ex;
+            } finally {
+                in.close();
+            }
+        }
+    }
+
+    private int write(LinkedList<Element> list, QueueFile queue, byte[] buffer, Random random, int size) throws IOException {
+        int numAdd = random.nextInt(16) + 1;
+        logger.info("Adding {} elements", numAdd);
+        int bytesUsed = 0;
+        try (QueueFile.QueueFileOutputStream out = queue.elementOutputStream()) {
+            for (int j = 0; j < numAdd; j++) {
+                int numBytes = random.nextInt(buffer.length) + 1;
+                if ((long) numBytes + out.bytesNeeded() + ELEMENT_HEADER_LENGTH > size) {
+                    logger.info("Not adding to full queue");
+                    break;
+                }
+                Element next = new Element(0, numBytes);
+                if (list.isEmpty()) {
+                    next.position = QueueFile.HEADER_LENGTH;
+                } else if (out.bytesNeeded() + numBytes + ELEMENT_HEADER_LENGTH > queue.fileSize()) {
+                    int firstPosition = list.getFirst().position;
+                    for (Element el : list) {
+                        if (el.position < firstPosition) {
+                            el.position += queue.fileSize() - QueueFile.HEADER_LENGTH;
+                        }
+                    }
+                    Element last = list.getLast();
+                    next.position = last.position + last.length + ELEMENT_HEADER_LENGTH;
+                    if (next.position >= queue.fileSize() * 2) {
+                        next.position += QueueFile.HEADER_LENGTH - queue.fileSize() * 2;
+                    }
+                } else {
+                    Element last = list.getLast();
+                    next.position = last.position + last.length + ELEMENT_HEADER_LENGTH;
+                    if (next.position >= queue.fileSize()) {
+                        next.position += QueueFile.HEADER_LENGTH - queue.fileSize();
+                    }
+                }
+                bytesUsed += next.length + ELEMENT_HEADER_LENGTH;
+                list.add(next);
+                out.write(buffer, 0, numBytes);
+                out.nextElement();
+            }
+        }
+        return bytesUsed;
+    }
+
+    private static class Element {
+        public int position;
+        public int length;
+        private Element(int position, int length) {
+            this.position = position;
+            this.length = length;
+        }
+        public String toString() {
+            return "[" + position + ", " + length + "]";
         }
     }
 }
