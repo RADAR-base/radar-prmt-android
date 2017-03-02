@@ -35,13 +35,14 @@ import java.util.NoSuchElementException;
 
 import static org.radarcns.util.Serialization.bytesToInt;
 import static org.radarcns.util.Serialization.intToBytes;
+import static org.radarcns.util.Serialization.longToBytes;
 
 /**
  * This class is an adaptation of com.squareup.tape2, allowing multi-element writes. It also
- * removes legacy support
+ * removes legacy support.
  *
- * A reliable, efficient, file-based, FIFO queue. Additions and removals are O(1). All operations
- * are atomic. Writes are synchronous; data will be written to disk before an operation returns.
+ * A reliable, efficient, file-based, FIFO queue. Additions and removals are O(1). Writes are
+ * synchronous; data will be written to disk before an operation returns.
  * The underlying file is structured to survive process and even system crashes. If an I/O
  * exception is thrown during a mutating change, the change is aborted. It is safe to continue to
  * use a {@code QueueFile} instance after an exception.
@@ -53,11 +54,6 @@ import static org.radarcns.util.Serialization.intToBytes;
  * {@code peek} to retrieve the first element, and then {@code remove} to remove it after
  * successful processing. If the system crashes after {@code peek} and during processing, the
  * element will remain in the queue, to be processed when the system restarts.
- *
- * <p><strong>NOTE:</strong> The current implementation is built for file systems that support
- * atomic segment writes (like YAFFS). Most conventional file systems don't support this; if the
- * power goes out while writing a segment, the segment will contain garbage and the file will be
- * corrupt. We'll add journaling support so this class can be used with more file systems later.
  *
  * @author Bob Lee (bob@squareup.com)
  */
@@ -76,23 +72,21 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     /**
      * The underlying file. Uses a ring buffer to store entries. Designed so that a modification
      * isn't committed or visible until we write the header. The header is much smaller than a
-     * segment. So long as the underlying file system supports atomic segment writes, changes to the
-     * queue are atomic. Storing the file length ensures we can recover from a failed expansion
-     * (i.e. if setting the file length succeeds but the process dies before the data can be copied).
-     * <p>
-     * This implementation supports two versions of the on-disk format.
+     * segment. Storing the file length ensures we can recover from a failed expansion
+     * (i.e. if setting the file length succeeds but the process dies before the data can be
+     * copied).
      * <pre>
      * Format:
-     *   16-32 bytes      Header
+     *   36 bytes      Header
      *   ...              Data
      *
      * Header (32 bytes):
-     *   1 bit            Versioned indicator [0 = legacy (see "Legacy Header"), 1 = versioned]
-     *   31 bits          Version, always 1
+     *   4 bytes          Version
      *   8 bytes          File length
      *   4 bytes          Element count
      *   8 bytes          Head element position
      *   8 bytes          Tail element position
+     *   4 bytes          Checksum
      *
      * Element:
      *   4 bytes          Data length
@@ -102,9 +96,6 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     private final FileChannel channel;
     private final RandomAccessFile randomAccessFile;
     private final int maxSize;
-
-    /** Keep file around for error reporting. */
-    private final File file;
 
     /** Cached file length. Always a power of 2. */
     private int fileLength;
@@ -119,6 +110,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     private Element last;
 
     private MappedByteBuffer byteBuffer;
+    private final MappedByteBuffer headerByteBuffer;
 
     /**
      * The number of times this file has been structurally modified — it is incremented during
@@ -129,13 +121,13 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
     private boolean closed;
     private final byte[] elementHeaderBuffer = new byte[Element.HEADER_LENGTH];
+    private final byte[] queueHeaderBuffer = new byte[QueueFile.HEADER_LENGTH];
 
     public QueueFile(File file) throws IOException {
         this(file, Integer.MAX_VALUE);
     }
 
     public QueueFile(File file, int maxSize) throws IOException {
-        this.file = file;
         if (maxSize < MINIMUM_SIZE) {
             throw new IllegalArgumentException("Maximum file size must be at least QueueFile.MINIMUM_SIZE = " + MINIMUM_SIZE);
         }
@@ -152,11 +144,12 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
                 throw new IOException("File " + file + " does not contain QueueFile header");
             }
             updateBufferExtent();
-            int version = byteBuffer.getInt();
+            headerByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, QueueFile.HEADER_LENGTH);
+            int version = headerByteBuffer.getInt();
             if (version != VERSIONED_HEADER) {
                 throw new IOException("File " + file + " is not recognized as a queue file.");
             }
-            long headerFileLength = byteBuffer.getLong();
+            long headerFileLength = headerByteBuffer.getLong();
             if (headerFileLength > maxSize) {
                 throw new IOException("Queue file is larger than maximum size " + maxSize);
             }
@@ -167,14 +160,14 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             }
             fileLength = (int)headerFileLength;
 
-            elementCount = byteBuffer.getInt();
-            long firstOffset = byteBuffer.getLong();
-            long lastOffset = byteBuffer.getLong();
+            elementCount = headerByteBuffer.getInt();
+            long firstOffset = headerByteBuffer.getLong();
+            long lastOffset = headerByteBuffer.getLong();
 
             if (firstOffset > fileLength || lastOffset > fileLength) {
                 throw new IOException("Element offsets point outside of file length");
             }
-            int crc = byteBuffer.getInt();
+            int crc = headerByteBuffer.getInt();
             if (crc != headerHash(version, fileLength, elementCount, first.position, last.position)) {
                 throw new IOException("Queue file " + file + " was corrupted.");
             }
@@ -184,6 +177,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         } else {
             setLength(MINIMUM_SIZE);
             updateBufferExtent();
+            headerByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, QueueFile.HEADER_LENGTH);
             elementCount = 0;
             first = Element.NULL;
             last = Element.NULL;
@@ -193,22 +187,23 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     }
 
     /**
-     * Writes header atomically. The arguments contain the updated values. The class member fields
-     * should not have changed yet. This only updates the state in the file. It's up to the caller to
-     * update the class member variables *after* this call succeeds. Assumes segment writes are
-     * atomic in the underlying file system.
+     * Writes QueueFile header.
      */
     private void writeHeader() {
-        byteBuffer.position(0);
-        byteBuffer.putInt(VERSIONED_HEADER);
-        byteBuffer.putLong(fileLength);
-        byteBuffer.putInt(elementCount);
-        byteBuffer.putLong(first.position);
-        byteBuffer.putLong(last.position);
+        // first write all variables to a single byte buffer
+        intToBytes(VERSIONED_HEADER, queueHeaderBuffer, 0);
+        longToBytes(fileLength, queueHeaderBuffer, 4);
+        intToBytes(elementCount, queueHeaderBuffer, 12);
+        longToBytes(first.position, queueHeaderBuffer, 16);
+        longToBytes(last.position, queueHeaderBuffer, 24);
         int crc = headerHash(VERSIONED_HEADER, fileLength, elementCount, first.position,
                 last.position);
-        byteBuffer.putInt(crc);
-        byteBuffer.clear();
+        intToBytes(crc, queueHeaderBuffer, 32);
+
+        // then write the byte buffer out in one go
+        headerByteBuffer.position(0);
+        headerByteBuffer.put(queueHeaderBuffer, 0, QueueFile.HEADER_LENGTH);
+        headerByteBuffer.force();
     }
 
     private int headerHash(int version, int length, int count, int firstPosition, int lastPosition) {
@@ -288,7 +283,8 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         return new QueueFileOutputStream(last.nextPosition());
     }
 
-    private int usedBytes() {
+    /** Number of bytes used in the file. */
+    public int usedBytes() {
         if (elementCount == 0) {
             return QueueFile.HEADER_LENGTH;
         }
@@ -302,10 +298,9 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         }
     }
 
-    private int remainingBytes() {
-        int used = usedBytes();
-        logger.info("Used bytes: {}", used);
-        return fileLength - used;
+    /** Number of free bytes remaining with the current file size. */
+    public int remainingBytes() {
+        return fileLength - usedBytes();
     }
 
     /** Returns true if this queue contains no entries. */
@@ -360,7 +355,6 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
         // Commit the expansion.
         writeHeader();
-        byteBuffer.force();
     }
 
     /** Sets the length of the file. */
@@ -374,6 +368,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         channel.force(true);
     }
 
+    /** Call after a resize to update the buffer to the new file size */
     private void updateBufferExtent() throws IOException {
         byteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, fileLength);
     }
@@ -447,8 +442,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             InputStream in = new QueueFileInputStream(current);
 
             // Update the pointer to the next element.
-            nextElementPosition =
-                    wrapPosition(current.position + Element.HEADER_LENGTH + current.length);
+            nextElementPosition = wrapPosition(current.nextPosition());
             nextElementIndex++;
 
             // Return the read element.
@@ -484,7 +478,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     /**
      * Removes the eldest {@code n} elements.
      *
-     * @throws NoSuchElementException if the queue is empty
+     * @throws NoSuchElementException if more than the available elements are requested to be removed
      */
     public void remove(int n) throws IOException {
         requireNotClosed();
@@ -498,11 +492,8 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             clear();
             return;
         }
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
         if (n > elementCount) {
-            throw new IllegalArgumentException(
+            throw new NoSuchElementException(
                     "Cannot remove more elements (" + n + ") than present in queue (" + elementCount + ").");
         }
 
@@ -517,7 +508,6 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         modCount++;
         first = newFirst;
         writeHeader();
-        byteBuffer.force();
 
         // truncate file if a lot of space is empty and no copy operations are needed
         if (last.position >= first.position && last.nextPosition() <= maxSize) {
@@ -555,7 +545,6 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
         // Commit the header.
         writeHeader();
-        byteBuffer.force();
 
         modCount++;
     }
@@ -571,6 +560,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         closed = true;
         byteBuffer = null;
         channel.close();
+        randomAccessFile.close();
     }
 
     @Override
@@ -646,7 +636,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     }
 
     private void writeElement(Element element) throws IOException {
-        logger.info("Writing element header {}", element);
+        logger.trace("Writing QueueFile element header {}", element);
         intToBytes(element.length, elementHeaderBuffer, 0);
         ringWrite(element.position, elementHeaderBuffer, 0, Element.HEADER_LENGTH);
     }
@@ -658,7 +648,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         private int bytesRead;
 
         public QueueFileInputStream(Element element) {
-            logger.info("InputStream for element {}", element);
+            logger.trace("QueueFileInputStream for element {}", element);
             this.buffer = byteBuffer.duplicate();
             this.buffer.position(wrapPosition(element.dataPosition()));
             this.totalLength = element.length;
@@ -737,15 +727,21 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         private int originalPosition;
         private int bytesWritten;
         private boolean closed;
-        private boolean hasWritten;
+        private Element newLast;
+        private Element newFirst;
+        private int elementsWritten;
+        private int totalBytesNeeded;
 
         private QueueFileOutputStream(long position) throws IOException {
             this.buffer = byteBuffer.duplicate();
             this.originalPosition = wrapPosition(position);
             this.buffer.position(wrapPosition(position + Element.HEADER_LENGTH));
-            hasWritten = false;
             bytesWritten = 0;
             closed = false;
+            newLast = null;
+            newFirst = null;
+            elementsWritten = 0;
+            totalBytesNeeded = 0;
         }
 
         @Override
@@ -757,7 +753,6 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             if (buffer.position() == fileLength) {
                 buffer.position(QueueFile.HEADER_LENGTH);
             }
-            logger.info("wrote {} to position {}", byteValue, buffer.position());
             buffer.put((byte)(byteValue & 0xFF));
             bytesWritten++;
         }
@@ -796,15 +791,12 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             if (bytesWritten == 0) {
                 return;
             }
-            boolean wasEmpty = isEmpty();
-            last = new Element(originalPosition, bytesWritten);
-            writeElement(last);
-            hasWritten = true;
-            if (wasEmpty) {
-                first = last;
+            newLast = new Element(originalPosition, bytesWritten);
+            writeElement(newLast);
+            if (newFirst == null && isEmpty()) {
+                newFirst = newLast;
             }
-            elementCount++;
-            modCount++;
+            elementsWritten++;
             originalPosition = buffer.position();
             buffer.position(wrapPosition((long)originalPosition + Element.HEADER_LENGTH));
             bytesWritten = 0;
@@ -812,25 +804,29 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
         /** Expands the storage if necessary, updating the buffer if needed. */
         private void expandAndUpdate(int length) throws IOException {
-            int expandLength = length;
-            if (bytesWritten == 0) {
-                if ((long)length + Element.HEADER_LENGTH > maxSize) {
-                    throw new IndexOutOfBoundsException();
-                }
-                expandLength += Element.HEADER_LENGTH;
+            if ((long)totalBytesNeeded + length > maxSize) {
+                throw new IOException("Data does not fit in queue");
             }
-            if (remainingBytes() < expandLength) {
+            totalBytesNeeded += length;
+            if (bytesWritten == 0) {
+                if ((long)totalBytesNeeded + Element.HEADER_LENGTH > maxSize) {
+                    throw new IOException("Data does not fit in queue");
+                }
+                totalBytesNeeded += Element.HEADER_LENGTH;
+            }
+
+            if (remainingBytes() < totalBytesNeeded) {
                 int oldLength = fileLength;
                 int position = buffer.position();
                 try {
-                    expandIfNecessary(length);
+                    expandIfNecessary(totalBytesNeeded);
                 } catch (IllegalStateException ex) {
-                    throw new IndexOutOfBoundsException();
+                    throw new IOException("Data does not fit in queue", ex);
                 }
+                buffer = byteBuffer.duplicate();
                 if (originalPosition < first.position) {
                     originalPosition += oldLength - QueueFile.HEADER_LENGTH;
                 }
-                buffer = byteBuffer.duplicate();
                 if (position < first.position) {
                     position += oldLength - QueueFile.HEADER_LENGTH;
                 }
@@ -839,18 +835,10 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         }
 
         /**
-         * This flushes the data to file, including header. {@link #nextElement()} is implicitly
-         * called, so the next write will be to a new element.
+         * This does nothing.
          */
         @Override
-        public void flush() throws IOException {
-            nextElement();
-            if (hasWritten) {
-                byteBuffer.force();
-                writeHeader();
-                byteBuffer.force();
-            }
-        }
+        public void flush() {}
 
         /**
          * Closes the stream and commits it to file.
@@ -859,7 +847,19 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         @Override
         public void close() throws IOException {
             try {
-                flush();
+                nextElement();
+                if (elementsWritten > 0) {
+                    if (newLast != null) {
+                        last = newLast;
+                    }
+                    if (newFirst != null) {
+                        first = newFirst;
+                    }
+                    elementCount += elementsWritten;
+                    byteBuffer.force();
+                    modCount++;
+                    writeHeader();
+                }
             } finally {
                 closed = true;
             }

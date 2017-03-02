@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,33 +43,32 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
     private final ScheduledExecutorService executor;
     private final AtomicLong nextOffset;
     private final List<Record<K, V>> measurementsToAdd;
-    private final ReentrantLock tapeLock;
-    private final ReentrantLock tapeThreadLock;
-    private final AtomicBoolean readerIsActive;
-    private final Condition tapeIsFlushed;
-    private final Condition tapeWritingShouldPause;
     private long lastOffsetSent;
     private long timeWindowMillis;
     private Future<?> addMeasurementFuture;
+    private boolean measurementsAreFlushed;
 
     public TapeCache(Context context, AvroTopic<K, V> topic, long timeWindowMillis) throws IOException {
         this.topic = topic;
         this.timeWindowMillis = timeWindowMillis;
         File outputFile = new File(context.getFilesDir(), topic.getName() + ".tape");
-        QueueFile queueFile = new QueueFile(outputFile);
+        QueueFile queueFile;
+        try {
+            queueFile = new QueueFile(outputFile);
+        } catch (IOException ex) {
+            logger.error("TapeCache " + outputFile + " was corrupted. Removing old cache.");
+            if (outputFile.delete()) {
+                queueFile = new QueueFile(outputFile);
+            } else {
+                throw ex;
+            }
+        }
         this.executor = Executors.newSingleThreadScheduledExecutor(new AndroidThreadFactory(
                 "TapeCache-" + TapeCache.this.topic.getName(),
                 Process.THREAD_PRIORITY_BACKGROUND));
         this.measurementsToAdd = new ArrayList<>();
 
 
-        tapeLock = new ReentrantLock();
-        tapeWritingShouldPause = tapeLock.newCondition();
-        readerIsActive = new AtomicBoolean(false);
-        tapeThreadLock = new ReentrantLock();
-        tapeIsFlushed = tapeThreadLock.newCondition();
-
-        tapeLock.lock();
         this.queue = new BackedObjectQueue<>(queueFile, new TapeAvroConverter<>(topic));
 
         long firstInQueue;
@@ -78,24 +79,31 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
         }
         lastOffsetSent = firstInQueue - 1L;
         nextOffset = new AtomicLong(firstInQueue + queue.size());
-        tapeLock.unlock();
+        measurementsAreFlushed = false;
     }
 
     @Override
-    public List<Record<K, V>> unsentRecords(int limit) throws IOException {
-        List<Record<K, V>> records = listPool.get(Collections.<Record<K,V>>emptyList());
-
-        readerIsActive.set(true);
-        tapeLock.lock();
-        readerIsActive.set(false);
-        tapeWritingShouldPause.signalAll();
+    public List<Record<K, V>> unsentRecords(final int limit) throws IOException {
         try {
-            records.addAll(queue.peek(limit));
-        } finally {
-            tapeLock.unlock();
+            return listPool.get(executor.submit(new Callable<List<Record<K, V>>>() {
+                @Override
+                public List<Record<K, V>> call() throws Exception {
+                    return queue.peek(limit);
+                }
+            }).get());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return listPool.get(Collections.<Record<K,V>>emptyList());
+        } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else if (cause instanceof IOException) {
+                throw (IOException) cause;
+            } else {
+                throw new IOException("Unknown error occurred", ex);
+            }
         }
-
-        return records;
     }
 
     @Override
@@ -109,54 +117,54 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
     }
 
     private int queueSize() {
-        tapeLock.lock();
         try {
-            return queue.size();
-        } finally {
-            tapeLock.unlock();
+            return executor.submit(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    return queue.size();
+                }
+            }).get();
+        } catch (InterruptedException | ExecutionException e) {
+            return -1;
         }
     }
 
     @Override
-    public void setTimeWindow(long timeWindowMillis) {
-        tapeThreadLock.lock();
+    public synchronized void setTimeWindow(long timeWindowMillis) {
         this.timeWindowMillis = timeWindowMillis;
-        tapeThreadLock.unlock();
     }
 
     @Override
-    public int markSent(long offset) throws IOException {
-        readerIsActive.set(true);
-        tapeLock.lock();
-        readerIsActive.set(false);
-        tapeWritingShouldPause.signalAll();
-        try {
-            logger.info("marking offset {} sent for topic {}, with last offset in data being {}",
-                    offset, topic, lastOffsetSent);
-            if (offset <= lastOffsetSent) {
-                return 0;
-            }
-            lastOffsetSent = offset;
+    public void markSent(final long offset) throws IOException {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                logger.debug("marking offset {} sent for topic {}, with last offset in data being {}",
+                        offset, topic, lastOffsetSent);
+                if (offset <= lastOffsetSent) {
+                    return;
+                }
+                lastOffsetSent = offset;
 
-            if (queue.isEmpty()) {
-                return 0;
-            } else {
-                int toRemove = (int)(offset - queue.peek().offset + 1);
-                logger.info("Removing data from topic {} at offset {} onwards ({} records)",
-                        topic, offset, toRemove);
-                queue.remove(toRemove);
-                logger.info("Removed data from topic {} at offset {} onwards ({} records)",
-                        topic, offset, toRemove);
-                return toRemove;
+                if (!queue.isEmpty()) {
+                    try {
+                    int toRemove = (int) (offset - queue.peek().offset + 1);
+                    logger.info("Removing data from topic {} at offset {} onwards ({} records)",
+                            topic, offset, toRemove);
+                    queue.remove(toRemove);
+                    logger.info("Removed data from topic {} at offset {} onwards ({} records)",
+                            topic, offset, toRemove);
+                    } catch (IOException ex) {
+                        logger.error("Failed to remove data from QueueFile", ex);
+                    }
+                }
             }
-        } finally {
-            tapeLock.unlock();
-        }
+        });
     }
 
     @Override
-    public void addMeasurement(final K key, final V value) {
-        tapeThreadLock.lock();
+    public synchronized void addMeasurement(final K key, final V value) {
+        measurementsAreFlushed = false;
         measurementsToAdd.add(new Record<>(nextOffset.getAndIncrement(), key, value));
 
         if (addMeasurementFuture == null) {
@@ -165,39 +173,30 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
                 public void run() {
                     List<Record<K, V>> localList;
 
-                    tapeThreadLock.lock();
-                    addMeasurementFuture = null;
-                    localList = listPool.get(measurementsToAdd);
-                    measurementsToAdd.clear();
-                    tapeThreadLock.unlock();
+                    synchronized (TapeCache.this) {
+                        addMeasurementFuture = null;
+                        localList = listPool.get(measurementsToAdd);
+                        measurementsToAdd.clear();
+                    }
 
-                    tapeLock.lock();
                     try {
-                        while (readerIsActive.get()) {
-                            tapeWritingShouldPause.await();
-                        }
                         logger.info("Writing {} records to file in topic {}", localList.size(), topic);
-                        for (Record<K, V> record : localList) {
-                            queue.add(record);
-                        }
+                        queue.addAll(localList);
                     } catch (IOException ex) {
                         logger.error("Failed to add record", ex);
                         throw new RuntimeException(ex);
-                    } catch (InterruptedException ex) {
-                        logger.warn("Tape writing was interrupted");
-                    } finally {
-                        tapeLock.unlock();
                     }
 
                     listPool.add(localList);
-
-                    tapeThreadLock.lock();
-                    tapeIsFlushed.signalAll();
-                    tapeThreadLock.unlock();
+                    synchronized (TapeCache.this) {
+                        if (measurementsToAdd.isEmpty()) {
+                            measurementsAreFlushed = true;
+                            notifyAll();
+                        }
+                    }
                 }
             }, timeWindowMillis, TimeUnit.MILLISECONDS);
         }
-        tapeThreadLock.unlock();
     }
 
     @Override
@@ -239,16 +238,13 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
     }
 
     @Override
-    public void flush() {
-        tapeThreadLock.lock();
+    public synchronized void flush() {
         try {
-            while (addMeasurementFuture != null) {
-                tapeIsFlushed.await();
+            while (!measurementsAreFlushed) {
+                wait();
             }
         } catch (InterruptedException e) {
             logger.warn("Did not wait for adding measurements to complete.");
-        } finally {
-            tapeThreadLock.unlock();
         }
     }
 }

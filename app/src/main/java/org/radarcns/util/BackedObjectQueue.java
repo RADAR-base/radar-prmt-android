@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * A queue-like object queue that is backed by a file storage.
@@ -35,8 +36,8 @@ public class BackedObjectQueue<T> implements Closeable {
     /**
      * Add a new element to the queue.
      * @param entry element to add
-     * @throws IOException if the backing file cannot be accessed or the element cannot be converted.
-     * @throws IllegalStateException if the queue is full.
+     * @throws IOException if the backing file cannot be accessed, the queue is full, or the element
+     *                     cannot be converted.
      */
     public void add(T entry) throws IOException {
         try (QueueFile.QueueFileOutputStream out = queueFile.elementOutputStream()) {
@@ -47,8 +48,8 @@ public class BackedObjectQueue<T> implements Closeable {
     /**
      * Add a collection of new element to the queue.
      * @param entries elements to add
-     * @throws IOException if the backing file cannot be accessed or the element cannot be converted.
-     * @throws IllegalStateException if the queue is full.
+     * @throws IOException if the backing file cannot be accessed, the queue is full or the element
+     *                     cannot be converted.
      */
     public void addAll(Collection<? extends T> entries) throws IOException {
         try (QueueFile.QueueFileOutputStream out = queueFile.elementOutputStream()) {
@@ -87,7 +88,21 @@ public class BackedObjectQueue<T> implements Closeable {
         return results;
     }
 
-    /** Remove the first {@code n} elements from the queue. */
+    /**
+     * Remove the first element from the queue.
+     * @throws IOException when the element could not be removed
+     * @throws NoSuchElementException if more than the available elements are requested to be removed
+     */
+    public void remove() throws IOException {
+
+    }
+
+    /**
+     * Remove the first {@code n} elements from the queue.
+     *
+     * @throws IOException when the elements could not be removed
+     * @throws NoSuchElementException if more than the available elements are requested to be removed
+     */
     public void remove(int n) throws IOException {
         queueFile.remove(n);
     }
@@ -106,6 +121,7 @@ public class BackedObjectQueue<T> implements Closeable {
         queueFile.close();
     }
 
+    /** Converts streams into objects. */
     public interface Converter<T> {
         /**
          * Deserialize an object from given offset of given bytes

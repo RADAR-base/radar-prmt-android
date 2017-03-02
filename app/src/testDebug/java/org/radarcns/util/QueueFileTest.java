@@ -1,7 +1,5 @@
 package org.radarcns.util;
 
-import android.support.v4.media.MediaMetadataCompat;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,7 +40,7 @@ public class QueueFileTest {
             out.nextElement();
             out.write(buffer);
             out.nextElement();
-            exception.expect(IndexOutOfBoundsException.class);
+            exception.expect(IOException.class);
             out.write(buffer);
         }
     }
@@ -194,6 +192,7 @@ public class QueueFileTest {
         QueueFile queue = createQueue();
         assertEquals(QueueFile.MINIMUM_SIZE, queue.fileSize());
         byte[] buffer = new byte[MAX_SIZE / 16 - 40];
+        // write buffer, assert that the file size increases with the stored size
         writeAssertFileSize(QueueFile.MINIMUM_SIZE, buffer, queue);
         writeAssertFileSize(QueueFile.MINIMUM_SIZE, buffer, queue);
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 2, buffer, queue);
@@ -203,19 +202,32 @@ public class QueueFileTest {
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, buffer, queue);
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 4, buffer, queue);
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+
+        // queue is full now
+        Exception actualException = null;
+        try {
+            writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        } catch (IOException ex) {
+            actualException = ex;
+        }
+        assertNotNull(actualException);
+        // queue is full, remove elements to add new ones
         queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 8, queue.fileSize());
+        // this buffer is written in a circular way
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
         queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 8, queue.fileSize());
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
         queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 8, queue.fileSize());
-        queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 8, queue.fileSize());
-        queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 8, queue.fileSize());
-        queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 8, queue.fileSize());
-        queue.remove();
-        assertEquals(QueueFile.MINIMUM_SIZE * 4, queue.fileSize());
+        writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
+        queue.remove(14);
+        assertEquals(2, queue.size());
+        assertEquals(QueueFile.MINIMUM_SIZE * 2, queue.fileSize());
     }
 }
