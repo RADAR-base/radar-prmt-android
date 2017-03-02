@@ -106,6 +106,8 @@ public class QueueFileTest {
         int v1 = random.nextInt(255);
         int v2 = random.nextInt(255);
         random.nextBytes(buffer);
+        byte[] expectedBuffer = new byte[buffer.length];
+        System.arraycopy(buffer, 0, expectedBuffer, 0, buffer.length);
         try (QueueFile.QueueFileOutputStream out = queueFile.elementOutputStream()) {
             out.write(v1);
             out.nextElement();
@@ -138,7 +140,7 @@ public class QueueFileTest {
             assertEquals(16, in.read(actualBuffer));
             byte[] actualBufferShortened = new byte[16];
             System.arraycopy(actualBuffer, 0, actualBufferShortened, 0, 16);
-            assertArrayEquals(buffer, actualBufferShortened);
+            assertArrayEquals(expectedBuffer, actualBufferShortened);
         }
         queueFile.remove(1);
         try (InputStream in = queueFile.peek()) {

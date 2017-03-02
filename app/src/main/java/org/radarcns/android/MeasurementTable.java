@@ -335,17 +335,17 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
      * @return number of rows removed
      */
     @Override
-    public void markSent(long offset) {
+    public int markSent(long offset) {
         synchronized (lastOffsetSentSync) {
             if (offset <= lastOffsetSent) {
-                return;
+                return 0;
             }
             lastOffsetSent = offset;
         }
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues content = new ContentValues();
         content.put("sent", 1);
-        db.update(topic.getName(), content, "offset <= " + offset + " AND sent = 0", null);
+        return db.update(topic.getName(), content, "offset <= " + offset + " AND sent = 0", null);
     }
 
     /**

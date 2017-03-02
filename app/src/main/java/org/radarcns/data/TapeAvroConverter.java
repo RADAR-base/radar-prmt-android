@@ -12,11 +12,14 @@ import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.BackedObjectQueue;
 import org.radarcns.util.Serialization;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.BufferOverflowException;
+import java.util.Arrays;
 
 import static org.radarcns.util.Serialization.bytesToLong;
 import static org.radarcns.util.Serialization.longToBytes;
@@ -50,7 +53,7 @@ public class TapeAvroConverter<K extends SpecificRecord, V extends SpecificRecor
     public Record<K, V> deserialize(InputStream in) throws IOException {
         int numRead = 0;
         do {
-            numRead += in.read(headerBuffer, 0, 8);
+            numRead += in.read(headerBuffer, numRead, 8 - numRead);
         } while (numRead < 8);
         decoder = decoderFactory.binaryDecoder(in, decoder);
 

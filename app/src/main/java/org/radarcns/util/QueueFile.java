@@ -67,7 +67,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     private static final Logger logger = LoggerFactory.getLogger(QueueFile.class);
 
     /** Leading bit set to 1 indicating a versioned header and the version of 1. */
-    private static final int VERSIONED_HEADER = 0x80000001;
+    private static final int VERSIONED_HEADER = 0x00000001;
 
     /**
      * The underlying file. Uses a ring buffer to store entries. Designed so that a modification
@@ -735,12 +735,12 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             int linearPart = fileLength - buffer.position();
             if (linearPart < length) {
                 if (linearPart > 0) {
-                    buffer.get(bytes, offset, linearPart);
+                    buffer.put(bytes, offset, linearPart);
                 }
                 buffer.position(HEADER_LENGTH);
-                buffer.get(bytes, offset + linearPart, length - linearPart);
+                buffer.put(bytes, offset + linearPart, length - linearPart);
             } else {
-                buffer.get(bytes, offset, length);
+                buffer.put(bytes, offset, length);
             }
             bytesWritten += length;
         }

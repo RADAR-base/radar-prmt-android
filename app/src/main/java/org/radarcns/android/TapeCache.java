@@ -149,31 +149,46 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
     }
 
     @Override
-    public void markSent(final long offset) throws IOException {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                logger.debug("marking offset {} sent for topic {}, with last offset in data being {}",
-                        offset, topic, lastOffsetSent);
-                if (offset <= lastOffsetSent) {
-                    return;
-                }
-                lastOffsetSent = offset;
+    public int markSent(final long offset) throws IOException {
+        try {
+            return executor.submit(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    logger.debug("marking offset {} sent for topic {}, with last offset in data being {}",
+                            offset, topic, lastOffsetSent);
+                    if (offset <= lastOffsetSent) {
+                        return 0;
+                    }
+                    lastOffsetSent = offset;
 
-                if (!queue.isEmpty()) {
-                    try {
-                    int toRemove = (int) (offset - queue.peek().offset + 1);
-                    logger.info("Removing data from topic {} at offset {} onwards ({} records)",
-                            topic, offset, toRemove);
-                    queue.remove(toRemove);
-                    logger.info("Removed data from topic {} at offset {} onwards ({} records)",
-                            topic, offset, toRemove);
-                    } catch (IOException ex) {
-                        logger.error("Failed to remove data from QueueFile", ex);
+                    if (queue.isEmpty()) {
+                        return 0;
+                    } else {
+                        int toRemove = (int) (offset - queue.peek().offset + 1);
+                        logger.info("Removing data from topic {} at offset {} onwards ({} records)",
+                                topic, offset, toRemove);
+                        queue.remove(toRemove);
+                        logger.info("Removed data from topic {} at offset {} onwards ({} records)",
+                                topic, offset, toRemove);
+                        return toRemove;
                     }
                 }
+            }).get();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            logger.warn("Failed to mark record as sent. May resend those at a later time.", ex);
+            return 0;
+        } catch (ExecutionException ex) {
+            logger.warn("Failed to mark sent records for topic {}", topic, ex);
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException) {
+                return 0;
+            } else if (cause instanceof IOException) {
+                throw (IOException) cause;
+            } else {
+                throw new IOException("Unknown error occurred", ex);
             }
-        });
+        }
     }
 
     @Override

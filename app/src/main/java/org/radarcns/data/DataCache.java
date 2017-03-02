@@ -35,7 +35,7 @@ public interface DataCache<K, V> extends Flushable, Closeable {
      * @param offset offset (inclusive) to remove.
      * @return number of rows removed
      */
-    void markSent(long offset) throws IOException;
+    int markSent(long offset) throws IOException;
 
     /** Add a new measurement to the cache. */
     void addMeasurement(K key, V value);

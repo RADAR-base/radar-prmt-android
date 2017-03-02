@@ -266,11 +266,12 @@ public class KafkaDataSubmitter<K, V> implements Closeable {
             lastUploadFailed = false;
             try {
                 cacheSender.send(measurements);
+                cacheSender.flush();
             } catch (IOException ioe) {
                 lastUploadFailed = true;
                 dataHandler.updateServerStatus(ServerStatusListener.Status.UPLOADING_FAILED);
                 dataHandler.updateRecordsSent(topic.getName(), -1);
-                logger.debug("UPF cacheSender.send failed. {} n_records = {}", topic.getName(), numberOfRecords);
+                logger.warn("UPF cacheSender.send failed. {} n_records = {}", topic, numberOfRecords);
                 throw ioe;
             }
 
