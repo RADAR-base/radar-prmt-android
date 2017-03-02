@@ -1,5 +1,8 @@
 package org.radarcns.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +18,8 @@ import java.util.NoSuchElementException;
  * @param <T> type of objects to store.
  */
 public class BackedObjectQueue<T> implements Closeable {
+    private static final Logger logger = LoggerFactory.getLogger(BackedObjectQueue.class);
+
     private final Converter<T> converter;
     private final QueueFile queueFile;
 
@@ -76,6 +81,7 @@ public class BackedObjectQueue<T> implements Closeable {
      * @param n number of elements to retrieve
      * @return list of elements, with at most {@code n} elements.
      * @throws IOException if the element could not be read or deserialized
+     * @throws IllegalStateException if the element could not be read
      */
     public List<T> peek(int n) throws IOException {
         Iterator<InputStream> iter = queueFile.iterator();
@@ -94,7 +100,7 @@ public class BackedObjectQueue<T> implements Closeable {
      * @throws NoSuchElementException if more than the available elements are requested to be removed
      */
     public void remove() throws IOException {
-
+        remove(1);
     }
 
     /**

@@ -29,29 +29,29 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> implements DataCache<K, V> {
     private static final Logger logger = LoggerFactory.getLogger(TapeCache.class);
     private static final ListPool listPool = new ListPool(10);
 
     private final AvroTopic<K, V> topic;
-    private final BackedObjectQueue<Record<K, V>> queue;
     private final ScheduledExecutorService executor;
     private final AtomicLong nextOffset;
     private final List<Record<K, V>> measurementsToAdd;
-    private long lastOffsetSent;
-    private long timeWindowMillis;
+    private final File outputFile;
+    private final BackedObjectQueue.Converter<Record<K, V>> converter;
+
+    private BackedObjectQueue<Record<K, V>> queue;
     private Future<?> addMeasurementFuture;
     private boolean measurementsAreFlushed;
+    private long lastOffsetSent;
+    private long timeWindowMillis;
 
     public TapeCache(Context context, AvroTopic<K, V> topic, long timeWindowMillis) throws IOException {
         this.topic = topic;
         this.timeWindowMillis = timeWindowMillis;
-        File outputFile = new File(context.getFilesDir(), topic.getName() + ".tape");
+        outputFile = new File(context.getFilesDir(), topic.getName() + ".tape");
         QueueFile queueFile;
         try {
             queueFile = new QueueFile(outputFile);
@@ -68,8 +68,8 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
                 Process.THREAD_PRIORITY_BACKGROUND));
         this.measurementsToAdd = new ArrayList<>();
 
-
-        this.queue = new BackedObjectQueue<>(queueFile, new TapeAvroConverter<>(topic));
+        this.converter = new TapeAvroConverter<>(topic);
+        this.queue = new BackedObjectQueue<>(queueFile, converter);
 
         long firstInQueue;
         if (queue.isEmpty()) {
@@ -84,17 +84,31 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
 
     @Override
     public List<Record<K, V>> unsentRecords(final int limit) throws IOException {
+        logger.info("Trying to retrieve records from topic {}", topic);
         try {
             return listPool.get(executor.submit(new Callable<List<Record<K, V>>>() {
                 @Override
                 public List<Record<K, V>> call() throws Exception {
-                    return queue.peek(limit);
+                    try {
+                        return queue.peek(limit);
+                    } catch (IllegalStateException ex) {
+                        logger.error("Queue was corrupted. Removing cache.");
+                        if (outputFile.delete()) {
+                            QueueFile queueFile = new QueueFile(outputFile);
+                            queue = new BackedObjectQueue<>(queueFile, converter);
+                            return Collections.emptyList();
+                        } else {
+                            throw new IOException("Cannot create new cache.");
+                        }
+                    }
                 }
             }).get());
         } catch (InterruptedException ex) {
+            logger.warn("unsentRecords was interrupted, returning an empty list", ex);
             Thread.currentThread().interrupt();
             return listPool.get(Collections.<Record<K,V>>emptyList());
         } catch (ExecutionException ex) {
+            logger.warn("Failed to retrieve records for topic {}", topic, ex);
             Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;

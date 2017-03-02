@@ -4,6 +4,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 public class QueueFileTest {
     private static final int MAX_SIZE = 8 * QueueFile.MINIMUM_SIZE;
+    private static final Logger logger = LoggerFactory.getLogger(QueueFileTest.class);
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -63,7 +66,7 @@ public class QueueFileTest {
             out.nextElement();
             out.write(buffer);
             out.nextElement();
-            exception.expect(IndexOutOfBoundsException.class);
+            exception.expect(IOException.class);
             out.write(buffer);
         }
     }
@@ -89,7 +92,7 @@ public class QueueFileTest {
         in.close();
         assertFalse(queueFile.isEmpty());
         assertEquals(1, queueFile.size());
-        queueFile.remove();
+        queueFile.remove(1);
         assertTrue(queueFile.isEmpty());
         assertEquals(0, queueFile.size());
     }
@@ -121,13 +124,13 @@ public class QueueFileTest {
             assertEquals(1, in.available());
             assertEquals(v1, in.read());
         }
-        queueFile.remove();
+        queueFile.remove(1);
         try (InputStream in = queueFile.peek()) {
             assertNotNull(in);
             assertEquals(1, in.available());
             assertEquals(v2, in.read());
         }
-        queueFile.remove();
+        queueFile.remove(1);
         try (InputStream in = queueFile.peek()) {
             assertNotNull(in);
             assertEquals(16, in.available());
@@ -137,7 +140,7 @@ public class QueueFileTest {
             System.arraycopy(actualBuffer, 0, actualBufferShortened, 0, 16);
             assertArrayEquals(buffer, actualBufferShortened);
         }
-        queueFile.remove();
+        queueFile.remove(1);
         try (InputStream in = queueFile.peek()) {
             assertNull(in);
         }
@@ -219,15 +222,54 @@ public class QueueFileTest {
         }
         assertNotNull(actualException);
         // queue is full, remove elements to add new ones
-        queue.remove();
+        queue.remove(1);
         // this buffer is written in a circular way
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        queue.remove();
+        queue.remove(1);
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
-        queue.remove();
+        queue.remove(1);
         writeAssertFileSize(QueueFile.MINIMUM_SIZE * 8, buffer, queue);
         queue.remove(14);
         assertEquals(2, queue.size());
         assertEquals(QueueFile.MINIMUM_SIZE * 2, queue.fileSize());
+    }
+
+    @Test
+    public void enduranceTest() throws IOException {
+        Random random = new Random();
+        byte[] buffer = new byte[MAX_SIZE / 8];
+        QueueFile queue = createQueue();
+
+        for (int i = 0; i < 1000; i++) {
+            double choice = random.nextDouble();
+            if (choice < 0.25 && !queue.isEmpty()) {
+                int numRemove = random.nextInt(queue.size()) + 1;
+                logger.info("Removing {} elements", numRemove);
+                queue.remove(numRemove);
+            } else if (choice < 0.5 && !queue.isEmpty()) {
+                int numRead = random.nextInt(queue.size()) + 1;
+                logger.info("Reading {} elements", numRead);
+                Iterator<InputStream> iterator = queue.iterator();
+                for (int j = 0; j < numRead; j++) {
+                    try (InputStream in = iterator.next()) {
+                        assertTrue(in.read(buffer) > 0);
+                    }
+                }
+            } else {
+                int numAdd = random.nextInt(16) + 1;
+                logger.info("Adding {} elements", numAdd);
+                try (QueueFile.QueueFileOutputStream out = queue.elementOutputStream()) {
+                    for (int j = 0; j < numAdd; j++) {
+                        int numBytes = random.nextInt(buffer.length) + 1;
+                        if ((long)numBytes + QueueFile.HEADER_LENGTH + out.bytesNeeded() > MAX_SIZE) {
+                            logger.info("Not adding to full queue");
+                            break;
+                        }
+                        out.write(buffer, 0, numBytes);
+                        out.nextElement();
+                    }
+                }
+            }
+        }
     }
 }

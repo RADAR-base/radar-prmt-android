@@ -93,7 +93,7 @@ class KafkaConnectionChecker implements Runnable {
      * @param ex exception the sender disconnected with, may be null
      */
     public void didDisconnect(IOException ex) {
-        logger.warn("Sender is disconnected [{}]", ex.getMessage());
+        logger.warn("Sender is disconnected", ex);
 
         if (isConnected.compareAndSet(true, false)) {
             listener.updateServerStatus(ServerStatusListener.Status.DISCONNECTED);
