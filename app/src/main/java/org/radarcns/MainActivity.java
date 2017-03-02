@@ -277,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeRemoteConfig() {
         // TODO: disable developer mode in production
-        radarConfiguration = RadarConfiguration.configure(true, R.xml.remote_config_defaults);
+        radarConfiguration = RadarConfiguration.configure(true, R.xml.remote_config_defaults_template);
         radarConfiguration.onFetchComplete(this, new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {

@@ -14,6 +14,7 @@ public class PhoneSensorsTopics extends DeviceTopics {
     private final AvroTopic<MeasurementKey, PhoneSensorLocation> locationTopic;
     private final AvroTopic<MeasurementKey, PhoneSensorUserInteraction> interactionTopic;
     private final AvroTopic<MeasurementKey, AndroidStatusServer> androidServerStatusTopic;
+    private final AvroTopic<MeasurementKey, PhoneSensorAudio> audioTopic;
 
     private static final Object syncObject = new Object();
     private static PhoneSensorsTopics instance = null;
@@ -52,6 +53,9 @@ public class PhoneSensorsTopics extends DeviceTopics {
         androidServerStatusTopic = createTopic("android_status_server",
                 AndroidStatusServer.getClassSchema(),
                 AndroidStatusServer.class);
+        audioTopic = createTopic("android_phone_sensor_audio",
+                PhoneSensorAudio.getClassSchema(),
+                PhoneSensorAudio.class);
     }
 
     public AvroTopic<MeasurementKey, PhoneSensorAcceleration> getAccelerationTopic() {
@@ -84,6 +88,10 @@ public class PhoneSensorsTopics extends DeviceTopics {
 
     public AvroTopic<MeasurementKey, AndroidStatusServer> getAndroidServerStatusTopic() {
         return androidServerStatusTopic;
+    }
+
+    public AvroTopic<MeasurementKey, PhoneSensorAudio> getAudioTopic() {
+        return audioTopic;
     }
 
 }

@@ -28,6 +28,7 @@ import org.radarcns.android.TableDataHandler;
 import org.radarcns.kafka.AvroTopic;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.util.IOUtil;
 import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,9 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
     private final MeasurementTable<PhoneSensorLocation> locationTable;
     private final MeasurementTable<PhoneSensorUserInteraction> userInteractionTable;
     private final MeasurementTable<AndroidStatusServer> serverStatusTable;
+    private final MeasurementTable<PhoneSensorAudio> audioTable;
     private final AvroTopic<MeasurementKey, PhoneSensorBatteryLevel> batteryTopic;
+
 
     private final PhoneSensorsDeviceStatus deviceStatus;
 
@@ -90,6 +93,7 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
         this.lightTable = dataHandler.getCache(topics.getLightTopic());
         this.callTable = dataHandler.getCache(topics.getCallTopic());
         this.smsTable = dataHandler.getCache(topics.getSmsTopic());
+        this.audioTable = dataHandler.getCache(topics.getAudioTopic());
         this.locationTable = dataHandler.getCache(topics.getLocationTopic());
         this.userInteractionTable = dataHandler.getCache(topics.getUserInteractionTopic());
         this.batteryTopic = topics.getBatteryLevelTopic();
@@ -471,6 +475,34 @@ public class PhoneSensorsDeviceManager implements DeviceManager, SensorEventList
 
         logger.info("SMS log: {}, {}, {}, {}, {}, {} chars", target, targetKey, type, eventTimestamp, timestamp, length);
         return true;
+    }
+
+    public void processAudio(SensorEvent event) {
+        // TODO
+        /*float x = event.values[0] / EARTH_GRAVITATIONAL_ACCELERATION;
+        float y = event.values[1] / EARTH_GRAVITATIONAL_ACCELERATION;
+        float z = event.values[2] / EARTH_GRAVITATIONAL_ACCELERATION;
+        deviceStatus.setAcceleration(x, y, z);
+        // nanoseconds to seconds
+        double time = event.timestamp / 1_000_000_000d;
+        double timeReceived = System.currentTimeMillis() / 1_000d;
+
+        PhoneSensorAcceleration value = new PhoneSensorAcceleration(time, timeReceived, x, y, z);
+        */
+
+        double time = event.timestamp / 1_000_000_000d;
+        double timeReceived = System.currentTimeMillis() / 1_000d;
+        String dataPath = context.getExternalFilesDir("") + "/audio.bin";
+        //SmileJNI.SMILExtractJNI(conf,1,dataPath);
+        try {
+            byte[] b = IOUtil.readFile(dataPath);
+            final String config = "";
+            final String b64 = android.util.Base64.encodeToString(b, android.util.Base64.DEFAULT);
+            PhoneSensorAudio value = new PhoneSensorAudio(time, timeReceived, config, b64);
+            dataHandler.addMeasurement(audioTable, deviceStatus.getId(), value);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     /**
