@@ -1,0 +1,17 @@
+{
+  "namespace": "org.radarcns.phoneSensors",
+  "type": "record",
+  "name": "PhoneSensorLocation",
+  "doc": "Data from the gps and network location providers.",
+  "fields": [
+    {"name": "time", "type": "double", "doc": "device timestamp in UTC (s)"},
+    {"name": "timeReceived", "type": "double", "doc": "device receiver timestamp in UTC (s)"},
+    {"name": "provider", "type": "int", "doc": "1-GPS, 2-Network, 3-Other"},
+    {"name": "latitude", "type": "double", "doc": "from a random reference latitude"},
+    {"name": "longitude", "type": "double", "doc": "from a random reference longitude"},
+    {"name": "altitude", "type": "float", "doc": "height above the WGS 84 (m)"},
+    {"name": "accuracy", "type": "float", "doc": "accuracy of location (m)"},
+    {"name": "speed", "type": "float", "doc": "speed over ground (m/s)"},
+    {"name": "bearing", "type": "float", "doc": "the horizontal direction of travel of this device (degrees)"}
+  ]
+}
