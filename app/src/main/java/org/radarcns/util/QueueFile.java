@@ -112,7 +112,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     private Element first;
 
     /** Pointer to last (or newest) element. */
-    private Element last;
+    private final Element last;
 
     private MappedByteBuffer byteBuffer;
     private final MappedByteBuffer headerByteBuffer;
@@ -138,6 +138,8 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         }
         this.fileName = file.getName();
         this.maxSize = maxSize;
+        this.last = new Element();
+
         closed = false;
 
         boolean exists = file.exists();
@@ -178,14 +180,13 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
                 throw new IOException("Queue file " + file + " was corrupted.");
             }
             first = readElement((int)firstOffset);
-            last = readElement((int)lastOffset);
+            readElement((int)lastOffset, last);
         } else {
             setLength(MINIMUM_SIZE);
             updateBufferExtent();
             headerByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, QueueFile.HEADER_LENGTH);
             elementCount = 0;
-            first = Element.NULL;
-            last = Element.NULL;
+            first = new Element();
             writeHeader();
         }
         byteBuffer.clear();
@@ -220,20 +221,28 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         return result;
     }
 
-    private Element readElement(int position) throws IOException {
-        if (position == 0) {
-            return Element.NULL;
-        }
-        ringRead(position, elementHeaderBuffer, 0, Element.HEADER_LENGTH);
-        int length = bytesToInt(elementHeaderBuffer, 0);
-        Element element = new Element(position, length);
 
-        if (elementHeaderBuffer[4] != element.crc()) {
-            logger.error("Failed to verify {}: crc {} does not match stored checksum {}. QueueFile is corrupted", element, element.crc(), elementHeaderBuffer[4]);
-            close();
-            throw new IOException("Element is not correct; queue file is corrupted");
+    private void readElement(int position, Element elementToUpdate) throws IOException {
+        if (position == 0) {
+            elementToUpdate.length = 0;
+        } else {
+            ringRead(position, elementHeaderBuffer, 0, Element.HEADER_LENGTH);
+            int length = bytesToInt(elementHeaderBuffer, 0);
+
+            if (elementHeaderBuffer[4] != crc(length)) {
+                logger.error("Failed to verify {}: crc {} does not match stored checksum {}. QueueFile is corrupted", elementToUpdate, crc(elementToUpdate.length), elementHeaderBuffer[4]);
+                close();
+                throw new IOException("Element is not correct; queue file is corrupted");
+            }
+            elementToUpdate.length = length;
         }
-        return element;
+        elementToUpdate.position = position;
+    }
+
+    private Element readElement(int position) throws IOException {
+        Element result = new Element();
+        readElement(position, result);
+        return result;
     }
 
     /** Wraps the position if it exceeds the end of the file. */
@@ -345,10 +354,13 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
          */
         private int expectedModCount;
 
+        private final Element current;
+
         private ElementIterator() {
             nextElementIndex = 0;
             nextElementPosition = first.position;
             expectedModCount = modCount;
+            current = new Element();
         }
 
         private void checkForComodification() {
@@ -374,9 +386,8 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
                 throw new NoSuchElementException();
             }
 
-            Element current;
             try {
-                current = readElement(nextElementPosition);
+                readElement(nextElementPosition, current);
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot read element", ex);
             }
@@ -437,9 +448,10 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         }
 
         // Read the position and length of the new first element.
-        Element newFirst = first;
+        Element newFirst = new Element();
+        newFirst.update(first);
         for (int i = 0; i < n; i++) {
-            newFirst = readElement(wrapPosition(newFirst.nextPosition()));
+            readElement(wrapPosition(newFirst.nextPosition()), newFirst);
         }
 
         // Commit the header.
@@ -475,8 +487,8 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         requireNotClosed();
 
         elementCount = 0;
-        first = Element.NULL;
-        last = Element.NULL;
+        first.reset();
+        last.reset();
 
         if (fileLength != MINIMUM_SIZE) {
             setLength(MINIMUM_SIZE);
@@ -515,8 +527,6 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
     /** A pointer to an element. */
     private static class Element {
-        private static final Element NULL = new Element(0, 0);
-
         /** Length of element header in bytes. */
         private static final int HEADER_LENGTH = 5;
 
@@ -537,6 +547,10 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             this.length = length;
         }
 
+        private Element() {
+            this(0, 0);
+        }
+
         @Override
         public String toString() {
             return getClass().getSimpleName()
@@ -545,9 +559,14 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
                     + "]";
         }
 
+        public void update(Element element) {
+            this.position = element.position;
+            this.length = element.length;
+        }
+
         public long dataPosition() {
             if (position == 0) {
-                throw new IllegalStateException("Cannot get data position of NULL element");
+                throw new IllegalStateException("Cannot get data position of empty element");
             }
             return (long)position + Element.HEADER_LENGTH;
         }
@@ -560,13 +579,9 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             }
         }
 
-        public byte crc() {
-            byte result = 17;
-            result = (byte)(31 * result + (length >> 24) & 0xFF);
-            result = (byte)(31 * result + ((length >> 16) & 0xFF));
-            result = (byte)(31 * result + ((length >> 8) & 0xFF));
-            result = (byte)(31 * result + (length & 0xFF));
-            return result;
+        public void reset() {
+            position = 0;
+            length = 0;
         }
 
         @Override
@@ -582,6 +597,15 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         public int hashCode() {
             return 31 * position + length;
         }
+    }
+
+    private static byte crc(int value) {
+        byte result = 17;
+        result = (byte)(31 * result + (value >> 24) & 0xFF);
+        result = (byte)(31 * result + ((value >> 16) & 0xFF));
+        result = (byte)(31 * result + ((value >> 8) & 0xFF));
+        result = (byte)(31 * result + (value & 0xFF));
+        return result;
     }
 
     private class QueueFileInputStream extends InputStream {
@@ -757,7 +781,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
             buffer.position(newLast.position);
             intToBytes(newLast.length, elementHeaderBuffer, 0);
-            elementHeaderBuffer[4] = newLast.crc();
+            elementHeaderBuffer[4] = crc(newLast.length);
             ringWrite(elementHeaderBuffer, 0, Element.HEADER_LENGTH);
 
             buffer.position(current.position);
@@ -845,7 +869,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
                 nextElement();
                 if (elementsWritten > 0) {
                     if (newLast != null) {
-                        last = newLast;
+                        last.update(newLast);
                     }
                     if (newFirst != null) {
                         first = newFirst;
