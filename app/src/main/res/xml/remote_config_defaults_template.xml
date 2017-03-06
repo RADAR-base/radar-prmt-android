@@ -3,19 +3,19 @@
 <defaultsMap>
     <entry>
         <key>empatica_api_key</key>
-        <value>b54f7ffbc8094347969e4949c1283eb0</value>
+        <value></value>
     </entry>
     <entry>
         <key>kafka_rest_proxy_url</key>
-        <value>http://132.231.15.39:8081</value>
+        <value></value>
     </entry>
     <entry>
         <key>schema_registry_url</key>
-        <value>http://132.231.15.39:8081</value>
+        <value></value>
     </entry>
     <entry>
         <key>device_group_id</key>
-        <value>unipassau</value>
+        <value></value>
     </entry>
     <entry>
         <key>device_data_retention_ms</key>
@@ -65,14 +65,6 @@
     <entry>
         <key>audio_config_file</key>
         <value>liveinput_android.conf</value>
-    </entry>
-    <entry>
-        <key>empatica_api_key</key>
-        <value>b54f7ffbc8094347969e4949c1283eb0</value>
-    </entry>
-    <entry>
-        <key>device_group_id_key</key>
-        <value>radarTestUP_EmpaticaDevice0</value>
     </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
