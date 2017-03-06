@@ -56,4 +56,5 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="playServicesUnavailable">Cannot connect, because Google Play Services is not available.</string>
+    <string name="header_audio_status">Audio</string>
 </resources>

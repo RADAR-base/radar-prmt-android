@@ -356,12 +356,58 @@
                     </TableRow>
                 </TableLayout>
 
+                <!-- Audio status -->
+                <RelativeLayout
+                    android:id="@+id/audioStatusLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@id/deviceTable">
+
+                    <TextView
+                        android:id="@+id/statusAudioLabel"
+                        style="@style/ServerStatusLabel"
+                        android:layout_marginEnd="11dp"
+                        android:text="@string/header_audio_status"
+                        android:layout_alignParentBottom="true"
+                        android:textColor="@android:color/background_dark" />
+
+                    <Switch
+                        android:text=""
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="11dp"
+                        android:layout_marginRight="11dp"
+                        android:checked="true"
+                        android:layout_toEndOf="@id/statusAudioLabel"
+                        android:id="@+id/statusAudioSwitch" />
+
+                    <ImageView
+                        android:id="@+id/statusAudio"
+                        style="@style/StatusCircle"
+                        android:layout_margin="0dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_toEndOf="@id/statusAudioSwitch"
+                        android:layout_marginRight="11dp"
+                        android:background="@drawable/status_disconnected"/>
+
+                    <TextView
+                        android:id="@+id/statusAudioMessage"
+                        style="@style/StatusMessage"
+                        android:text="@string/emptyText"
+                        android:layout_width="wrap_content"
+                        android:layout_marginStart="11dp"
+                        android:layout_toEndOf="@id/statusAudio"
+                        android:layout_alignParentBottom="true" />
+
+                </RelativeLayout>
+
                 <!-- Server status -->
                 <RelativeLayout
                     android:id="@+id/serverStatusLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_below="@id/deviceTable">
+                    android:layout_below="@id/audioStatusLayout"
+                    android:layout_marginTop="20dp">
 
                     <TextView
                         android:id="@+id/statusServerLabel"
@@ -421,6 +467,8 @@
                         android:layout_alignParentBottom="true" />
 
                 </RelativeLayout>
-        </RelativeLayout>
+
+
+            </RelativeLayout>
     </HorizontalScrollView>
 </ScrollView>

@@ -16,6 +16,7 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
@@ -23,6 +24,7 @@ import android.util.SparseIntArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +40,7 @@ import org.radarcns.empaticaE4.E4DeviceStatus;
 import org.radarcns.empaticaE4.E4HeartbeatToast;
 import org.radarcns.empaticaE4.E4Service;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.opensmile.SmileJNI;
 import org.radarcns.pebble2.Pebble2DeviceStatus;
 import org.radarcns.pebble2.Pebble2HeartbeatToast;
 import org.radarcns.pebble2.Pebble2Service;
@@ -53,6 +56,9 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.radarcns.RadarConfiguration.AUDIO_CONFIG_FILE;
+import static org.radarcns.RadarConfiguration.AUDIO_DURATION_S;
+import static org.radarcns.RadarConfiguration.AUDIO_REC_RATE_S;
 import static org.radarcns.RadarConfiguration.CALL_SMS_LOG_UPDATE_RATE_KEY;
 import static org.radarcns.RadarConfiguration.DEVICE_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
@@ -72,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
+    private static final int REQUEST_AUDIO_PERMISSIONS = 3;
 
     private long uiRefreshRate;
 
@@ -113,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
     private final Runnable bindServicesRunner;
     private ServerStatusListener.Status serverStatus;
 
+    private Switch mAudioSwitch;
+
     private void configureEmpatica(Bundle bundle) {
         configureServiceExtras(bundle);
         radarConfiguration.putExtras(bundle, EMPATICA_API_KEY);
@@ -125,7 +134,8 @@ public class MainActivity extends AppCompatActivity {
     private void configurePhoneSensors(Bundle bundle) {
         configureServiceExtras(bundle);
         radarConfiguration.putExtras(bundle, CALL_SMS_LOG_UPDATE_RATE_KEY,
-                LOCATION_GPS_UPDATE_RATE_KEY, LOCATION_NETWORK_UPDATE_RATE_KEY);
+                LOCATION_GPS_UPDATE_RATE_KEY, LOCATION_NETWORK_UPDATE_RATE_KEY,
+                AUDIO_REC_RATE_S,AUDIO_DURATION_S,AUDIO_CONFIG_FILE);
     }
 
     private void configureServiceExtras(Bundle bundle) {
@@ -254,6 +264,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Not needed in API level 22.
         // checkBluetoothPermissions();
+        if(checkAudioRecordingPermissions()){
+            SmileJNI.allowRecording = true;
+            SmileJNI.prepareOpenSMILE(getApplicationContext());
+            mAudioSwitch.setChecked(true);
+        }
+        else {
+            requestAudioRecordingPermissions();
+        }
+
 
         // Check availability of Google Play Services
         if ( GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS ) {
@@ -269,6 +288,28 @@ public class MainActivity extends AppCompatActivity {
                 (Button) findViewById(R.id.inputDeviceNameButtonRow3),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow4)
         };
+
+        // Audio switch
+        mAudioSwitch = (Switch) findViewById(R.id.statusAudioSwitch);
+        mAudioSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(((Switch)view).isChecked()){
+                    if(checkAudioRecordingPermissions()){
+                        SmileJNI.allowRecording= true;
+                        SmileJNI.prepareOpenSMILE(getApplicationContext());
+                    }
+                    else {
+                        SmileJNI.allowRecording = false;
+                        Toast.makeText(getApplicationContext(), "Audio permission denied!", Toast.LENGTH_SHORT).show();
+                        mAudioSwitch.setChecked(false);
+                    }
+                }
+                else{
+                    SmileJNI.allowRecording = false;
+                }
+            }
+        });
 
         // Firebase
         mFirebaseStatusIcon = findViewById(R.id.firebaseStatus);
@@ -481,6 +522,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private boolean checkAudioRecordingPermissions(){
+        String[] permissions = {
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.RECORD_AUDIO};
+
+        for (String permission : permissions) {
+            if (PermissionChecker.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            //if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void requestAudioRecordingPermissions(){
+        if (!checkAudioRecordingPermissions()) {
+            String[] permissions = {
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.RECORD_AUDIO};
+            ActivityCompat.requestPermissions(this, permissions, REQUEST_AUDIO_PERMISSIONS);
+        }
+    }
+
     private void checkBluetoothPermissions() {
         String[] permissions = {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -510,6 +574,26 @@ public class MainActivity extends AppCompatActivity {
                 // User refused to grant permission.
                 Boast.makeText(this, "Cannot connect to Empatica E4DeviceManager without location permissions", Toast.LENGTH_LONG).show();
             }
+        }
+        if (requestCode == REQUEST_AUDIO_PERMISSIONS){
+            if(checkAudioRecordingPermissions()){
+                SmileJNI.allowRecording = true;
+                SmileJNI.prepareOpenSMILE(getApplicationContext());
+                mAudioSwitch.setChecked(true);
+            }
+            else{
+                SmileJNI.allowRecording = false;
+                mAudioSwitch.setChecked(false);
+                mAudioSwitch.setChecked(false);
+            }
+            /*if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+                //SmileJNI.allowRecording = true;
+            }
+            else{
+                // User refused to grant permission.
+                //SmileJNI.allowRecording = false;
+            }*/
         }
     }
 

@@ -39,6 +39,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.radarcns.RadarConfiguration.AUDIO_DURATION_S;
+import static org.radarcns.RadarConfiguration.AUDIO_REC_RATE_S;
+import static org.radarcns.RadarConfiguration.AUDIO_CONFIG_FILE;
 import static org.radarcns.RadarConfiguration.DATABASE_COMMIT_RATE_KEY;
 import static org.radarcns.RadarConfiguration.DATA_RETENTION_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
@@ -47,6 +50,7 @@ import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
 import static org.radarcns.RadarConfiguration.LOCATION_GPS_UPDATE_RATE_KEY;
 import static org.radarcns.RadarConfiguration.LOCATION_NETWORK_UPDATE_RATE_KEY;
+import static org.radarcns.RadarConfiguration.RADAR_PREFIX;
 import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
 import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
 import static org.radarcns.RadarConfiguration.CALL_SMS_LOG_UPDATE_RATE_KEY;
@@ -513,6 +517,16 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         RadarConfiguration.getLongExtra(bundle, LOCATION_NETWORK_UPDATE_RATE_KEY));
             }
         }
+
+        if (RadarConfiguration.hasExtra(bundle, AUDIO_REC_RATE_S) && RadarConfiguration.hasExtra(bundle, AUDIO_DURATION_S) ) {
+            if (deviceScanner instanceof PhoneSensorsDeviceManager) {
+                ((PhoneSensorsDeviceManager) deviceScanner).setAudioUpdateRate(
+                        RadarConfiguration.getLongExtra(bundle, AUDIO_REC_RATE_S),
+                        RadarConfiguration.getLongExtra(bundle, AUDIO_DURATION_S),
+                        RadarConfiguration.getStringExtra(bundle, AUDIO_CONFIG_FILE));
+            }
+        }
+
     }
 
     public synchronized TableDataHandler getDataHandler() {

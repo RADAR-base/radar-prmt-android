@@ -10,10 +10,14 @@ import org.radarcns.android.DeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.data.TimedInt;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.opensmile.SmileJNI;
+import org.radarcns.phoneSensors.PhoneSensorsDeviceStatus;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
@@ -44,6 +48,8 @@ public class MainActivityUIUpdater implements Runnable {
     private ImageView[] mBatteryLabels;
     private View mServerStatusIcon;
     private TextView mServerMessage;
+    private ImageView mAudioStatusIcon;
+    private TextView mAudioStatusMessage;
     private final RadarConfiguration radarConfiguration;
 
     private final Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
@@ -96,6 +102,7 @@ public class MainActivityUIUpdater implements Runnable {
                 deviceNames[i] = null;
             }
         }
+
         mainActivity.runOnUiThread(this);
     }
 
@@ -150,6 +157,9 @@ public class MainActivityUIUpdater implements Runnable {
                 (TextView) mainActivity.findViewById(R.id.recordsSentRow4)
         };
 
+        mAudioStatusMessage = (TextView) mainActivity.findViewById(R.id.statusAudioMessage);
+        mAudioStatusIcon = (ImageView) mainActivity.findViewById(R.id.statusAudio);
+
         mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
 
         // Server
@@ -169,6 +179,7 @@ public class MainActivityUIUpdater implements Runnable {
             updateDeviceTotalRecordsSent(i);
         }
         updateServerStatus();
+        updateAudio();
     }
 
     private void updateServerStatus() {
@@ -244,6 +255,18 @@ public class MainActivityUIUpdater implements Runnable {
         } else {
             mBatteryLabels[row].setImageResource(R.drawable.ic_battery_empty);
         }
+    }
+
+    //public void updateAudio(PhoneSensorsDeviceStatus audioStatus){
+    public void updateAudio(){
+        File audioFile = new File(SmileJNI.lastRecording);
+        if(audioFile.exists())
+            mAudioStatusMessage.setText("last audio recording on "+(new Date(audioFile.lastModified()).toString()));
+
+        if(SmileJNI.getIsRecording())
+            mAudioStatusIcon.setImageResource(R.drawable.status_connected);
+        else
+            mAudioStatusIcon.setImageResource(R.drawable.status_disconnected);
     }
 
     public void updateDeviceName(String deviceName, int row) {

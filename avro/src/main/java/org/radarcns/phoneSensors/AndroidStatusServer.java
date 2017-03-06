@@ -8,13 +8,13 @@ package org.radarcns.phoneSensors;
 /**  */
 @org.apache.avro.specific.AvroGenerated
 public class AndroidStatusServer extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AndroidStatusServer\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"serverStatus\",\"type\":\"int\",\"doc\":\"0-disconnected,1-connected,2-other status\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AndroidStatusServer\",\"namespace\":\"org.radarcns.phoneSensors\",\"doc\":\"\",\"fields\":[{\"name\":\"time\",\"type\":\"double\",\"doc\":\"device timestamp in UTC (s)\"},{\"name\":\"timeReceived\",\"type\":\"double\",\"doc\":\"device receiver timestamp in UTC (s)\"},{\"name\":\"serverStatus\",\"type\":\"int\",\"doc\":\"0-disconnected,1-connected,2-failed uploading,3-other\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** device timestamp in UTC (s) */
   @Deprecated public double time;
   /** device receiver timestamp in UTC (s) */
   @Deprecated public double timeReceived;
-  /** 0-disconnected,1-connected,2-other status */
+  /** 0-disconnected,1-connected,2-failed uploading,3-other */
   @Deprecated public int serverStatus;
 
   /**
@@ -86,14 +86,14 @@ public class AndroidStatusServer extends org.apache.avro.specific.SpecificRecord
 
   /**
    * Gets the value of the 'serverStatus' field.
-   * 0-disconnected,1-connected,2-other status   */
+   * 0-disconnected,1-connected,2-failed uploading,3-other   */
   public java.lang.Integer getServerStatus() {
     return serverStatus;
   }
 
   /**
    * Sets the value of the 'serverStatus' field.
-   * 0-disconnected,1-connected,2-other status   * @param value the value to set.
+   * 0-disconnected,1-connected,2-failed uploading,3-other   * @param value the value to set.
    */
   public void setServerStatus(java.lang.Integer value) {
     this.serverStatus = value;

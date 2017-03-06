@@ -11,6 +11,8 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
     private float[] acceleration = {Float.NaN, Float.NaN, Float.NaN};
     private float batteryLevel = Float.NaN;
     private float light = Float.NaN;
+    //private String audioB64 = "";
+    private int isRecordingAudio = 0;
 
     @Override
     public int describeContents() {
@@ -37,6 +39,8 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
         dest.writeFloat(this.acceleration[2]);
         dest.writeFloat(this.batteryLevel);
         dest.writeFloat(this.light);
+        //dest.writeString(this.audioB64);
+        dest.writeInt(this.isRecordingAudio);
     }
 
     protected void updateFromParcel(Parcel in) {
@@ -46,6 +50,8 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
         acceleration[2] = in.readFloat();
         batteryLevel = in.readFloat();
         light = in.readFloat();
+        isRecordingAudio = in.readInt();
+        //audioB64 = in.readString();
     }
 
     @Override
@@ -76,4 +82,11 @@ public class PhoneSensorsDeviceStatus extends DeviceState {
         this.light = light;
     }
 
+    //public String getAudio(){ return audioB64;}
+    public int getIsRecordingAudio(){return isRecordingAudio;}
+
+    //public synchronized void setAudio(String audio){this.audioB64 = audio;}
+    public synchronized void setIsRecordingAudio(int isRecordingAudio) {
+        this.isRecordingAudio = isRecordingAudio;
+    }
 }

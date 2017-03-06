@@ -40,6 +40,10 @@ public class RadarConfiguration {
     public static final String CALL_SMS_LOG_UPDATE_RATE_KEY = "call_sms_log_update_rate";
     public static final String LOCATION_GPS_UPDATE_RATE_KEY = "location_gps_update_rate";
     public static final String LOCATION_NETWORK_UPDATE_RATE_KEY = "location_network_update_rate";
+    public static final String AUDIO_REC_RATE_S = "audio_rec_rate_s";
+    public static final String AUDIO_DURATION_S = "audio_duration_s";
+    public static final String AUDIO_CONFIG_FILE = "audio_config_file";
+
 
     public static final Pattern IS_TRUE = Pattern.compile(
             "^(1|true|t|yes|y|on)$", CASE_INSENSITIVE);
@@ -50,13 +54,17 @@ public class RadarConfiguration {
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
             KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
             FIREBASE_FETCH_TIMEOUT_MS_KEY, CALL_SMS_LOG_UPDATE_RATE_KEY,
-            LOCATION_GPS_UPDATE_RATE_KEY, LOCATION_NETWORK_UPDATE_RATE_KEY));
+            LOCATION_GPS_UPDATE_RATE_KEY, LOCATION_NETWORK_UPDATE_RATE_KEY,
+            AUDIO_REC_RATE_S, AUDIO_DURATION_S));
 
     public static final Set<String> INT_VALUES = Collections.singleton(
             KAFKA_RECORDS_SEND_LIMIT_KEY);
 
     public static final Set<String> BOOLEAN_VALUES = Collections.singleton(
             CONDENSED_DISPLAY_KEY);
+
+    public static final Set<String> STRING_VALUES = Collections.singleton(
+            AUDIO_CONFIG_FILE);
 
     private static final Object syncObject = new Object();
     private static RadarConfiguration instance = null;
@@ -361,6 +369,8 @@ public class RadarConfiguration {
                     bundle.putLong(key, (Long) value);
                 } else if (value instanceof Integer) {
                     bundle.putInt(key, (Integer) value);
+                } else if (value instanceof String){
+                    bundle.putString(key, (String) value);
                 }
             }
             else {

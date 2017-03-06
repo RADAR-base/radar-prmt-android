@@ -63,7 +63,8 @@ public class PhoneSensorsService extends DeviceService {
         return new AvroTopic[] {
                 topics.getAccelerationTopic(), topics.getLightTopic(), topics.getCallTopic(),
                 topics.getSmsTopic(), topics.getLocationTopic(), topics.getUserInteractionTopic(),
-                topics.getAndroidServerStatusTopic()
+                topics.getAndroidServerStatusTopic(),
+                topics.getAudioTopic()
         };
     }
 
