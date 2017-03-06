@@ -24,9 +24,9 @@ android {
         androidTest {
         }
     }
-    task ndkBuild(type: Exec) {
-        commandLine '/home/sag/Softwares/android-ndk-r10e/ndk-build', 'NDK_DEBUG=1', 'TARGET_PLATFORM=android-22', '-C', file('src/main').absolutePath
-    }
+    //task ndkBuild(type: Exec) {
+    //    commandLine '/home/sag/Softwares/android-ndk-r10e/ndk-build', 'NDK_DEBUG=1', 'TARGET_PLATFORM=android-22', '-C', file('src/main').absolutePath
+    //}
 
     lintOptions {
         abortOnError false
