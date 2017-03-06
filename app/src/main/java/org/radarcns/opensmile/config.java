@@ -10,7 +10,10 @@ import java.util.List;
 
 class  config {
     public static String[] assets = {
-            "liveinput_android.conf"
+            "liveinput_android.conf",
+            "raw_audio_bin.conf",
+            "GenevaExtended_func.conf",
+            "GenevaExtended_lld.conf"
             //"BufferModeRb.conf.inc",
             //"features.conf.inc",
             //"messages.conf.inc",
@@ -19,7 +22,7 @@ class  config {
             //"FrameModeMoodWin.conf.inc"
     };
 
-    public static String mainConf = "liveinput_android.conf";
+   // public static String mainConf = "liveinput_android.conf";
    /* List<OpenSmile_plugins_mine> plugins = new ArrayList<>();
 
     config(ArrayList<OpenSmile_plugins_mine> op){
