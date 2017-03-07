@@ -18,10 +18,10 @@ package org.radarcns.util;
 
 import java.io.IOException;
 
-import static org.radarcns.util.Serialization.bytesToInt;
-import static org.radarcns.util.Serialization.bytesToLong;
-import static org.radarcns.util.Serialization.intToBytes;
-import static org.radarcns.util.Serialization.longToBytes;
+import static org.radarcns.util.QueueFile.bytesToInt;
+import static org.radarcns.util.QueueFile.bytesToLong;
+import static org.radarcns.util.QueueFile.intToBytes;
+import static org.radarcns.util.QueueFile.longToBytes;
 
 /**
  * Header for a {@link QueueFile}.

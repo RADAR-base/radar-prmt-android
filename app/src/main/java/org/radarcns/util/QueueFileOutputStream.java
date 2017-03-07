@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import static org.radarcns.util.Serialization.intToBytes;
+import static org.radarcns.util.QueueFile.intToBytes;
 
 /**
  * An OutputStream that can write multiple elements. After finished writing one element, call

@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
-import static org.radarcns.util.Serialization.bytesToInt;
-
 /**
  * An efficient, file-based, FIFO queue. Additions and removals are O(1). Writes are
  * synchronous; data will be written to disk before an operation returns.
@@ -577,5 +575,41 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         }
 
         header.write();
+    }
+
+    public static long bytesToLong(byte[] b, int startIndex) {
+        long result = 0;
+        for (int i = 0; i < 8; i++) {
+            result <<= 8;
+            result |= b[i + startIndex] & 0xFF;
+        }
+        return result;
+    }
+
+    public static void longToBytes(long value, byte[] b, int startIndex) {
+        b[startIndex] = (byte)((value >> 56) & 0xFF);
+        b[startIndex + 1] = (byte)((value >> 48) & 0xFF);
+        b[startIndex + 2] = (byte)((value >> 40) & 0xFF);
+        b[startIndex + 3] = (byte)((value >> 32) & 0xFF);
+        b[startIndex + 4] = (byte)((value >> 24) & 0xFF);
+        b[startIndex + 5] = (byte)((value >> 16) & 0xFF);
+        b[startIndex + 6] = (byte)((value >> 8) & 0xFF);
+        b[startIndex + 7] = (byte)(value & 0xFF);
+    }
+
+    public static void intToBytes(int value, byte[] b, int startIndex) {
+        b[startIndex] = (byte)((value >> 24) & 0xFF);
+        b[startIndex + 1] = (byte)((value >> 16) & 0xFF);
+        b[startIndex + 2] = (byte)((value >> 8) & 0xFF);
+        b[startIndex + 3] = (byte)(value & 0xFF);
+    }
+
+    public static int bytesToInt(byte[] b, int startIndex) {
+        int result = 0;
+        for (int i = 0; i < 4; i++) {
+            result <<= 8;
+            result |= b[i + startIndex] & 0xFF;
+        }
+        return result;
     }
 }

@@ -2,27 +2,20 @@ package org.radarcns.data;
 
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.topic.AvroTopic;
 import org.radarcns.util.BackedObjectQueue;
-import org.radarcns.util.Serialization;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.BufferOverflowException;
-import java.util.Arrays;
 
-import static org.radarcns.util.Serialization.bytesToLong;
-import static org.radarcns.util.Serialization.longToBytes;
+import static org.radarcns.util.QueueFile.bytesToLong;
+import static org.radarcns.util.QueueFile.longToBytes;
 
 /**
  * Converts records from an AvroTopic for Tape

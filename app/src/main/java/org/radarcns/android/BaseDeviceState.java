@@ -3,7 +3,6 @@ package org.radarcns.android;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.util.DeviceStateCreator;
 
