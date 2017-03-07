@@ -245,7 +245,7 @@ public class QueueFileTest {
 
     @Test(timeout = 2000L)
     public void enduranceTest() throws Throwable {
-        int numberOfOperations = 10000;
+        int numberOfOperations = 1000;
         int size = QueueFile.MINIMUM_LENGTH *2;
         Random random = new Random();
         byte[] buffer = new byte[size / 16];
