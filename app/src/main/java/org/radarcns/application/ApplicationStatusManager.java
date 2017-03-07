@@ -14,10 +14,11 @@ import org.radarcns.android.BaseServiceConnection;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceServiceBinder;
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
+import org.radarcns.data.DataCache;
 import org.radarcns.empaticaE4.E4Service;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble2.Pebble2Service;
 import org.radarcns.phone.PhoneSensorsService;
 import org.slf4j.Logger;
@@ -52,9 +53,9 @@ public class ApplicationStatusManager implements DeviceManager {
 
     private final ApplicationStatusService applicationStatusService;
 
-    private final MeasurementTable<ApplicationServerStatus> serverStatusTable;
-    private final MeasurementTable<ApplicationUptime> uptimeTable;
-    private final MeasurementTable<ApplicationRecordCounts> recordCountsTable;
+    private final DataCache<MeasurementKey, ApplicationServerStatus> serverStatusTable;
+    private final DataCache<MeasurementKey, ApplicationUptime> uptimeTable;
+    private final DataCache<MeasurementKey, ApplicationRecordCounts> recordCountsTable;
 
     private final ApplicationState deviceStatus;
 

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -51,7 +52,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         this.deviceName = null;
         this.deviceStatus = DeviceStatusListener.Status.DISCONNECTED;
         this.isRemote = false;
-        this.deviceStateCreator = deviceStateCreator;
+        this.deviceStateCreator = Objects.requireNonNull(deviceStateCreator);
         this.serviceClassName = serviceClassName;
     }
 
@@ -158,10 +159,6 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
 
     public S getDeviceData() throws RemoteException {
         if (isRemote) {
-            if (deviceStateCreator == null) {
-                throw new IllegalStateException(
-                        "Cannot deserialize state without device state creator");
-            }
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
             getServiceBinder().transact(TRANSACT_GET_DEVICE_STATUS, data, reply, 0);

@@ -18,8 +18,8 @@ import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
+import org.radarcns.data.DataCache;
 import org.radarcns.empatica.EmpaticaE4Acceleration;
 import org.radarcns.empatica.EmpaticaE4BatteryLevel;
 import org.radarcns.empatica.EmpaticaE4BloodVolumePulse;
@@ -48,12 +48,12 @@ class E4DeviceManager implements EmpaDataDelegate, EmpaStatusDelegate, DeviceMan
     private Handler mHandler;
     private final HandlerThread mHandlerThread;
 
-    private final MeasurementTable<EmpaticaE4Acceleration> accelerationTable;
-    private final MeasurementTable<EmpaticaE4BloodVolumePulse> bvpTable;
-    private final MeasurementTable<EmpaticaE4ElectroDermalActivity> edaTable;
-    private final MeasurementTable<EmpaticaE4InterBeatInterval> ibiTable;
-    private final MeasurementTable<EmpaticaE4Temperature> temperatureTable;
-    private final MeasurementTable<EmpaticaE4SensorStatus> sensorStatusTable;
+    private final DataCache<MeasurementKey, EmpaticaE4Acceleration> accelerationTable;
+    private final DataCache<MeasurementKey, EmpaticaE4BloodVolumePulse> bvpTable;
+    private final DataCache<MeasurementKey, EmpaticaE4ElectroDermalActivity> edaTable;
+    private final DataCache<MeasurementKey, EmpaticaE4InterBeatInterval> ibiTable;
+    private final DataCache<MeasurementKey, EmpaticaE4Temperature> temperatureTable;
+    private final DataCache<MeasurementKey, EmpaticaE4SensorStatus> sensorStatusTable;
     private final AvroTopic<MeasurementKey, EmpaticaE4BatteryLevel> batteryTopic;
 
     private final E4DeviceStatus deviceStatus;

@@ -312,7 +312,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     private class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
         public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(
-                @NonNull AvroTopic<MeasurementKey, V> topic, int limit) {
+                @NonNull AvroTopic<MeasurementKey, V> topic, int limit) throws IOException {
             return getDataHandler().getCache(topic).getRecords(limit);
         }
 
@@ -470,9 +470,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
                 try {
                     kafkaUrl = new URL(urlString);
-                } catch (MalformedURLException e) {
+                } catch (MalformedURLException ex) {
                     logger.error("Malformed Kafka server URL {}", urlString);
-                    throw new IllegalArgumentException(e);
+                    throw new IllegalArgumentException(ex);
                 }
             }
         }
@@ -480,9 +480,14 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         boolean newlyCreated;
         synchronized (this) {
             if (dataHandler == null) {
-                dataHandler = new TableDataHandler(
-                        this, kafkaUrl, remoteSchemaRetriever, getCachedTopics());
-                newlyCreated = true;
+                try {
+                    dataHandler = new TableDataHandler(
+                            this, kafkaUrl, remoteSchemaRetriever, getCachedTopics());
+                    newlyCreated = true;
+                } catch (IOException ex) {
+                    logger.error("Failed to instantiate Data Handler", ex);
+                    throw new IllegalStateException(ex);
+                }
             } else {
                 newlyCreated = false;
             }

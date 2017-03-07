@@ -10,6 +10,7 @@ import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.topic.AvroTopic;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,7 @@ public interface DeviceServiceBinder {
     BaseDeviceState startRecording(@NonNull Set<String> acceptableIds);
     /** Stop scanning and recording */
     void stopRecording();
-    <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit);
+    <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(@NonNull AvroTopic<MeasurementKey, V> topic, int limit) throws IOException;
     /** Get the current device status */
     BaseDeviceState getDeviceStatus();
     /** Get the current device name, or null if unknown. */

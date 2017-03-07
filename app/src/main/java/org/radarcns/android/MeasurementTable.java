@@ -116,6 +116,7 @@ public class MeasurementTable<V extends SpecificRecord> implements DataCache<Mea
         }
     }
 
+    @Override
     public synchronized void setTimeWindow(long timeWindowMillis) {
         this.window = timeWindowMillis;
     }

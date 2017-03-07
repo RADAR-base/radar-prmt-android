@@ -12,8 +12,8 @@ import com.getpebble.android.kit.PebbleKit;
 
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.MeasurementTable;
 import org.radarcns.android.TableDataHandler;
+import org.radarcns.data.DataCache;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2Acceleration;
 import org.radarcns.pebble.Pebble2BatteryLevel;
@@ -54,9 +54,9 @@ class Pebble2DeviceManager implements DeviceManager {
     private final BroadcastReceiver disconnectReceiver;
     private final PebbleKit.PebbleDataLogReceiver dataLogReceiver;
 
-    private final MeasurementTable<Pebble2Acceleration> accelerationTable;
-    private final MeasurementTable<Pebble2HeartRate> heartRateTable;
-    private final MeasurementTable<Pebble2HeartRateFiltered> heartRateFilteredTable;
+    private final DataCache<MeasurementKey, Pebble2Acceleration> accelerationTable;
+    private final DataCache<MeasurementKey, Pebble2HeartRate> heartRateTable;
+    private final DataCache<MeasurementKey, Pebble2HeartRateFiltered> heartRateFilteredTable;
     private final AvroTopic<MeasurementKey, Pebble2BatteryLevel> batteryTopic;
 
     private final Pebble2DeviceStatus deviceStatus;

@@ -7,6 +7,7 @@ import org.radarcns.topic.AvroTopic;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class DeviceTopics {
     private final Map<String, AvroTopic<MeasurementKey, ? extends SpecificRecord>> topicMap;
@@ -25,10 +26,6 @@ public abstract class DeviceTopics {
     }
 
     public AvroTopic<MeasurementKey, ? extends SpecificRecord> getTopic(String name) {
-        AvroTopic<MeasurementKey, ? extends SpecificRecord> topic = topicMap.get(name);
-        if (topic == null) {
-            throw new IllegalArgumentException("Topic " + name + " unknown");
-        }
-        return topic;
+        return Objects.requireNonNull(topicMap.get(name), "Topic " + name + " unknown");
     }
 }
