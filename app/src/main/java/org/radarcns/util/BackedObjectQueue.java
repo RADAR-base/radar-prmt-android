@@ -45,7 +45,7 @@ public class BackedObjectQueue<T> implements Closeable {
      *                     cannot be converted.
      */
     public void add(T entry) throws IOException {
-        try (QueueFile.QueueFileOutputStream out = queueFile.elementOutputStream()) {
+        try (QueueFileOutputStream out = queueFile.elementOutputStream()) {
             converter.serialize(entry, out);
         }
     }
@@ -57,10 +57,10 @@ public class BackedObjectQueue<T> implements Closeable {
      *                     cannot be converted.
      */
     public void addAll(Collection<? extends T> entries) throws IOException {
-        try (QueueFile.QueueFileOutputStream out = queueFile.elementOutputStream()) {
+        try (QueueFileOutputStream out = queueFile.elementOutputStream()) {
             for (T entry : entries) {
                 converter.serialize(entry, out);
-                out.nextElement();
+                out.next();
             }
         }
     }

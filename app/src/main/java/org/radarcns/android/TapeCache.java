@@ -54,11 +54,11 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
         outputFile = new File(context.getFilesDir(), topic.getName() + ".tape");
         QueueFile queueFile;
         try {
-            queueFile = new QueueFile(outputFile);
+            queueFile = QueueFile.newMapped(outputFile, Integer.MAX_VALUE);
         } catch (IOException ex) {
             logger.error("TapeCache " + outputFile + " was corrupted. Removing old cache.");
             if (outputFile.delete()) {
-                queueFile = new QueueFile(outputFile);
+                queueFile = QueueFile.newMapped(outputFile, Integer.MAX_VALUE);
             } else {
                 throw ex;
             }
@@ -94,7 +94,7 @@ public class TapeCache<K extends SpecificRecord, V extends SpecificRecord> imple
                     } catch (IllegalStateException ex) {
                         logger.error("Queue was corrupted. Removing cache.");
                         if (outputFile.delete()) {
-                            QueueFile queueFile = new QueueFile(outputFile);
+                            QueueFile queueFile = QueueFile.newMapped(outputFile, Integer.MAX_VALUE);
                             queue = new BackedObjectQueue<>(queueFile, converter);
                             return Collections.emptyList();
                         } else {

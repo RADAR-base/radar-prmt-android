@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 Square, Inc.
+ * Copyright (C) 2017 The Hyve
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,25 +25,15 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
 import static org.radarcns.util.Serialization.bytesToInt;
-import static org.radarcns.util.Serialization.intToBytes;
-import static org.radarcns.util.Serialization.longToBytes;
 
 /**
- * This class is an adaptation of com.squareup.tape2, allowing multi-element writes. It also
- * removes legacy support.
- *
- * A reliable, efficient, file-based, FIFO queue. Additions and removals are O(1). Writes are
+ * An efficient, file-based, FIFO queue. Additions and removals are O(1). Writes are
  * synchronous; data will be written to disk before an operation returns.
  * The underlying file is structured to survive process and even system crashes. If an I/O
  * exception is thrown during a mutating change, the change is aborted. It is safe to continue to
@@ -56,19 +47,17 @@ import static org.radarcns.util.Serialization.longToBytes;
  * successful processing. If the system crashes after {@code peek} and during processing, the
  * element will remain in the queue, to be processed when the system restarts.
  *
+ * This class is an adaptation of com.squareup.tape2, allowing multi-element writes. It also
+ * removes legacy support.
+ *
  * @author Bob Lee (bob@squareup.com)
+ * @author Joris Borgdorff (joris@thehyve.nl)
  */
 public final class QueueFile implements Closeable, Iterable<InputStream> {
     /** Initial file size in bytes. */
-    public static final int MINIMUM_SIZE = 4096; // one file system block
-
-    /** The header length in bytes. */
-    public static final int HEADER_LENGTH = 36;
+    public static final int MINIMUM_LENGTH = 4096; // one file system block
 
     private static final Logger logger = LoggerFactory.getLogger(QueueFile.class);
-
-    /** Leading bit set to 1 indicating a versioned header and the version of 1. */
-    private static final int VERSIONED_HEADER = 0x00000001;
 
     /**
      * The underlying file. Uses a ring buffer to store entries. Designed so that a modification
@@ -95,27 +84,15 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
      *   `n` bytes          Data
      * </pre>
      */
-    private final FileChannel channel;
-    private final RandomAccessFile randomAccessFile;
-    private final int maxSize;
-
-    /** Filename, for toString purposes */
-    private final String fileName;
-
-    /** Cached file length. Always a power of 2. */
-    private int fileLength;
-
-    /** Number of elements. */
-    private int elementCount;
+    private final QueueFileHeader header;
 
     /** Pointer to first (or eldest) element. */
-    private Element first;
+    private final LinkedList<QueueFileElement> first;
 
     /** Pointer to last (or newest) element. */
-    private final Element last;
+    private final QueueFileElement last;
 
-    private MappedByteBuffer byteBuffer;
-    private final MappedByteBuffer headerByteBuffer;
+    private final QueueStorage storage;
 
     /**
      * The number of times this file has been structurally modified — it is incremented during
@@ -124,154 +101,76 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
      */
     private int modCount = 0;
 
-    private boolean closed;
-    private final byte[] elementHeaderBuffer = new byte[Element.HEADER_LENGTH];
-    private final byte[] queueHeaderBuffer = new byte[QueueFile.HEADER_LENGTH];
+    private final byte[] elementHeaderBuffer = new byte[QueueFileElement.HEADER_LENGTH];
 
-    public QueueFile(File file) throws IOException {
-        this(file, Integer.MAX_VALUE);
+    public QueueFile(QueueStorage storage) throws IOException {
+        if (storage.getMaximumLength() < MINIMUM_LENGTH) {
+            throw new IllegalArgumentException("Maximum file size must be at least QueueFile.MINIMUM_LENGTH = " + MINIMUM_LENGTH);
+        }
+
+        this.storage = storage;
+        first = new LinkedList<>();
+        last = new QueueFileElement();
+
+        if (this.storage.wasCreated()) {
+            header = new QueueFileHeader(storage);
+            header.setLength(storage.length());
+            header.write();
+        } else {
+            header = QueueFileHeader.read(storage);
+            if (header.getLength() < storage.length()) {
+                this.storage.resize(header.getLength());
+            }
+            QueueFileElement newFirst = readElement((int)header.getFirstPosition());
+            if (!newFirst.isEmpty()) {
+                first.add(newFirst);
+            }
+            readElement((int)header.getLastPosition(), last);
+        }
     }
 
-    public QueueFile(File file, int maxSize) throws IOException {
-        if (maxSize < MINIMUM_SIZE) {
-            throw new IllegalArgumentException("Maximum file size must be at least QueueFile.MINIMUM_SIZE = " + MINIMUM_SIZE);
-        }
-        this.fileName = file.getName();
-        this.maxSize = maxSize;
-        this.last = new Element();
-
-        closed = false;
-
-        boolean exists = file.exists();
-        randomAccessFile = new RandomAccessFile(file, "rw");
-        channel = this.randomAccessFile.getChannel();
-
-        if (exists) {
-            fileLength = (int)(Math.min(randomAccessFile.length(), maxSize));
-            if (fileLength < QueueFile.HEADER_LENGTH) {
-                throw new IOException("File " + file + " does not contain QueueFile header");
-            }
-            updateBufferExtent();
-            headerByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, QueueFile.HEADER_LENGTH);
-            int version = headerByteBuffer.getInt();
-            if (version != VERSIONED_HEADER) {
-                throw new IOException("File " + file + " is not recognized as a queue file.");
-            }
-            long headerFileLength = headerByteBuffer.getLong();
-            if (headerFileLength > maxSize) {
-                throw new IOException("Queue file is larger than maximum size " + maxSize);
-            }
-            if (headerFileLength > fileLength) {
-                throw new IOException(
-                        "File is truncated. Expected length: " + headerFileLength
-                                + ", Actual length: " + fileLength);
-            }
-            fileLength = (int)headerFileLength;
-
-            elementCount = headerByteBuffer.getInt();
-            long firstOffset = headerByteBuffer.getLong();
-            long lastOffset = headerByteBuffer.getLong();
-
-            if (firstOffset > fileLength || lastOffset > fileLength) {
-                throw new IOException("Element offsets point outside of file length");
-            }
-            int crc = headerByteBuffer.getInt();
-            if (crc != headerHash(version, fileLength, elementCount, (int)firstOffset, (int)lastOffset)) {
-                throw new IOException("Queue file " + file + " was corrupted.");
-            }
-            first = readElement((int)firstOffset);
-            readElement((int)lastOffset, last);
-        } else {
-            setLength(MINIMUM_SIZE);
-            updateBufferExtent();
-            headerByteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, QueueFile.HEADER_LENGTH);
-            elementCount = 0;
-            first = new Element();
-            writeHeader();
-        }
-        byteBuffer.clear();
+    public static QueueFile newMapped(File file, int maxSize) throws IOException {
+        return new QueueFile(new MappedQueueFileStorage(file, MINIMUM_LENGTH, maxSize));
     }
 
     /**
-     * Writes QueueFile header.
+     * Read element header data into given element.
+     *
+     * @param position position of the element
+     * @param elementToUpdate element to update with found information
+     * @throws IOException if the header is incorrect and so the file is corrupt.
      */
-    private void writeHeader() {
-        // first write all variables to a single byte buffer
-        intToBytes(VERSIONED_HEADER, queueHeaderBuffer, 0);
-        longToBytes(fileLength, queueHeaderBuffer, 4);
-        intToBytes(elementCount, queueHeaderBuffer, 12);
-        longToBytes(first.position, queueHeaderBuffer, 16);
-        longToBytes(last.position, queueHeaderBuffer, 24);
-        int crc = headerHash(VERSIONED_HEADER, fileLength, elementCount, first.position,
-                last.position);
-        intToBytes(crc, queueHeaderBuffer, 32);
-
-        // then write the byte buffer out in one go
-        headerByteBuffer.position(0);
-        headerByteBuffer.put(queueHeaderBuffer, 0, QueueFile.HEADER_LENGTH);
-        headerByteBuffer.force();
-    }
-
-    private int headerHash(int version, int length, int count, int firstPosition, int lastPosition) {
-        int result = version;
-        result = 31 * result + length;
-        result = 31 * result + count;
-        result = 31 * result + firstPosition;
-        result = 31 * result + lastPosition;
-        return result;
-    }
-
-
-    private void readElement(int position, Element elementToUpdate) throws IOException {
+    private void readElement(int position, QueueFileElement elementToUpdate) throws IOException {
         if (position == 0) {
-            elementToUpdate.length = 0;
-        } else {
-            ringRead(position, elementHeaderBuffer, 0, Element.HEADER_LENGTH);
-            int length = bytesToInt(elementHeaderBuffer, 0);
-
-            if (elementHeaderBuffer[4] != crc(length)) {
-                logger.error("Failed to verify {}: crc {} does not match stored checksum {}. QueueFile is corrupted", elementToUpdate, crc(elementToUpdate.length), elementHeaderBuffer[4]);
-                close();
-                throw new IOException("Element is not correct; queue file is corrupted");
-            }
-            elementToUpdate.length = length;
+            elementToUpdate.reset();
+            return;
         }
-        elementToUpdate.position = position;
+
+        storage.read(position, elementHeaderBuffer, 0, QueueFileElement.HEADER_LENGTH);
+        int length = bytesToInt(elementHeaderBuffer, 0);
+
+        if (elementHeaderBuffer[4] != QueueFileElement.crc(length)) {
+            logger.error("Failed to verify {}: crc {} does not match stored checksum {}. "
+                    + "QueueFile is corrupt.",
+                    elementToUpdate, QueueFileElement.crc(length), elementHeaderBuffer[4]);
+            close();
+            throw new IOException("Element is not correct; queue file is corrupted");
+        }
+        elementToUpdate.setLength(length);
+        elementToUpdate.setPosition(position);
     }
 
-    private Element readElement(int position) throws IOException {
-        Element result = new Element();
+    /**
+     * Read a new element.
+     *
+     * @param position position of the element header
+     * @return element with information found at position
+     * @throws IOException if the header is incorrect and so the file is corrupt.
+     */
+    private QueueFileElement readElement(int position) throws IOException {
+        QueueFileElement result = new QueueFileElement();
         readElement(position, result);
         return result;
-    }
-
-    /** Wraps the position if it exceeds the end of the file. */
-    private int wrapPosition(long position) {
-        return (int)(position < fileLength ? position
-                : QueueFile.HEADER_LENGTH + position - fileLength);
-    }
-
-    /**
-     * Reads count bytes into buffer from file. Wraps if necessary.
-     *
-     * @param position in file to read from
-     * @param buffer to read into
-     * @param count # of bytes to read
-     */
-    private void ringRead(int position, byte[] buffer, int offset, int count) {
-        position = wrapPosition(position);
-        byteBuffer.position(position);
-        if (position + count <= fileLength) {
-            byteBuffer.get(buffer, offset, count);
-        } else {
-            // The read overlaps the EOF.
-            // # of bytes to read before the EOF. Guaranteed to be less than Integer.MAX_VALUE.
-            int firstPart = fileLength - position;
-            byteBuffer.get(buffer, offset, firstPart);
-            byteBuffer.position(QueueFile.HEADER_LENGTH);
-            byteBuffer.get(buffer, offset + firstPart, count - firstPart);
-        }
-        byteBuffer.clear();
     }
 
     /**
@@ -279,43 +178,28 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
      */
     public QueueFileOutputStream elementOutputStream() throws IOException {
         requireNotClosed();
-        return new QueueFileOutputStream(last.nextPosition());
+        return new QueueFileOutputStream(this, header, storage, last.nextPosition());
     }
 
     /** Number of bytes used in the file. */
-    public int usedBytes() {
-        if (elementCount == 0) {
-            return QueueFile.HEADER_LENGTH;
+    public long usedBytes() {
+        if (isEmpty()) {
+            return QueueFileHeader.HEADER_LENGTH;
         }
 
-        if (last.position >= first.position) {
+        long firstPosition = first.getFirst().getPosition();
+        if (last.getPosition() >= firstPosition) {
             // Contiguous queue.
-            return (int)(last.nextPosition() - first.position) + QueueFile.HEADER_LENGTH;
+            return last.nextPosition() - firstPosition + QueueFileHeader.HEADER_LENGTH;
         } else {
             // tail < head. The queue wraps.
-            return (int)(last.nextPosition() - first.position) + fileLength;
+            return last.nextPosition() - firstPosition + header.getLength();
         }
     }
 
     /** Returns true if this queue contains no entries. */
     public boolean isEmpty() {
-        return elementCount == 0;
-    }
-
-    /** Sets the length of the file. */
-    private void setLength(int newLength) throws IOException {
-        if (newLength < usedBytes()) {
-            throw new IllegalArgumentException("Cannot decrease size to less than the size used");
-        }
-        // Set new file length (considered metadata) and sync it to storage.
-        fileLength = newLength;
-        randomAccessFile.setLength(newLength);
-        channel.force(true);
-    }
-
-    /** Call after a resize to update the buffer to the new file size */
-    private void updateBufferExtent() throws IOException {
-        byteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, fileLength);
+        return size() == 0;
     }
 
     /** Returns an InputStream to read the eldest element. Returns null if the queue is empty. */
@@ -324,7 +208,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         if (isEmpty()) {
             return null;
         }
-        return new QueueFileInputStream(first);
+        return new QueueFileInputStream(first.getFirst());
     }
 
     /**
@@ -346,7 +230,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         private int nextElementIndex;
 
         /** Position of element to be returned by subsequent call to next. */
-        private int nextElementPosition;
+        private long nextElementPosition;
 
         /**
          * The {@link #modCount} value that the iterator believes that the backing QueueFile should
@@ -354,13 +238,15 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
          */
         private int expectedModCount;
 
-        private final Element current;
+        private Iterator<QueueFileElement> cacheIterator;
+        private QueueFileElement previousCached;
 
         private ElementIterator() {
             nextElementIndex = 0;
-            nextElementPosition = first.position;
             expectedModCount = modCount;
-            current = new Element();
+            previousCached = new QueueFileElement();
+            cacheIterator = first.iterator();
+            nextElementPosition = first.isEmpty() ? 0 : first.getFirst().getPosition();
         }
 
         private void checkForComodification() {
@@ -369,32 +255,44 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
         @Override
         public boolean hasNext() {
-            if (closed) {
+            if (storage.isClosed()) {
                 throw new IllegalStateException("closed");
             }
             checkForComodification();
-            return nextElementIndex != elementCount;
+            return nextElementIndex != header.getCount();
         }
 
         @Override
         public InputStream next() {
-            if (closed) {
+            if (storage.isClosed()) {
                 throw new IllegalStateException("closed");
             }
             checkForComodification();
-            if (nextElementIndex >= elementCount) {
+            if (nextElementIndex >= header.getCount()) {
                 throw new NoSuchElementException();
             }
 
-            try {
-                readElement(nextElementPosition, current);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot read element", ex);
+            QueueFileElement current;
+            if (cacheIterator != null && cacheIterator.hasNext()) {
+                current = cacheIterator.next();
+                current.updateIfTransferred(previousCached, header);
+                previousCached.update(current);
+            } else {
+                if (cacheIterator != null) {
+                    cacheIterator = null;
+                    previousCached = null;
+                }
+                try {
+                    current = readElement((int)nextElementPosition);
+                } catch (IOException ex) {
+                    throw new IllegalStateException("Cannot read element", ex);
+                }
+                first.add(current);
             }
             InputStream in = new QueueFileInputStream(current);
 
             // Update the pointer to the next element.
-            nextElementPosition = wrapPosition(current.nextPosition());
+            nextElementPosition = (int)header.wrapPosition(current.nextPosition());
             nextElementIndex++;
 
             // Return the read element.
@@ -409,20 +307,18 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
         @Override
         public String toString() {
-            return "QueueFile<" + fileName
-                    + ">[position=" + nextElementPosition
-                    + ", index=" + nextElementIndex + "]";
+            return "QueueFile[position=" + nextElementPosition + ", index=" + nextElementIndex + "]";
         }
     }
 
     /** Returns the number of elements in this queue. */
     public int size() {
-        return elementCount;
+        return header.getCount();
     }
 
     /** File size in bytes */
     public long fileSize() {
-        return fileLength;
+        return header.getLength();
     }
 
     /**
@@ -438,189 +334,123 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         if (n == 0) {
             return;
         }
-        if (n == elementCount) {
+        if (n == header.getCount()) {
             clear();
             return;
         }
-        if (n > elementCount) {
+        if (n > header.getCount()) {
             throw new NoSuchElementException(
-                    "Cannot remove more elements (" + n + ") than present in queue (" + elementCount + ").");
+                    "Cannot remove more elements (" + n + ") than present in queue (" + header.getCount() + ").");
         }
 
         // Read the position and length of the new first element.
-        Element newFirst = new Element();
-        newFirst.update(first);
-        for (int i = 0; i < n; i++) {
-            readElement(wrapPosition(newFirst.nextPosition()), newFirst);
+        QueueFileElement newFirst = new QueueFileElement();
+        QueueFileElement previous = new QueueFileElement();
+        int i;
+        // remove from cache first
+        for (i = 0; i < n && !first.isEmpty(); i++) {
+            newFirst.update(first.removeFirst());
+            newFirst.updateIfTransferred(previous, header);
+            previous.update(newFirst);
+        }
+
+        if (first.isEmpty()) {
+            // if the cache contained less than n elements, skip from file
+            // read one additional element to become the first element of the cache.
+            for (; i <= n; i++) {
+                readElement((int)header.wrapPosition(newFirst.nextPosition()), newFirst);
+            }
+            // the next element was read from file and will become the next first element
+            first.add(newFirst);
+        } else {
+            newFirst = first.getFirst();
+            newFirst.updateIfTransferred(previous, header);
         }
 
         // Commit the header.
-        elementCount -= n;
         modCount++;
-        first = newFirst;
-        writeHeader();
+        header.setFirstPosition(newFirst.getPosition());
+        header.setCount(header.getCount() - n);
+        truncateIfNeeded();
+        header.write();
+    }
 
-        // truncate file if a lot of space is empty and no copy operations are needed
-        if (last.position >= first.position && last.nextPosition() <= maxSize) {
-            int newLength = fileLength;
-            int goalLength = newLength / 2;
-            int bytesUsed = usedBytes();
-            int maxExtent = (int)last.nextPosition();
+    /**
+     * Truncate file if a lot of space is empty and no copy operations are needed.
+     */
+    private void truncateIfNeeded() throws IOException {
+        if (header.getLastPosition() >= header.getFirstPosition() && last.nextPosition() <= getMaximumFileSize()) {
+            long newLength = header.getLength();
+            long goalLength = newLength / 2;
+            long bytesUsed = usedBytes();
+            long maxExtent = last.nextPosition();
 
-            while (goalLength >= QueueFile.MINIMUM_SIZE
+            while (goalLength >= QueueFile.MINIMUM_LENGTH
                     && maxExtent <= goalLength
                     && bytesUsed <= goalLength / 2) {
                 newLength = goalLength;
                 goalLength /= 2;
             }
-            if (newLength < fileLength) {
-                logger.debug("Truncating {} from {} to {}", this, fileLength, newLength);
-                setLength(newLength);
-                updateBufferExtent();
+            if (newLength < header.getLength()) {
+                logger.debug("Truncating {} from {} to {}", this, header.getLength(), newLength);
+                storage.resize(newLength);
+                header.setLength(newLength);
             }
         }
-
     }
 
     /** Clears this queue. Truncates the file to the initial size. */
     public void clear() throws IOException {
         requireNotClosed();
 
-        elementCount = 0;
-        first.reset();
+        first.clear();
         last.reset();
+        header.clear();
 
-        if (fileLength != MINIMUM_SIZE) {
-            setLength(MINIMUM_SIZE);
-            updateBufferExtent();
+        if (header.getLength() != MINIMUM_LENGTH) {
+            storage.resize(MINIMUM_LENGTH);
+            header.setLength(MINIMUM_LENGTH);
         }
 
-        // Commit the header.
-        writeHeader();
+        header.write();
 
         modCount++;
     }
 
     private void requireNotClosed() throws IOException {
-        if (closed) {
+        if (storage.isClosed()) {
             throw new IOException("closed");
         }
     }
 
     @Override
     public void close() throws IOException {
-        closed = true;
-        byteBuffer = null;
-        channel.close();
-        randomAccessFile.close();
+        storage.close();
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "<" + fileName + ">"
-                + "[length=" + fileLength
-                + ", size=" + elementCount
+        return getClass().getSimpleName()
+                + "[storage=" + storage
+                + ", header=" + header
                 + ", first=" + first
                 + ", last=" + last
                 + "]";
     }
 
-    /** A pointer to an element. */
-    private static class Element {
-        /** Length of element header in bytes. */
-        private static final int HEADER_LENGTH = 5;
-
-        /** Position in file. */
-        private int position;
-
-        /** The length of the data. */
-        private int length;
-
-        /**
-         * Constructs a new element.
-         *
-         * @param position within file
-         * @param length of data
-         */
-        private Element(int position, int length) {
-            this.position = position;
-            this.length = length;
-        }
-
-        private Element() {
-            this(0, 0);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName()
-                    + "[position=" + position
-                    + ", length=" + length
-                    + "]";
-        }
-
-        public void update(Element element) {
-            this.position = element.position;
-            this.length = element.length;
-        }
-
-        public long dataPosition() {
-            if (position == 0) {
-                throw new IllegalStateException("Cannot get data position of empty element");
-            }
-            return (long)position + Element.HEADER_LENGTH;
-        }
-
-        public long nextPosition() {
-            if (position == 0) {
-                return QueueFile.HEADER_LENGTH;
-            } else {
-                return (long)position + Element.HEADER_LENGTH + length;
-            }
-        }
-
-        public void reset() {
-            position = 0;
-            length = 0;
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (other == this) return true;
-            if (other == null || getClass() != other.getClass()) return false;
-
-            Element otherElement = (Element)other;
-            return position == otherElement.position && length == otherElement.length;
-        }
-
-        @Override
-        public int hashCode() {
-            return 31 * position + length;
-        }
-    }
-
-    private static byte crc(int value) {
-        byte result = 17;
-        result = (byte)(31 * result + (value >> 24) & 0xFF);
-        result = (byte)(31 * result + ((value >> 16) & 0xFF));
-        result = (byte)(31 * result + ((value >> 8) & 0xFF));
-        result = (byte)(31 * result + (value & 0xFF));
-        return result;
-    }
-
     private class QueueFileInputStream extends InputStream {
         private final int totalLength;
-        private final ByteBuffer buffer;
         private final int expectedModCount;
+        private final byte[] singleByteArray = new byte[1];
+        private long storagePosition;
         private int bytesRead;
 
-        public QueueFileInputStream(Element element) {
+        public QueueFileInputStream(QueueFileElement element) {
             logger.trace("QueueFileInputStream for element {}", element);
-            this.buffer = byteBuffer.duplicate();
-            this.buffer.position(wrapPosition(element.dataPosition()));
-            this.totalLength = element.length;
+            this.storagePosition = header.wrapPosition(element.dataPosition());
+            this.totalLength = element.getLength();
             this.expectedModCount = modCount;
-            bytesRead = 0;
+            this.bytesRead = 0;
         }
 
         @Override
@@ -632,47 +462,35 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         public long skip(long byteCount) {
             int countAvailable = (int)Math.min(byteCount, totalLength - bytesRead);
             bytesRead += countAvailable;
-            this.buffer.position(wrapPosition(this.buffer.position() + countAvailable));
+            storagePosition = header.wrapPosition(storagePosition + countAvailable);
             return countAvailable;
         }
 
         @Override
         public int read() throws IOException {
-            if (bytesRead == totalLength) {
-                return -1;
+            if (read(singleByteArray, 0, 1) != 1) {
+                throw new IOException("Cannot read byte");
             }
-            checkForComodification();
-
-            // wrap position
-            if (buffer.position() == fileLength) {
-                buffer.position(QueueFile.HEADER_LENGTH);
-            }
-            bytesRead++;
-            return buffer.get() & 0xFF;
+            return singleByteArray[0] & 0xFF;
         }
 
         @Override
-        public int read(@NonNull byte[] bytes, int offset, int length) throws IOException {
-            checkOffsetAndCount(bytes, offset, length);
+        public int read(@NonNull byte[] bytes, int offset, int count) throws IOException {
             if (bytesRead == totalLength) {
                 return -1;
             }
+            if (count < 0) {
+                throw new IndexOutOfBoundsException("length < 0");
+            }
+            if (count == 0) {
+                return 0;
+            }
             checkForComodification();
 
-            int lengthAvailable = Math.min(length, totalLength - bytesRead);
-
-            int linearPart = fileLength - buffer.position();
-            if (linearPart < lengthAvailable) {
-                if (linearPart > 0) {
-                    buffer.get(bytes, offset, linearPart);
-                }
-                buffer.position(QueueFile.HEADER_LENGTH);
-                buffer.get(bytes, offset + linearPart, lengthAvailable - linearPart);
-            } else {
-                buffer.get(bytes, offset, lengthAvailable);
-            }
-            bytesRead += lengthAvailable;
-            return lengthAvailable;
+            int countAvailable = Math.min(count, totalLength - bytesRead);
+            storagePosition = storage.read(storagePosition, bytes, offset, countAvailable);
+            bytesRead += countAvailable;
+            return countAvailable;
         }
 
         private void checkForComodification() throws IOException {
@@ -683,239 +501,11 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
 
         @Override
         public String toString() {
-            return "QueueFileInputStream<" + fileName + ">[position=" + buffer.position() + ",length=" + totalLength + ",bytesRead=" + bytesRead + "]";
+            return "QueueFileInputStream[length=" + totalLength + ",bytesRead=" + bytesRead + "]";
         }
     }
 
-    /**
-     * An OutputStream that can write multiple elements. After finished writing one element, call
-     * {@link #nextElement()} to start writing the next.
-     *
-     * <p>It is very important to close this OutputStream, as this is the only way that the data is
-     * actually committed to file.
-     */
-    public class QueueFileOutputStream extends OutputStream {
-        private ByteBuffer buffer;
-        private Element current;
-        private boolean closed;
-        private Element newLast;
-        private Element newFirst;
-        private int elementsWritten;
-        private long streamBytesUsed;
-
-        private QueueFileOutputStream(long position) throws IOException {
-            this.buffer = byteBuffer.duplicate();
-            this.current = new Element(wrapPosition(position), 0);
-            this.buffer.position(current.position);
-            closed = false;
-            newLast = null;
-            newFirst = null;
-            elementsWritten = 0;
-            streamBytesUsed = 0L;
-        }
-
-        @Override
-        public void write(int byteValue) throws IOException {
-            checkConditions();
-            writeNullElementIfNeeded();
-            expandAndUpdate(1);
-
-            buffer.put((byte)(byteValue & 0xFF));
-            current.length++;
-
-            // wrap position
-            if (buffer.position() == fileLength) {
-                buffer.position(QueueFile.HEADER_LENGTH);
-            }
-        }
-
-        @Override
-        public void write(@NonNull byte[] bytes, int offset, int length) throws IOException {
-            checkOffsetAndCount(bytes, offset, length);
-            if (length == 0) {
-                return;
-            }
-            checkConditions();
-            writeNullElementIfNeeded();
-            expandAndUpdate(length);
-
-            ringWrite(bytes, offset, length);
-            current.length += length;
-
-            // wrap position
-            if (buffer.position() == fileLength) {
-                buffer.position(QueueFile.HEADER_LENGTH);
-            }
-        }
-
-        private void checkConditions() throws IOException {
-            if (closed || QueueFile.this.closed) {
-                throw new IOException("closed");
-            }
-        }
-
-        private void writeNullElementIfNeeded() throws IOException {
-            if (current.length != 0) {
-                return;
-            }
-            expandAndUpdate(Element.HEADER_LENGTH);
-            Arrays.fill(elementHeaderBuffer, (byte)0);
-            ringWrite(elementHeaderBuffer, 0, Element.HEADER_LENGTH);
-        }
-
-        /**
-         * Proceed writing the next element. Zero length elements are not written, so always write
-         * at least one byte to store an element.
-         */
-        public void nextElement() throws IOException {
-            checkConditions();
-            if (current.length == 0) {
-                return;
-            }
-            newLast = current;
-            if (newFirst == null && isEmpty()) {
-                newFirst = current;
-            }
-
-            current = new Element(buffer.position(), 0);
-
-            buffer.position(newLast.position);
-            intToBytes(newLast.length, elementHeaderBuffer, 0);
-            elementHeaderBuffer[4] = crc(newLast.length);
-            ringWrite(elementHeaderBuffer, 0, Element.HEADER_LENGTH);
-
-            buffer.position(current.position);
-            elementsWritten++;
-        }
-
-        public long bytesNeeded() {
-            return QueueFile.this.usedBytes() + streamBytesUsed;
-        }
-
-        /**
-         * Increase the number of bytes used.
-         * @param length number of bytes to increase the used bytes with
-         * @return number of bytes currently used
-         */
-
-        private int increaseBytesUsed(int length) throws IOException {
-            streamBytesUsed += length;
-
-            long bytesNeeded = usedBytes() + streamBytesUsed;
-            if (bytesNeeded > maxSize) {
-                throw new IOException("Data does not fit in queue");
-            }
-            return (int)bytesNeeded;
-        }
-
-        /** Expands the storage if necessary, updating the buffer if needed. */
-        private void expandAndUpdate(int length) throws IOException {
-            int bytesNeeded = increaseBytesUsed(length);
-            if (bytesNeeded <= fileLength) {
-                return;
-            }
-
-            logger.debug("Extending {}", QueueFile.this);
-
-            int oldLength = fileLength;
-            // Double the length until we can fit the new data.
-            long newLength = fileLength * 2;
-            while (newLength < bytesNeeded) {
-                newLength += newLength;
-            }
-
-            int position = buffer.position();
-            int beginningOfFirstElement = newFirst == null ? first.position : newFirst.position;
-
-            byteBuffer.force();
-            setLength((int)Math.min(newLength, maxSize));
-
-            // Calculate the position of the tail end of the data in the ring buffer
-            // If the buffer is split, we need to make it contiguous
-            if (position <= beginningOfFirstElement) {
-                channel.position(oldLength); // destination position
-                int count = position - QueueFile.HEADER_LENGTH;
-                if (channel.transferTo(HEADER_LENGTH, count, channel) != count) {
-                    throw new AssertionError("Copied insufficient number of bytes!");
-                }
-                modCount++;
-
-                // Last position was moved forward in the copy
-                int positionUpdate = oldLength - QueueFile.HEADER_LENGTH;
-                if (last.position < beginningOfFirstElement) {
-                    last.position += positionUpdate;
-                }
-                if (current.position <= beginningOfFirstElement) {
-                    current.position += positionUpdate;
-                }
-                position += positionUpdate;
-            }
-
-            updateBufferExtent();
-            buffer = byteBuffer.duplicate();
-
-            // Commit the expansion.
-            writeHeader();
-            buffer.position(position);
-        }
-
-        /**
-         * Closes the stream and commits it to file.
-         * @throws IOException
-         */
-        @Override
-        public void close() throws IOException {
-            try {
-                nextElement();
-                if (elementsWritten > 0) {
-                    if (newLast != null) {
-                        last.update(newLast);
-                    }
-                    if (newFirst != null) {
-                        first = newFirst;
-                    }
-                    elementCount += elementsWritten;
-                    byteBuffer.force();
-                    modCount++;
-                    writeHeader();
-                }
-            } finally {
-                closed = true;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "QueueFileOutputStream<" + fileName + ">[current=" + current
-                    + ",total=" + streamBytesUsed + ",used=" + bytesNeeded() + "]";
-        }
-
-
-        /**
-         * Writes count bytes from buffer to position in file. Automatically wraps write if position is
-         * past the end of the file or if buffer overlaps it.
-         *
-         * @param bytes to write from
-         * @param count # of bytes to write
-         */
-        private void ringWrite(byte[] bytes, int offset, int count) throws IOException {
-            int position = buffer.position();
-            int linearPart = fileLength - position;
-            if (linearPart >= count) {
-                buffer.put(bytes, offset, count);
-            } else {
-                // The write overlaps the EOF.
-                // # of bytes to write before the EOF. Guaranteed to be less than Integer.MAX_VALUE.
-                if (linearPart > 0) {
-                    buffer.put(bytes, offset, linearPart);
-                }
-                buffer.position(QueueFile.HEADER_LENGTH);
-                buffer.put(bytes, offset + linearPart, count - linearPart);
-            }
-        }
-    }
-
-    private static void checkOffsetAndCount(byte[] bytes, int offset, int length) {
+    public static void checkOffsetAndCount(byte[] bytes, int offset, int length) {
         if (offset < 0) {
             throw new IndexOutOfBoundsException("offset < 0");
         }
@@ -926,5 +516,66 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             throw new IndexOutOfBoundsException(
                     "extent of offset and length larger than buffer length");
         }
+    }
+
+    public boolean isClosed() {
+        return storage.isClosed();
+    }
+
+    public long getMaximumFileSize() {
+        return storage.getMaximumLength();
+    }
+
+    void commitOutputStream(QueueFileElement newFirst, QueueFileElement newLast, int count) throws IOException {
+        if (newLast != null) {
+            last.update(newLast);
+            header.setLastPosition(newLast.getPosition());
+        }
+        if (newFirst != null && first.isEmpty()) {
+            first.add(newFirst);
+            header.setFirstPosition(newFirst.getPosition());
+        }
+        storage.flush();
+        header.setCount(header.getCount() + count);
+        header.write();
+        modCount++;
+    }
+
+    public void setFileLength(long size, long position, long beginningOfFirstElement) throws IOException {
+        if (size > getMaximumFileSize()) {
+            throw new IllegalArgumentException("File length may not exceed maximum file length");
+        }
+        long oldLength = header.getLength();
+        if (size < oldLength) {
+            throw new IllegalArgumentException("File length may not be decreased");
+        }
+        if (beginningOfFirstElement >= oldLength || beginningOfFirstElement < 0) {
+            throw new IllegalArgumentException("First element may not exceed file size");
+        }
+        if (position > oldLength || position < 0) {
+            throw new IllegalArgumentException("Position may not exceed file size");
+        }
+
+        storage.resize(size);
+        header.setLength(size);
+
+        // Calculate the position of the tail end of the data in the ring buffer
+        // If the buffer is split, we need to make it contiguous
+        if (position <= beginningOfFirstElement) {
+            if (position > QueueFileHeader.HEADER_LENGTH) {
+                long count = position - QueueFileHeader.HEADER_LENGTH;
+                storage.move(QueueFileHeader.HEADER_LENGTH, oldLength, count);
+            }
+            modCount++;
+
+            // Last position was moved forward in the copy
+            long positionUpdate = oldLength - QueueFileHeader.HEADER_LENGTH;
+            if (header.getLastPosition() < beginningOfFirstElement) {
+                header.setLastPosition(header.getLastPosition() + positionUpdate);
+                last.setPosition(header.getLastPosition());
+            }
+        }
+
+        header.write();
     }
 }
