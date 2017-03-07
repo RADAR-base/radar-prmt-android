@@ -27,6 +27,9 @@ import java.nio.channels.FileChannel;
  * @author Joris Borgdorff (joris@thehyve.nl)
  */
 public class MappedQueueFileStorage implements QueueStorage {
+    /** Initial file size in bytes. */
+    public static final int MINIMUM_LENGTH = 4096; // one file system block
+
     /**
      * The underlying file. Uses a ring buffer to store entries.
      * <pre>
@@ -45,7 +48,7 @@ public class MappedQueueFileStorage implements QueueStorage {
     private MappedByteBuffer byteBuffer;
     private boolean closed;
     private int length;
-    private boolean wasCreated;
+    private boolean existed;
 
     /**
      * Create a new QueueFileStorage from file.
@@ -53,24 +56,29 @@ public class MappedQueueFileStorage implements QueueStorage {
      * @param initialLength initial length if the file does not exist.
      * @param maximumLength maximum length that the file may have.
      * @throws NullPointerException if file is null
-     * @throws IllegalArgumentException if the initialLength is smaller than
+     * @throws IllegalArgumentException if the initialLength or maximumLength is smaller than
      *                                  {@code QueueFileHeader.HEADER_LENGTH}.
      * @throws IOException if the file could not be accessed or was smaller than
      *                     {@code QueueFileHeader.HEADER_LENGTH}
      */
     public MappedQueueFileStorage(File file, int initialLength, int maximumLength) throws IOException {
         this.fileName = file.getName();
-        if (initialLength < QueueFileHeader.HEADER_LENGTH) {
-            throw new IllegalArgumentException("Initial length " + initialLength + " is smaller than queue header length " + QueueFileHeader.HEADER_LENGTH);
+        if (initialLength < getMinimumLength()) {
+            throw new IllegalArgumentException("Initial length " + initialLength
+                    + " is smaller than minimum length " + getMinimumLength());
+        }
+        if (maximumLength < getMinimumLength()) {
+            throw new IllegalArgumentException("Maximum length " + maximumLength
+                    + " is smaller than minimum length " + getMinimumLength());
         }
 
         closed = false;
         this.maximumLength = maximumLength;
 
-        wasCreated = !file.exists();
+        existed = file.exists();
         randomAccessFile = new RandomAccessFile(file, "rw");
 
-        if (!wasCreated) {
+        if (existed) {
             // Read header from file
             long currentLength = randomAccessFile.length();
             if (currentLength > getMaximumLength()) {
@@ -126,7 +134,7 @@ public class MappedQueueFileStorage implements QueueStorage {
             throw new IllegalArgumentException("New length " + newLength
                     + " exceeds maximum length " + getMaximumLength());
         }
-        if (newLength < QueueFileHeader.HEADER_LENGTH) {
+        if (newLength < getMinimumLength()) {
             throw new IllegalArgumentException("New length " + newLength
                     + " is less than minimum length " + QueueFileHeader.HEADER_LENGTH);
         }
@@ -182,12 +190,6 @@ public class MappedQueueFileStorage implements QueueStorage {
         }
     }
 
-    /** File size in bytes */
-    @Override
-    public long length() {
-        return length;
-    }
-
     private void requireNotClosed() throws IOException {
         if (closed) {
             throw new IOException("closed");
@@ -224,6 +226,17 @@ public class MappedQueueFileStorage implements QueueStorage {
         }
     }
 
+    /** File size in bytes. */
+    @Override
+    public long length() {
+        return length;
+    }
+
+    @Override
+    public long getMinimumLength() {
+        return MINIMUM_LENGTH;
+    }
+
     @Override
     public long getMaximumLength() {
         return maximumLength;
@@ -235,7 +248,7 @@ public class MappedQueueFileStorage implements QueueStorage {
     }
 
     @Override
-    public boolean wasCreated() {
-        return wasCreated;
+    public boolean existed() {
+        return existed;
     }
 }

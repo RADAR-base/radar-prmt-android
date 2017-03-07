@@ -15,17 +15,17 @@ import static org.radarcns.util.QueueFile.intToBytes;
  * An OutputStream that can write multiple elements. After finished writing one element, call
  * {@link #next()} to start writing the next.
  *
- * <p>It is very important to close this OutputStream, as this is the only way that the data is
- * actually committed to file.
+ * <p>It is very important to {@link #close()} this OutputStream, as this is the only way that the
+ * data is actually committed to file.
  */
 public class QueueFileOutputStream extends OutputStream {
     private static final Logger logger = LoggerFactory.getLogger(QueueFileOutputStream.class);
 
     private QueueFile queue;
-    private QueueFileElement current;
+    private final QueueFileElement current;
     private boolean closed;
-    private QueueFileElement newLast;
-    private QueueFileElement newFirst;
+    private final QueueFileElement newLast;
+    private final QueueFileElement newFirst;
     private int elementsWritten;
     private long streamBytesUsed;
     private final QueueFileHeader header;
@@ -38,11 +38,11 @@ public class QueueFileOutputStream extends OutputStream {
         this.queue = queue;
         this.header = header;
         this.storage = storage;
-        this.current = new QueueFileElement(header.wrapPosition(position), 0);
         this.storagePosition = header.wrapPosition(position);
+        this.current = new QueueFileElement(storagePosition, 0);
         closed = false;
-        newLast = null;
-        newFirst = null;
+        newLast = new QueueFileElement();
+        newFirst = new QueueFileElement();
         elementsWritten = 0;
         streamBytesUsed = 0L;
     }
@@ -74,7 +74,7 @@ public class QueueFileOutputStream extends OutputStream {
     }
 
     private void checkConditions() throws IOException {
-        if (closed || queue.isClosed() || storage.isClosed()) {
+        if (closed || storage.isClosed()) {
             throw new IOException("closed");
         }
     }
@@ -82,18 +82,20 @@ public class QueueFileOutputStream extends OutputStream {
     /**
      * Proceed writing the next element. Zero length elements are not written, so always write
      * at least one byte to store an element.
+     * @throws IOException if the QueueFileStorage cannot be written to
      */
     public void next() throws IOException {
         checkConditions();
         if (current.isEmpty()) {
             return;
         }
-        newLast = current;
-        if (newFirst == null && queue.isEmpty()) {
-            newFirst = current;
+        newLast.update(current);
+        if (newFirst.isEmpty() && queue.isEmpty()) {
+            newFirst.update(current);
         }
 
-        current = new QueueFileElement(storagePosition, 0);
+        current.setPosition(storagePosition);
+        current.setLength(0);
 
         intToBytes(newLast.getLength(), elementHeaderBuffer, 0);
         elementHeaderBuffer[4] = newLast.crc();
@@ -102,17 +104,21 @@ public class QueueFileOutputStream extends OutputStream {
         elementsWritten++;
     }
 
-    public long bytesNeeded() {
+    /**
+     * Size of the storage that will be used if the OutputStream is closed.
+     * @return number of bytes used
+     */
+    public long usedSize() {
         return queue.usedBytes() + streamBytesUsed;
     }
 
-    /** Expands the storage if necessary, updating the buffer if needed. */
+    /** Expands the storage if necessary, updating the queue length if needed. */
     private void expandAndUpdate(long length) throws IOException {
         streamBytesUsed += length;
 
         long oldLength = header.getLength();
 
-        long bytesNeeded = bytesNeeded();
+        long bytesNeeded = usedSize();
         if (bytesNeeded <= oldLength) {
             return;
         }
@@ -128,7 +134,12 @@ public class QueueFileOutputStream extends OutputStream {
             newLength += newLength;
         }
 
-        long beginningOfFirstElement = newFirst != null ? newFirst.getPosition() : header.getFirstPosition();
+        long beginningOfFirstElement;
+        if (!newFirst.isEmpty()) {
+            beginningOfFirstElement = newFirst.getPosition();
+        } else {
+            beginningOfFirstElement = header.getFirstPosition();
+        }
 
         queue.setFileLength(Math.min(queue.getMaximumFileSize(), newLength), storagePosition, beginningOfFirstElement);
 
@@ -161,6 +172,6 @@ public class QueueFileOutputStream extends OutputStream {
     @Override
     public String toString() {
         return "QueueFileOutputStream[current=" + current
-                + ",total=" + streamBytesUsed + ",used=" + bytesNeeded() + "]";
+                + ",total=" + streamBytesUsed + ",used=" + usedSize() + "]";
     }
 }

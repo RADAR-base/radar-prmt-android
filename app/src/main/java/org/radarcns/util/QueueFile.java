@@ -52,9 +52,6 @@ import java.util.NoSuchElementException;
  * @author Joris Borgdorff (joris@thehyve.nl)
  */
 public final class QueueFile implements Closeable, Iterable<InputStream> {
-    /** Initial file size in bytes. */
-    public static final int MINIMUM_LENGTH = 4096; // one file system block
-
     private static final Logger logger = LoggerFactory.getLogger(QueueFile.class);
 
     /**
@@ -102,33 +99,24 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
     private final byte[] elementHeaderBuffer = new byte[QueueFileElement.HEADER_LENGTH];
 
     public QueueFile(QueueStorage storage) throws IOException {
-        if (storage.getMaximumLength() < MINIMUM_LENGTH) {
-            throw new IllegalArgumentException("Maximum file size must be at least QueueFile.MINIMUM_LENGTH = " + MINIMUM_LENGTH);
-        }
-
         this.storage = storage;
-        first = new LinkedList<>();
-        last = new QueueFileElement();
+        this.header = new QueueFileHeader(storage);
 
-        if (this.storage.wasCreated()) {
-            header = new QueueFileHeader(storage);
-            header.setLength(storage.length());
-            header.write();
-        } else {
-            header = QueueFileHeader.read(storage);
-            if (header.getLength() < storage.length()) {
-                this.storage.resize(header.getLength());
-            }
-            QueueFileElement newFirst = readElement((int)header.getFirstPosition());
-            if (!newFirst.isEmpty()) {
-                first.add(newFirst);
-            }
-            readElement((int)header.getLastPosition(), last);
+        if (header.getLength() < storage.length()) {
+            this.storage.resize(header.getLength());
         }
+
+        first = new LinkedList<>();
+        QueueFileElement newFirst = readElement((int)header.getFirstPosition());
+        if (!newFirst.isEmpty()) {
+            first.add(newFirst);
+        }
+        last = readElement((int)header.getLastPosition());
     }
 
     public static QueueFile newMapped(File file, int maxSize) throws IOException {
-        return new QueueFile(new MappedQueueFileStorage(file, MINIMUM_LENGTH, maxSize));
+        return new QueueFile(new MappedQueueFileStorage(
+                file, MappedQueueFileStorage.MINIMUM_LENGTH, maxSize));
     }
 
     /**
@@ -273,7 +261,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             QueueFileElement current;
             if (cacheIterator != null && cacheIterator.hasNext()) {
                 current = cacheIterator.next();
-                current.updateIfTransferred(previousCached, header);
+                current.updateIfMoved(previousCached, header);
                 previousCached.update(current);
             } else {
                 if (cacheIterator != null) {
@@ -348,7 +336,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         // remove from cache first
         for (i = 0; i < n && !first.isEmpty(); i++) {
             newFirst.update(first.removeFirst());
-            newFirst.updateIfTransferred(previous, header);
+            newFirst.updateIfMoved(previous, header);
             previous.update(newFirst);
         }
 
@@ -362,13 +350,13 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             first.add(newFirst);
         } else {
             newFirst = first.getFirst();
-            newFirst.updateIfTransferred(previous, header);
+            newFirst.updateIfMoved(previous, header);
         }
 
         // Commit the header.
         modCount++;
         header.setFirstPosition(newFirst.getPosition());
-        header.setCount(header.getCount() - n);
+        header.addCount(-n);
         truncateIfNeeded();
         header.write();
     }
@@ -383,7 +371,7 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
             long bytesUsed = usedBytes();
             long maxExtent = last.nextPosition();
 
-            while (goalLength >= QueueFile.MINIMUM_LENGTH
+            while (goalLength >= storage.getMinimumLength()
                     && maxExtent <= goalLength
                     && bytesUsed <= goalLength / 2) {
                 newLength = goalLength;
@@ -405,9 +393,9 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         last.reset();
         header.clear();
 
-        if (header.getLength() != MINIMUM_LENGTH) {
-            storage.resize(MINIMUM_LENGTH);
-            header.setLength(MINIMUM_LENGTH);
+        if (header.getLength() != storage.getMinimumLength()) {
+            storage.resize(storage.getMinimumLength());
+            header.setLength(storage.getMinimumLength());
         }
 
         header.write();
@@ -516,25 +504,21 @@ public final class QueueFile implements Closeable, Iterable<InputStream> {
         }
     }
 
-    public boolean isClosed() {
-        return storage.isClosed();
-    }
-
     public long getMaximumFileSize() {
         return storage.getMaximumLength();
     }
 
     void commitOutputStream(QueueFileElement newFirst, QueueFileElement newLast, int count) throws IOException {
-        if (newLast != null) {
+        if (!newLast.isEmpty()) {
             last.update(newLast);
             header.setLastPosition(newLast.getPosition());
         }
-        if (newFirst != null && first.isEmpty()) {
+        if (!newFirst.isEmpty() && first.isEmpty()) {
             first.add(newFirst);
             header.setFirstPosition(newFirst.getPosition());
         }
         storage.flush();
-        header.setCount(header.getCount() + count);
+        header.addCount(count);
         header.write();
         modCount++;
     }

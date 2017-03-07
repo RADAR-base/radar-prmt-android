@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class QueueFileTest {
-    private static final int MAX_SIZE = 8 * QueueFile.MINIMUM_LENGTH;
+    private static final int MAX_SIZE = 8 * MappedQueueFileStorage.MINIMUM_LENGTH;
     private static final Logger logger = LoggerFactory.getLogger(QueueFileTest.class);
 
     @Rule
@@ -200,31 +200,31 @@ public class QueueFileTest {
     @Test
     public void fileSize() throws Exception {
         QueueFile queue = createQueue();
-        assertEquals(QueueFile.MINIMUM_LENGTH, queue.fileSize());
+        assertEquals(MappedQueueFileStorage.MINIMUM_LENGTH, queue.fileSize());
         int bufSize = MAX_SIZE / 16 - QueueFileHeader.HEADER_LENGTH;
         byte[] buffer = new byte[bufSize];
         // write buffer, assert that the file size increases with the stored size
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH, (bufSize + QueueFileElement.HEADER_LENGTH) + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH, (bufSize + QueueFileElement.HEADER_LENGTH)*2 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 2, (bufSize + QueueFileElement.HEADER_LENGTH)*3 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 2, (bufSize + QueueFileElement.HEADER_LENGTH)*4 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*5 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*6 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*7 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*8 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*9 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*10 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*11 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*12 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*13 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*14 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*15 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH, (bufSize + QueueFileElement.HEADER_LENGTH) + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH, (bufSize + QueueFileElement.HEADER_LENGTH)*2 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 2, (bufSize + QueueFileElement.HEADER_LENGTH)*3 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 2, (bufSize + QueueFileElement.HEADER_LENGTH)*4 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*5 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*6 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*7 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 4, (bufSize + QueueFileElement.HEADER_LENGTH)*8 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*9 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*10 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*11 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*12 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*13 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*14 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*15 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
 
         // queue is full now
         Exception actualException = null;
         try {
-            writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*17 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+            writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*17 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
         } catch (IOException ex) {
             actualException = ex;
         }
@@ -232,21 +232,21 @@ public class QueueFileTest {
         // queue is full, remove elements to add new ones
         queue.remove(1);
         // this buffer is written in a circular way
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
         queue.remove(1);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
         queue.remove(1);
-        writeAssertFileSize(QueueFile.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
+        writeAssertFileSize(MappedQueueFileStorage.MINIMUM_LENGTH * 8, (bufSize + QueueFileElement.HEADER_LENGTH)*16 + QueueFileHeader.HEADER_LENGTH, buffer, queue);
         queue.remove(14);
         assertEquals(2, queue.size());
         assertEquals((bufSize + QueueFileElement.HEADER_LENGTH)*2 + QueueFileHeader.HEADER_LENGTH, queue.usedBytes());
-        assertEquals(QueueFile.MINIMUM_LENGTH * 2, queue.fileSize());
+        assertEquals(MappedQueueFileStorage.MINIMUM_LENGTH * 2, queue.fileSize());
     }
 
     @Test(timeout = 2000L)
     public void enduranceTest() throws Throwable {
         int numberOfOperations = 1000;
-        int size = QueueFile.MINIMUM_LENGTH *2;
+        int size = MappedQueueFileStorage.MINIMUM_LENGTH *2;
         Random random = new Random();
         byte[] buffer = new byte[size / 16];
         File file = folder.newFile();
@@ -335,14 +335,14 @@ public class QueueFileTest {
         try (QueueFileOutputStream out = queue.elementOutputStream()) {
             for (int j = 0; j < numAdd; j++) {
                 int numBytes = random.nextInt(buffer.length) + 1;
-                if ((long) numBytes + out.bytesNeeded() + QueueFileElement.HEADER_LENGTH > size) {
+                if ((long) numBytes + out.usedSize() + QueueFileElement.HEADER_LENGTH > size) {
                     logger.info("Not adding to full queue");
                     break;
                 }
                 Element next = new Element(0, numBytes);
                 if (list.isEmpty()) {
                     next.position = QueueFileHeader.HEADER_LENGTH;
-                } else if (out.bytesNeeded() + numBytes + QueueFileElement.HEADER_LENGTH > queue.fileSize()) {
+                } else if (out.usedSize() + numBytes + QueueFileElement.HEADER_LENGTH > queue.fileSize()) {
                     int firstPosition = list.getFirst().position;
                     for (Element el : list) {
                         if (el.position < firstPosition) {

@@ -36,6 +36,11 @@ public class QueueFileHeader {
 
     /** Leading bit set to 1 indicating a versioned header and the version of 1. */
     private static final int VERSIONED_HEADER = 0x00000001;
+
+    /** Buffer to read and store the header with. */
+    private final byte[] headerBuffer = new byte[HEADER_LENGTH];
+
+    /** Storage to read and write the header. */
     private final QueueStorage storage;
 
     /** Cached file length. Always a power of 2. */
@@ -44,28 +49,39 @@ public class QueueFileHeader {
     /** Number of elements. */
     private int count;
 
+    /** Version number. Currently fixed to {@link #VERSIONED_HEADER}. */
     private final int version;
 
+    /** Position of the first (front-most) element in the queue. */
     private long firstPosition;
+
+    /** Position of the last (back-most) element in the queue. */
     private long lastPosition;
 
-    private final byte[] headerBuffer = new byte[HEADER_LENGTH];
-
+    /**
+     * QueueFileHeader that matches storage. If the storage already existed, the header is read from
+     * the file. Otherwise, the header is initialized and written to file.
+     * @param storage medium to write to.
+     * @throws IOException if the storage cannot be read or contains invalid data.
+     */
     public QueueFileHeader(QueueStorage storage) throws IOException {
         this.storage = storage;
-        this.version = VERSIONED_HEADER;
-        this.length = 0L;
-        this.count = 0;
-        this.firstPosition = 0L;
-        this.lastPosition = 0L;
+        version = VERSIONED_HEADER;
+        if (this.storage.existed()) {
+            read();
+        } else {
+            length = this.storage.length();
+            if (length < HEADER_LENGTH) {
+                throw new IOException("Storage does not contain header.");
+            }
+            count = 0;
+            firstPosition = 0L;
+            lastPosition = 0L;
+            write();
+        }
     }
 
-    public static QueueFileHeader read(QueueStorage storage) throws IOException {
-        QueueFileHeader header = new QueueFileHeader(storage);
-        header.read();
-        return header;
-    }
-
+    /** To initialize the header, read it from file. */
     private void read() throws IOException {
         storage.read(0L, headerBuffer, 0, HEADER_LENGTH);
 
@@ -75,9 +91,8 @@ public class QueueFileHeader {
         }
         length = bytesToLong(headerBuffer, 4);
         if (length > storage.length()) {
-            throw new IOException(
-                    "File is truncated. Expected length: " + length
-                            + ", Actual length: " + storage.length());
+            throw new IOException("File is truncated. Expected length: " + length
+                    + ", Actual length: " + storage.length());
         }
         count = bytesToInt(headerBuffer, 12);
         firstPosition = bytesToLong(headerBuffer, 16);
@@ -99,6 +114,10 @@ public class QueueFileHeader {
         }
     }
 
+    /**
+     * Writes the header to file in a single write operation. This will flush the storage.
+     * @throws IOException if the header could not be written
+     */
     public void write() throws IOException {
         // first write all variables to a single byte buffer
         intToBytes(VERSIONED_HEADER, headerBuffer, 0);
@@ -113,34 +132,45 @@ public class QueueFileHeader {
         storage.flush();
     }
 
+    /** Get the stored length of the QueueStorage in bytes. */
     public long getLength() {
         return length;
     }
 
+    /**
+     * Set the stored length of the QueueStorage in bytes. This does not modify the storage length
+     * itself.
+     */
     public void setLength(long length) {
         this.length = length;
     }
 
+    /** Get the number of elements in the QueueFile. */
     public int getCount() {
         return count;
     }
 
-    public void setCount(int count) {
-        this.count = count;
+    /** Add given number of elements to the current number of elements in the QueueFile. */
+    public void addCount(int count) {
+        this.count += count;
     }
 
+    /** Get the position of the first element in the QueueFile. */
     public long getFirstPosition() {
         return firstPosition;
     }
 
+    /** Set the position of the first element in the QueueFile. */
     public void setFirstPosition(long firstPosition) {
         this.firstPosition = firstPosition;
     }
 
+    /** Get the position of the last element in the QueueFile. */
     public long getLastPosition() {
         return lastPosition;
     }
 
+    /** Set the position of the last element in the QueueFile. */
     public void setLastPosition(long lastPosition) {
         this.lastPosition = lastPosition;
     }
@@ -148,6 +178,7 @@ public class QueueFileHeader {
     /**
      * Hash function for the header, so that it can be verified.
      */
+    @Override
     public int hashCode() {
         int result = version;
         result = 31 * result + (int)((length >> 32) ^ length);
@@ -176,6 +207,7 @@ public class QueueFileHeader {
                 + "]";
     }
 
+    /** Clear the positions and count. This does not change the stored file length. */
     public void clear() {
         count = 0;
         firstPosition = 0L;

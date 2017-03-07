@@ -68,12 +68,15 @@ public interface QueueStorage extends Closeable, Flushable {
      */
     long length();
 
+    /** Minimum size of the storage in bytes. */
+    long getMinimumLength();
+
     /** Maximum size of the storage in bytes. */
     long getMaximumLength();
 
     /** Whether the close function was called. */
     boolean isClosed();
 
-    /** Whether underlying file was created by the current object. */
-    boolean wasCreated();
+    /** Whether underlying file existed when the current object was created. */
+    boolean existed();
 }
