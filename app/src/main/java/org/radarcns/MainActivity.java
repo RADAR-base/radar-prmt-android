@@ -34,37 +34,26 @@ import com.google.android.gms.tasks.Task;
 
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.application.ApplicationStatusService;
-import org.radarcns.application.ApplicationState;
-import org.radarcns.empaticaE4.E4DeviceStatus;
-import org.radarcns.empaticaE4.E4HeartbeatToast;
-import org.radarcns.empaticaE4.E4Service;
-import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.pebble2.Pebble2DeviceStatus;
-import org.radarcns.pebble2.Pebble2HeartbeatToast;
-import org.radarcns.pebble2.Pebble2Service;
-import org.radarcns.phone.PhoneState;
-import org.radarcns.phone.PhoneSensorsService;
-import org.radarcns.util.Boast;
+import org.radarcns.android.RadarServiceProvider;
 import org.radarcns.data.TimedInt;
+import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
-import static org.radarcns.RadarConfiguration.EMPATICA_API_KEY;
-import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
-import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
-import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
-import static org.radarcns.RadarConfiguration.KAFKA_UPLOAD_RATE_KEY;
-import static org.radarcns.RadarConfiguration.SCHEMA_REGISTRY_URL_KEY;
-import static org.radarcns.RadarConfiguration.SENDER_CONNECTION_TIMEOUT_KEY;
 import static org.radarcns.RadarConfiguration.UI_REFRESH_RATE_KEY;
 import static org.radarcns.android.DeviceService.DEVICE_CONNECT_FAILED;
 import static org.radarcns.android.DeviceService.DEVICE_STATUS_NAME;
@@ -83,26 +72,21 @@ public class MainActivity extends AppCompatActivity {
     private Runnable mUIScheduler;
     private MainActivityUIUpdater mUIUpdater;
     private boolean isForcedDisconnected;
-    private final boolean[] mConnectionIsBound;
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private final DeviceServiceConnection<E4DeviceStatus> mE4Connection;
-    private final DeviceServiceConnection<Pebble2DeviceStatus> pebble2Connection;
-    private final DeviceServiceConnection<PhoneState> phoneConnection;
-    private final DeviceServiceConnection<ApplicationState> appStatusConnection;
     private final BroadcastReceiver bluetoothReceiver;
     private final BroadcastReceiver deviceFailedReceiver;
 
-    /** Connections. 0 = Empatica, 1 = Angel sensor, 2 = Pebble sensor, 3 = Phone sensor **/
-    private DeviceServiceConnection[] mConnections;
+    /** Connections. **/
+    private List<RadarServiceProvider> mConnections;
 
     /** Overview UI **/
-    private Button[] mDeviceInputButtons;
-    private final String[] mInputDeviceKeys = new String[5];
-    private final String[][] deviceKeys = new String[5][];
+    private List<Button> mDeviceInputButtons;
+    private final List<String> mInputDeviceKeys;
+    private final List<Collection<String>> deviceKeys;
     private Button mGroupIdInputButton;
 
-    private final TimedInt[] mTotalRecordsSent;
+    private final List<TimedInt> mTotalRecordsSent;
     private String latestTopicSent;
     private final TimedInt latestNumberOfRecordsSent;
 
@@ -118,32 +102,9 @@ public class MainActivity extends AppCompatActivity {
     private final Runnable bindServicesRunner;
     private ServerStatusListener.Status serverStatus;
 
-    private void configureEmpatica(Bundle bundle) {
-        configureServiceExtras(bundle);
-        radarConfiguration.putExtras(bundle, EMPATICA_API_KEY);
-    }
-
-    private void configurePebble2(Bundle bundle) {
-        configureServiceExtras(bundle);
-    }
-
-    private void configureServiceExtras(Bundle bundle) {
-        // Add the default configuration parameters given to the service intents
-        radarConfiguration.putExtras(bundle,
-                KAFKA_REST_PROXY_URL_KEY, SCHEMA_REGISTRY_URL_KEY, DEFAULT_GROUP_ID_KEY,
-                KAFKA_UPLOAD_RATE_KEY, KAFKA_CLEAN_RATE_KEY, KAFKA_RECORDS_SEND_LIMIT_KEY,
-                SENDER_CONNECTION_TIMEOUT_KEY);
-    }
-
     public MainActivity() {
         super();
         isForcedDisconnected = false;
-        mE4Connection = new DeviceServiceConnection<>(this, E4DeviceStatus.CREATOR, E4Service.class.getName());
-        pebble2Connection = new DeviceServiceConnection<>(this, Pebble2DeviceStatus.CREATOR, Pebble2Service.class.getName());
-        phoneConnection = new DeviceServiceConnection<>(this, PhoneState.CREATOR, PhoneSensorsService.class.getName());
-        appStatusConnection = new DeviceServiceConnection<>(this, ApplicationState.CREATOR, ApplicationStatusService.class.getName());
-        mConnections = new DeviceServiceConnection[] {mE4Connection, null, pebble2Connection, phoneConnection, appStatusConnection};
-        mConnectionIsBound = new boolean[] {false, false, false, false, false};
         serverStatus = null;
 
         rowMap = new SparseIntArray(4);
@@ -152,49 +113,17 @@ public class MainActivity extends AppCompatActivity {
         rowMap.put(R.id.row3, 2);
         rowMap.put(R.id.row4, 3);
 
-        mTotalRecordsSent = new TimedInt[5];
-        for (int i = 0; i < 5; i++) {
-            mTotalRecordsSent[i] = new TimedInt();
-        }
+        mTotalRecordsSent = new ArrayList<>(5);
+        mInputDeviceKeys = new ArrayList<>(5);
+        deviceKeys = new ArrayList<>(5);
 
         bindServicesRunner = new Runnable() {
             @Override
             public void run() {
-                if (!mConnectionIsBound[0]) {
-                    Intent e4serviceIntent = new Intent(MainActivity.this, E4Service.class);
-                    Bundle extras = new Bundle();
-                    configureEmpatica(extras);
-                    e4serviceIntent.putExtras(extras);
-
-                    mE4Connection.bind(e4serviceIntent);
-                    mConnectionIsBound[0] = true;
-                }
-                if (!mConnectionIsBound[2]) {
-                    Intent pebble2Intent = new Intent(MainActivity.this, Pebble2Service.class);
-                    Bundle extras = new Bundle();
-                    configurePebble2(extras);
-                    pebble2Intent.putExtras(extras);
-
-                    pebble2Connection.bind(pebble2Intent);
-                    mConnectionIsBound[2] = true;
-                }
-                if (!mConnectionIsBound[3]) {
-                    Intent phoneIntent = new Intent(MainActivity.this, PhoneSensorsService.class);
-                    Bundle extras = new Bundle();
-                    configureServiceExtras(extras);
-                    phoneIntent.putExtras(extras);
-
-                    phoneConnection.bind(phoneIntent);
-                    mConnectionIsBound[3] = true;
-                }
-                if (!mConnectionIsBound[4]) {
-                    Intent appStatusIntent = new Intent(MainActivity.this, ApplicationStatusService.class);
-                    Bundle extras = new Bundle();
-                    configureServiceExtras(extras);
-                    appStatusIntent.putExtras(extras);
-
-                    appStatusConnection.bind(appStatusIntent);
-                    mConnectionIsBound[4] = true;
+                for (RadarServiceProvider provider : mConnections) {
+                    if (!provider.isBound()) {
+                        provider.bind();
+                    }
                 }
             }
 
@@ -262,6 +191,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        mConnections = RadarServiceProvider.loadProviders(this, radarConfiguration);
+        for (int i = 0; i < mConnections.size(); i++) {
+            mTotalRecordsSent.add(new TimedInt());
+            mInputDeviceKeys.add("");
+            deviceKeys.add(Collections.<String>emptyList());
+        }
+
         // Not needed in API level 22.
         // checkBluetoothPermissions();
 
@@ -273,12 +209,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        mDeviceInputButtons = new Button[] {
+        mDeviceInputButtons = Arrays.asList(
                 (Button) findViewById(R.id.inputDeviceNameButtonRow1),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow2),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow3),
                 (Button) findViewById(R.id.inputDeviceNameButtonRow4)
-        };
+        );
 
         mGroupIdInputButton = (Button) findViewById(R.id.inputGroupId);
 
@@ -297,15 +233,8 @@ public class MainActivity extends AppCompatActivity {
                     // Once the config is successfully fetched it must be
                     // activated before newly fetched values are returned.
                     radarConfiguration.activateFetched();
-                    if (mConnectionIsBound[0]) {
-                        Bundle bundle = new Bundle();
-                        configureEmpatica(bundle);
-                        mE4Connection.updateConfiguration(bundle);
-                    }
-                    if (mConnectionIsBound[2]) {
-                        Bundle bundle = new Bundle();
-                        configurePebble2(bundle);
-                        pebble2Connection.updateConfiguration(bundle);
+                    for (RadarServiceProvider provider : mConnections) {
+                        provider.updateConfiguration();
                     }
                     logger.info("Remote Config: Activate success.");
                     // Set global properties.
@@ -372,14 +301,6 @@ public class MainActivity extends AppCompatActivity {
         synchronized (this) {
             mHandler = localHandler;
         }
-        localHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < mConnections.length; i++) {
-                    mConnectionIsBound[i] = false;
-                }
-            }
-        });
     }
 
     @Override
@@ -391,10 +312,9 @@ public class MainActivity extends AppCompatActivity {
         getHandler().post(new Runnable() {
             @Override
             public void run() {
-                for (int i = 0; i < mConnections.length; i++) {
-                    if (mConnectionIsBound[i]) {
-                        mConnectionIsBound[i] = false;
-                        mConnections[i].unbind();
+                for (RadarServiceProvider connection : mConnections) {
+                    if (connection.isBound()) {
+                        connection.unbind();
                     }
                 }
             }
@@ -410,14 +330,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void disconnect() {
-        for (int i = 0; i < mConnections.length; i++) {
+        for (int i = 0; i < mConnections.size(); i++) {
             disconnect(i);
         }
     }
 
     private void disconnect(int row) {
-        DeviceServiceConnection connection = mConnections[row];
-        if (connection != null && connection.isRecording()) {
+        DeviceServiceConnection connection = mConnections.get(row).getConnection();
+        if (connection.isRecording()) {
             try {
                 connection.stopRecording();
             } catch (RemoteException e) {
@@ -436,15 +356,14 @@ public class MainActivity extends AppCompatActivity {
             enableBt();
             return;
         }
-        for (int i = 0; i < mConnections.length; i++) {
-            DeviceServiceConnection connection = mConnections[i];
-            if (connection == null || !connection.hasService() || connection.isRecording()) {
+        for (int i = 0; i < mConnections.size(); i++) {
+            DeviceServiceConnection connection = mConnections.get(i).getConnection();
+            if (!connection.hasService() || connection.isRecording()) {
                 continue;
             }
             Set<String> acceptableIds;
-            if (mInputDeviceKeys[i] != null && !mInputDeviceKeys[i].isEmpty()) {
-                acceptableIds = new HashSet<>();
-                Collections.addAll(acceptableIds, deviceKeys[i]);
+            if (!mInputDeviceKeys.get(i).isEmpty()) {
+                acceptableIds = new HashSet<>(deviceKeys.get(i));
             } else {
                 acceptableIds = Collections.emptySet();
             }
@@ -470,7 +389,18 @@ public class MainActivity extends AppCompatActivity {
 
     public synchronized void serviceDisconnected(final DeviceServiceConnection<?> connection) {
         if (mHandler != null) {
-            mHandler.post(bindServicesRunner);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    int rowNumber = getRow(connection);
+                    RadarServiceProvider provider = mConnections.get(rowNumber);
+                    logger.info("Rebinding {} after disconnect", provider);
+                    if (provider.isBound()) {
+                        provider.unbind();
+                    }
+                    provider.bind();
+                }
+            });
         }
     }
 
@@ -485,16 +415,12 @@ public class MainActivity extends AppCompatActivity {
                     case CONNECTING:
 //                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
-                        for (int i = 0; i < mConnections.length; i++) {
-                            if (mConnections[i] != connection) {
-                                continue;
-                            }
-                            // Reject if device name inputted does not equal device nameA
-                            if (mInputDeviceKeys[i] != null && !connection.isAllowedDevice(deviceKeys[i])) {
-                                logger.info("Device name '{}' is not in the list of keys '{}'", connection.getDeviceName(), deviceKeys[i]);
-                                Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName()), Toast.LENGTH_LONG).show();
-                                disconnect();
-                            }
+                        int rowNumber = getRow(connection);
+                        // Reject if device name inputted does not equal device nameA
+                        if (!connection.isAllowedDevice(deviceKeys.get(rowNumber))) {
+                            logger.info("Device name '{}' is not in the list of keys '{}'", connection.getDeviceName(), deviceKeys.get(rowNumber));
+                            Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName()), Toast.LENGTH_LONG).show();
+                            disconnect();
                         }
                         break;
                     case DISCONNECTED:
@@ -568,22 +494,23 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mUIUpdater.update();
-                    DeviceServiceConnection connection = mConnections[row];
-                    if (connection == mE4Connection) {
-                        new E4HeartbeatToast(MainActivity.this).execute(connection);
-                    } else if (connection == pebble2Connection) {
-                        new Pebble2HeartbeatToast(MainActivity.this).execute(connection);
+        final RadarServiceProvider provider = mConnections.get(row);
+        if (provider.hasDetailView()) {
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mUIUpdater.update();
+                        RadarServiceProvider provider = mConnections.get(row);
+                        if (provider.hasDetailView()) {
+                            provider.showDetailView();
+                        }
+                    } catch (RemoteException e) {
+                        logger.warn("Failed to update view with device data");
                     }
-                } catch (RemoteException e) {
-                    logger.warn("Failed to update view with device data");
                 }
-            }
-        });
+            });
+        }
 
         if (radarConfiguration.isInDevelopmentMode()) {
             radarConfiguration.fetch();
@@ -609,7 +536,7 @@ public class MainActivity extends AppCompatActivity {
                                         int numberOfRecords) {
         int row = getRow(connection);
         if (numberOfRecords >= 0){
-            mTotalRecordsSent[row].add(numberOfRecords);
+            mTotalRecordsSent.get(row).add(numberOfRecords);
         }
         latestTopicSent = topic;
         latestNumberOfRecordsSent.set(numberOfRecords);
@@ -637,29 +564,41 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Set up the buttons
-        input.setText(mInputDeviceKeys[row]);
+        input.setText(mInputDeviceKeys.get(row));
         builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Remember previous value
-                String oldValue = mInputDeviceKeys[row];
+                String oldValue = mInputDeviceKeys.get(row);
+                String newValue = input.getText().toString().trim();
 
                 // Set new value and process
-                mInputDeviceKeys[row] = input.getText().toString();
-                deviceKeys[row] = mInputDeviceKeys[row].split(getString(R.string.deviceKeySplitRegex));
-                mDeviceInputButtons[row].setText( mInputDeviceKeys[row] );
+                mInputDeviceKeys.set(row, newValue);
+                Collection<String> allowed;
+                String splitRegex = getString(R.string.deviceKeySplitRegex);
+                allowed = new ArrayList<>(Arrays.asList(newValue.split(splitRegex)));
+                Iterator<String> iter = allowed.iterator();
+                // remove empty strings
+                while (iter.hasNext()) {
+                    if (iter.next().trim().isEmpty()) {
+                        iter.remove();
+                    }
+                }
+                deviceKeys.set(row, allowed);
+                mDeviceInputButtons.get(row).setText(newValue);
 
+                final DeviceServiceConnection connection = mConnections.get(row).getConnection();
                 // Do NOT disconnect if input has not changed, is empty or equals the connected device.
-                if (!mInputDeviceKeys[row].equals(oldValue) &&
-                    !mInputDeviceKeys[row].isEmpty()        &&
-                    !mConnections[row].isAllowedDevice( deviceKeys[row] ) )
+                if (!newValue.equals(oldValue) &&
+                    !newValue.isEmpty()        &&
+                    !connection.isAllowedDevice(allowed))
                 {
                     getHandler().post(new Runnable() {
                         @Override
                         public void run() {
                             try {
-                                if (mConnections[row].isRecording()) {
-                                    mConnections[row].stopRecording();
+                                if (connection.isRecording()) {
+                                    connection.stopRecording();
                                     // will restart recording once the status is set to disconnected.
                                 }
                             } catch (RemoteException e) {
@@ -700,8 +639,9 @@ public class MainActivity extends AppCompatActivity {
 
                 // Set group/user id for each active connection
                 try {
-                    for (DeviceServiceConnection connection : mConnections) {
-                        if (connection != null && connection.hasService()) {
+                    for (RadarServiceProvider provider : mConnections) {
+                        DeviceServiceConnection connection = provider.getConnection();
+                        if (connection.hasService()) {
                             connection.getDeviceData().getId().setUserId(groupId);
                         }
                     }
@@ -721,8 +661,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int getRow(DeviceServiceConnection<?> connection) {
-        for (int i = 0; i < mConnections.length; i++) {
-            if (mConnections[i] != null && mConnections[i].getServiceClassName().equals(connection.getServiceClassName())) {
+        for (int i = 0; i < mConnections.size(); i++) {
+            String className = mConnections.get(i).getServiceClass().getName();
+            if (className.equals(connection.getServiceClassName())) {
                 return i;
             }
         }
@@ -735,7 +676,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public TimedInt getTopicsSent(int row) {
-        return mTotalRecordsSent[row];
+        return mTotalRecordsSent.get(row);
     }
 
     public String getLatestTopicSent() {
@@ -747,6 +688,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public DeviceServiceConnection<?> getConnection(int i) {
-        return mConnections[i];
+        return mConnections.get(i).getConnection();
     }
 }

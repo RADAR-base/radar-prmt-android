@@ -36,4 +36,6 @@ public interface DeviceServiceBinder {
     void updateConfiguration(Bundle bundle);
     /** Number of records in cache [unsent] and [sent] */
     Pair<Long, Long> numberOfRecords();
+    /** Display name of the service. */
+    String getDisplayName();
 }

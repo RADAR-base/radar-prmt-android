@@ -3,6 +3,7 @@ package org.radarcns.pebble2;
 import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
@@ -58,6 +59,11 @@ public class Pebble2Service extends DeviceService {
         return Arrays.<AvroTopic<MeasurementKey, ? extends SpecificRecord>>asList(
                 topics.getAccelerationTopic(), topics.getHeartRateTopic(),
                 topics.getHeartRateFilteredTopic());
+    }
+
+    @Override
+    public String getDisplayName() {
+        return getString(R.string.pebble2DisplayName);
     }
 
     @Override

@@ -29,6 +29,10 @@
         <key>ui_refresh_rate_millis</key>
         <value>250</value>
     </entry>
+    <entry>
+        <key>device_services_to_connect</key>
+        <value>.application.ApplicationServiceProvider .phone.PhoneServiceProvider .empatica.E4ServiceProvider</value>
+    </entry>
     <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
         <key>kafka_records_send_limit</key>

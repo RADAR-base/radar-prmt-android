@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -209,9 +210,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
                 // keep old configuration
             }
         } else {
-            if (serviceBinder != null) {
-                getLocalServiceBinder().updateConfiguration(bundle);
-            }
+            getLocalServiceBinder().updateConfiguration(bundle);
         }
     }
 
@@ -228,7 +227,7 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
     /**
      * True if given string is a substring of the device name.
      */
-    public boolean isAllowedDevice(String[] values) {
+    public boolean isAllowedDevice(Collection<String> values) {
         for (String value : values) {
             Pattern pattern = Strings.containsIgnoreCasePattern(value);
             String deviceName = getDeviceName();

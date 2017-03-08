@@ -65,6 +65,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public static final int TRANSACT_GET_DEVICE_NAME = 17;
     public static final int TRANSACT_UPDATE_CONFIG = 18;
     public static final int TRANSACT_GET_CACHE_SIZE = 19;
+    public static final int TRANSACT_GET_DISPLAY_NAME = 20;
     private static final String PREFIX = "org.radarcns.android.";
     public static final String SERVER_STATUS_CHANGED = PREFIX + "ServerStatusListener.Status";
     public static final String SERVER_RECORDS_SENT_TOPIC = PREFIX + "ServerStatusListener.topic";
@@ -309,6 +310,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     protected abstract List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics();
 
+    public abstract String getDisplayName();
+
     private class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
         public <V extends SpecificRecord> List<Record<MeasurementKey, V>> getRecords(
@@ -403,6 +406,11 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
+        public String getDisplayName() {
+            return DeviceService.this.getDisplayName();
+        }
+
+        @Override
         public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
             try {
                 switch (code) {
@@ -443,6 +451,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         reply.writeLong(value.second);
                         break;
                     }
+                    case TRANSACT_GET_DISPLAY_NAME:
+                        reply.writeString(getDisplayName());
+                        break;
                     default:
                         return false;
                 }

@@ -3,10 +3,11 @@ package org.radarcns.phone;
 import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
-import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.key.MeasurementKey;
@@ -60,6 +61,11 @@ public class PhoneSensorsService extends DeviceService {
     protected List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics() {
         return Arrays.<AvroTopic<MeasurementKey, ? extends SpecificRecord>>asList(
                 topics.getAccelerationTopic(), topics.getLightTopic());
+    }
+
+    @Override
+    public String getDisplayName() {
+        return getString(R.string.phoneServiceDisplayName);
     }
 
     @Override

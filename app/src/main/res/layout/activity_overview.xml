@@ -75,7 +75,7 @@
                     <TextView
                         android:id="@+id/deviceTypeRow1"
                         style="@style/DeviceTypeLabel"
-                        android:text="@string/deviceTypeLabel1" />
+                        android:text="@string/empaticaE4DisplayName" />
 
                     <TextView
                         android:id="@+id/deviceNameRow1"
@@ -129,7 +129,6 @@
                         android:id="@+id/recordsSentRow1"
                         style="@style/NumberColumn"
                         android:text="@string/emptyText" />
-
                 </TableRow>
 
                 <TableRow
@@ -204,7 +203,7 @@
                     <TextView
                         android:id="@+id/deviceTypeRow3"
                         style="@style/DeviceTypeLabel"
-                        android:text="@string/deviceTypeLabel3" />
+                        android:text="@string/pebble2DisplayName" />
 
                     <TextView
                         android:id="@+id/deviceNameRow3"
@@ -270,7 +269,7 @@
                     <TextView
                         android:id="@+id/deviceTypeRow4"
                         style="@style/DeviceTypeLabel"
-                        android:text="@string/deviceTypeLabel4" />
+                        android:text="@string/phoneServiceDisplayName" />
 
                     <TextView
                         android:id="@+id/deviceNameRow4"

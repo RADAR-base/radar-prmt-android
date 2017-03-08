@@ -109,16 +109,4 @@ public class DeviceServiceConnection<S extends BaseDeviceState> extends BaseServ
             mainActivity.serviceDisconnected(this);
         }
     }
-
-    public void bind(@NonNull Intent intent) {
-        logger.info("Intending to start " + intent.getComponent());
-
-        mainActivity.startService(intent);
-        mainActivity.bindService(intent, this, Context.BIND_ABOVE_CLIENT);
-    }
-
-    public void unbind() {
-        mainActivity.unbindService(this);
-        onServiceDisconnected(null);
-    }
 }
