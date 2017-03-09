@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     /** Connections. **/
     private List<RadarServiceProvider> mConnections;
 
-    private final List<TimedInt> mTotalRecordsSent;
+    private final Map<DeviceServiceConnection, TimedInt> mTotalRecordsSent;
     private String latestTopicSent;
     private final TimedInt latestNumberOfRecordsSent;
 
@@ -87,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         isForcedDisconnected = false;
         serverStatus = null;
 
-        mTotalRecordsSent = new ArrayList<>(5);
+        mTotalRecordsSent = new HashMap<>();
         mInputDeviceKeys = new HashMap<>();
 
         bindServicesRunner = new Runnable() {
@@ -166,8 +165,9 @@ public class MainActivity extends AppCompatActivity {
 
         mConnections = RadarServiceProvider.loadProviders(this, radarConfiguration);
         for (RadarServiceProvider provider : mConnections) {
-            mTotalRecordsSent.add(new TimedInt());
-            mInputDeviceKeys.put(provider.getConnection(), Collections.<String>emptySet());
+            DeviceServiceConnection connection = provider.getConnection();
+            mTotalRecordsSent.put(connection, new TimedInt());
+            mInputDeviceKeys.put(connection, Collections.<String>emptySet());
         }
 
         // Not needed in API level 22.
@@ -349,8 +349,7 @@ public class MainActivity extends AppCompatActivity {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    int rowNumber = getRow(connection);
-                    RadarServiceProvider provider = mConnections.get(rowNumber);
+                    RadarServiceProvider provider = getConnectionProvider(connection);
                     logger.info("Rebinding {} after disconnect", provider);
                     if (provider.isBound()) {
                         provider.unbind();
@@ -436,9 +435,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateServerRecordsSent(DeviceServiceConnection<?> connection, String topic,
                                         int numberOfRecords) {
-        int row = getRow(connection);
         if (numberOfRecords >= 0){
-            mTotalRecordsSent.get(row).add(numberOfRecords);
+            mTotalRecordsSent.get(connection).add(numberOfRecords);
         }
         latestTopicSent = topic;
         latestNumberOfRecordsSent.set(numberOfRecords);
@@ -463,11 +461,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int getRow(DeviceServiceConnection<?> connection) {
-        for (int i = 0; i < mConnections.size(); i++) {
-            String className = mConnections.get(i).getServiceClass().getName();
-            if (className.equals(connection.getServiceClassName())) {
-                return i;
+    private RadarServiceProvider getConnectionProvider(DeviceServiceConnection<?> connection) {
+        for (RadarServiceProvider provider : mConnections) {
+            if (provider.getConnection().equals(connection)) {
+                return provider;
             }
         }
         throw new IllegalArgumentException("DeviceServiceConnection "
@@ -479,7 +476,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public TimedInt getTopicsSent(DeviceServiceConnection connection) {
-        return mTotalRecordsSent.get(getRow(connection));
+        return mTotalRecordsSent.get(connection);
     }
 
     public String getLatestTopicSent() {
