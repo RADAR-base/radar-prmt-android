@@ -1,11 +1,9 @@
 package org.radarcns;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -15,15 +13,8 @@ import android.os.HandlerThread;
 import android.os.Process;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
-import android.util.SparseIntArray;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,16 +35,13 @@ import org.slf4j.LoggerFactory;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
-import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.UI_REFRESH_RATE_KEY;
 import static org.radarcns.android.DeviceService.DEVICE_CONNECT_FAILED;
 import static org.radarcns.android.DeviceService.DEVICE_STATUS_NAME;
@@ -62,9 +50,9 @@ public class MainActivity extends AppCompatActivity {
     private static final Logger logger = LoggerFactory.getLogger(MainActivity.class);
 
     private static final int REQUEST_ENABLE_PERMISSIONS = 2;
+    private final Map<DeviceServiceConnection, Set<String>> mInputDeviceKeys;
 
     private long uiRefreshRate;
-    private String groupId;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
@@ -80,20 +68,12 @@ public class MainActivity extends AppCompatActivity {
     /** Connections. **/
     private List<RadarServiceProvider> mConnections;
 
-    /** Overview UI **/
-    private List<Button> mDeviceInputButtons;
-    private final List<String> mInputDeviceKeys;
-    private final List<Collection<String>> deviceKeys;
-    private Button mGroupIdInputButton;
-
     private final List<TimedInt> mTotalRecordsSent;
     private String latestTopicSent;
     private final TimedInt latestNumberOfRecordsSent;
 
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
-
-    private final SparseIntArray rowMap;
 
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
@@ -107,15 +87,8 @@ public class MainActivity extends AppCompatActivity {
         isForcedDisconnected = false;
         serverStatus = null;
 
-        rowMap = new SparseIntArray(4);
-        rowMap.put(R.id.row1, 0);
-        rowMap.put(R.id.row2, 1);
-        rowMap.put(R.id.row3, 2);
-        rowMap.put(R.id.row4, 3);
-
         mTotalRecordsSent = new ArrayList<>(5);
-        mInputDeviceKeys = new ArrayList<>(5);
-        deviceKeys = new ArrayList<>(5);
+        mInputDeviceKeys = new HashMap<>();
 
         bindServicesRunner = new Runnable() {
             @Override
@@ -156,7 +129,9 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Boast.makeText(MainActivity.this, "Cannot connect to device " + intent.getStringExtra(DEVICE_STATUS_NAME), Toast.LENGTH_SHORT).show();
+                            Boast.makeText(MainActivity.this, "Cannot connect to device "
+                                    + intent.getStringExtra(DEVICE_STATUS_NAME),
+                                    Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -174,8 +149,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Start the UI thread
         uiRefreshRate = radarConfiguration.getLong(UI_REFRESH_RATE_KEY);
-        groupId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
-        mGroupIdInputButton.setText(groupId);
         mUIUpdater = new MainActivityUIUpdater(this, radarConfiguration);
         mUIScheduler = new Runnable() {
             @Override
@@ -192,32 +165,23 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mConnections = RadarServiceProvider.loadProviders(this, radarConfiguration);
-        for (int i = 0; i < mConnections.size(); i++) {
+        for (RadarServiceProvider provider : mConnections) {
             mTotalRecordsSent.add(new TimedInt());
-            mInputDeviceKeys.add("");
-            deviceKeys.add(Collections.<String>emptyList());
+            mInputDeviceKeys.put(provider.getConnection(), Collections.<String>emptySet());
         }
 
         // Not needed in API level 22.
         // checkBluetoothPermissions();
 
         // Check availability of Google Play Services
-        if ( GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS ) {
+        GoogleApiAvailability googleApi = GoogleApiAvailability.getInstance();
+        if (googleApi.isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
             mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
             mFirebaseMessage.setText(R.string.playServicesUnavailable);
         }
     }
 
     private void initializeViews() {
-        mDeviceInputButtons = Arrays.asList(
-                (Button) findViewById(R.id.inputDeviceNameButtonRow1),
-                (Button) findViewById(R.id.inputDeviceNameButtonRow2),
-                (Button) findViewById(R.id.inputDeviceNameButtonRow3),
-                (Button) findViewById(R.id.inputDeviceNameButtonRow4)
-        );
-
-        mGroupIdInputButton = (Button) findViewById(R.id.inputGroupId);
-
         // Firebase
         mFirebaseStatusIcon = findViewById(R.id.firebaseStatus);
         mFirebaseMessage = (TextView) findViewById( R.id.firebaseStatusMessage);
@@ -330,13 +294,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void disconnect() {
-        for (int i = 0; i < mConnections.size(); i++) {
-            disconnect(i);
+        for (RadarServiceProvider provider : mConnections) {
+            disconnect(provider.getConnection());
         }
     }
 
-    private void disconnect(int row) {
-        DeviceServiceConnection connection = mConnections.get(row).getConnection();
+    public void disconnect(DeviceServiceConnection connection) {
         if (connection.isRecording()) {
             try {
                 connection.stopRecording();
@@ -356,22 +319,16 @@ public class MainActivity extends AppCompatActivity {
             enableBt();
             return;
         }
-        for (int i = 0; i < mConnections.size(); i++) {
-            DeviceServiceConnection connection = mConnections.get(i).getConnection();
+        for (RadarServiceProvider provider : mConnections) {
+            DeviceServiceConnection connection = provider.getConnection();
             if (!connection.hasService() || connection.isRecording()) {
                 continue;
             }
-            Set<String> acceptableIds;
-            if (!mInputDeviceKeys.get(i).isEmpty()) {
-                acceptableIds = new HashSet<>(deviceKeys.get(i));
-            } else {
-                acceptableIds = Collections.emptySet();
-            }
             try {
-                logger.info("Starting recording on connection {}", i);
-                connection.startRecording(acceptableIds);
-            } catch (RemoteException e) {
-                logger.error("Failed to start recording for device {}", i, e);
+                logger.info("Starting recording on connection {}", connection);
+                connection.startRecording(mInputDeviceKeys.get(connection));
+            } catch (RemoteException ex) {
+                logger.error("Failed to start recording for device {}", connection, ex);
             }
         }
     }
@@ -380,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             ServerStatusListener.Status status = connection.getServerStatus();
             logger.info("Initial server status: {}", status);
-            updateServerStatus(connection, status);
+            updateServerStatus(status);
         } catch (RemoteException e) {
             logger.warn("Failed to update UI server status");
         }
@@ -415,10 +372,9 @@ public class MainActivity extends AppCompatActivity {
                     case CONNECTING:
 //                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
-                        int rowNumber = getRow(connection);
                         // Reject if device name inputted does not equal device nameA
-                        if (!connection.isAllowedDevice(deviceKeys.get(rowNumber))) {
-                            logger.info("Device name '{}' is not in the list of keys '{}'", connection.getDeviceName(), deviceKeys.get(rowNumber));
+                        if (!connection.isAllowedDevice(mInputDeviceKeys.get(connection))) {
+                            logger.info("Device name '{}' is not in the list of keys '{}'", connection.getDeviceName(), mInputDeviceKeys.get(connection));
                             Boast.makeText(MainActivity.this, String.format("Device '%s' rejected", connection.getDeviceName()), Toast.LENGTH_LONG).show();
                             disconnect();
                         }
@@ -442,23 +398,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void checkBluetoothPermissions() {
-        String[] permissions = {
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.BLUETOOTH,
-                Manifest.permission.BLUETOOTH_ADMIN};
-
-        boolean waitingForPermission = false;
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                waitingForPermission = true;
-                break;
-            }
-        }
-        if (waitingForPermission) {
-            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
-        }
-    }
+//    private void checkBluetoothPermissions() {
+//        String[] permissions = {
+//                Manifest.permission.ACCESS_COARSE_LOCATION,
+//                Manifest.permission.BLUETOOTH,
+//                Manifest.permission.BLUETOOTH_ADMIN};
+//
+//        boolean waitingForPermission = false;
+//        for (String permission : permissions) {
+//            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+//                waitingForPermission = true;
+//                break;
+//            }
+//        }
+//        if (waitingForPermission) {
+//            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
+//        }
+//    }
 
     @Override
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
@@ -474,61 +430,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void reconnectDevice(View v) {
-        try {
-            int rowIndex = getRowIndexFromView(v);
-            // will restart scanning after disconnect
-            disconnect(rowIndex);
-        } catch (IndexOutOfBoundsException iobe) {
-            Boast.makeText(this, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
-            logger.warn(iobe.getMessage());
-        }
-    }
-
-    public void showDetails(final View v) {
-        final int row;
-        try {
-            row = getRowIndexFromView(v);
-        } catch (IndexOutOfBoundsException iobe) {
-            logger.warn(iobe.getMessage());
-            return;
-        }
-
-        final RadarServiceProvider provider = mConnections.get(row);
-        if (provider.hasDetailView()) {
-            getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        mUIUpdater.update();
-                        RadarServiceProvider provider = mConnections.get(row);
-                        if (provider.hasDetailView()) {
-                            provider.showDetailView();
-                        }
-                    } catch (RemoteException e) {
-                        logger.warn("Failed to update view with device data");
-                    }
-                }
-            });
-        }
-
-        if (radarConfiguration.isInDevelopmentMode()) {
-            radarConfiguration.fetch();
-        }
-    }
-
-    private int getRowIndexFromView(View v) throws IndexOutOfBoundsException {
-        // Assume all elements are direct descendants from the TableRow
-        int rowId = ((View) v.getParent()).getId();
-        int ret = rowMap.get(rowId, -1);
-        if (ret == -1) {
-            throw new IndexOutOfBoundsException("Could not find row index of the given view.");
-        }
-        return ret;
-    }
-
-    public void updateServerStatus(DeviceServiceConnection<?> connection,
-                                   final ServerStatusListener.Status status) {
+    public void updateServerStatus(final ServerStatusListener.Status status) {
         this.serverStatus = status;
     }
 
@@ -542,122 +444,23 @@ public class MainActivity extends AppCompatActivity {
         latestNumberOfRecordsSent.set(numberOfRecords);
     }
 
-    public void dialogInputDeviceName(final View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Device Serial Number:");
-
-        // Set up the input
-        final EditText input = new EditText(this);
-        // Specify the type of input expected
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        // Setup the row
-        final int row;
-        try {
-            row = getRowIndexFromView(v);
-        } catch (IndexOutOfBoundsException iobe) {
-            Boast.makeText(this, "Could not set this device key, there is no valid row index "
-                    + "associated with this button.", Toast.LENGTH_LONG).show();
-            logger.warn(iobe.getMessage());
-            return;
+    public void setAllowedDeviceIds(final DeviceServiceConnection connection, Set<String> allowedIds) {
+        // Do NOT disconnect if input has not changed, is empty or equals the connected device.
+        if (!connection.isAllowedDevice(allowedIds)) {
+            getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (connection.isRecording()) {
+                            connection.stopRecording();
+                            // will restart recording once the status is set to disconnected.
+                        }
+                    } catch (RemoteException e) {
+                        logger.error("Cannot restart scanning");
+                    }
+                }
+            });
         }
-
-        // Set up the buttons
-        input.setText(mInputDeviceKeys.get(row));
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Remember previous value
-                String oldValue = mInputDeviceKeys.get(row);
-                String newValue = input.getText().toString().trim();
-
-                // Set new value and process
-                mInputDeviceKeys.set(row, newValue);
-                Collection<String> allowed;
-                String splitRegex = getString(R.string.deviceKeySplitRegex);
-                allowed = new ArrayList<>(Arrays.asList(newValue.split(splitRegex)));
-                Iterator<String> iter = allowed.iterator();
-                // remove empty strings
-                while (iter.hasNext()) {
-                    if (iter.next().trim().isEmpty()) {
-                        iter.remove();
-                    }
-                }
-                deviceKeys.set(row, allowed);
-                mDeviceInputButtons.get(row).setText(newValue);
-
-                final DeviceServiceConnection connection = mConnections.get(row).getConnection();
-                // Do NOT disconnect if input has not changed, is empty or equals the connected device.
-                if (!newValue.equals(oldValue) &&
-                    !newValue.isEmpty()        &&
-                    !connection.isAllowedDevice(allowed))
-                {
-                    getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                if (connection.isRecording()) {
-                                    connection.stopRecording();
-                                    // will restart recording once the status is set to disconnected.
-                                }
-                            } catch (RemoteException e) {
-                                logger.error("Cannot restart scanning");
-                            }
-                        }
-                    });
-                }
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
-
-    public void dialogInputGroupId(final View v) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Patient Identifier:");
-
-        // Set up the input
-        final EditText input = new EditText(this);
-        // Specify the type of input expected
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        // Set up the buttons
-        input.setText(groupId);
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                groupId = input.getText().toString();
-                mGroupIdInputButton.setText(groupId);
-
-                // Set group/user id for each active connection
-                try {
-                    for (RadarServiceProvider provider : mConnections) {
-                        DeviceServiceConnection connection = provider.getConnection();
-                        if (connection.hasService()) {
-                            connection.getDeviceData().getId().setUserId(groupId);
-                        }
-                    }
-                } catch (RemoteException re) {
-                    Boast.makeText(MainActivity.this, "Could not set the patient id", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
     }
 
     private int getRow(DeviceServiceConnection<?> connection) {
@@ -675,8 +478,8 @@ public class MainActivity extends AppCompatActivity {
         return serverStatus;
     }
 
-    public TimedInt getTopicsSent(int row) {
-        return mTotalRecordsSent.get(row);
+    public TimedInt getTopicsSent(DeviceServiceConnection connection) {
+        return mTotalRecordsSent.get(getRow(connection));
     }
 
     public String getLatestTopicSent() {
@@ -687,7 +490,7 @@ public class MainActivity extends AppCompatActivity {
         return latestNumberOfRecordsSent;
     }
 
-    public DeviceServiceConnection<?> getConnection(int i) {
-        return mConnections.get(i).getConnection();
+    public List<RadarServiceProvider> getConnections() {
+        return Collections.unmodifiableList(mConnections);
     }
 }

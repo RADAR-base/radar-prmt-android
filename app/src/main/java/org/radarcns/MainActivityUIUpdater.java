@@ -1,52 +1,62 @@
 package org.radarcns;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.RemoteException;
+import android.support.v7.app.AlertDialog;
+import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceServiceConnection;
 import org.radarcns.android.DeviceStatusListener;
+import org.radarcns.android.RadarServiceProvider;
 import org.radarcns.data.TimedInt;
 import org.radarcns.kafka.rest.ServerStatusListener;
+import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.radarcns.RadarConfiguration.CONDENSED_DISPLAY_KEY;
+import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
 public class MainActivityUIUpdater implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(MainActivityUIUpdater.class);
-    private static final int NUM_ROWS = 4;
     private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     /**
      * Data formats
-     **/
+     */
     private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
     private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
     private final DecimalFormat noDecimals = new DecimalFormat("0");
     private final MainActivity mainActivity;
     private final RadarConfiguration radarConfiguration;
-    private final BaseDeviceState[] deviceData;
-    private final String[] deviceNames;
+    private final List<DeviceRow> rows;
 
-    private TextView[] mDeviceNameLabels;
-    private View[] mStatusIcons;
-    private TextView[] mTemperatureLabels;
-    private TextView[] mHeartRateLabels;
-    private TextView[] mAccelerationLabels;
-    private TextView[] mRecordsSentLabels;
-    private ImageView[] mBatteryLabels;
     private View mServerStatusIcon;
     private TextView mServerMessage;
 
@@ -59,22 +69,13 @@ public class MainActivityUIUpdater implements Runnable {
     private String previousTopic;
     private TimedInt previousNumberOfTopicsSent;
     private ServerStatusListener.Status previousServerStatus;
-    private DeviceStatusListener.Status[] previousDeviceStatus;
     private String newServerStatus;
-    private float[] previousTemperature;
-    private float[] previousBatteryLevel;
-    private float[] previousHeartRate;
-    private float[] previousAcceleration;
-    private String previousName;
-    private TimedInt[] previousRecordsSent;
-    private int[] previousRecordsSentTimer;
+    private String userId;
+    private Button mGroupIdInputButton;
 
     MainActivityUIUpdater(MainActivity activity, RadarConfiguration radarConfiguration) {
         this.radarConfiguration = radarConfiguration;
         this.mainActivity = activity;
-
-        deviceData = new BaseDeviceState[NUM_ROWS];
-        deviceNames = new String[NUM_ROWS];
 
         deviceStatusIconMap = new EnumMap<>(DeviceStatusListener.Status.class);
         deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTED, R.drawable.status_connected);
@@ -91,35 +92,22 @@ public class MainActivityUIUpdater implements Runnable {
         serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
         serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_uploading_failed);
 
-        previousDeviceStatus = new DeviceStatusListener.Status[NUM_ROWS];
-        previousTemperature = new float[NUM_ROWS];
-        previousBatteryLevel = new float[NUM_ROWS];
-        previousHeartRate = new float[NUM_ROWS];
-        previousRecordsSent = new TimedInt[NUM_ROWS];
-        previousRecordsSentTimer = new int[NUM_ROWS];
-        previousAcceleration = new float[NUM_ROWS];
+        userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
 
         initializeViews();
+
+        rows = new ArrayList<>();
+        ViewGroup root = (ViewGroup) activity.findViewById(R.id.deviceTable);
+        for (RadarServiceProvider provider : activity.getConnections()) {
+            if (provider.isDisplayable()) {
+                rows.add(new DeviceRow(provider, root));
+            }
+        }
     }
 
     public void update() throws RemoteException {
-        for (int i = 0; i < NUM_ROWS; i++) {
-            DeviceServiceConnection<?> connection = mainActivity.getConnection(i);
-            if (connection != null && connection.hasService()) {
-                deviceData[i] = connection.getDeviceData();
-                switch (deviceData[i].getStatus()) {
-                    case CONNECTED:
-                    case CONNECTING:
-                        deviceNames[i] = connection.getDeviceName();
-                        break;
-                    default:
-                        deviceNames[i] = null;
-                        break;
-                }
-            } else {
-                deviceData[i] = null;
-                deviceNames[i] = null;
-            }
+        for (DeviceRow row : rows) {
+            row.update();
         }
         String message = getServerStatusMessage();
         synchronized (this) {
@@ -156,73 +144,22 @@ public class MainActivityUIUpdater implements Runnable {
     }
 
     private void initializeViews() {
-        // The columns, fixed to four rows.
-        mDeviceNameLabels = new TextView[]{
-                (TextView) mainActivity.findViewById(R.id.deviceNameRow1),
-                (TextView) mainActivity.findViewById(R.id.deviceNameRow2),
-                (TextView) mainActivity.findViewById(R.id.deviceNameRow3),
-                (TextView) mainActivity.findViewById(R.id.deviceNameRow4)
-        };
-
-        mStatusIcons = new View[]{
-                mainActivity.findViewById(R.id.statusRow1),
-                mainActivity.findViewById(R.id.statusRow2),
-                mainActivity.findViewById(R.id.statusRow3),
-                mainActivity.findViewById(R.id.statusRow4)
-        };
-
-        mTemperatureLabels = new TextView[]{
-                (TextView) mainActivity.findViewById(R.id.temperatureRow1),
-                (TextView) mainActivity.findViewById(R.id.temperatureRow2),
-                (TextView) mainActivity.findViewById(R.id.temperatureRow3),
-                (TextView) mainActivity.findViewById(R.id.temperatureRow4)
-        };
-
-        mHeartRateLabels = new TextView[]{
-                (TextView) mainActivity.findViewById(R.id.heartRateRow1),
-                (TextView) mainActivity.findViewById(R.id.heartRateRow2),
-                (TextView) mainActivity.findViewById(R.id.heartRateRow3),
-                (TextView) mainActivity.findViewById(R.id.heartRateRow4)
-        };
-
-        mAccelerationLabels = new TextView[]{
-                (TextView) mainActivity.findViewById(R.id.accelerationRow1),
-                (TextView) mainActivity.findViewById(R.id.accelerationRow2),
-                (TextView) mainActivity.findViewById(R.id.accelerationRow3),
-                (TextView) mainActivity.findViewById(R.id.accelerationRow4)
-        };
-
-        mBatteryLabels = new ImageView[]{
-                (ImageView) mainActivity.findViewById(R.id.batteryRow1),
-                (ImageView) mainActivity.findViewById(R.id.batteryRow2),
-                (ImageView) mainActivity.findViewById(R.id.batteryRow3),
-                (ImageView) mainActivity.findViewById(R.id.batteryRow4)
-        };
-
-        mRecordsSentLabels = new TextView[]{
-                (TextView) mainActivity.findViewById(R.id.recordsSentRow1),
-                (TextView) mainActivity.findViewById(R.id.recordsSentRow2),
-                (TextView) mainActivity.findViewById(R.id.recordsSentRow3),
-                (TextView) mainActivity.findViewById(R.id.recordsSentRow4)
-        };
-
         mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
-
-        // Server
         mServerMessage = (TextView) mainActivity.findViewById( R.id.statusServerMessage);
+        mGroupIdInputButton = (Button) mainActivity.findViewById(R.id.inputGroupId);
+        mGroupIdInputButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogInputGroupId();
+            }
+        });
+        mGroupIdInputButton.setText(userId);
     }
 
     @Override
     public void run() {
-        for (int i = 0; i < NUM_ROWS; i++) {
-            // Update all fields
-            updateDeviceStatus(deviceData[i], i);
-            updateTemperature(deviceData[i], i);
-            updateHeartRate(deviceData[i], i);
-            updateAcceleration(deviceData[i], i);
-            updateBattery(deviceData[i], i);
-            updateDeviceName(deviceNames[i], i);
-            updateDeviceTotalRecordsSent(i);
+        for (DeviceRow row : rows) {
+            row.display();
         }
         updateServerStatus();
     }
@@ -245,119 +182,317 @@ public class MainActivityUIUpdater implements Runnable {
         }
     }
 
-    public void updateDeviceStatus(BaseDeviceState deviceData, int row) {
-        // Connection status. Change icon used.
-        DeviceStatusListener.Status status;
-        if (deviceData == null) {
-            status = DeviceStatusListener.Status.DISCONNECTED;
-        } else {
-            status = deviceData.getStatus();
-        }
-        if (!Objects.equals(status, previousDeviceStatus[row])) {
-            logger.info("Device status of row {} is {}", row, status);
-            previousDeviceStatus[row] = status;
-            Integer statusIcon = deviceStatusIconMap.get(status);
-            int resource = statusIcon != null ? statusIcon : deviceStatusIconDefault;
-            mStatusIcons[row].setBackgroundResource(resource);
-        }
-    }
 
-    public void updateTemperature(BaseDeviceState deviceData, int row) {
-        // \u2103 == ℃
-        setText(mTemperatureLabels, previousTemperature, row,
-                deviceData == null ? Float.NaN : deviceData.getTemperature(), "\u2103", singleDecimal);
-    }
+    public void dialogInputGroupId() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
+        builder.setTitle("Patient Identifier:");
 
-    public void updateHeartRate(BaseDeviceState deviceData, int row) {
-        setText(mHeartRateLabels, previousHeartRate, row,
-                deviceData == null ? Float.NaN : deviceData.getHeartRate(), "bpm", noDecimals);
-    }
+        // Set up the input
+        final EditText input = new EditText(mainActivity);
+        // Specify the type of input expected
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
 
-    public void updateAcceleration(BaseDeviceState deviceData, int row) {
-        setText(mAccelerationLabels, previousAcceleration, row,
-                deviceData == null ? Float.NaN : deviceData.getAccelerationMagnitude(), "g", doubleDecimal);
-    }
+        // Set up the buttons
+        input.setText(userId);
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                userId = input.getText().toString();
+                mGroupIdInputButton.setText(userId);
 
-    public void updateBattery(BaseDeviceState deviceData, int row) {
-        // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
-        float batteryLevel = deviceData == null ? Float.NaN : deviceData.getBatteryLevel();
-//            if ( row == 0 ) {logger.info("Battery: {}", batteryLevel);}
-        if (previousBatteryLevel[row] == batteryLevel
-                || (Float.isNaN(previousBatteryLevel[row]) && Float.isNaN(batteryLevel))) {
-            return;
-        }
-        previousBatteryLevel[row] = batteryLevel;
-        if (Float.isNaN(batteryLevel)) {
-            mBatteryLabels[row].setImageResource(R.drawable.ic_battery_unknown);
-            // up to 100%
-        } else if (batteryLevel > 0.5) {
-            mBatteryLabels[row].setImageResource(R.drawable.ic_battery_full);
-            // up to 45%
-        } else if (batteryLevel > 0.2) {
-            mBatteryLabels[row].setImageResource(R.drawable.ic_battery_50);
-            // up to 10%
-        } else if (batteryLevel > 0.1) {
-            mBatteryLabels[row].setImageResource(R.drawable.ic_battery_low);
-            // up to 5% [what are possible values below 10%?]
-        } else {
-            mBatteryLabels[row].setImageResource(R.drawable.ic_battery_empty);
-        }
-    }
-
-    public void updateDeviceName(String deviceName, int row) {
-        if (Objects.equals(deviceName, previousName)) {
-            return;
-        }
-        previousName = deviceName;
-        // Restrict length of name that is shown.
-        if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH - 3) {
-            deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH) + "...";
-        }
-
-        // \u2014 == —
-        mDeviceNameLabels[row].setText(deviceName == null ? "\u2014" : deviceName);
-    }
-
-    public void updateDeviceTotalRecordsSent(int row) {
-        TimedInt recordsSent = mainActivity.getTopicsSent(row);
-        if (recordsSent.getTime() == -1L) {
-            if (previousRecordsSent[row] != null && previousRecordsSent[row].getTime() == -1L) {
-                return;
+                // Set group/user id for each active connection
+                try {
+                    for (RadarServiceProvider provider : mainActivity.getConnections()) {
+                        DeviceServiceConnection connection = provider.getConnection();
+                        if (connection.hasService()) {
+                            connection.setUserId(userId);
+                        }
+                    }
+                } catch (RemoteException re) {
+                    Boast.makeText(mainActivity, "Could not set the patient id", Toast.LENGTH_LONG).show();
+                }
             }
-            mRecordsSentLabels[row].setText(R.string.emptyText);
-        } else {
-            int timeSinceLastUpdate = (int)((System.currentTimeMillis() - recordsSent.getTime()) / 1000L);
-            if (previousRecordsSent[row] != null && previousRecordsSent[row].equals(recordsSent) && previousRecordsSentTimer[row] == timeSinceLastUpdate) {
-                return;
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
             }
-            // Small test for Firebase Remote config.
-            String message;
-            if (radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true)) {
-                message = String.format(Locale.US, "%1$4dk (%2$d)",
-                        recordsSent.getValue() / 1000, timeSinceLastUpdate);
+        });
+
+        builder.show();
+    }
+
+    private class DeviceRow {
+        private final DeviceServiceConnection connection;
+        private final View mStatusIcon;
+        private final TextView mTemperatureLabel;
+        private final TextView mHeartRateLabel;
+        private final TextView mAccelerationLabel;
+        private final TextView mRecordsSentLabel;
+        private final ImageView mBatteryLabel;
+        private final TextView mDeviceNameLabel;
+        private final Button mDeviceInputButton;
+        private String mInputDeviceKey;
+        private BaseDeviceState state;
+        private String deviceName;
+        private TimedInt previousRecordsSent;
+        private float previousTemperature = Float.NaN;
+        private float previousBatteryLevel = Float.NaN;
+        private float previousHeartRate = Float.NaN;
+        private float previousAcceleration = Float.NaN;
+        private int previousRecordsSentTimer = -1;
+        private String previousName;
+        private DeviceStatusListener.Status previousStatus = null;
+
+        private DeviceRow(RadarServiceProvider provider, ViewGroup root) {
+            this.connection = provider.getConnection();
+            LayoutInflater inflater = (LayoutInflater) mainActivity.getSystemService(
+                    Context.LAYOUT_INFLATER_SERVICE);
+            RelativeLayout row = (RelativeLayout) inflater.inflate(R.layout.activity_overview_device_row, root);
+            TextView deviceTypeLabel = (TextView) row.findViewById(R.id.deviceType);
+            deviceTypeLabel.setText(provider.getDisplayName());
+
+            mStatusIcon = row.findViewById(R.id.status_icon);
+            mTemperatureLabel = (TextView) row.findViewById(R.id.temperature_label);
+            mHeartRateLabel = (TextView) row.findViewById(R.id.heartRate_label);
+            mAccelerationLabel = (TextView) row.findViewById(R.id.acceleration_label);
+            mRecordsSentLabel = (TextView) row.findViewById(R.id.recordsSent_label);
+            mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
+            mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
+            mDeviceInputButton = (Button) row.findViewById(R.id.inputDeviceNameButton);
+            mDeviceInputButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialogDeviceName();
+                }
+            });
+
+            mInputDeviceKey = "";
+            row.findViewById(R.id.refreshButton).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    reconnectDevice();
+                }
+            });
+        }
+
+        public void dialogDeviceName() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
+            builder.setTitle("Device Serial Number:");
+
+            // Set up the input
+            final EditText input = new EditText(mainActivity);
+            // Specify the type of input expected
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            builder.setView(input);
+
+            // Set up the buttons
+            input.setText(mInputDeviceKey);
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // Remember previous value
+                    String oldValue = mInputDeviceKey;
+
+                    // Set new value and process
+                    mInputDeviceKey = input.getText().toString().trim();
+                    if (!mInputDeviceKey.equals(oldValue)) {
+                        return;
+                    }
+                    Set<String> allowed;
+                    String splitRegex = mainActivity.getString(R.string.deviceKeySplitRegex);
+                    allowed = new HashSet<>(Arrays.asList(mInputDeviceKey.split(splitRegex)));
+                    Iterator<String> iter = allowed.iterator();
+                    // remove empty strings
+                    while (iter.hasNext()) {
+                        if (iter.next().trim().isEmpty()) {
+                            iter.remove();
+                        }
+                    }
+
+                    mainActivity.setAllowedDeviceIds(connection, allowed);
+                    mDeviceInputButton.setText(mInputDeviceKey);
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+
+            builder.show();
+        }
+
+        public void reconnectDevice() {
+            try {
+                // will restart scanning after disconnect
+                mainActivity.disconnect(connection);
+            } catch (IndexOutOfBoundsException iobe) {
+                Boast.makeText(mainActivity, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
+                logger.warn(iobe.getMessage());
+            }
+        }
+
+        private void update() throws RemoteException {
+            if (connection.hasService()) {
+                state = connection.getDeviceData();
+                switch (state.getStatus()) {
+                    case CONNECTED:
+                    case CONNECTING:
+                        deviceName = connection.getDeviceName();
+                        break;
+                    default:
+                        deviceName = null;
+                        break;
+                }
             } else {
-                message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)",
-                        recordsSent.getValue(), timeSinceLastUpdate);
+                state = null;
+                deviceName = null;
             }
-            mRecordsSentLabels[row].setText(message);
-            previousRecordsSentTimer[row] = timeSinceLastUpdate;
         }
-        previousRecordsSent[row] = recordsSent;
-    }
 
-    private void setText(TextView[] labels, float[] previousValue, int row, float value, String suffix, DecimalFormat formatter) {
-        if (value == previousValue[row] || (Float.isNaN(value) && Float.isNaN(previousValue[row]))) {
-            return;
+        public void display() {
+            updateAcceleration();
+            updateBattery();
+            updateDeviceName();
+            updateDeviceStatus();
+            updateDeviceTotalRecordsSent();
+            updateHeartRate();
+            updateTemperature();
         }
-        previousValue[row] = value;
-        if (Float.isNaN(value)) {
-            // Only overwrite default value if enabled.
-            if (labels[row].isEnabled()) {
-                // em dash
-                labels[row].setText("\u2014");
+
+        public void updateDeviceStatus() {
+            // Connection status. Change icon used.
+            DeviceStatusListener.Status status;
+            if (state == null) {
+                status = DeviceStatusListener.Status.DISCONNECTED;
+            } else {
+                status = state.getStatus();
             }
-        } else {
-            labels[row].setText(formatter.format(value) + " " + suffix);
+            if (!Objects.equals(status, previousStatus)) {
+                logger.info("Device status is {}", status);
+                previousStatus = status;
+                Integer statusIcon = deviceStatusIconMap.get(status);
+                int resource = statusIcon != null ? statusIcon : deviceStatusIconDefault;
+                mStatusIcon.setBackgroundResource(resource);
+            }
+        }
+
+        public void updateTemperature() {
+            if (state != null && !state.hasTemperature()) {
+                return;
+            }
+            // \u2103 == ℃
+            float temperature = state == null ? Float.NaN : state.getTemperature();
+            if (Objects.equals(previousTemperature, temperature)) {
+                return;
+            }
+            previousTemperature = temperature;
+            setText(mTemperatureLabel, temperature, "\u2103", singleDecimal);
+        }
+
+        public void updateHeartRate() {
+            if (state != null && !state.hasHeartRate()) {
+                return;
+            }
+            float heartRate = state == null ? Float.NaN : state.getHeartRate();
+            if (Objects.equals(previousHeartRate, heartRate)) {
+                return;
+            }
+            previousHeartRate = heartRate;
+            setText(mHeartRateLabel, heartRate, "bpm", noDecimals);
+        }
+
+        public void updateAcceleration() {
+            if (state != null && !state.hasAcceleration()) {
+                return;
+            }
+            float acceleration = state == null ? Float.NaN : state.getAccelerationMagnitude();
+            if (Objects.equals(previousAcceleration, acceleration)) {
+                return;
+            }
+            previousAcceleration = acceleration;
+            setText(mAccelerationLabel, acceleration, "g", doubleDecimal);
+        }
+
+        public void updateBattery() {
+            // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
+            float batteryLevel = state == null ? Float.NaN : state.getBatteryLevel();
+            if (Objects.equals(previousBatteryLevel, batteryLevel)) {
+                return;
+            }
+            previousBatteryLevel = batteryLevel;
+            if (Float.isNaN(batteryLevel)) {
+                mBatteryLabel.setImageResource(R.drawable.ic_battery_unknown);
+                // up to 100%
+            } else if (batteryLevel > 0.5) {
+                mBatteryLabel.setImageResource(R.drawable.ic_battery_full);
+                // up to 45%
+            } else if (batteryLevel > 0.2) {
+                mBatteryLabel.setImageResource(R.drawable.ic_battery_50);
+                // up to 10%
+            } else if (batteryLevel > 0.1) {
+                mBatteryLabel.setImageResource(R.drawable.ic_battery_low);
+                // up to 5% [what are possible values below 10%?]
+            } else {
+                mBatteryLabel.setImageResource(R.drawable.ic_battery_empty);
+            }
+        }
+
+        public void updateDeviceName() {
+            if (Objects.equals(deviceName, previousName)) {
+                return;
+            }
+            previousName = deviceName;
+            // Restrict length of name that is shown.
+            if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH - 3) {
+                deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH) + "...";
+            }
+
+            // \u2014 == —
+            mDeviceNameLabel.setText(deviceName == null ? "\u2014" : deviceName);
+        }
+
+        public void updateDeviceTotalRecordsSent() {
+            TimedInt recordsSent = mainActivity.getTopicsSent(connection);
+            if (recordsSent.getTime() == -1L) {
+                if (previousRecordsSent != null && previousRecordsSent.getTime() == -1L) {
+                    return;
+                }
+                mRecordsSentLabel.setText(R.string.emptyText);
+            } else {
+                int timeSinceLastUpdate = (int)((System.currentTimeMillis() - recordsSent.getTime()) / 1000L);
+                if (previousRecordsSent != null && previousRecordsSent.equals(recordsSent) && previousRecordsSentTimer == timeSinceLastUpdate) {
+                    return;
+                }
+                // Small test for Firebase Remote config.
+                String message;
+                if (radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true)) {
+                    message = String.format(Locale.US, "%1$4dk (%2$d)",
+                            recordsSent.getValue() / 1000, timeSinceLastUpdate);
+                } else {
+                    message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)",
+                            recordsSent.getValue(), timeSinceLastUpdate);
+                }
+                mRecordsSentLabel.setText(message);
+                previousRecordsSentTimer = timeSinceLastUpdate;
+            }
+            previousRecordsSent = recordsSent;
+        }
+
+        private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+            if (Float.isNaN(value)) {
+                // Only overwrite default value if enabled.
+                if (label.isEnabled()) {
+                    // em dash
+                    label.setText("\u2014");
+                }
+            } else {
+                label.setText(formatter.format(value) + " " + suffix);
+            }
         }
     }
 }

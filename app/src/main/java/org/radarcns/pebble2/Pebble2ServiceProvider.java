@@ -2,8 +2,8 @@ package org.radarcns.pebble2;
 
 import android.os.Parcelable;
 
+import org.radarcns.R;
 import org.radarcns.android.RadarServiceProvider;
-import org.radarcns.empaticaE4.E4Service;
 
 public class Pebble2ServiceProvider extends RadarServiceProvider<Pebble2DeviceStatus> {
     @Override
@@ -23,5 +23,10 @@ public class Pebble2ServiceProvider extends RadarServiceProvider<Pebble2DeviceSt
 
     public void showDetailView() {
         new Pebble2HeartbeatToast(getActivity()).execute(getConnection());
+    }
+
+    @Override
+    public String getDisplayName() {
+        return getActivity().getString(R.string.pebble2DisplayName);
     }
 }

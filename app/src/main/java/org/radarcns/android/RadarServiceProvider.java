@@ -44,6 +44,9 @@ public abstract class RadarServiceProvider<T extends BaseDeviceState> {
      */
     public abstract Parcelable.Creator<T> getStateCreator();
 
+    /** Display name of the service. */
+    public abstract String getDisplayName();
+
     /**
      * Whether the service has a UI detail view that can be invoked. If not,
      * {@link #showDetailView()} will throw an UnsupportedOperationException.
@@ -252,4 +255,11 @@ public abstract class RadarServiceProvider<T extends BaseDeviceState> {
     public String toString() {
         return getClass().getSimpleName() + "<" + getServiceClass().getSimpleName()  + ">";
     }
+
+    /** Whether the current service can meaningfully be displayed. */
+    public boolean isDisplayable() {
+        return true;
+    }
+
+    public boolean isFilterable() { return false; }
 }

@@ -37,11 +37,13 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.radarcns.RadarConfiguration.DATABASE_COMMIT_RATE_KEY;
 import static org.radarcns.RadarConfiguration.DATA_RETENTION_KEY;
+import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_CLEAN_RATE_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_RECORDS_SEND_LIMIT_KEY;
 import static org.radarcns.RadarConfiguration.KAFKA_REST_PROXY_URL_KEY;
@@ -65,7 +67,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     public static final int TRANSACT_GET_DEVICE_NAME = 17;
     public static final int TRANSACT_UPDATE_CONFIG = 18;
     public static final int TRANSACT_GET_CACHE_SIZE = 19;
-    public static final int TRANSACT_GET_DISPLAY_NAME = 20;
+    public static final int TRANSACT_SET_USER_ID = 20;
     private static final String PREFIX = "org.radarcns.android.";
     public static final String SERVER_STATUS_CHANGED = PREFIX + "ServerStatusListener.Status";
     public static final String SERVER_RECORDS_SENT_TOPIC = PREFIX + "ServerStatusListener.topic";
@@ -105,6 +107,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     private boolean isInForeground;
     private boolean isConnected;
     private int latestStartId = -1;
+    private String userId;
 
     @Override
     public void onCreate() {
@@ -310,7 +313,13 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     protected abstract List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> getCachedTopics();
 
-    public abstract String getDisplayName();
+    public synchronized void setUserId(@NonNull String userId) {
+        Objects.requireNonNull(userId);
+        this.userId = userId;
+        if (deviceScanner != null) {
+            deviceScanner.getState().getId().setUserId(userId);
+        }
+    }
 
     private class LocalBinder extends Binder implements DeviceServiceBinder {
         @Override
@@ -342,6 +351,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         @Override
         public BaseDeviceState startRecording(@NonNull Set<String> acceptableIds) {
             DeviceManager localManager = getDeviceManager();
+            if (getUserId() == null) {
+                throw new IllegalStateException("Cannot start recording: user ID is not set.");
+            }
             if (localManager == null) {
                 logger.info("Starting recording");
                 localManager = createDeviceManager();
@@ -406,8 +418,8 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         @Override
-        public String getDisplayName() {
-            return DeviceService.this.getDisplayName();
+        public void setUserId(@NonNull String userId) {
+            DeviceService.this.setUserId(userId);
         }
 
         @Override
@@ -425,12 +437,18 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         getDeviceStatus().writeToParcel(reply, 0);
                         break;
                     case TRANSACT_START_RECORDING: {
-                        int setSize = data.readInt();
-                        Set<String> acceptableIds = new HashSet<>();
-                        for (int i = 0; i < setSize; i++) {
-                            acceptableIds.add(data.readString());
+                        if (getUserId() == null) {
+                            reply.writeByte((byte)0);
+                            break;
+                        } else {
+                            int setSize = data.readInt();
+                            Set<String> acceptableIds = new HashSet<>();
+                            for (int i = 0; i < setSize; i++) {
+                                acceptableIds.add(data.readString());
+                            }
+                            startRecording(acceptableIds).writeToParcel(reply, 0);
+                            reply.writeByte((byte)1);
                         }
-                        startRecording(acceptableIds).writeToParcel(reply, 0);
                         break;
                     }
                     case TRANSACT_STOP_RECORDING:
@@ -451,8 +469,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
                         reply.writeLong(value.second);
                         break;
                     }
-                    case TRANSACT_GET_DISPLAY_NAME:
-                        reply.writeString(getDisplayName());
+                    case TRANSACT_SET_USER_ID:
+                        String userId = data.readString();
+                        setUserId(userId);
                         break;
                     default:
                         return false;
@@ -538,6 +557,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             localDataHandler.setDatabaseCommitRate(
                     RadarConfiguration.getLongExtra(bundle, DATABASE_COMMIT_RATE_KEY));
         }
+        if (RadarConfiguration.hasExtra(bundle, DEFAULT_GROUP_ID_KEY)) {
+            setUserId(RadarConfiguration.getStringExtra(bundle, DEFAULT_GROUP_ID_KEY));
+        }
 
         if (newlyCreated) {
             localDataHandler.addStatusListener(this);
@@ -557,5 +579,9 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
 
     public Binder getBinder() {
         return mBinder;
+    }
+
+    public String getUserId() {
+        return userId;
     }
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <TextView
+        android:id="@+id/deviceType"
+        style="@style/DeviceTypeLabel"
+        android:text="" />
+
+    <TextView
+        android:id="@+id/deviceName_label"
+        style="@style/DeviceNameColumn"
+        android:text="@string/emptyText" />
+
+    <FrameLayout android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <View
+            android:id="@+id/status_icon"
+            style="@style/StatusCircle"
+            android:background="@drawable/status_disconnected" />
+    </FrameLayout>
+
+    <FrameLayout android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/battery_label"
+            style="@style/BatteryColumn"
+            android:src="@drawable/ic_battery_unknown"
+            android:contentDescription="@string/battery_status" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/temperature_label"
+        style="@style/NumberColumn"
+        android:text="@string/disabledText" />
+
+    <TextView
+        android:id="@+id/heartRate_label"
+        style="@style/NumberColumn"
+        android:text="@string/disabledText" />
+
+    <TextView
+        android:id="@+id/acceleration_label"
+        style="@style/NumberColumn"
+        android:text="@string/disabledText" />
+
+    <Button
+        android:id="@+id/inputDeviceNameButton"
+        style="@style/ButtonInputColumn"
+        android:text="@string/button_input"
+        android:visibility="invisible" />
+
+    <Button
+        android:id="@+id/refreshButton"
+        style="@style/ButtonColumn"
+        android:text="@string/button_connect"
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/recordsSent_label"
+        style="@style/NumberColumn"
+        android:text="@string/emptyText" />
+</TableRow>

@@ -3,11 +3,10 @@ package org.radarcns.empaticaE4;
 import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
-import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.key.MeasurementKey;
@@ -62,11 +61,6 @@ public class E4Service extends DeviceService {
                 topics.getAccelerationTopic(), topics.getBloodVolumePulseTopic(),
                 topics.getElectroDermalActivityTopic(), topics.getInterBeatIntervalTopic(),
                 topics.getTemperatureTopic(), topics.getSensorStatusTopic());
-    }
-
-    @Override
-    public String getDisplayName() {
-        return getString(R.string.empaticaE4DisplayName);
     }
 
     @Override

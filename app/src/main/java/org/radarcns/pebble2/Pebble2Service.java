@@ -62,11 +62,6 @@ public class Pebble2Service extends DeviceService {
     }
 
     @Override
-    public String getDisplayName() {
-        return getString(R.string.pebble2DisplayName);
-    }
-
-    @Override
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
         if (groupId == null) {

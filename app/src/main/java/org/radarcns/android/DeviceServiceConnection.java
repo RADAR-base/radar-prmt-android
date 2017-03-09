@@ -48,7 +48,7 @@ public class DeviceServiceConnection<S extends BaseDeviceState> extends BaseServ
         public void onReceive(Context context, Intent intent) {
             if (intentMatches(intent, SERVER_STATUS_CHANGED)) {
                 final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
-                mainActivity.updateServerStatus(DeviceServiceConnection.this, status);
+                mainActivity.updateServerStatus(status);
             } else if (intentMatches(intent, SERVER_RECORDS_SENT_TOPIC)) {
                 String topic = intent.getStringExtra(SERVER_RECORDS_SENT_TOPIC); // topicName that updated
                 int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);

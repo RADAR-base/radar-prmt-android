@@ -3,6 +3,7 @@ package org.radarcns.empaticaE4;
 import android.os.Bundle;
 import android.os.Parcelable;
 
+import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
 import org.radarcns.android.RadarServiceProvider;
 
@@ -30,5 +31,15 @@ public class E4ServiceProvider extends RadarServiceProvider<E4DeviceStatus> {
     protected void configure(Bundle bundle) {
         super.configure(bundle);
         getConfig().putExtras(bundle, RadarConfiguration.EMPATICA_API_KEY);
+    }
+
+    @Override
+    public String getDisplayName() {
+        return getActivity().getString(R.string.empaticaE4DisplayName);
+    }
+
+    @Override
+    public boolean isFilterable() {
+        return true;
     }
 }

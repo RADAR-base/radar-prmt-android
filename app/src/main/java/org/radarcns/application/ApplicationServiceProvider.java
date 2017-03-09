@@ -2,6 +2,7 @@ package org.radarcns.application;
 
 import android.os.Parcelable;
 
+import org.radarcns.R;
 import org.radarcns.android.RadarServiceProvider;
 
 /**
@@ -17,5 +18,14 @@ public class ApplicationServiceProvider extends RadarServiceProvider<Application
     @Override
     public Parcelable.Creator<ApplicationState> getStateCreator() {
         return ApplicationState.CREATOR;
+    }
+
+    public boolean isDisplayable() {
+        return false;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return getActivity().getString(R.string.applicationServiceDisplayName);
     }
 }
