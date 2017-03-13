@@ -2,4 +2,3 @@
 
 # Ignore the file with the default settings key
 /src/main/res/xml/remote_config_defaults.xml
-/google-services.json

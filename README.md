@@ -56,8 +56,8 @@ Firebase can be used to remotely configure some device and system parameters, e.
 
 1. [Install the Firebase SDK](https://firebase.google.com/docs/android/setup) in Android Studio.
 2. Login to a Google account.
-3. In the [Firebase console](https://console.firebase.google.com/), add the app (`org.radarcns.android.android`) to a new Firebase project.
-4. Download the `google-services.json` from the Firebase console (under Project Settings) and move the file to the `app/` folder. 
+3. In the [Firebase console](https://console.firebase.google.com/), add the app (`org.radarcns.android`) to a new Firebase project.
+4. Download the `google-services.json` from the Firebase console (under Project Settings) and move the file to the `common-android/` folder. 
 5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`.
 
 [Full Firebase guide](https://firebase.google.com/docs/remote-config/use-config-android)
