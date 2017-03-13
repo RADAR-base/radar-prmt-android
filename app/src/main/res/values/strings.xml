@@ -57,7 +57,10 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="playServicesUnavailable">Cannot connect, because Google Play Services is not available.</string>
-    <string name="deviceKeySplitRegex">[;,]</string>
     <string name="applicationServiceDisplayName">Application</string>
     <string name="battery_status">Battery status</string>
+    <string name="filter_help_label">Enter part of a device name, serial number or MAC address. Separate multiple options with semicolons \';\' or comma\'s \',\'.</string>
+    <string name="filter_title">Filter device name</string>
+    <string name="filter_split_regex">[;,]</string>
+    <string name="firebase_fetching">Fetching remote config</string>
 </resources>

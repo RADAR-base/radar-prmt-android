@@ -1,10 +1,13 @@
 package org.radarcns;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
@@ -46,6 +49,14 @@ public class RadarConfiguration {
     public static final Pattern IS_FALSE = Pattern.compile(
             "^(0|false|f|no|n|off|)$", CASE_INSENSITIVE);
 
+    public FirebaseStatus getStatus() {
+        return status;
+    }
+
+    public enum FirebaseStatus {
+        UNAVAILABLE, ERROR, READY, FETCHING, FETCHED
+    }
+
     public static final Set<String> LONG_VALUES = new HashSet<>(Arrays.asList(
             UI_REFRESH_RATE_KEY, KAFKA_UPLOAD_RATE_KEY, DATABASE_COMMIT_RATE_KEY,
             KAFKA_CLEAN_RATE_KEY, SENDER_CONNECTION_TIMEOUT_KEY, DATA_RETENTION_KEY,
@@ -60,6 +71,7 @@ public class RadarConfiguration {
     private static final Object syncObject = new Object();
     private static RadarConfiguration instance = null;
     private final FirebaseRemoteConfig config;
+    private FirebaseStatus status;
 
     public static final long FIREBASE_FETCH_TIMEOUT_MS_DEFAULT = 12*60*60 * 1000L;
     private final Handler handler;
@@ -67,20 +79,27 @@ public class RadarConfiguration {
     private OnCompleteListener<Void> onFetchCompleteHandler;
     private final Map<String, Object> localConfiguration;
 
-    private RadarConfiguration(@NonNull FirebaseRemoteConfig config) {
+    private RadarConfiguration(@NonNull Context context, @NonNull FirebaseRemoteConfig config) {
         this.config = config;
         this.onFetchCompleteHandler = null;
 
         this.localConfiguration = new ConcurrentHashMap<>();
         this.handler = new Handler();
-        this.handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                fetch();
-                long delay = getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT);
-                handler.postDelayed(this, delay);
-            }
-        }, getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT));
+
+        GoogleApiAvailability googleApi = GoogleApiAvailability.getInstance();
+        if (googleApi.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
+            status = FirebaseStatus.READY;
+            this.handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    fetch();
+                    long delay = getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT);
+                    handler.postDelayed(this, delay);
+                }
+            }, getLong(FIREBASE_FETCH_TIMEOUT_MS_KEY, FIREBASE_FETCH_TIMEOUT_MS_DEFAULT));
+        } else {
+            status = FirebaseStatus.UNAVAILABLE;
+        }
     }
 
     public FirebaseRemoteConfig getFirebase() {
@@ -101,7 +120,7 @@ public class RadarConfiguration {
         }
     }
 
-    public static RadarConfiguration configure(boolean inDevelopmentMode, int defaultSettings) {
+    public static RadarConfiguration configure(@NonNull Context context, boolean inDevelopmentMode, int defaultSettings) {
         synchronized (syncObject) {
             if (instance == null) {
                 FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
@@ -111,7 +130,7 @@ public class RadarConfiguration {
                 config.setConfigSettings(configSettings);
                 config.setDefaults(defaultSettings);
 
-                instance = new RadarConfiguration(config);
+                instance = new RadarConfiguration(context, config);
             }
             return instance;
         }
@@ -121,6 +140,10 @@ public class RadarConfiguration {
         return localConfiguration.put(key, value);
     }
 
+    /**
+     * Fetch the configuration from the firebase server.
+     * @return fetch task or null status is {@link FirebaseStatus#UNAVAILABLE}.
+     */
     public Task<Void> fetch() {
         long delay;
         if (isInDevelopmentMode()) {
@@ -131,9 +154,30 @@ public class RadarConfiguration {
         return fetch(delay);
     }
 
+    /**
+     * Fetch the configuration from the firebase server.
+     * @param delay
+     * @return fetch task or null status is {@link FirebaseStatus#UNAVAILABLE}.
+     */
     private Task<Void> fetch(long delay) {
+        if (status == FirebaseStatus.UNAVAILABLE) {
+            return null;
+        }
         Task<Void> task = config.fetch(delay);
         synchronized (this) {
+            status = FirebaseStatus.FETCHING;
+            task.addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    synchronized (RadarConfiguration.this) {
+                        if (task.isSuccessful()) {
+                            status = FirebaseStatus.FETCHED;
+                        } else {
+                            status = FirebaseStatus.ERROR;
+                        }
+                    }
+                }
+            });
             if (onFetchCompleteHandler != null) {
                 if (onFetchActivity != null) {
                     task.addOnCompleteListener(onFetchActivity, onFetchCompleteHandler);

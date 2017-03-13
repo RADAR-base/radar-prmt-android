@@ -13,13 +13,11 @@ import android.os.HandlerThread;
 import android.os.Process;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -32,15 +30,17 @@ import org.radarcns.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import static android.Manifest.permission.ACCESS_NETWORK_STATE;
+import static android.Manifest.permission.INTERNET;
+import static android.Manifest.permission.RECEIVE_BOOT_COMPLETED;
 import static org.radarcns.RadarConfiguration.UI_REFRESH_RATE_KEY;
 import static org.radarcns.android.DeviceService.DEVICE_CONNECT_FAILED;
 import static org.radarcns.android.DeviceService.DEVICE_STATUS_NAME;
@@ -70,11 +70,6 @@ public class MainActivity extends AppCompatActivity {
     private final Map<DeviceServiceConnection, TimedInt> mTotalRecordsSent;
     private String latestTopicSent;
     private final TimedInt latestNumberOfRecordsSent;
-
-    private View mFirebaseStatusIcon;
-    private TextView mFirebaseMessage;
-
-    private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
     public RadarConfiguration radarConfiguration;
 
@@ -140,11 +135,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean supportRequestWindowFeature(int featureId) {
+        return super.supportRequestWindowFeature(featureId);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_overview);
-        initializeViews();
-        initializeRemoteConfig();
+
+        // TODO: disable developer mode in production
+        radarConfiguration = RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
+        configureRunAtBoot();
+
+        mConnections = RadarServiceProvider.loadProviders(this, radarConfiguration);
+        for (RadarServiceProvider provider : mConnections) {
+            DeviceServiceConnection connection = provider.getConnection();
+            mTotalRecordsSent.put(connection, new TimedInt());
+            mInputDeviceKeys.put(connection, Collections.<String>emptySet());
+        }
+
+        radarConfiguration.onFetchComplete(this, new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    // Once the config is successfully fetched it must be
+                    // activated before newly fetched values are returned.
+                    radarConfiguration.activateFetched();
+                    for (RadarServiceProvider provider : mConnections) {
+                        provider.updateConfiguration();
+                    }
+                    logger.info("Remote Config: Activate success.");
+                    // Set global properties.
+                    configureRunAtBoot();
+                } else {
+                    Boast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
+                            Toast.LENGTH_SHORT).show();
+                    logger.info("Remote Config: Fetch failed. Stacktrace: {}", task.getException());
+                }
+            }
+        });
 
         // Start the UI thread
         uiRefreshRate = radarConfiguration.getLong(UI_REFRESH_RATE_KEY);
@@ -163,60 +192,11 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        mConnections = RadarServiceProvider.loadProviders(this, radarConfiguration);
-        for (RadarServiceProvider provider : mConnections) {
-            DeviceServiceConnection connection = provider.getConnection();
-            mTotalRecordsSent.put(connection, new TimedInt());
-            mInputDeviceKeys.put(connection, Collections.<String>emptySet());
-        }
-
         // Not needed in API level 22.
-        // checkBluetoothPermissions();
-
-        // Check availability of Google Play Services
-        GoogleApiAvailability googleApi = GoogleApiAvailability.getInstance();
-        if (googleApi.isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
-            mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
-            mFirebaseMessage.setText(R.string.playServicesUnavailable);
-        }
+        // checkPermissions();
     }
 
-    private void initializeViews() {
-        // Firebase
-        mFirebaseStatusIcon = findViewById(R.id.firebaseStatus);
-        mFirebaseMessage = (TextView) findViewById( R.id.firebaseStatusMessage);
-    }
-
-    private void initializeRemoteConfig() {
-        // TODO: disable developer mode in production
-        radarConfiguration = RadarConfiguration.configure(true, R.xml.remote_config_defaults);
-        radarConfiguration.onFetchComplete(this, new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    // Once the config is successfully fetched it must be
-                    // activated before newly fetched values are returned.
-                    radarConfiguration.activateFetched();
-                    for (RadarServiceProvider provider : mConnections) {
-                        provider.updateConfiguration();
-                    }
-                    logger.info("Remote Config: Activate success.");
-                    // Set global properties.
-                    mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
-                    mFirebaseMessage.setText("Remote config fetched from the server ("
-                            + timeFormat.format( System.currentTimeMillis() ) + ")");
-                    configureAtBoot();
-                } else {
-                    Toast.makeText(MainActivity.this, "Remote Config: Fetch Failed",
-                            Toast.LENGTH_SHORT).show();
-                    logger.info("Remote Config: Fetch failed. Stacktrace: {}", task.getException());
-                }
-            }
-        });
-        configureAtBoot();
-    }
-
-    private void configureAtBoot() {
+    private void configureRunAtBoot() {
         ComponentName receiver = new ComponentName(
                 getApplicationContext(), MainActivityStarter.class);
         PackageManager pm = getApplicationContext().getPackageManager();
@@ -369,7 +349,6 @@ public class MainActivity extends AppCompatActivity {
                     case CONNECTED:
                         break;
                     case CONNECTING:
-//                        statusLabel.setText("CONNECTING");
                         logger.info( "Device name is {} while connecting.", connection.getDeviceName() );
                         // Reject if device name inputted does not equal device nameA
                         if (!connection.isAllowedDevice(mInputDeviceKeys.get(connection))) {
@@ -397,23 +376,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    private void checkBluetoothPermissions() {
-//        String[] permissions = {
-//                Manifest.permission.ACCESS_COARSE_LOCATION,
-//                Manifest.permission.BLUETOOTH,
-//                Manifest.permission.BLUETOOTH_ADMIN};
-//
-//        boolean waitingForPermission = false;
-//        for (String permission : permissions) {
-//            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-//                waitingForPermission = true;
-//                break;
-//            }
-//        }
-//        if (waitingForPermission) {
-//            ActivityCompat.requestPermissions(this, permissions, REQUEST_ENABLE_PERMISSIONS);
-//        }
-//    }
+    private void checkPermissions() {
+        List<String> basePermissions = Arrays.asList(ACCESS_NETWORK_STATE, INTERNET,
+                RECEIVE_BOOT_COMPLETED);
+        List<String> permissions = new ArrayList<>();
+        permissions.addAll(basePermissions);
+        for (RadarServiceProvider<?> provider : mConnections) {
+            permissions.addAll(provider.needsPermissions());
+        }
+
+        List<String> permissionsToRequest = new ArrayList<>();
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(permission);
+            }
+        }
+        if (!permissionsToRequest.isEmpty()) {
+            ActivityCompat.requestPermissions(this,
+                    permissionsToRequest.toArray(new String[permissionsToRequest.size()]),
+                    REQUEST_ENABLE_PERMISSIONS);
+        }
+    }
 
     @Override
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {

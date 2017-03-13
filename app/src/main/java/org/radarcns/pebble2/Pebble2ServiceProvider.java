@@ -5,6 +5,13 @@ import android.os.Parcelable;
 import org.radarcns.R;
 import org.radarcns.android.RadarServiceProvider;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.BLUETOOTH;
+import static android.Manifest.permission.BLUETOOTH_ADMIN;
+
 public class Pebble2ServiceProvider extends RadarServiceProvider<Pebble2DeviceStatus> {
     @Override
     public Class<?> getServiceClass() {
@@ -23,6 +30,11 @@ public class Pebble2ServiceProvider extends RadarServiceProvider<Pebble2DeviceSt
 
     public void showDetailView() {
         new Pebble2HeartbeatToast(getActivity()).execute(getConnection());
+    }
+
+    @Override
+    public List<String> needsPermissions() {
+        return Arrays.asList(ACCESS_COARSE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN);
     }
 
     @Override

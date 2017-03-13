@@ -90,7 +90,7 @@ public class BaseDeviceState implements Parcelable {
 
     /**
      * Get the x, y and z components of the acceleration in g.
-     * @return array of acceleration or Float.NaN if unknown
+     * @return array of acceleration or of Float.NaN if unknown
      */
     public float[] getAcceleration() {
         return new float[] {Float.NaN, Float.NaN, Float.NaN};

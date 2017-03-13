@@ -261,5 +261,13 @@ public abstract class RadarServiceProvider<T extends BaseDeviceState> {
         return true;
     }
 
+    /**
+     * Whether the device name should be checked with given filters before a connection is allowed
+     */
     public boolean isFilterable() { return false; }
+
+    /**
+     * Android permissions that the underlying service needs to function correctly.
+     */
+    public abstract List<String> needsPermissions();
 }

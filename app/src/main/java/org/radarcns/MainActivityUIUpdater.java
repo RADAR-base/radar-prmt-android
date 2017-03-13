@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,18 +48,14 @@ public class MainActivityUIUpdater implements Runnable {
     private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
-    /**
-     * Data formats
-     */
+    // Data formats
     private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
     private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
     private final DecimalFormat noDecimals = new DecimalFormat("0");
+
     private final MainActivity mainActivity;
     private final RadarConfiguration radarConfiguration;
     private final List<DeviceRow> rows;
-
-    private View mServerStatusIcon;
-    private TextView mServerMessage;
 
     private final Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
     private final static int serverStatusIconDefault = R.drawable.status_disconnected;
@@ -71,7 +68,14 @@ public class MainActivityUIUpdater implements Runnable {
     private ServerStatusListener.Status previousServerStatus;
     private String newServerStatus;
     private String userId;
+    private RadarConfiguration.FirebaseStatus previousFirebaseStatus;
+
+    // View elements
+    private View mServerStatusIcon;
+    private TextView mServerMessage;
     private Button mGroupIdInputButton;
+    private View mFirebaseStatusIcon;
+    private TextView mFirebaseMessage;
 
     MainActivityUIUpdater(MainActivity activity, RadarConfiguration radarConfiguration) {
         this.radarConfiguration = radarConfiguration;
@@ -90,7 +94,7 @@ public class MainActivityUIUpdater implements Runnable {
         serverStatusIconMap.put(ServerStatusListener.Status.READY, R.drawable.status_searching);
         serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, R.drawable.status_searching);
         serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
-        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_uploading_failed);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_error);
 
         userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
 
@@ -144,6 +148,8 @@ public class MainActivityUIUpdater implements Runnable {
     }
 
     private void initializeViews() {
+        mainActivity.setContentView(R.layout.activity_overview);
+
         mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
         mServerMessage = (TextView) mainActivity.findViewById( R.id.statusServerMessage);
         mGroupIdInputButton = (Button) mainActivity.findViewById(R.id.inputGroupId);
@@ -154,6 +160,8 @@ public class MainActivityUIUpdater implements Runnable {
             }
         });
         mGroupIdInputButton.setText(userId);
+        mFirebaseStatusIcon = mainActivity.findViewById(R.id.firebaseStatus);
+        mFirebaseMessage = (TextView) mainActivity.findViewById( R.id.firebaseStatusMessage);
     }
 
     @Override
@@ -162,6 +170,38 @@ public class MainActivityUIUpdater implements Runnable {
             row.display();
         }
         updateServerStatus();
+        updateFirebaseStatus();
+    }
+
+    private void updateFirebaseStatus() {
+        RadarConfiguration.FirebaseStatus status = radarConfiguration.getStatus();
+        if (status == previousFirebaseStatus) {
+            return;
+        }
+        previousFirebaseStatus = status;
+
+        switch (status) {
+            case FETCHED:
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
+                mFirebaseMessage.setText("Remote config fetched from the server ("
+                        + timeFormat.format( System.currentTimeMillis() ) + ")");
+                break;
+            case UNAVAILABLE:
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
+                mFirebaseMessage.setText(R.string.playServicesUnavailable);
+                break;
+            case FETCHING:
+                mFirebaseMessage.setText(R.string.firebase_fetching);
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_searching);
+                break;
+            case ERROR:
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_error);
+                mFirebaseMessage.setText("Failed to fetch remote config ("
+                        + timeFormat.format( System.currentTimeMillis() ) + ")");
+                break;
+            default:
+                // no action
+        }
     }
 
     private void updateServerStatus() {
@@ -248,9 +288,11 @@ public class MainActivityUIUpdater implements Runnable {
 
         private DeviceRow(RadarServiceProvider provider, ViewGroup root) {
             this.connection = provider.getConnection();
+            logger.info("Creating device row for provider {} and connection {}", provider, connection);
             LayoutInflater inflater = (LayoutInflater) mainActivity.getSystemService(
                     Context.LAYOUT_INFLATER_SERVICE);
-            RelativeLayout row = (RelativeLayout) inflater.inflate(R.layout.activity_overview_device_row, root);
+            TableRow row = (TableRow) inflater.inflate(R.layout.activity_overview_device_row, null);
+            root.addView(row);
             TextView deviceTypeLabel = (TextView) row.findViewById(R.id.deviceType);
             deviceTypeLabel.setText(provider.getDisplayName());
 
@@ -262,12 +304,15 @@ public class MainActivityUIUpdater implements Runnable {
             mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
             mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
             mDeviceInputButton = (Button) row.findViewById(R.id.inputDeviceNameButton);
-            mDeviceInputButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dialogDeviceName();
-                }
-            });
+            if (provider.isFilterable()) {
+                mDeviceInputButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialogDeviceName();
+                    }
+                });
+                mDeviceInputButton.setVisibility(View.VISIBLE);
+            }
 
             mInputDeviceKey = "";
             row.findViewById(R.id.refreshButton).setOnClickListener(new View.OnClickListener() {
@@ -280,13 +325,18 @@ public class MainActivityUIUpdater implements Runnable {
 
         public void dialogDeviceName() {
             AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-            builder.setTitle("Device Serial Number:");
+            builder.setTitle(mainActivity.getString(R.string.filter_title));
 
+            final RelativeLayout layout = new RelativeLayout(mainActivity);
+            TextView label = new TextView(mainActivity);
+            label.setText(R.string.filter_help_label);
+            layout.addView(label);
             // Set up the input
             final EditText input = new EditText(mainActivity);
             // Specify the type of input expected
             input.setInputType(InputType.TYPE_CLASS_TEXT);
-            builder.setView(input);
+            layout.addView(input);
+            builder.setView(layout);
 
             // Set up the buttons
             input.setText(mInputDeviceKey);
@@ -302,7 +352,7 @@ public class MainActivityUIUpdater implements Runnable {
                         return;
                     }
                     Set<String> allowed;
-                    String splitRegex = mainActivity.getString(R.string.deviceKeySplitRegex);
+                    String splitRegex = mainActivity.getString(R.string.filter_split_regex);
                     allowed = new HashSet<>(Arrays.asList(mInputDeviceKey.split(splitRegex)));
                     Iterator<String> iter = allowed.iterator();
                     // remove empty strings

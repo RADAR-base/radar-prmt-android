@@ -248,6 +248,9 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
      * True if given string is a substring of the device name.
      */
     public boolean isAllowedDevice(Collection<String> values) {
+        if (values.isEmpty()) {
+            return true;
+        }
         for (String value : values) {
             Pattern pattern = Strings.containsIgnoreCasePattern(value);
             String deviceName = getDeviceName();
@@ -294,5 +297,26 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
 
     public String getServiceClassName() {
         return serviceClassName;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        BaseServiceConnection otherService = (BaseServiceConnection) other;
+        return Objects.equals(this.serviceClassName, otherService.serviceClassName);
+    }
+
+    @Override
+    public int hashCode() {
+        return serviceClassName.hashCode();
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + "<" + getServiceClassName() + ">";
     }
 }

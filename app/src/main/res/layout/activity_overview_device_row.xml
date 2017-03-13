@@ -55,8 +55,7 @@
     <Button
         android:id="@+id/refreshButton"
         style="@style/ButtonColumn"
-        android:text="@string/button_connect"
-        android:visibility="invisible" />
+        android:text="@string/button_connect" />
 
     <TextView
         android:id="@+id/recordsSent_label"
