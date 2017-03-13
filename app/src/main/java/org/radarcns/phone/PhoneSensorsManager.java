@@ -11,10 +11,10 @@ import android.hardware.SensorManager;
 import android.os.BatteryManager;
 import android.support.annotation.NonNull;
 
-import org.radarcns.android.DeviceManager;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.TableDataHandler;
-import org.radarcns.data.DataCache;
+import org.radarcns.android.device.DeviceManager;
+import org.radarcns.android.device.DeviceStatusListener;
+import org.radarcns.android.data.DataCache;
+import org.radarcns.android.data.TableDataHandler;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;

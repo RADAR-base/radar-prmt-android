@@ -1,6 +1,6 @@
 package org.radarcns.empaticaE4;
 
-import org.radarcns.android.DeviceTopics;
+import org.radarcns.android.device.DeviceTopics;
 import org.radarcns.empatica.EmpaticaE4Acceleration;
 import org.radarcns.empatica.EmpaticaE4BatteryLevel;
 import org.radarcns.empatica.EmpaticaE4BloodVolumePulse;

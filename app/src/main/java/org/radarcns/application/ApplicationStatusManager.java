@@ -9,15 +9,15 @@ import android.support.annotation.NonNull;
 import android.util.Pair;
 
 import org.radarcns.R;
-import org.radarcns.android.BaseDeviceState;
-import org.radarcns.android.BaseServiceConnection;
-import org.radarcns.android.DeviceManager;
-import org.radarcns.android.DeviceServiceBinder;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.TableDataHandler;
-import org.radarcns.data.DataCache;
+import org.radarcns.android.data.DataCache;
+import org.radarcns.android.data.TableDataHandler;
+import org.radarcns.android.device.BaseDeviceState;
+import org.radarcns.android.device.BaseServiceConnection;
+import org.radarcns.android.device.DeviceManager;
+import org.radarcns.android.device.DeviceServiceBinder;
+import org.radarcns.android.device.DeviceStatusListener;
+import org.radarcns.android.kafka.ServerStatusListener;
 import org.radarcns.empaticaE4.E4Service;
-import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble2.Pebble2Service;
 import org.radarcns.phone.PhoneSensorsService;
@@ -38,9 +38,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.Context.BIND_WAIVE_PRIORITY;
-import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_NUMBER;
-import static org.radarcns.android.DeviceService.SERVER_RECORDS_SENT_TOPIC;
-import static org.radarcns.android.DeviceService.SERVER_STATUS_CHANGED;
+import static org.radarcns.android.device.DeviceService.SERVER_RECORDS_SENT_NUMBER;
+import static org.radarcns.android.device.DeviceService.SERVER_RECORDS_SENT_TOPIC;
+import static org.radarcns.android.device.DeviceService.SERVER_STATUS_CHANGED;
 
 public class ApplicationStatusManager implements DeviceManager {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationStatusManager.class);

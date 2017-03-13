@@ -10,17 +10,17 @@ import android.support.annotation.NonNull;
 
 import com.getpebble.android.kit.PebbleKit;
 
-import org.radarcns.android.DeviceManager;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.TableDataHandler;
-import org.radarcns.data.DataCache;
+import org.radarcns.android.data.DataCache;
+import org.radarcns.android.data.TableDataHandler;
+import org.radarcns.android.device.DeviceManager;
+import org.radarcns.android.device.DeviceStatusListener;
+import org.radarcns.android.util.BundleSerialization;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2Acceleration;
 import org.radarcns.pebble.Pebble2BatteryLevel;
 import org.radarcns.pebble.Pebble2HeartRate;
 import org.radarcns.pebble.Pebble2HeartRateFiltered;
 import org.radarcns.topic.AvroTopic;
-import org.radarcns.util.BundleSerialization;
 import org.radarcns.util.Serialization;
 import org.radarcns.util.Strings;
 import org.slf4j.Logger;

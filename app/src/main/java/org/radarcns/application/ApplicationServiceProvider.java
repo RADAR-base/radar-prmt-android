@@ -3,14 +3,14 @@ package org.radarcns.application;
 import android.os.Parcelable;
 
 import org.radarcns.R;
-import org.radarcns.android.RadarServiceProvider;
+import org.radarcns.android.device.DeviceServiceProvider;
 
 import java.util.Collections;
 import java.util.List;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-public class ApplicationServiceProvider extends RadarServiceProvider<ApplicationState> {
+public class ApplicationServiceProvider extends DeviceServiceProvider<ApplicationState> {
     @Override
     public Class<?> getServiceClass() {
         return ApplicationStatusService.class;

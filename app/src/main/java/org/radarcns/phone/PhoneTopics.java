@@ -1,6 +1,6 @@
 package org.radarcns.phone;
 
-import org.radarcns.android.DeviceTopics;
+import org.radarcns.android.device.DeviceTopics;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.topic.AvroTopic;
 

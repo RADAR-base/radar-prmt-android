@@ -4,8 +4,8 @@ import android.os.Bundle;
 import android.os.Parcelable;
 
 import org.radarcns.R;
-import org.radarcns.RadarConfiguration;
-import org.radarcns.android.RadarServiceProvider;
+import org.radarcns.android.RadarConfiguration;
+import org.radarcns.android.device.DeviceServiceProvider;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,7 +14,7 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.BLUETOOTH;
 import static android.Manifest.permission.BLUETOOTH_ADMIN;
 
-public class E4ServiceProvider extends RadarServiceProvider<E4DeviceStatus> {
+public class E4ServiceProvider extends DeviceServiceProvider<E4DeviceStatus> {
     @Override
     public Class<?> getServiceClass() {
         return E4Service.class;

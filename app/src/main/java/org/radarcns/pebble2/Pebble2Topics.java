@@ -1,6 +1,6 @@
 package org.radarcns.pebble2;
 
-import org.radarcns.android.DeviceTopics;
+import org.radarcns.android.device.DeviceTopics;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2Acceleration;
 import org.radarcns.pebble.Pebble2BatteryLevel;

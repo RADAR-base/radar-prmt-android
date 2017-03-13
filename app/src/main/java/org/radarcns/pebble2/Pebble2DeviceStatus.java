@@ -2,8 +2,8 @@ package org.radarcns.pebble2;
 
 import android.os.Parcel;
 
-import org.radarcns.android.BaseDeviceState;
-import org.radarcns.util.DeviceStateCreator;
+import org.radarcns.android.device.DeviceStateCreator;
+import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.util.Serialization;
 
 import java.util.Arrays;

@@ -3,9 +3,9 @@ package org.radarcns.application;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.radarcns.android.BaseDeviceState;
-import org.radarcns.kafka.rest.ServerStatusListener;
-import org.radarcns.util.DeviceStateCreator;
+import org.radarcns.android.device.DeviceStateCreator;
+import org.radarcns.android.device.BaseDeviceState;
+import org.radarcns.android.kafka.ServerStatusListener;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

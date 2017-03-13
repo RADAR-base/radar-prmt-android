@@ -1,17 +1,3 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.3'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-        classpath 'com.google.gms:google-services:3.0.0'
-    }
-}
-
 apply plugin: 'com.android.application'
 
 android {
@@ -47,25 +33,13 @@ repositories {
 }
 
 dependencies {
-    // logging
-    compile('io.confluent:kafka-avro-serializer:3.1.2') {
-        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-        exclude group: 'log4j'
-        exclude group: 'jline'
-        exclude group: 'com.101tec'
-    }
+    compile project(':common-android')
+    compile project(':empalink-2.0')
+
     // needed to work with testCompile -> kafka-clients
     compile 'com.getpebble:pebblekit:4.0.0'
     compile 'com.loopj.android:android-async-http:1.4.6'
     compile 'com.android.support:appcompat-v7:22.2.0'
-    compile 'com.squareup.okhttp3:okhttp:3.4.1'
-    compile 'org.apache.avro:avro:1.8.1'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
-    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
-    compile 'com.google.firebase:firebase-config:10.0.1'
-    compile 'org.radarcns:radar-commons:0.1'
-
-    compile project(':empalink-2.0')
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.21'

@@ -6,8 +6,8 @@ import android.os.Parcelable;
 import com.empatica.empalink.config.EmpaSensorStatus;
 import com.empatica.empalink.config.EmpaSensorType;
 
-import org.radarcns.android.BaseDeviceState;
-import org.radarcns.util.DeviceStateCreator;
+import org.radarcns.android.device.BaseDeviceState;
+import org.radarcns.android.device.DeviceStateCreator;
 
 import java.util.EnumMap;
 import java.util.Map;

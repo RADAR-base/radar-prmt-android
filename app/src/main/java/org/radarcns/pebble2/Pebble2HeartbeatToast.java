@@ -5,11 +5,11 @@ import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.widget.Toast;
 
-import org.radarcns.android.DeviceServiceConnection;
+import org.radarcns.android.device.DeviceServiceConnection;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.Pebble2HeartRateFiltered;
 import org.radarcns.topic.AvroTopic;
-import org.radarcns.util.Boast;
+import org.radarcns.android.util.Boast;
 import org.radarcns.data.Record;
 
 import java.io.IOException;

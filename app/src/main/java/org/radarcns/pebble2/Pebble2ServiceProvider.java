@@ -3,7 +3,7 @@ package org.radarcns.pebble2;
 import android.os.Parcelable;
 
 import org.radarcns.R;
-import org.radarcns.android.RadarServiceProvider;
+import org.radarcns.android.device.DeviceServiceProvider;
 
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +12,7 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.BLUETOOTH;
 import static android.Manifest.permission.BLUETOOTH_ADMIN;
 
-public class Pebble2ServiceProvider extends RadarServiceProvider<Pebble2DeviceStatus> {
+public class Pebble2ServiceProvider extends DeviceServiceProvider<Pebble2DeviceStatus> {
     @Override
     public Class<?> getServiceClass() {
         return Pebble2Service.class;

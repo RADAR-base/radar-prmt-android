@@ -16,10 +16,10 @@ import com.empatica.empalink.config.EmpaStatus;
 import com.empatica.empalink.delegate.EmpaDataDelegate;
 import com.empatica.empalink.delegate.EmpaStatusDelegate;
 
-import org.radarcns.android.DeviceManager;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.TableDataHandler;
-import org.radarcns.data.DataCache;
+import org.radarcns.android.data.DataCache;
+import org.radarcns.android.data.TableDataHandler;
+import org.radarcns.android.device.DeviceManager;
+import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.empatica.EmpaticaE4Acceleration;
 import org.radarcns.empatica.EmpaticaE4BatteryLevel;
 import org.radarcns.empatica.EmpaticaE4BloodVolumePulse;

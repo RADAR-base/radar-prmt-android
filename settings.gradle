@@ -1,2 +1,3 @@
 include ':app'
+include ':common-android'
 include ':empalink-2.0'

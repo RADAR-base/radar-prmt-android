@@ -4,10 +4,7 @@
     <uses-feature android:name="android.hardware.bluetooth"/>
     <uses-feature android:name="android.hardware.bluetooth_le"/>
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <!--Write permission needed for persisting phone source id. e.g. between new installations-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -21,7 +18,7 @@
         android:theme="@style/AppTheme">
         <receiver
             android:enabled="false"
-            android:name=".MainActivityStarter">
+            android:name=".android.MainActivityStarter">
 
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -30,7 +27,7 @@
 
         <activity
             android:screenOrientation="landscape"
-            android:name=".MainActivity"
+            android:name=".DetailMainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

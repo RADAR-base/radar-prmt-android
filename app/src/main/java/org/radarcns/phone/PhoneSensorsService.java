@@ -3,23 +3,23 @@ package org.radarcns.phone;
 import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
-import org.radarcns.RadarConfiguration;
-import org.radarcns.android.BaseDeviceState;
-import org.radarcns.android.DeviceManager;
-import org.radarcns.android.DeviceService;
-import org.radarcns.android.DeviceStatusListener;
-import org.radarcns.android.DeviceTopics;
+import org.radarcns.android.RadarConfiguration;
+import org.radarcns.android.device.BaseDeviceState;
+import org.radarcns.android.device.DeviceManager;
+import org.radarcns.android.device.DeviceService;
+import org.radarcns.android.device.DeviceStatusListener;
+import org.radarcns.android.device.DeviceTopics;
+import org.radarcns.android.util.PersistentStorage;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.topic.AvroTopic;
-import org.radarcns.util.PersistentStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.radarcns.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
-import static org.radarcns.RadarConfiguration.SOURCE_ID_KEY;
+import static org.radarcns.android.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
+import static org.radarcns.android.RadarConfiguration.SOURCE_ID_KEY;
 
 /**
  * A service that manages the phone sensor manager and a TableDataHandler to send store the data of

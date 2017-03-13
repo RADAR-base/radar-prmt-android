@@ -2,8 +2,8 @@ package org.radarcns.phone;
 
 import android.os.Parcel;
 
-import org.radarcns.android.BaseDeviceState;
-import org.radarcns.util.DeviceStateCreator;
+import org.radarcns.android.device.BaseDeviceState;
+import org.radarcns.android.device.DeviceStateCreator;
 
 /**
  * The status on a single point in time
