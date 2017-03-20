@@ -9,20 +9,20 @@ import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.config.ServerConfig;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.DataHandler;
 import org.radarcns.data.SpecificRecordEncoder;
 import org.radarcns.kafka.KafkaDataSubmitter;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
+import org.radarcns.producer.SchemaRetriever;
 import org.radarcns.producer.rest.RestSender;
-import org.radarcns.producer.rest.SchemaRetriever;
 import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,7 +51,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     private final Map<AvroTopic<MeasurementKey, ? extends SpecificRecord>, DataCache<MeasurementKey, ? extends SpecificRecord>> tables;
     private final Set<ServerStatusListener> statusListeners;
     private final BroadcastReceiver connectivityReceiver;
-    private URL kafkaUrl;
+    private ServerConfig kafkaConfig;
     private SchemaRetriever schemaRetriever;
     private int kafkaRecordsSendLimit;
     private final AtomicLong dataRetention;
@@ -65,13 +65,13 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
     private RestSender<MeasurementKey, SpecificRecord> sender;
 
     /**
-     * Create a data handler. If kafkaUrl is null, data will only be stored to disk, not uploaded.
+     * Create a data handler. If kafkaConfig is null, data will only be stored to disk, not uploaded.
      */
-    public TableDataHandler(Context context, URL kafkaUrl, SchemaRetriever schemaRetriever,
+    public TableDataHandler(Context context, ServerConfig kafkaUrl, SchemaRetriever schemaRetriever,
                             List<AvroTopic<MeasurementKey, ? extends SpecificRecord>> topics)
             throws IOException {
         this.context = context;
-        this.kafkaUrl = kafkaUrl;
+        this.kafkaConfig = kafkaUrl;
         this.schemaRetriever = schemaRetriever;
         this.kafkaUploadRate = UPLOAD_RATE_DEFAULT;
         this.kafkaCleanRate = CLEAN_RATE_DEFAULT;
@@ -133,7 +133,7 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         }
 
         updateServerStatus(Status.CONNECTING);
-        this.sender = new RestSender<>(kafkaUrl.toExternalForm(), schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
+        this.sender = new RestSender<>(kafkaConfig, schemaRetriever, new SpecificRecordEncoder(false), new SpecificRecordEncoder(false), senderConnectionTimeout);
         this.submitter = new KafkaDataSubmitter<>(this, sender, threadFactory, kafkaRecordsSendLimit, kafkaUploadRate, kafkaCleanRate);
     }
 
@@ -332,11 +332,11 @@ public class TableDataHandler implements DataHandler<MeasurementKey, SpecificRec
         this.senderConnectionTimeout = senderConnectionTimeout;
     }
 
-    public synchronized void setKafkaUrl(@NonNull URL kafkaUrl) {
+    public synchronized void setKafkaConfig(@NonNull ServerConfig kafkaUrl) {
         if (sender != null) {
-            sender.setKafkaUrl(kafkaUrl.toExternalForm());
+            sender.setKafkaConfig(kafkaUrl);
         }
-        this.kafkaUrl = kafkaUrl;
+        this.kafkaConfig = kafkaUrl;
     }
 
     public synchronized void setSchemaRetriever(@NonNull SchemaRetriever schemaRetriever) {

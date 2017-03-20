@@ -24,8 +24,6 @@ bin/
 gen/
 out/
 build/
-app/libs/
-org.radarcns.android/libs/
 
 # OSX stuff
 .DS_Store

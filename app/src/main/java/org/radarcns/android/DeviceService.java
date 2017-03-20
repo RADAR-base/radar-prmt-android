@@ -22,18 +22,18 @@ import android.util.Pair;
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
+import org.radarcns.config.ServerConfig;
 import org.radarcns.data.DataCache;
 import org.radarcns.data.Record;
 import org.radarcns.kafka.rest.ServerStatusListener;
 import org.radarcns.key.MeasurementKey;
-import org.radarcns.producer.rest.SchemaRetriever;
+import org.radarcns.producer.SchemaRetriever;
 import org.radarcns.topic.AvroTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -461,15 +461,15 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
     protected void onInvocation(Bundle bundle) {
         TableDataHandler localDataHandler;
 
-        URL kafkaUrl = null;
+        ServerConfig kafkaConfig = null;
         SchemaRetriever remoteSchemaRetriever = null;
         if (RadarConfiguration.hasExtra(bundle, KAFKA_REST_PROXY_URL_KEY)) {
             String urlString = RadarConfiguration.getStringExtra(bundle, KAFKA_REST_PROXY_URL_KEY);
             if (!urlString.isEmpty()) {
-                remoteSchemaRetriever = new SchemaRetriever(
-                        RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
                 try {
-                    kafkaUrl = new URL(urlString);
+                    ServerConfig schemaRegistry = new ServerConfig(RadarConfiguration.getStringExtra(bundle, SCHEMA_REGISTRY_URL_KEY));
+                    remoteSchemaRetriever = new SchemaRetriever(schemaRegistry, 30);
+                    kafkaConfig = new ServerConfig(urlString);
                 } catch (MalformedURLException ex) {
                     logger.error("Malformed Kafka server URL {}", urlString);
                     throw new IllegalArgumentException(ex);
@@ -482,7 +482,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
             if (dataHandler == null) {
                 try {
                     dataHandler = new TableDataHandler(
-                            this, kafkaUrl, remoteSchemaRetriever, getCachedTopics());
+                            this, kafkaConfig, remoteSchemaRetriever, getCachedTopics());
                     newlyCreated = true;
                 } catch (IOException ex) {
                     logger.error("Failed to instantiate Data Handler", ex);
@@ -495,10 +495,10 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         }
 
         if (!newlyCreated) {
-            if (kafkaUrl == null) {
+            if (kafkaConfig == null) {
                 localDataHandler.disableSubmitter();
             } else {
-                localDataHandler.setKafkaUrl(kafkaUrl);
+                localDataHandler.setKafkaConfig(kafkaConfig);
                 localDataHandler.setSchemaRetriever(remoteSchemaRetriever);
             }
         }
@@ -531,7 +531,7 @@ public abstract class DeviceService extends Service implements DeviceStatusListe
         if (newlyCreated) {
             localDataHandler.addStatusListener(this);
             localDataHandler.start();
-        } else if (kafkaUrl != null) {
+        } else if (kafkaConfig != null) {
             localDataHandler.enableSubmitter();
         }
     }
