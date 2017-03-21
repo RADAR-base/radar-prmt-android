@@ -3,6 +3,7 @@ package org.radarcns.pebble2;
 import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.radarcns.R;
 import org.radarcns.RadarConfiguration;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;

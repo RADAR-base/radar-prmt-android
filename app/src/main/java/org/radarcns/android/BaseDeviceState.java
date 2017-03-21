@@ -51,11 +51,25 @@ public class BaseDeviceState implements Parcelable {
     }
 
     /**
+     * Whether the state will gather any temperature information. This implementation returns false.
+     */
+    public boolean hasTemperature() {
+        return false;
+    }
+
+    /**
      * Get the temperature in degrees Celcius.
      * @return temperature or Float.NaN if unknown.
      */
     public float getTemperature() {
         return Float.NaN;
+    }
+
+    /**
+     * Whether the state will gather any heart rate information. This implementation returns false.
+     */
+    public boolean hasHeartRate() {
+        return false;
     }
 
     /**
@@ -66,16 +80,24 @@ public class BaseDeviceState implements Parcelable {
         return Float.NaN;
     }
 
+
+    /**
+     * Whether the state will gather any acceleration information. This implementation returns false.
+     */
+    public boolean hasAcceleration() {
+        return false;
+    }
+
     /**
      * Get the x, y and z components of the acceleration in g.
-     * @return array of acceleration or Float.NaN if unknown
+     * @return array of acceleration or of Float.NaN if unknown
      */
     public float[] getAcceleration() {
         return new float[] {Float.NaN, Float.NaN, Float.NaN};
     }
 
     /**
-     * Get the magnitude of the acceleration in g.
+     * Get the magnitude of the acceleration in g, computed from {@link #getAcceleration()}.
      * @return acceleration or Float.NaN if unknown.
      */
     public float getAccelerationMagnitude() {

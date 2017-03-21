@@ -61,6 +61,11 @@ public class E4DeviceStatus extends BaseDeviceState {
     }
 
     @Override
+    public boolean hasAcceleration() {
+        return true;
+    }
+
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
@@ -100,12 +105,23 @@ public class E4DeviceStatus extends BaseDeviceState {
         return interBeatInterval;
     }
 
+    @Override
+    public boolean hasHeartRate() {
+        return true;
+    }
+
+    @Override
     public float getHeartRate() {
         return 60 / interBeatInterval;
     }
 
     public synchronized void setInterBeatInterval(float interBeatInterval) {
         this.interBeatInterval = interBeatInterval;
+    }
+
+    @Override
+    public boolean hasTemperature() {
+        return true;
     }
 
     @Override

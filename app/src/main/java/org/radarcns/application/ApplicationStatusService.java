@@ -4,9 +4,9 @@ import android.os.Bundle;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.radarcns.RadarConfiguration;
+import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceManager;
 import org.radarcns.android.DeviceService;
-import org.radarcns.android.BaseDeviceState;
 import org.radarcns.android.DeviceStatusListener;
 import org.radarcns.android.DeviceTopics;
 import org.radarcns.key.MeasurementKey;

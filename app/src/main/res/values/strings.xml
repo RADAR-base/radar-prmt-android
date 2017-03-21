@@ -20,7 +20,7 @@
     <string name="active_device">Device</string>
 
     <!--Overview activity-->
-    <string name="button_connect">Scan</string>
+    <string name="button_connect">Reset</string>
     <string name="button_details">Details</string>
     <string name="request_E4_key">Enter E4 S/N</string>
     <string name="request_group_id">Enter Patient ID</string>
@@ -37,10 +37,10 @@
     <string name="header_records_sent">Number of records sent</string>
     <string name="label_firebase_status">Firebase</string>
     <string name="label_group_id_input">Patient ID</string>
-    <string name="deviceTypeLabel1">E4</string>
+    <string name="empaticaE4DisplayName">E4</string>
     <string name="deviceTypeLabel2">Angel</string>
-    <string name="deviceTypeLabel3">Pebble</string>
-    <string name="deviceTypeLabel4">Phone</string>
+    <string name="pebble2DisplayName">Pebble</string>
+    <string name="phoneServiceDisplayName">Phone</string>
     <string name="disabledText">NA</string>
 
     <!--Status texts-->
@@ -57,5 +57,10 @@
     <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
     <string name="playServicesUnavailable">Cannot connect, because Google Play Services is not available.</string>
-    <string name="deviceKeySplitRegex">[;,]</string>
+    <string name="applicationServiceDisplayName">Application</string>
+    <string name="battery_status">Battery status</string>
+    <string name="filter_help_label">Enter part of a device name, serial number or MAC address. Separate multiple options with semicolons \';\' or comma\'s \',\'.</string>
+    <string name="filter_title">Filter device name</string>
+    <string name="filter_split_regex">[;,]</string>
+    <string name="firebase_fetching">Fetching remote config</string>
 </resources>

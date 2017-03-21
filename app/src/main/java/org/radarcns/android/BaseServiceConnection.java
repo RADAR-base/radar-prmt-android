@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.regex.Pattern;
 
 import static org.radarcns.android.DeviceService.TRANSACT_GET_CACHE_SIZE;
 import static org.radarcns.android.DeviceService.TRANSACT_GET_DEVICE_NAME;
+import static org.radarcns.android.DeviceService.TRANSACT_SET_USER_ID;
 import static org.radarcns.android.DeviceService.TRANSACT_UPDATE_CONFIG;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_DEVICE_STATUS;
 import static org.radarcns.empaticaE4.E4Service.TRANSACT_GET_RECORDS;
@@ -107,6 +109,12 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
         return result;
     }
 
+    /**
+     * Start looking for devices to record.
+     * @param acceptableIds case insensitive parts of device ID's that are allowed to connect.
+     * @throws RemoteException if the Service cannot be reached
+     * @throws IllegalStateException if the user ID was not set yet
+     */
     public void startRecording(@NonNull Set<String> acceptableIds) throws RemoteException {
         if (isRemote) {
             Parcel data = Parcel.obtain();
@@ -116,6 +124,9 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
             }
             Parcel reply = Parcel.obtain();
             getServiceBinder().transact(TRANSACT_START_RECORDING, data, reply, 0);
+            if (reply.readByte() == 0) {
+                throw new IllegalStateException("Cannot start recording: user ID was not set yet");
+            }
             deviceStatus = E4DeviceStatus.CREATOR.createFromParcel(reply).getStatus();
         } else {
             deviceStatus = getLocalServiceBinder().startRecording(acceptableIds).getStatus();
@@ -209,9 +220,17 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
                 // keep old configuration
             }
         } else {
-            if (serviceBinder != null) {
-                getLocalServiceBinder().updateConfiguration(bundle);
-            }
+            getLocalServiceBinder().updateConfiguration(bundle);
+        }
+    }
+
+    public void setUserId(String userId) throws RemoteException {
+        if (isRemoteService()) {
+            Parcel data = Parcel.obtain();
+            data.writeString(userId);
+            getServiceBinder().transact(TRANSACT_SET_USER_ID, data, null, 0);
+        } else {
+            getLocalServiceBinder().setUserId(userId);
         }
     }
 
@@ -228,7 +247,10 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
     /**
      * True if given string is a substring of the device name.
      */
-    public boolean isAllowedDevice(String[] values) {
+    public boolean isAllowedDevice(Collection<String> values) {
+        if (values.isEmpty()) {
+            return true;
+        }
         for (String value : values) {
             Pattern pattern = Strings.containsIgnoreCasePattern(value);
             String deviceName = getDeviceName();
@@ -275,5 +297,26 @@ public class BaseServiceConnection<S extends BaseDeviceState> implements Service
 
     public String getServiceClassName() {
         return serviceClassName;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+        BaseServiceConnection otherService = (BaseServiceConnection) other;
+        return Objects.equals(this.serviceClassName, otherService.serviceClassName);
+    }
+
+    @Override
+    public int hashCode() {
+        return serviceClassName.hashCode();
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + "<" + getServiceClassName() + ">";
     }
 }

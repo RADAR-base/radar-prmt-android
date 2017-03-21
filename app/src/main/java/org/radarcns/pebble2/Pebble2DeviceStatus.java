@@ -47,6 +47,11 @@ public class Pebble2DeviceStatus extends BaseDeviceState {
     }
 
     @Override
+    public boolean hasAcceleration() {
+        return true;
+    }
+
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
@@ -80,6 +85,11 @@ public class Pebble2DeviceStatus extends BaseDeviceState {
 
     public void setBatteryIsPlugged(Boolean batteryIsPlugged) {
         this.batteryIsPlugged = batteryIsPlugged;
+    }
+
+    @Override
+    public boolean hasHeartRate() {
+        return true;
     }
 
     @Override

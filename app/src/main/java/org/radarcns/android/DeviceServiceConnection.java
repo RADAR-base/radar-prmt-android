@@ -48,7 +48,7 @@ public class DeviceServiceConnection<S extends BaseDeviceState> extends BaseServ
         public void onReceive(Context context, Intent intent) {
             if (intentMatches(intent, SERVER_STATUS_CHANGED)) {
                 final ServerStatusListener.Status status = ServerStatusListener.Status.values()[intent.getIntExtra(SERVER_STATUS_CHANGED, 0)];
-                mainActivity.updateServerStatus(DeviceServiceConnection.this, status);
+                mainActivity.updateServerStatus(status);
             } else if (intentMatches(intent, SERVER_RECORDS_SENT_TOPIC)) {
                 String topic = intent.getStringExtra(SERVER_RECORDS_SENT_TOPIC); // topicName that updated
                 int numberOfRecordsSent = intent.getIntExtra(SERVER_RECORDS_SENT_NUMBER, 0);
@@ -108,17 +108,5 @@ public class DeviceServiceConnection<S extends BaseDeviceState> extends BaseServ
             mainActivity.unregisterReceiver(serverStatusListener);
             mainActivity.serviceDisconnected(this);
         }
-    }
-
-    public void bind(@NonNull Intent intent) {
-        logger.info("Intending to start " + intent.getComponent());
-
-        mainActivity.startService(intent);
-        mainActivity.bindService(intent, this, Context.BIND_ABOVE_CLIENT);
-    }
-
-    public void unbind() {
-        mainActivity.unbindService(this);
-        onServiceDisconnected(null);
     }
 }

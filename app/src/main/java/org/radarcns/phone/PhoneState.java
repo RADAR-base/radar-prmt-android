@@ -35,6 +35,11 @@ public class PhoneState extends BaseDeviceState {
     }
 
     @Override
+    public boolean hasAcceleration() {
+        return true;
+    }
+
+    @Override
     public float[] getAcceleration() {
         return acceleration;
     }
