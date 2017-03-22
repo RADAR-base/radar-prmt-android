@@ -31,7 +31,6 @@ repositories {
     maven { url "${rootProject.projectDir}/libs" }
     jcenter()
     maven { url 'http://packages.confluent.io/maven/' }
-    maven { url  "https://dl.bintray.com/radar-cns/org.radarcns" }
 }
 
 dependencies {
