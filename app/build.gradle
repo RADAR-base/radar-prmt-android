@@ -31,18 +31,17 @@ repositories {
     maven { url "${rootProject.projectDir}/libs" }
     jcenter()
     maven { url 'http://packages.confluent.io/maven/' }
+    maven { url  "https://dl.bintray.com/radar-cns/org.radarcns" }
 }
 
 dependencies {
-    compile project(':commons-android')
     compile project(':empalink-2.0')
 
     // needed to work with testCompile -> kafka-clients
     compile 'com.getpebble:pebblekit:4.0.0'
     compile 'com.loopj.android:android-async-http:1.4.6'
     compile 'com.android.support:appcompat-v7:22.2.0'
-
-    compile project(':empalink-2.0')
+    compile 'org.radarcns:radar-commons-android:0.1-alpha.1'
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.21'
