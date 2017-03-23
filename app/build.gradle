@@ -39,6 +39,7 @@ dependencies {
     compile 'org.radarcns:radar-android-empatica:0.1-alpha.1'
     compile 'org.radarcns:radar-android-pebble:0.1-alpha.1'
     compile 'org.radarcns:radar-android-phone:0.1-alpha.1'
+    compile 'org.radarcns:radar-android-application-status:0.1-alpha.1'
 
     // needed to work with testCompile -> kafka-clients
     compile 'com.getpebble:pebblekit:4.0.0'
