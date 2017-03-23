@@ -15,12 +15,10 @@ import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.BaseServiceConnection;
 import org.radarcns.android.device.DeviceManager;
 import org.radarcns.android.device.DeviceServiceBinder;
+import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.android.kafka.ServerStatusListener;
-import org.radarcns.empatica.E4Service;
 import org.radarcns.key.MeasurementKey;
-import org.radarcns.pebble.PebbleService;
-import org.radarcns.phone.PhoneSensorsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +29,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,8 +44,6 @@ import static org.radarcns.android.device.DeviceService.SERVER_STATUS_CHANGED;
 public class ApplicationStatusManager implements DeviceManager {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationStatusManager.class);
     private static final long APPLICATION_UPDATE_INTERVAL_DEFAULT = 20; // seconds
-    private static final Class[] APPLICATION_SERVICES_CLASSES = {
-            E4Service.class, PhoneSensorsService.class, PebbleService.class};
 
     private final TableDataHandler dataHandler;
     private final Context context;
@@ -64,6 +61,7 @@ public class ApplicationStatusManager implements DeviceManager {
     private final ScheduledExecutorService executor;
 
     private final List<BaseServiceConnection<BaseDeviceState>> services;
+    private final List<Class<?>> serviceClasses;
 
     private final long creationTimeStamp;
     private boolean isRegistered = false;
@@ -84,7 +82,7 @@ public class ApplicationStatusManager implements DeviceManager {
         }
     };
 
-    public ApplicationStatusManager(Context context, ApplicationStatusService applicationStatusService, String groupId, String sourceId, TableDataHandler dataHandler, ApplicationStatusTopics topics) {
+    public ApplicationStatusManager(Context context, ApplicationStatusService applicationStatusService, String groupId, String sourceId, TableDataHandler dataHandler, ApplicationStatusTopics topics, String devicesToConnect) {
         this.dataHandler = dataHandler;
         this.serverStatusTable = dataHandler.getCache(topics.getServerTopic());
         this.uptimeTable = dataHandler.getCache(topics.getUptimeTopic());
@@ -100,7 +98,21 @@ public class ApplicationStatusManager implements DeviceManager {
         deviceName = context.getString(R.string.app_name);
 //        updateStatus(DeviceStatusListener.Status.READY);
 
-        services = new ArrayList<>(APPLICATION_SERVICES_CLASSES.length);
+        serviceClasses = new ArrayList<>();
+        Scanner sc = new Scanner(devicesToConnect);
+        while (sc.hasNext()) {
+            String providerName = sc.next();
+            if (providerName.charAt(0) == '.') {
+                providerName = "org.radarcns" + providerName;
+            }
+            try {
+                DeviceServiceProvider provider = (DeviceServiceProvider) Class.forName(providerName).newInstance();
+                serviceClasses.add(provider.getServiceClass());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | ClassCastException ex) {
+                logger.error("Cannot load provider {}", providerName, ex);
+            }
+        }
+        services = new ArrayList<>(serviceClasses.size());
         creationTimeStamp = System.currentTimeMillis();
 
         // Scheduler TODO: run executor with existing thread pool/factory
@@ -111,7 +123,7 @@ public class ApplicationStatusManager implements DeviceManager {
     @Override
     public void start(@NonNull Set<String> acceptableIds) {
         logger.info("Starting ApplicationStatusManager");
-        for (Class clazz : APPLICATION_SERVICES_CLASSES) {
+        for (Class clazz : serviceClasses) {
             Intent serviceIntent = new Intent(context, clazz);
             BaseServiceConnection<BaseDeviceState> conn = new BaseServiceConnection<>(BaseDeviceState.CREATOR, clazz.getName());
             services.add(conn);

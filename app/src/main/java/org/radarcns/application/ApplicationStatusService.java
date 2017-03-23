@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.radarcns.android.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
+import static org.radarcns.android.RadarConfiguration.DEVICE_SERVICES_TO_CONNECT;
 import static org.radarcns.android.RadarConfiguration.SOURCE_ID_KEY;
 
 public class ApplicationStatusService extends DeviceService {
@@ -26,6 +27,7 @@ public class ApplicationStatusService extends DeviceService {
     private ApplicationStatusTopics topics;
     private String groupId;
     private String sourceId;
+    private String devicesToConnect;
 
     @Override
     public void onCreate() {
@@ -37,7 +39,7 @@ public class ApplicationStatusService extends DeviceService {
 
     @Override
     protected DeviceManager createDeviceManager() {
-        return new ApplicationStatusManager(this, this, groupId, getSourceId(), getDataHandler(), topics);
+        return new ApplicationStatusManager(this, this, groupId, getSourceId(), getDataHandler(), topics, devicesToConnect);
     }
 
     @Override
@@ -61,8 +63,11 @@ public class ApplicationStatusService extends DeviceService {
     @Override
     protected void onInvocation(Bundle bundle) {
         super.onInvocation(bundle);
-        if (groupId == null) {
+        if (RadarConfiguration.hasExtra(bundle, DEFAULT_GROUP_ID_KEY)) {
             groupId = RadarConfiguration.getStringExtra(bundle, DEFAULT_GROUP_ID_KEY);
+        }
+        if (RadarConfiguration.hasExtra(bundle, DEVICE_SERVICES_TO_CONNECT)) {
+            devicesToConnect = RadarConfiguration.getStringExtra(bundle, DEFAULT_GROUP_ID_KEY);
         }
     }
 

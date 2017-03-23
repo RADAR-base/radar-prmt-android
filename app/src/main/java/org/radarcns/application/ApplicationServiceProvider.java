@@ -1,8 +1,10 @@
 package org.radarcns.application;
 
+import android.os.Bundle;
 import android.os.Parcelable;
 
 import org.radarcns.R;
+import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
 
 import java.util.Collections;
@@ -29,6 +31,12 @@ public class ApplicationServiceProvider extends DeviceServiceProvider<Applicatio
     @Override
     public List<String> needsPermissions() {
         return Collections.singletonList(WRITE_EXTERNAL_STORAGE);
+    }
+
+    @Override
+    protected void configure(Bundle bundle) {
+        super.configure(bundle);
+        this.getConfig().putExtras(bundle, RadarConfiguration.DEVICE_SERVICES_TO_CONNECT);
     }
 
     @Override
