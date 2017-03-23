@@ -2,12 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.radarcns" >
     <uses-feature android:name="android.hardware.bluetooth"/>
-    <uses-feature android:name="android.hardware.bluetooth_le"/>
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <!--Write permission needed for persisting phone source id. e.g. between new installations-->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!-- Start on boot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
