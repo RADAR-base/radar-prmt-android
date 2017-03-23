@@ -18,7 +18,7 @@
         android:theme="@style/AppTheme">
         <receiver
             android:enabled="false"
-            android:name=".android.MainActivityStarter">
+            android:name=".android.MainActivityBootStarter">
 
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -34,7 +34,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".empaticaE4.E4Service"/>
         <service android:name=".pebble2.Pebble2Service"/>
         <service android:name=".phone.PhoneSensorsService"/>
         <service android:name=".application.ApplicationStatusService"/>
