@@ -17,7 +17,7 @@ import org.radarcns.android.device.DeviceManager;
 import org.radarcns.android.device.DeviceServiceBinder;
 import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.android.kafka.ServerStatusListener;
-import org.radarcns.empaticaE4.E4Service;
+import org.radarcns.empatica.E4Service;
 import org.radarcns.key.MeasurementKey;
 import org.radarcns.pebble.PebbleService;
 import org.radarcns.phone.PhoneSensorsService;
