@@ -34,7 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".pebble2.Pebble2Service"/>
+        <service android:name=".pebble.PebbleService"/>
         <service android:name=".phone.PhoneSensorsService"/>
         <service android:name=".application.ApplicationStatusService"/>
 

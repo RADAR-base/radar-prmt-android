@@ -19,7 +19,7 @@ import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.android.kafka.ServerStatusListener;
 import org.radarcns.empaticaE4.E4Service;
 import org.radarcns.key.MeasurementKey;
-import org.radarcns.pebble2.Pebble2Service;
+import org.radarcns.pebble.PebbleService;
 import org.radarcns.phone.PhoneSensorsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ public class ApplicationStatusManager implements DeviceManager {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationStatusManager.class);
     private static final long APPLICATION_UPDATE_INTERVAL_DEFAULT = 20; // seconds
     private static final Class[] APPLICATION_SERVICES_CLASSES = {
-            E4Service.class, PhoneSensorsService.class, Pebble2Service.class};
+            E4Service.class, PhoneSensorsService.class, PebbleService.class};
 
     private final TableDataHandler dataHandler;
     private final Context context;
