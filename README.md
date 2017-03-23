@@ -18,16 +18,19 @@ If the repository is already cloned, go to the source directory and run
 git submodule update --init --recursive
 ```
 
+## Building
+
+Copy the `src/main/res/xml/remote_config_defaults_TEMPLATE.xml` from the [RADAR-Commons repository](https://github.com/RADAR/RADAR-Commons.git) to `app/src/main/res/xml/remote_config_defaults.xml`. These are the configuration defaults for the app. Enable different plugins by adding it to the dependencies, and adding the respective `DeviceServiceProvider` to the `device_services_to_connect` property.
+
 ## Setup Empatica E4
 
 First, request an Empatica API key for your Empatica Connect account from their [Developer Area][1]. Also download the Empatica Android SDK there.
 
 1. Copy the empalink-2.0.aar from the Empatica Android SDK package to the `empalink-2.0` directory.
-2. Edit the `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml` file
+2. Edit the `app/src/main/res/xml/remote_config_defaults.xml` file:
 	- Set your Empatica API key in the `empatica_api_key` xml element.
  	- Set the `kafka_rest_proxy_url` and the `schema_registry_url`. If the app should not upload any data, leave them blank.
 	- Set the `device_group_id` string to a suitable user ID.
-3. Rename the file to `remote_config_defaults.xml` to use the file with Firebase. For the full Firebase setup, see below.
 
 [1]: https://www.empatica.com/connect/developer.php
 [2]: https://github.com/empatica/empalink-sample-project-android
@@ -52,6 +55,7 @@ Then run the following sequence:
 The RADAR-CNS Pebble app will now send data to the endpoint.
 
 ## Setup Firebase Remote Configuration
+
 Firebase can be used to remotely configure some device and system parameters, e.g. the E4 API key, kafka server address and upload rate. The default parameters are also stored locally in `app/src/main/res/xml/remote_config_defaults.xml`, which will be used if the remote parameters cannot be accessed.
 
 1. [Install the Firebase SDK](https://firebase.google.com/docs/android/setup) in Android Studio.
@@ -68,7 +72,7 @@ To send some mock data to a Confluent Kafka set up on localhost, run `./gradlew 
 
 ## Contributing
 
-To add additional device types to this application, make the following steps (see the `org.radarcns.pebble2` package as an example):
+To add additional plugins to this application, make the following steps (see the [Pebble plugin](https://github.com/RADAR/RADAR-Android-Pebble.git) as an example):
 
 - Add the schemas of the data you intend to send to the [RADAR-CNS Schemas repository](https://github.com/RADAR-CNS/RADAR-Schemas). Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
 - Create a new package `org.radarcns.mydevicetype`. In that package, create classes that:
@@ -80,4 +84,4 @@ To add additional device types to this application, make the following steps (se
 - Add a new service element to `AndroidManifest.xml`, referencing the newly created device service.
 - Add the `DeviceServiceProvider` you just created to the `device_services_to_connect` property in `app/src/main/res/xml/remote_config_defaults.xml`.
 
-Make a pull request once the code is working.
+This plugin can remain a separate github repository, but it should be published to Bintray for easy integration.
