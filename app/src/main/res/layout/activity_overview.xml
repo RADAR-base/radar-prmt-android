@@ -20,6 +20,52 @@
                 android:layout_width="fill_parent"
                 android:layout_height="match_parent"
                 android:stretchColumns="*">
+
+                <TableRow
+                    android:id="@+id/headerRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="match_parent" >
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_device" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_device_status" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_battery" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_temp" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_hr" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_acceleration" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_device_key" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_scan" />
+
+                    <TextView
+                        style="@style/Header"
+                        android:text="@string/header_records_sent" />
+                </TableRow>
             </TableLayout>
 
             <View
