@@ -10,10 +10,10 @@
     tools:context=".android.MainActivity">
     <HorizontalScrollView
         android:layout_width="fill_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
         <RelativeLayout
             android:layout_height="match_parent"
-            android:layout_width="fill_parent">
+            android:layout_width="wrap_content">
 
             <TableLayout
                 android:id="@+id/deviceTable"
