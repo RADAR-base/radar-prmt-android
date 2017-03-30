@@ -27,7 +27,6 @@ android {
 
 repositories {
     jcenter()
-    maven { url 'http://packages.confluent.io/maven/' }
     flatDir { dirs 'libs' }
     maven { url  'http://dl.bintray.com/radar-cns/org.radarcns' }
 }

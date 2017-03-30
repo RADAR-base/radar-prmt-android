@@ -20,41 +20,25 @@ git submodule update --init --recursive
 
 ## Building
 
-Copy the `src/main/res/xml/remote_config_defaults_TEMPLATE.xml` from the [RADAR-Commons repository](https://github.com/RADAR/RADAR-Commons.git) to `app/src/main/res/xml/remote_config_defaults.xml`. These are the configuration defaults for the app. Enable different plugins by adding it to the dependencies, and adding the respective `DeviceServiceProvider` to the `device_services_to_connect` property.
+Copy the `src/main/res/xml/remote_config_defaults_TEMPLATE.xml` from the [RADAR-Commons repository](https://github.com/RADAR/RADAR-Commons.git) to `app/src/main/res/xml/remote_config_defaults.xml`. These are the configuration defaults for the app.
 
-## Setup Empatica E4
+- Set the `kafka_rest_proxy_url` and the `schema_registry_url`. If the app should not upload any data, leave them blank.
+- Set the `device_group_id` string to a suitable user ID.
 
-First, request an Empatica API key for your Empatica Connect account from their [Developer Area][1]. Also download the Empatica Android SDK there.
+### Plugins
 
-1. Copy the empalink-2.0.aar from the Empatica Android SDK package to the `empalink-2.0` directory.
-2. Edit the `app/src/main/res/xml/remote_config_defaults.xml` file:
-	- Set your Empatica API key in the `empatica_api_key` xml element.
- 	- Set the `kafka_rest_proxy_url` and the `schema_registry_url`. If the app should not upload any data, leave them blank.
-	- Set the `device_group_id` string to a suitable user ID.
+This application depends on plugins to collect information. The application currently supports plugins the following plugins:
 
-[1]: https://www.empatica.com/connect/developer.php
-[2]: https://github.com/empatica/empalink-sample-project-android
+- [Application status](https://github.com/RADAR-CNS/RADAR-Android-Application-Status.git)
+- [Android Phone telemetry](https://github.com/RADAR-CNS/RADAR-Android-Phone.git)
+- [Audio](https://github.com/RADAR-CNS/RADAR-Android-Audio.git)
+- [Empatica E4](https://github.com/RADAR-CNS/RADAR-Android-Empatica.git)
+- [Pebble](https://github.com/RADAR-CNS/RADAR-Android-Pebble.git)
+- [Biovotion](https://github.com/RADAR-CNS/RADAR-Android-Biovotion.git)
 
-## Setup Pebble 2
+See the link to each plugin for its installation instructions. In general, a dependency needs to be added in build.gradle, and a service needs to be aded in the `device_services_to_connect` property in `app/src/main/res/xml/remote_config_defaults.xml`.
 
-To run this app with a Pebble 2 device, the RADAR-CNS app must be installed on the Pebble 2. For now, [install the Pebble SDK](https://developer.pebble.com/sdk/install/) on your machine. Go to the `pebble2/` directory. There we can use the [Pebble command line tools](https://developer.pebble.com/guides/tools-and-resources/pebble-tool/). First, build the app with
-```shell
-pebble build
-```
-Then run the following sequence:
-
-1. Pair the Pebble 2 with the app on the endpoint.
-2. Disable Bluetooth on the endpoint.
-3. Enable Bluetooth on your phone.
-4. Pair the Pebble 2 with the Pebble app on your phone.
-5. Open the developer menu on the Pebble app on your phone and enable developer mode.
-6. Install the app with `pebble install --phone 1.2.3.4` with the IP address stated in the Pebble app on your phone.
-7. Disable Bluetooth on your phone. If desired, remove the pairing with your phone and the Pebble 2 device.
-8. Enable Bluetooth on the endpoint.
-
-The RADAR-CNS Pebble app will now send data to the endpoint.
-
-## Setup Firebase Remote Configuration
+### Setup Firebase Remote Configuration
 
 Firebase can be used to remotely configure some device and system parameters, e.g. the E4 API key, kafka server address and upload rate. The default parameters are also stored locally in `app/src/main/res/xml/remote_config_defaults.xml`, which will be used if the remote parameters cannot be accessed.
 
@@ -65,10 +49,6 @@ Firebase can be used to remotely configure some device and system parameters, e.
 5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`.
 
 [Full Firebase guide](https://firebase.google.com/docs/remote-config/use-config-android)
-
-## Usage
-
-To send some mock data to a Confluent Kafka set up on localhost, run `./gradlew :app:cleanTest :app:test`. If the Confluent Kafka setup is running elsewhere, edit `app/src/test/resources/org/radarcns/kafka/kafka.properties` accordingly.
 
 ## Contributing
 
