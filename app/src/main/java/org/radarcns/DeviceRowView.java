@@ -84,6 +84,7 @@ public class DeviceRowView {
     private final TextView mAccelerationLabel;
     private final TextView mRecordsSentLabel;
     private final ImageView mBatteryLabel;
+    private final TextView mBatteryValue;
     private final TextView mDeviceNameLabel;
     private final Button mDeviceInputButton;
     private final SharedPreferences devicePreferences;
@@ -119,6 +120,7 @@ public class DeviceRowView {
         mRecordsSentLabel = (TextView) row.findViewById(R.id.recordsSent_label);
         mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
         mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
+        mBatteryValue = (TextView) row.findViewById(R.id.battery_value);
         mDeviceInputButton = (Button) row.findViewById(R.id.inputDeviceNameButton);
 
         if (provider.isFilterable()) {
@@ -319,6 +321,10 @@ public class DeviceRowView {
         } else {
             mBatteryLabel.setImageResource(R.drawable.ic_battery_empty);
         }
+
+        // Display battery level value. If 100%, make it 99% for better layout
+        float batteryLevelFormatted = batteryLevel == 1 ? batteryLevel*100 - 1 : batteryLevel*100;
+        setText(mBatteryValue, batteryLevelFormatted, "", noDecimals);
     }
 
     public void updateDeviceName() {

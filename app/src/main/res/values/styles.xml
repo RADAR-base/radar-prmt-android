@@ -95,4 +95,11 @@
         <item name="android:layout_gravity">center_horizontal</item>
     </style>
 
+    <style name="BatteryValue" parent="DefaultColumn">
+        <item name="android:textSize">8sp</item>
+        <item name="android:textStyle">normal|bold</item>
+        <item name="android:paddingLeft">21dip</item>
+        <item name="android:paddingTop">21dip</item>
+    </style>
+
 </resources>
