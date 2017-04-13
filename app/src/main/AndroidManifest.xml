@@ -2,16 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.radarcns" >
     <uses-feature android:name="android.hardware.bluetooth"/>
-    <uses-feature android:name="android.hardware.bluetooth_le"/>
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <!--Write permission needed for persisting phone source id. e.g. between new installations-->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Start on boot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -19,10 +11,11 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name=".DetailRadarApplication">
         <receiver
             android:enabled="false"
-            android:name=".MainActivityStarter">
+            android:name=".MainActivityBootStarter">
 
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -31,17 +24,13 @@
 
         <activity
             android:screenOrientation="landscape"
-            android:name=".MainActivity"
+            android:name=".DetailMainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".empaticaE4.E4Service"/>
-        <service android:name=".pebble2.Pebble2Service"/>
-        <service android:name=".phone.PhoneSensorsService"/>
-        <service android:name=".application.ApplicationStatusService"/>
 
         <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
