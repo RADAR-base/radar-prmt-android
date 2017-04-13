@@ -32,22 +32,18 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-android-empatica:0.1-alpha.1'
-//    compile 'org.radarcns:radar-android-pebble:0.1-alpha.1'
-    compile 'org.radarcns:radar-android-phone:0.1-alpha.1'
-//    compile 'org.radarcns:radar-android-biovotion:0.1-alpha.1'
-    compile 'org.radarcns:radar-android-application-status:0.1-alpha.2'
+    compile 'org.radarcns:radar-commons-android:0.1'
+    compile 'org.radarcns:radar-android-empatica:0.1-alpha.2'
+    compile 'org.radarcns:radar-android-phone:0.1-alpha.2'
+    compile 'org.radarcns:radar-android-application-status:0.1'
 //    compile 'org.radarcns:radar-android-audio:0.1-alpha.1@aar'
 
-    // needed to work with testCompile -> kafka-clients
     compile 'com.android.support:appcompat-v7:22.2.0'
-    compile 'org.radarcns:radar-commons-android:0.1-alpha.1'
     compile 'com.google.firebase:firebase-config:10.0.1'
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.21'
 
-    testCompile 'org.apache.kafka:kafka-clients:0.10.1.1'
     testCompile 'junit:junit:4.12'
     testCompile 'org.slf4j:slf4j-simple:1.7.21'
 }

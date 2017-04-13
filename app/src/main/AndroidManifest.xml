@@ -11,10 +11,11 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name=".DetailRadarApplication">
         <receiver
             android:enabled="false"
-            android:name=".android.MainActivityBootStarter">
+            android:name=".MainActivityBootStarter">
 
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

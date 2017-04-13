@@ -33,6 +33,11 @@ public class DetailMainActivity extends MainActivity {
     }
 
     @Override
+    protected void onConfigChanged() {
+        configureRunAtBoot(MainActivityBootStarter.class);
+    }
+
+    @Override
     protected MainActivityView createView() {
         return new DetailMainActivityView(this, getRadarConfiguration());
     }
