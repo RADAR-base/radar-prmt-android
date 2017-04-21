@@ -82,7 +82,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     // View elements
     private View mServerStatusIcon;
     private TextView mServerMessage;
-    private Button mGroupIdInputButton;
+    private EditText mGroupIdInput;
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
 
@@ -148,14 +148,14 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         mServerStatusIcon = mainActivity.findViewById(org.radarcns.R.id.statusServer);
         mServerMessage = (TextView) mainActivity.findViewById( org.radarcns.R.id.statusServerMessage);
-        mGroupIdInputButton = (Button) mainActivity.findViewById(org.radarcns.R.id.inputGroupId);
-        mGroupIdInputButton.setOnClickListener(new View.OnClickListener() {
+        mGroupIdInput = (EditText) mainActivity.findViewById(org.radarcns.R.id.inputGroupId);
+        mGroupIdInput.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialogInputGroupId();
             }
         });
-        mGroupIdInputButton.setText(userId);
+        mGroupIdInput.setText(userId);
         mFirebaseStatusIcon = mainActivity.findViewById(org.radarcns.R.id.firebaseStatus);
         mFirebaseMessage = (TextView) mainActivity.findViewById( org.radarcns.R.id.firebaseStatusMessage);
     }
@@ -254,7 +254,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
         }
         preferences.edit().putString("userId", userId).apply();
-        mGroupIdInputButton.setText(userId);
+        mGroupIdInput.setText(userId);
 
         // Set group/user id for each active connection
         try {

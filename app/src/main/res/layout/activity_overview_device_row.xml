@@ -4,15 +4,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <TextView
-        android:id="@+id/deviceType"
-        style="@style/DeviceTypeLabel"
-        android:text="" />
+    <EditText
+        android:id="@+id/inputDeviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="2"
+        android:inputType="textPersonName"
+        android:text="E4"
+        android:textSize="10sp"/>
 
     <TextView
         android:id="@+id/deviceName_label"
         style="@style/DeviceNameColumn"
-        android:text="@string/emptyText" />
+        android:text="Empatica E4 - A003C9"/> <!--@string/emptyText" />-->
 
     <FrameLayout android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -51,18 +55,8 @@
         android:text="@string/disabledText" />
 
     <Button
-        android:id="@+id/inputDeviceNameButton"
-        style="@style/ButtonInputColumn"
-        android:text="@string/button_input"
-        android:visibility="invisible" />
-
-    <Button
         android:id="@+id/refreshButton"
         style="@style/ButtonColumn"
         android:text="@string/button_connect" />
 
-    <TextView
-        android:id="@+id/recordsSent_label"
-        style="@style/NumberColumn"
-        android:text="@string/emptyText" />
 </TableRow>

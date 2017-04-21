@@ -77,61 +77,45 @@ public class DeviceRowView {
 
 
     private final DeviceServiceConnection connection;
-    private final boolean condensedDisplay;
     private final View mStatusIcon;
     private final TextView mTemperatureLabel;
     private final TextView mHeartRateLabel;
     private final TextView mAccelerationLabel;
-    private final TextView mRecordsSentLabel;
     private final ImageView mBatteryLabel;
     private final TextView mBatteryValue;
     private final TextView mDeviceNameLabel;
-    private final Button mDeviceInputButton;
+    private final EditText mDeviceInput;
     private final SharedPreferences devicePreferences;
     private String filter;
     private BaseDeviceState state;
     private String deviceName;
-    private TimedInt previousRecordsSent;
     private float previousTemperature = Float.NaN;
     private float previousBatteryLevel = Float.NaN;
     private float previousHeartRate = Float.NaN;
     private float previousAcceleration = Float.NaN;
-    private int previousRecordsSentTimer = -1;
     private String previousName;
     private DeviceStatusListener.Status previousStatus = null;
 
     DeviceRowView(MainActivity mainActivity, DeviceServiceProvider provider, ViewGroup root, boolean condensedDisplay) {
         this.mainActivity = mainActivity;
         this.connection = provider.getConnection();
-        this.condensedDisplay = condensedDisplay;
         devicePreferences = this.mainActivity.getSharedPreferences("device." + connection.getServiceClassName(), Context.MODE_PRIVATE);
         logger.info("Creating device row for provider {} and connection {}", provider, connection);
         LayoutInflater inflater = (LayoutInflater) this.mainActivity.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
         inflater.inflate(R.layout.activity_overview_device_row, root);
         TableRow row = (TableRow) root.getChildAt(root.getChildCount() - 1);
-        TextView deviceTypeLabel = (TextView) row.findViewById(R.id.deviceType);
-        deviceTypeLabel.setText(provider.getDisplayName());
 
         mStatusIcon = row.findViewById(R.id.status_icon);
         mTemperatureLabel = (TextView) row.findViewById(R.id.temperature_label);
         mHeartRateLabel = (TextView) row.findViewById(R.id.heartRate_label);
         mAccelerationLabel = (TextView) row.findViewById(R.id.acceleration_label);
-        mRecordsSentLabel = (TextView) row.findViewById(R.id.recordsSent_label);
         mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
         mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
         mBatteryValue = (TextView) row.findViewById(R.id.battery_value);
-        mDeviceInputButton = (Button) row.findViewById(R.id.inputDeviceNameButton);
+        mDeviceInput = (EditText) row.findViewById(R.id.inputDeviceName);
 
-        if (provider.isFilterable()) {
-            mDeviceInputButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dialogDeviceName();
-                }
-            });
-            mDeviceInputButton.setVisibility(View.VISIBLE);
-        }
+        mDeviceInput.setText(provider.getDisplayName());
 
         filter = "";
         setFilter(devicePreferences.getString("filter", ""));
@@ -196,12 +180,12 @@ public class DeviceRowView {
 
         logger.info("setting device filter {}", allowed);
         if (allowed.isEmpty()) {
-            mDeviceInputButton.setText(R.string.button_input);
+            mDeviceInput.setText("-");
         } else {
             String allowedString = allowed.toString();
             // strip array indicators
             allowedString = allowedString.substring(1, allowedString.length() - 1);
-            mDeviceInputButton.setText(allowedString);
+            mDeviceInput.setText(allowedString);
         }
 
         this.mainActivity.setAllowedDeviceIds(connection, allowed);
@@ -240,7 +224,6 @@ public class DeviceRowView {
         updateBattery();
         updateDeviceName();
         updateDeviceStatus();
-        updateDeviceTotalRecordsSent();
         updateHeartRate();
         updateTemperature();
     }
@@ -272,7 +255,7 @@ public class DeviceRowView {
             return;
         }
         previousTemperature = temperature;
-        setText(mTemperatureLabel, temperature, "\u2103", singleDecimal);
+        setText(mTemperatureLabel, temperature, "", singleDecimal);
     }
 
     public void updateHeartRate() {
@@ -284,7 +267,7 @@ public class DeviceRowView {
             return;
         }
         previousHeartRate = heartRate;
-        setText(mHeartRateLabel, heartRate, "bpm", noDecimals);
+        setText(mHeartRateLabel, heartRate, "", noDecimals);
     }
 
     public void updateAcceleration() {
@@ -335,33 +318,6 @@ public class DeviceRowView {
 
         // \u2014 == —
         mDeviceNameLabel.setText(deviceName == null ? "\u2014" : deviceName);
-    }
-
-    public void updateDeviceTotalRecordsSent() {
-        TimedInt recordsSent = this.mainActivity.getTopicsSent(connection);
-        if (recordsSent.getTime() == -1L) {
-            if (previousRecordsSent != null && previousRecordsSent.getTime() == -1L) {
-                return;
-            }
-            mRecordsSentLabel.setText(R.string.emptyText);
-        } else {
-            int timeSinceLastUpdate = (int) ((System.currentTimeMillis() - recordsSent.getTime()) / 1000L);
-            if (previousRecordsSent != null && previousRecordsSent.equals(recordsSent) && previousRecordsSentTimer == timeSinceLastUpdate) {
-                return;
-            }
-            // Small test for Firebase Remote config.
-            String message;
-            if (condensedDisplay) {
-                message = String.format(Locale.US, "%1$4dk (%2$d)",
-                        recordsSent.getValue() / 1000, timeSinceLastUpdate);
-            } else {
-                message = String.format(Locale.US, "%1$4d (updated %2$d sec. ago)",
-                        recordsSent.getValue(), timeSinceLastUpdate);
-            }
-            mRecordsSentLabel.setText(message);
-            previousRecordsSentTimer = timeSinceLastUpdate;
-        }
-        previousRecordsSent = recordsSent;
     }
 
     private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
