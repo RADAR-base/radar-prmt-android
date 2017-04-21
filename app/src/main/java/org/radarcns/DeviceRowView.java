@@ -308,18 +308,14 @@ public class DeviceRowView {
         previousBatteryLevel = batteryLevel;
         if (Float.isNaN(batteryLevel)) {
             mBatteryLabel.setImageResource(R.drawable.ic_battery_unknown);
-            // up to 100%
-        } else if (batteryLevel > 0.5) {
-            mBatteryLabel.setImageResource(R.drawable.ic_battery_full);
-            // up to 45%
-        } else if (batteryLevel > 0.2) {
-            mBatteryLabel.setImageResource(R.drawable.ic_battery_50);
-            // up to 10%
-        } else if (batteryLevel > 0.1) {
-            mBatteryLabel.setImageResource(R.drawable.ic_battery_low);
-            // up to 5% [what are possible values below 10%?]
-        } else {
+        } else if (batteryLevel < 0.1) {
             mBatteryLabel.setImageResource(R.drawable.ic_battery_empty);
+        } else if (batteryLevel < 0.3) {
+            mBatteryLabel.setImageResource(R.drawable.ic_battery_low);
+        } else if (batteryLevel < 0.6) {
+            mBatteryLabel.setImageResource(R.drawable.ic_battery_50);
+        } else {
+            mBatteryLabel.setImageResource(R.drawable.ic_battery_full);
         }
 
         // Display battery level value. If 100%, make it 99% for better layout
