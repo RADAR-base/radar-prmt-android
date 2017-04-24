@@ -84,7 +84,7 @@ public class DeviceRowView {
     private final ImageView mBatteryLabel;
     private final TextView mBatteryValue;
     private final TextView mDeviceNameLabel;
-    private final EditText mDeviceInput;
+    private final Button mDeviceInput;
     private final SharedPreferences devicePreferences;
     private String filter;
     private BaseDeviceState state;
@@ -113,7 +113,17 @@ public class DeviceRowView {
         mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
         mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
         mBatteryValue = (TextView) row.findViewById(R.id.battery_value);
-        mDeviceInput = (EditText) row.findViewById(R.id.inputDeviceName);
+        mDeviceInput = (Button) row.findViewById(R.id.inputDeviceButton);
+
+        if (provider.isFilterable()) {
+            mDeviceInput.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialogDeviceName();
+                }
+            });
+            mDeviceInput.setVisibility(View.VISIBLE);
+        }
 
         mDeviceInput.setText(provider.getDisplayName());
 
@@ -255,7 +265,7 @@ public class DeviceRowView {
             return;
         }
         previousTemperature = temperature;
-        setText(mTemperatureLabel, temperature, "", singleDecimal);
+        setText(mTemperatureLabel, temperature, "\u2103", noDecimals);
     }
 
     public void updateHeartRate() {
@@ -267,7 +277,7 @@ public class DeviceRowView {
             return;
         }
         previousHeartRate = heartRate;
-        setText(mHeartRateLabel, heartRate, "", noDecimals);
+        setText(mHeartRateLabel, heartRate, "bpm", noDecimals);
     }
 
     public void updateAcceleration() {

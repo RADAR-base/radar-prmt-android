@@ -4,19 +4,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <EditText
-        android:id="@+id/inputDeviceName"
+    <Button
+        android:id="@+id/inputDeviceButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ems="2"
-        android:inputType="textPersonName"
+        android:layout_gravity="center_vertical"
         android:text="E4"
-        android:textSize="10sp"/>
+        android:textSize="10sp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:visibility="invisible"/>
 
     <TextView
         android:id="@+id/deviceName_label"
         style="@style/DeviceNameColumn"
-        android:text="Empatica E4 - A003C9"/> <!--@string/emptyText" />-->
+        android:text="@string/emptyText" />
 
     <FrameLayout android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -54,9 +56,10 @@
         style="@style/NumberColumn"
         android:text="@string/disabledText" />
 
-    <Button
+    <ImageButton
         android:id="@+id/refreshButton"
-        style="@style/ButtonColumn"
-        android:text="@string/button_connect" />
+        android:src="@drawable/ic_cancel"
+        />
+
 
 </TableRow>

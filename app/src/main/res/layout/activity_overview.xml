@@ -31,9 +31,8 @@
                         style="@style/Header"
                         android:text="" />
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_device" />
+                    <ImageView
+                        android:src="@drawable/ic_watch"/>
 
                     <TextView
                         style="@style/Header"
@@ -43,21 +42,14 @@
                         style="@style/Header"
                         android:text="@string/header_battery" />
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_temp" />
+                    <ImageView
+                        android:src="@drawable/ic_thermometer"/>
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_hr" />
+                    <ImageView
+                        android:src="@drawable/ic_heartrate"/>
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_acceleration" />
-
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_device_key" />
+                    <ImageView
+                        android:src="@drawable/ic_accelerometer"/>
 
                     <TextView
                         style="@style/Header"
