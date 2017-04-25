@@ -52,6 +52,6 @@
     <string name="battery_status">Battery status</string>
 
     <string name="filter_title">Filter device name</string>
-    <string name="filter_help_label">Enter part of a device name or MAC address. Separate multiple options with comma\'s \',\'.</string>
+    <string name="filter_help_label">Enter part of a device name or MAC address. Separate multiple options with commas.</string>
     <string name="firebase_fetching">Fetching remote config</string>
 </resources>

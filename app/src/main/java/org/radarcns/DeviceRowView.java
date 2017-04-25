@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -142,13 +143,18 @@ public class DeviceRowView {
         AlertDialog.Builder builder = new AlertDialog.Builder(this.mainActivity);
         builder.setTitle(this.mainActivity.getString(R.string.filter_title));
 
-        final RelativeLayout layout = new RelativeLayout(this.mainActivity);
+        // Layout containing label and input
+        final LinearLayout layout = new LinearLayout(this.mainActivity);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(70,0,70,0);
+
+        // Label
         TextView label = new TextView(this.mainActivity);
         label.setText(R.string.filter_help_label);
         layout.addView(label);
+
         // Set up the input
         final EditText input = new EditText(this.mainActivity);
-        // Specify the type of input expected
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         layout.addView(input);
         builder.setView(layout);
@@ -190,14 +196,6 @@ public class DeviceRowView {
         }
 
         logger.info("setting device filter {}", allowed);
-        if (allowed.isEmpty()) {
-            mDeviceInput.setText("-");
-        } else {
-            String allowedString = allowed.toString();
-            // strip array indicators
-            allowedString = allowedString.substring(1, allowedString.length() - 1);
-            mDeviceInput.setText(allowedString);
-        }
 
         this.mainActivity.setAllowedDeviceIds(connection, allowed);
     }
