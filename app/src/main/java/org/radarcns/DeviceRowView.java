@@ -122,7 +122,8 @@ public class DeviceRowView {
                     dialogDeviceName();
                 }
             });
-            mDeviceInput.setVisibility(View.VISIBLE);
+//            mDeviceInput.setVisibility(View.VISIBLE);
+            mDeviceInput.setEnabled(true);
         }
 
         mDeviceInput.setText(provider.getDisplayName());
@@ -277,7 +278,7 @@ public class DeviceRowView {
             return;
         }
         previousHeartRate = heartRate;
-        setText(mHeartRateLabel, heartRate, "bpm", noDecimals);
+        setText(mHeartRateLabel, heartRate, "", noDecimals);
     }
 
     public void updateAcceleration() {
@@ -307,6 +308,8 @@ public class DeviceRowView {
             mBatteryLabel.setImageResource(R.drawable.ic_battery_low);
         } else if (batteryLevel < 0.6) {
             mBatteryLabel.setImageResource(R.drawable.ic_battery_50);
+        } else if (batteryLevel < 0.85) {
+            mBatteryLabel.setImageResource(R.drawable.ic_battery_80);
         } else {
             mBatteryLabel.setImageResource(R.drawable.ic_battery_full);
         }

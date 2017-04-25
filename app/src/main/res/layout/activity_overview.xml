@@ -19,8 +19,7 @@
                 android:id="@+id/deviceTable"
                 android:layout_width="fill_parent"
                 android:layout_height="match_parent"
-                android:stretchColumns="*"
-                android:layout_marginBottom="10dp">
+                android:stretchColumns="*" >
 
                 <TableRow
                     android:id="@+id/headerRow"
@@ -61,7 +60,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="15dp"
                 android:layout_below="@id/deviceTable"
                 android:orientation="vertical">
 
@@ -109,7 +108,8 @@
                 <!-- Source identifier input for all devices -->
                 <TextView
                     style="@style/ServerStatusLabel"
-                    android:text="@string/label_group_id_input"/>
+                    android:text="@string/label_group_id_input"
+                    android:layout_marginTop="15dp" />
 
                 <TextView
                     android:layout_width="wrap_content"

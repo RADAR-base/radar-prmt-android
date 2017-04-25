@@ -13,7 +13,8 @@
         android:textSize="10sp"
         android:minHeight="0dp"
         android:minWidth="0dp"
-        android:visibility="invisible"/>
+        android:visibility="visible"
+        android:clickable="false"/>
 
     <TextView
         android:id="@+id/deviceName_label"
