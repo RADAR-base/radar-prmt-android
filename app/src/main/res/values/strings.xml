@@ -54,4 +54,8 @@
     <string name="filter_title">Filter device name</string>
     <string name="filter_help_label">Enter part of a device name or MAC address. Separate multiple options with commas.</string>
     <string name="firebase_fetching">Fetching remote config</string>
+
+    <string name="username_label">Username</string>
+    <string name="password_label">Password</string>
+    <string name="login_button">Login</string>
 </resources>

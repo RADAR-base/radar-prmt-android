@@ -115,27 +115,31 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:labelFor="@+id/inputGroupId"
-                    android:text="Username"/>
+                    android:text="@string/username_label"/>
                 <EditText
                     android:id="@+id/inputGroupId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:text="Hello123"
+                    android:ems="15"
                     android:inputType="textPersonName" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:labelFor="@+id/inputPassword"
-                    android:text="Password"/>
+                    android:text="@string/password_label"/>
                 <EditText
                     android:id="@+id/inputPassword"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:text="Hello123"
+                    android:ems="15"
                     android:inputType="textPassword" />
+
+                <Button
+                    android:id="@+id/loginButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/login_button"/>
 
             </LinearLayout>
 

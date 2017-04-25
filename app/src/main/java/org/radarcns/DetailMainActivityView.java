@@ -83,6 +83,8 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private View mServerStatusIcon;
     private TextView mServerMessage;
     private EditText mGroupIdInput;
+    private EditText mPasswordInput;
+    private Button mLoginButton;
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
 
@@ -148,14 +150,18 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         mServerStatusIcon = mainActivity.findViewById(org.radarcns.R.id.statusServer);
         mServerMessage = (TextView) mainActivity.findViewById( org.radarcns.R.id.statusServerMessage);
+
         mGroupIdInput = (EditText) mainActivity.findViewById(org.radarcns.R.id.inputGroupId);
-        mGroupIdInput.setOnClickListener(new View.OnClickListener() {
+        mGroupIdInput.setText(userId);
+        mPasswordInput = (EditText) mainActivity.findViewById(org.radarcns.R.id.inputPassword);
+        mLoginButton = (Button) mainActivity.findViewById(org.radarcns.R.id.loginButton);
+        mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialogInputGroupId();
+                login(mGroupIdInput.getText().toString().trim(),mPasswordInput.getText().toString().trim());
             }
         });
-        mGroupIdInput.setText(userId);
+
         mFirebaseStatusIcon = mainActivity.findViewById(org.radarcns.R.id.firebaseStatus);
         mFirebaseMessage = (TextView) mainActivity.findViewById( org.radarcns.R.id.firebaseStatusMessage);
     }
@@ -218,35 +224,6 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         }
     }
 
-
-    public void dialogInputGroupId() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-        builder.setTitle("Patient Identifier:");
-
-        // Set up the input
-        final EditText input = new EditText(mainActivity);
-        // Specify the type of input expected
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        // Set up the buttons
-        input.setText(userId);
-        builder.setPositiveButton(org.radarcns.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                setUserId(input.getText().toString().trim());
-            }
-        });
-        builder.setNegativeButton(org.radarcns.R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
-
     private void setUserId(String newValue) {
         if (!newValue.isEmpty()) {
             userId = newValue;
@@ -267,6 +244,17 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         } catch (RemoteException re) {
             Boast.makeText(mainActivity, "Could not set the patient id", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void login(String username, String password) {
+        // TODO: proper authentication (20170425)
+        if (!password.equals("radarcns")) {
+            Boast.makeText(mainActivity, "Username and password do not match", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        setUserId(username);
+        Boast.makeText(mainActivity, "Login successful", Toast.LENGTH_LONG).show();
     }
 
 }
