@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.radarcns;
+package org.radarcns.detail;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
-import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,14 +59,14 @@ public class DeviceRowView {
     private static final int MAX_UI_DEVICE_NAME_LENGTH = 25;
 
     private final static Map<DeviceStatusListener.Status, Integer> deviceStatusIconMap;
-    private final static int deviceStatusIconDefault = org.radarcns.R.drawable.status_searching;
+    private final static int deviceStatusIconDefault = R.drawable.status_searching;
 
     static {
         deviceStatusIconMap = new EnumMap<>(DeviceStatusListener.Status.class);
-        deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTED, org.radarcns.R.drawable.status_connected);
-        deviceStatusIconMap.put(DeviceStatusListener.Status.DISCONNECTED, org.radarcns.R.drawable.status_disconnected);
-        deviceStatusIconMap.put(DeviceStatusListener.Status.READY, org.radarcns.R.drawable.status_searching);
-        deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTING, org.radarcns.R.drawable.status_searching);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTED, R.drawable.status_connected);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.DISCONNECTED, R.drawable.status_disconnected);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.READY, R.drawable.status_searching);
+        deviceStatusIconMap.put(DeviceStatusListener.Status.CONNECTING, R.drawable.status_searching);
     }
 
     private final MainActivity mainActivity;

@@ -31,7 +31,7 @@
     </entry>
     <entry>
         <key>device_services_to_connect</key>
-        <value>.application.ApplicationServiceProvider .phone.PhoneServiceProvider .empaticaE4.E4ServiceProvider</value>
+        <value>.application.ApplicationServiceProvider .phone.PhoneServiceProvider .empatica.E4ServiceProvider .pebble.PebbleServiceProvider</value>
     </entry>
     <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
@@ -40,7 +40,7 @@
     </entry>
     <entry>
         <key>kafka_upload_rate</key>
-        <value>10</value>
+        <value>60</value>
     </entry>
     <entry>
         <key>kafka_clean_rate</key>
@@ -49,6 +49,12 @@
     <entry>
         <key>sender_connection_timeout</key>
         <value>20</value>
+    </entry>
+    <!-- Cache size per topic -->
+    <entry>
+        <key>max_cache_size_bytes</key>
+        <!-- 450 MB ~ 5.5 million records. With a 64 Hz stream, that fills up after 24 hours. -->
+        <value>450000000</value>
     </entry>
 </defaultsMap>
 <!-- END xml_defaults -->

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.radarcns;
+package org.radarcns.detail;
 
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;

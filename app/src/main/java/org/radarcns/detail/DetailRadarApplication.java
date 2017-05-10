@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package org.radarcns;
+package org.radarcns.detail;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import org.radarcns.android.RadarApplication;
 
 /**
- * Starts MainActivity on boot if configured to do so
+ * Radar application class for the detailed application.
  */
-public class MainActivityBootStarter extends BroadcastReceiver {
+public class DetailRadarApplication extends RadarApplication {
     @Override
-    public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
-            Intent i = new Intent(context, DetailMainActivity.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(i);
-        }
+    public Bitmap getLargeIcon() {
+        return BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+    }
+
+    @Override
+    public int getSmallIcon() {
+        return org.radarcns.android.R.drawable.ic_bt_connected;
     }
 }

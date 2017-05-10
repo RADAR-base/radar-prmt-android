@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.radarcns;
+package org.radarcns.detail;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
-import android.support.v7.app.AlertDialog;
 import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,15 +60,15 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private final static Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
     static {
         serverStatusIconMap = new EnumMap<>(ServerStatusListener.Status.class);
-        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTED, org.radarcns.R.drawable.status_connected);
-        serverStatusIconMap.put(ServerStatusListener.Status.DISCONNECTED, org.radarcns.R.drawable.status_disconnected);
-        serverStatusIconMap.put(ServerStatusListener.Status.DISABLED, org.radarcns.R.drawable.status_disconnected);
-        serverStatusIconMap.put(ServerStatusListener.Status.READY, org.radarcns.R.drawable.status_searching);
-        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, org.radarcns.R.drawable.status_searching);
-        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, org.radarcns.R.drawable.status_uploading);
-        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, org.radarcns.R.drawable.status_error);
+        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTED, R.drawable.status_connected);
+        serverStatusIconMap.put(ServerStatusListener.Status.DISCONNECTED, R.drawable.status_disconnected);
+        serverStatusIconMap.put(ServerStatusListener.Status.DISABLED, R.drawable.status_disconnected);
+        serverStatusIconMap.put(ServerStatusListener.Status.READY, R.drawable.status_searching);
+        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, R.drawable.status_searching);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_error);
     }
-    private final static int serverStatusIconDefault = org.radarcns.R.drawable.status_disconnected;
+    private final static int serverStatusIconDefault = R.drawable.status_disconnected;
 
     private final SharedPreferences preferences;
 
@@ -93,7 +93,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         initializeViews();
 
         rows = new ArrayList<>();
-        ViewGroup root = (ViewGroup) activity.findViewById(org.radarcns.R.id.deviceTable);
+        ViewGroup root = (ViewGroup) activity.findViewById(R.id.deviceTable);
         boolean condensed = radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true);
         for (DeviceServiceProvider provider : activity.getConnections()) {
             if (provider.isDisplayable()) {
@@ -144,11 +144,11 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     }
 
     private void initializeViews() {
-        mainActivity.setContentView(org.radarcns.R.layout.activity_overview);
+        mainActivity.setContentView(R.layout.activity_overview);
 
-        mServerStatusIcon = mainActivity.findViewById(org.radarcns.R.id.statusServer);
-        mServerMessage = (TextView) mainActivity.findViewById( org.radarcns.R.id.statusServerMessage);
-        mGroupIdInputButton = (Button) mainActivity.findViewById(org.radarcns.R.id.inputGroupId);
+        mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
+        mServerMessage = (TextView) mainActivity.findViewById( R.id.statusServerMessage);
+        mGroupIdInputButton = (Button) mainActivity.findViewById(R.id.inputGroupId);
         mGroupIdInputButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,8 +156,8 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             }
         });
         mGroupIdInputButton.setText(userId);
-        mFirebaseStatusIcon = mainActivity.findViewById(org.radarcns.R.id.firebaseStatus);
-        mFirebaseMessage = (TextView) mainActivity.findViewById( org.radarcns.R.id.firebaseStatusMessage);
+        mFirebaseStatusIcon = mainActivity.findViewById(R.id.firebaseStatus);
+        mFirebaseMessage = (TextView) mainActivity.findViewById( R.id.firebaseStatusMessage);
     }
 
     @Override
@@ -178,20 +178,20 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         switch (status) {
             case FETCHED:
-                mFirebaseStatusIcon.setBackgroundResource(org.radarcns.R.drawable.status_connected);
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
                 mFirebaseMessage.setText("Remote config fetched from the server ("
                         + timeFormat.format( System.currentTimeMillis() ) + ")");
                 break;
             case UNAVAILABLE:
-                mFirebaseStatusIcon.setBackgroundResource(org.radarcns.R.drawable.status_disconnected);
-                mFirebaseMessage.setText(org.radarcns.R.string.playServicesUnavailable);
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
+                mFirebaseMessage.setText(R.string.playServicesUnavailable);
                 break;
             case FETCHING:
-                mFirebaseMessage.setText(org.radarcns.R.string.firebase_fetching);
-                mFirebaseStatusIcon.setBackgroundResource(org.radarcns.R.drawable.status_searching);
+                mFirebaseMessage.setText(R.string.firebase_fetching);
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_searching);
                 break;
             case ERROR:
-                mFirebaseStatusIcon.setBackgroundResource(org.radarcns.R.drawable.status_error);
+                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_error);
                 mFirebaseMessage.setText("Failed to fetch remote config ("
                         + timeFormat.format( System.currentTimeMillis() ) + ")");
                 break;
@@ -231,13 +231,13 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         // Set up the buttons
         input.setText(userId);
-        builder.setPositiveButton(org.radarcns.R.string.ok, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 setUserId(input.getText().toString().trim());
             }
         });
-        builder.setNegativeButton(org.radarcns.R.string.cancel, new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
