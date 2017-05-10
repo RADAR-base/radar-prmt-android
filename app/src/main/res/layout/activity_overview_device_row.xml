@@ -4,10 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <TextView
-        android:id="@+id/deviceType"
-        style="@style/DeviceTypeLabel"
-        android:text="" />
+    <Button
+        android:id="@+id/inputDeviceButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:text="E4"
+        android:textSize="10sp"
+        android:minHeight="0dp"
+        android:minWidth="0dp"
+        android:visibility="visible"
+        android:clickable="false"/>
 
     <TextView
         android:id="@+id/deviceName_label"
@@ -29,6 +36,10 @@
             style="@style/BatteryColumn"
             android:src="@drawable/ic_battery_unknown"
             android:contentDescription="@string/battery_status" />
+
+        <TextView
+            android:id="@+id/battery_value"
+            style="@style/BatteryValue" />
     </FrameLayout>
 
     <TextView
@@ -46,19 +57,10 @@
         style="@style/NumberColumn"
         android:text="@string/disabledText" />
 
-    <Button
-        android:id="@+id/inputDeviceNameButton"
-        style="@style/ButtonInputColumn"
-        android:text="@string/button_input"
-        android:visibility="invisible" />
-
-    <Button
+    <ImageButton
         android:id="@+id/refreshButton"
-        style="@style/ButtonColumn"
-        android:text="@string/button_connect" />
+        android:src="@drawable/ic_cancel"
+        />
 
-    <TextView
-        android:id="@+id/recordsSent_label"
-        style="@style/NumberColumn"
-        android:text="@string/emptyText" />
+
 </TableRow>

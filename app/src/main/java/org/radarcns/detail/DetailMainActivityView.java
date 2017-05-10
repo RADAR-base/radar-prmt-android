@@ -82,7 +82,9 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     // View elements
     private View mServerStatusIcon;
     private TextView mServerMessage;
-    private Button mGroupIdInputButton;
+    private EditText mGroupIdInput;
+    private EditText mPasswordInput;
+    private Button mLoginButton;
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
 
@@ -147,17 +149,21 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         mainActivity.setContentView(R.layout.activity_overview);
 
         mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
-        mServerMessage = (TextView) mainActivity.findViewById( R.id.statusServerMessage);
-        mGroupIdInputButton = (Button) mainActivity.findViewById(R.id.inputGroupId);
-        mGroupIdInputButton.setOnClickListener(new View.OnClickListener() {
+        mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
+
+        mGroupIdInput = (EditText) mainActivity.findViewById(R.id.inputGroupId);
+        mGroupIdInput.setText(userId);
+        mPasswordInput = (EditText) mainActivity.findViewById(R.id.inputPassword);
+        mLoginButton = (Button) mainActivity.findViewById(R.id.loginButton);
+        mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialogInputGroupId();
+                login(mGroupIdInput.getText().toString().trim(),mPasswordInput.getText().toString().trim());
             }
         });
-        mGroupIdInputButton.setText(userId);
+
         mFirebaseStatusIcon = mainActivity.findViewById(R.id.firebaseStatus);
-        mFirebaseMessage = (TextView) mainActivity.findViewById( R.id.firebaseStatusMessage);
+        mFirebaseMessage = (TextView) mainActivity.findViewById(R.id.firebaseStatusMessage);
     }
 
     @Override
@@ -218,35 +224,6 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         }
     }
 
-
-    public void dialogInputGroupId() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-        builder.setTitle("Patient Identifier:");
-
-        // Set up the input
-        final EditText input = new EditText(mainActivity);
-        // Specify the type of input expected
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        // Set up the buttons
-        input.setText(userId);
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                setUserId(input.getText().toString().trim());
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
-
     private void setUserId(String newValue) {
         if (!newValue.isEmpty()) {
             userId = newValue;
@@ -254,7 +231,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
         }
         preferences.edit().putString("userId", userId).apply();
-        mGroupIdInputButton.setText(userId);
+        mGroupIdInput.setText(userId);
 
         // Set group/user id for each active connection
         try {
@@ -267,6 +244,17 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         } catch (RemoteException re) {
             Boast.makeText(mainActivity, "Could not set the patient id", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void login(String username, String password) {
+        // TODO: proper authentication (20170425)
+        if (!password.equals("radarcns")) {
+            Boast.makeText(mainActivity, "Username and password do not match", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        setUserId(username);
+        Boast.makeText(mainActivity, "Login successful", Toast.LENGTH_LONG).show();
     }
 
 }

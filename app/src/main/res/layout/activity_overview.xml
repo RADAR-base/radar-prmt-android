@@ -19,7 +19,7 @@
                 android:id="@+id/deviceTable"
                 android:layout_width="fill_parent"
                 android:layout_height="match_parent"
-                android:stretchColumns="*">
+                android:stretchColumns="*" >
 
                 <TableRow
                     android:id="@+id/headerRow"
@@ -30,9 +30,8 @@
                         style="@style/Header"
                         android:text="" />
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_device" />
+                    <ImageView
+                        android:src="@drawable/ic_watch"/>
 
                     <TextView
                         style="@style/Header"
@@ -42,120 +41,109 @@
                         style="@style/Header"
                         android:text="@string/header_battery" />
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_temp" />
+                    <ImageView
+                        android:src="@drawable/ic_thermometer"/>
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_hr" />
+                    <ImageView
+                        android:src="@drawable/ic_heartrate"/>
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_acceleration" />
-
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_device_key" />
+                    <ImageView
+                        android:src="@drawable/ic_accelerometer"/>
 
                     <TextView
                         style="@style/Header"
                         android:text="@string/header_scan" />
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_records_sent" />
                 </TableRow>
             </TableLayout>
 
-            <View
-                android:id="@+id/dividerLine"
-                android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:background="#c0c0c0"
-                android:layout_marginTop="5dp"
-                android:layout_below="@id/deviceTable"/>
-
-            <TableLayout
-                android:layout_width="fill_parent"
-                android:layout_height="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
                 android:layout_below="@id/deviceTable"
-                android:layout_marginTop="20dp"
-                >
+                android:orientation="vertical">
+
                 <!-- Server status -->
-                <TableRow
-                    android:id="@+id/serverStatusLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                <TextView
+                    android:id="@+id/statusServerLabel"
+                    style="@style/ServerStatusLabel"
+                    android:text="@string/header_server_status" />
 
-                    <TextView
-                        android:id="@+id/statusServerLabel"
-                        style="@style/ServerStatusLabel"
-                        android:text="@string/header_server_status" />
-
-                    <FrameLayout
-                        android:layout_height="match_parent"
-                        android:layout_width="match_parent">
-                        <View
-                            android:id="@+id/statusServer"
-                            style="@style/StatusCircle"
-                            android:background="@drawable/status_disconnected" />
-                    </FrameLayout>
-
+                <LinearLayout
+                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    android:orientation="horizontal">
+                    <View
+                        android:id="@+id/statusServer"
+                        style="@style/StatusCircle"
+                        android:background="@drawable/status_disconnected" />
                     <TextView
                         android:id="@+id/statusServerMessage"
                         style="@style/StatusMessage"
                         android:text="@string/emptyText" />
-                </TableRow>
+                </LinearLayout>
+
 
                 <!-- Firebase status -->
-                <TableRow
-                    android:id="@+id/firebaseStatusLayout"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/firebaseStatusLabel"
+                    style="@style/ServerStatusLabel"
+                    android:text="@string/label_firebase_status"/>
+
+                <LinearLayout
                     android:layout_height="match_parent"
-                    android:layout_marginTop="20dp" >
-
-                    <TextView
-                        android:id="@+id/firebaseStatusLabel"
-                        style="@style/ServerStatusLabel"
-                        android:text="@string/label_firebase_status"/>
-
-                    <FrameLayout
-                        android:layout_height="match_parent"
-                        android:layout_width="match_parent">
-                        <View
-                            android:id="@+id/firebaseStatus"
-                            style="@style/StatusCircle"
-                            android:background="@drawable/status_disconnected" />
-                    </FrameLayout>
-
+                    android:layout_width="wrap_content"
+                    android:orientation="horizontal">
+                    <View
+                        android:id="@+id/firebaseStatus"
+                        style="@style/StatusCircle"
+                        android:background="@drawable/status_disconnected" />
                     <TextView
                         android:id="@+id/firebaseStatusMessage"
                         style="@style/StatusMessage"
                         android:text="@string/emptyText" />
-                </TableRow>
+                </LinearLayout>
 
                 <!-- Source identifier input for all devices -->
-                <TableRow
-                    android:id="@+id/inputGroupIdRow"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginTop="20dp" >
+                <TextView
+                    style="@style/ServerStatusLabel"
+                    android:text="@string/label_group_id_input"
+                    android:layout_marginTop="15dp" />
 
-                    <TextView
-                        style="@style/ServerStatusLabel"
-                        android:text="@string/label_group_id_input"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:labelFor="@+id/inputGroupId"
+                    android:text="@string/username_label"/>
+                <EditText
+                    android:id="@+id/inputGroupId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="15"
+                    android:inputType="textPersonName" />
 
-                    <Button
-                        android:id="@+id/inputGroupId"
-                        style="@style/ButtonInputColumn"
-                        android:layout_span="2"
-                        android:layout_gravity="start"
-                        android:text="@string/request_group_id" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:labelFor="@+id/inputPassword"
+                    android:text="@string/password_label"/>
+                <EditText
+                    android:id="@+id/inputPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="15"
+                    android:inputType="textPassword" />
 
-                </TableRow>
+                <Button
+                    android:id="@+id/loginButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/login_button"/>
 
-            </TableLayout>
+            </LinearLayout>
+
+
         </RelativeLayout>
     </HorizontalScrollView>
 </ScrollView>
