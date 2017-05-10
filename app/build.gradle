@@ -43,7 +43,7 @@ dependencies {
     compile 'com.empatica:empalink:2.1@aar'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
     compile 'org.radarcns:radar-android-pebble:0.1-alpha.1'
-    compile 'org.radarcns:radar-android-phone:0.1-alpha.2'
+    compile 'org.radarcns:radar-android-phone:0.1-alpha.3-SNAPSHOT@aar'
     compile 'org.radarcns:radar-android-application-status:0.1.1-SNAPSHOT@aar'
 //    compile 'org.radarcns:radar-android-audio:0.1-alpha.2-SNAPSHOT@aar'
 

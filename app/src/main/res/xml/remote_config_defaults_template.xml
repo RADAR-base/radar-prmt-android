@@ -31,7 +31,7 @@
     </entry>
     <entry>
         <key>device_services_to_connect</key>
-        <value>.application.ApplicationServiceProvider .phone.PhoneServiceProvider .empatica.E4ServiceProvider .pebble.PebbleServiceProvider</value>
+        <value>.application.ApplicationServiceProvider .phone.PhoneSensorProvider .empatica.E4ServiceProvider .pebble.PebbleServiceProvider</value>
     </entry>
     <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
