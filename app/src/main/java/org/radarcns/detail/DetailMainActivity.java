@@ -16,6 +16,9 @@
 
 package org.radarcns.detail;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
@@ -29,7 +32,13 @@ public class DetailMainActivity extends MainActivity {
     @Override
     protected RadarConfiguration createConfiguration() {
         // TODO: turn off developer mode
-        return RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
+        RadarConfiguration configuration = RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
+        SharedPreferences preferences = getSharedPreferences("main", Context.MODE_PRIVATE);
+        String userId = preferences.getString("userId", "");
+        if (!userId.isEmpty()) {
+            configuration.put(RadarConfiguration.DEFAULT_GROUP_ID_KEY, userId);
+        }
+        return configuration;
     }
 
     @Override

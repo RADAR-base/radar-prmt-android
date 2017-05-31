@@ -16,12 +16,9 @@
 
 package org.radarcns.detail;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
-import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -231,6 +228,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
         }
         preferences.edit().putString("userId", userId).apply();
+        radarConfiguration.put(DEFAULT_GROUP_ID_KEY, userId);
         mGroupIdInput.setText(userId);
 
         // Set group/user id for each active connection
