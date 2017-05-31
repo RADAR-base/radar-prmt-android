@@ -222,10 +222,14 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     }
 
     private void setUserId(String newValue) {
+        String oldValue = userId;
         if (!newValue.isEmpty()) {
             userId = newValue;
         } else {
             userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
+        }
+        if (Objects.equals(userId, oldValue)) {
+            return;
         }
         preferences.edit().putString("userId", userId).apply();
         radarConfiguration.put(DEFAULT_GROUP_ID_KEY, userId);
