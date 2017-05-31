@@ -34,30 +34,18 @@ repositories {
 dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.google.firebase:firebase-config:10.0.1'
+    compile 'com.google.firebase:firebase-config:10.2.6'
 
-    compile('org.radarcns:radar-commons-android:0.1.1-SNAPSHOT@aar') {
-        force = true
-    }
+    compile('org.radarcns:radar-commons-android:0.2')
+
     compile 'org.radarcns:radar-android-empatica:0.1-SNAPSHOT@aar'
     compile 'com.empatica:empalink:2.1@aar'
     compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile 'org.radarcns:radar-android-pebble:0.1-alpha.1'
-    compile 'org.radarcns:radar-android-phone:0.1-alpha.3-SNAPSHOT@aar'
-    compile 'org.radarcns:radar-android-application-status:0.1.1-SNAPSHOT@aar'
-//    compile 'org.radarcns:radar-android-audio:0.1-alpha.2-SNAPSHOT@aar'
 
-    // tmp
-    compile 'com.squareup.okhttp3:okhttp:3.6.0'
-    compile 'org.apache.avro:avro:1.8.1'
-    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
-    compile 'com.google.firebase:firebase-config:10.0.1'
-    compile ('org.radarcns:radar-commons:0.2.1') {
-        exclude group: 'io.confluent', module: 'kafka-avro-serializer'
-        exclude group: 'org.apache.kafka', module: 'kafka-clients'
-        exclude group: 'com.fasterxml.jackson.dataformat', module: 'jackson-dataformat-yaml'
-    }
-    compile 'org.radarcns:radar-schemas-commons:0.1'
+//    compile 'org.radarcns:radar-android-pebble:0.1-alpha.1'
+//    compile 'org.radarcns:radar-android-phone:0.1-alpha.3-SNAPSHOT@aar'
+//    compile 'org.radarcns:radar-android-application-status:0.1.1-SNAPSHOT@aar'
+//    compile 'org.radarcns:radar-android-audio:0.1-alpha.2-SNAPSHOT@aar'
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.21'
