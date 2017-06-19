@@ -80,7 +80,7 @@ public class DeviceRowView {
 //    private final TextView mHeartRateLabel;
 //    private final TextView mAccelerationLabel;
     private final ImageView mBatteryLabel;
-    private final TextView mBatteryValue;
+//    private final TextView mBatteryValue;
     private final TextView mDeviceNameLabel;
     private final SharedPreferences devicePreferences;
     private String filter;
@@ -109,7 +109,7 @@ public class DeviceRowView {
 //        mAccelerationLabel = (TextView) row.findViewById(R.id.acceleration_label);
         mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
         mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
-        mBatteryValue = (TextView) row.findViewById(R.id.battery_value);
+//        mBatteryValue = (TextView) row.findViewById(R.id.battery_value);
         Button mDeviceInput = (Button) row.findViewById(R.id.inputDeviceButton);
 
         if (provider.isFilterable()) {
@@ -222,6 +222,9 @@ public class DeviceRowView {
             state = null;
             deviceName = null;
         }
+        if (deviceName != null) {
+            deviceName = deviceName.replace("Empatica", "").trim();
+        }
     }
 
     public void display() {
@@ -309,8 +312,8 @@ public class DeviceRowView {
         }
 
         // Display battery level value. If 100%, make it 99% for better layout
-        float batteryLevelFormatted = batteryLevel == 1 ? batteryLevel*100 - 1 : batteryLevel*100;
-        setText(mBatteryValue, batteryLevelFormatted, "", noDecimals);
+//        float batteryLevelFormatted = batteryLevel == 1 ? batteryLevel*100 - 1 : batteryLevel*100;
+//        setText(mBatteryValue, batteryLevelFormatted, "", noDecimals);
     }
 
     public void updateDeviceName() {
@@ -326,16 +329,16 @@ public class DeviceRowView {
         // \u2014 == —
         mDeviceNameLabel.setText(deviceName == null ? "\u2014" : deviceName);
     }
-
-    private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
-        if (Float.isNaN(value)) {
-            // Only overwrite default value if enabled.
-            if (label.isEnabled()) {
-                // em dash
-                label.setText("\u2014");
-            }
-        } else {
-            label.setText(formatter.format(value) + " " + suffix);
-        }
-    }
+//
+//    private void setText(TextView label, float value, String suffix, DecimalFormat formatter) {
+//        if (Float.isNaN(value)) {
+//            // Only overwrite default value if enabled.
+//            if (label.isEnabled()) {
+//                // em dash
+//                label.setText("\u2014");
+//            }
+//        } else {
+//            label.setText(formatter.format(value) + " " + suffix);
+//        }
+//    }
 }

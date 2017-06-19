@@ -37,9 +37,9 @@
             android:src="@drawable/ic_battery_unknown"
             android:contentDescription="@string/battery_status" />
 
-        <TextView
-            android:id="@+id/battery_value"
-            style="@style/BatteryValue" />
+        <!--<TextView-->
+            <!--android:id="@+id/battery_value"-->
+            <!--style="@style/BatteryValue" />-->
     </FrameLayout>
 
     <!--<TextView-->
