@@ -71,7 +71,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private View mServerStatusIcon;
     private TextView mServerMessage;
     private View mFirebaseStatusIcon;
-    private TextView mFirebaseMessage;
+//    private TextView mFirebaseMessage;
     private TextView mPatientId;
 
     DetailMainActivityView(MainActivity activity, RadarConfiguration radarConfiguration) {
@@ -121,11 +121,9 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
 
             if (numberOfRecords.getValue() < 0) {
-                message = String.format(Locale.US, "%1$25s has FAILED uploading (%2$s)",
-                        topic, messageTimeStamp);
+                message = String.format(Locale.US, "last upload failed at %1$s", messageTimeStamp);
             } else {
-                message = String.format(Locale.US, "%1$25s uploaded %2$4d records (%3$s)",
-                        topic, numberOfRecords.getValue(), messageTimeStamp);
+                message = String.format(Locale.US, "last upload at %1$s", messageTimeStamp);
             }
         }
         return message;
@@ -139,7 +137,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         mPatientId = (TextView) mainActivity.findViewById(R.id.userIdLabel);
         mFirebaseStatusIcon = mainActivity.findViewById(R.id.firebaseStatus);
-        mFirebaseMessage = (TextView) mainActivity.findViewById(R.id.firebaseStatusMessage);
+//        mFirebaseMessage = (TextView) mainActivity.findViewById(R.id.firebaseStatusMessage);
     }
 
     @Override
@@ -161,21 +159,21 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         switch (status) {
             case FETCHED:
                 mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
-                mFirebaseMessage.setText("Remote config fetched from the server ("
-                        + timeFormat.format( System.currentTimeMillis() ) + ")");
+//                mFirebaseMessage.setText("Remote config fetched from the server ("
+//                        + timeFormat.format( System.currentTimeMillis() ) + ")");
                 break;
             case UNAVAILABLE:
                 mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
-                mFirebaseMessage.setText(R.string.playServicesUnavailable);
+//                mFirebaseMessage.setText(R.string.playServicesUnavailable);
                 break;
             case FETCHING:
-                mFirebaseMessage.setText(R.string.firebase_fetching);
+//                mFirebaseMessage.setText(R.string.firebase_fetching);
                 mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_searching);
                 break;
             case ERROR:
                 mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_error);
-                mFirebaseMessage.setText("Failed to fetch remote config ("
-                        + timeFormat.format( System.currentTimeMillis() ) + ")");
+//                mFirebaseMessage.setText("Failed to fetch remote config ("
+//                        + timeFormat.format( System.currentTimeMillis() ) + ")");
                 break;
             default:
                 // no action

@@ -29,7 +29,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,14 +39,12 @@ import org.radarcns.android.device.DeviceServiceConnection;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.android.util.Boast;
-import org.radarcns.data.TimedInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
 import java.util.EnumMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -72,28 +69,27 @@ public class DeviceRowView {
 
     private final MainActivity mainActivity;
     // Data formats
-    private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
-    private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
+//    private final DecimalFormat singleDecimal = new DecimalFormat("0.0");
+//    private final DecimalFormat doubleDecimal = new DecimalFormat("0.00");
     private final DecimalFormat noDecimals = new DecimalFormat("0");
 
 
     private final DeviceServiceConnection connection;
     private final View mStatusIcon;
-    private final TextView mTemperatureLabel;
-    private final TextView mHeartRateLabel;
-    private final TextView mAccelerationLabel;
+//    private final TextView mTemperatureLabel;
+//    private final TextView mHeartRateLabel;
+//    private final TextView mAccelerationLabel;
     private final ImageView mBatteryLabel;
     private final TextView mBatteryValue;
     private final TextView mDeviceNameLabel;
-    private final Button mDeviceInput;
     private final SharedPreferences devicePreferences;
     private String filter;
     private BaseDeviceState state;
     private String deviceName;
-    private float previousTemperature = Float.NaN;
+//    private float previousTemperature = Float.NaN;
     private float previousBatteryLevel = Float.NaN;
-    private float previousHeartRate = Float.NaN;
-    private float previousAcceleration = Float.NaN;
+//    private float previousHeartRate = Float.NaN;
+//    private float previousAcceleration = Float.NaN;
     private String previousName;
     private DeviceStatusListener.Status previousStatus = null;
 
@@ -108,13 +104,13 @@ public class DeviceRowView {
         TableRow row = (TableRow) root.getChildAt(root.getChildCount() - 1);
 
         mStatusIcon = row.findViewById(R.id.status_icon);
-        mTemperatureLabel = (TextView) row.findViewById(R.id.temperature_label);
-        mHeartRateLabel = (TextView) row.findViewById(R.id.heartRate_label);
-        mAccelerationLabel = (TextView) row.findViewById(R.id.acceleration_label);
+//        mTemperatureLabel = (TextView) row.findViewById(R.id.temperature_label);
+//        mHeartRateLabel = (TextView) row.findViewById(R.id.heartRate_label);
+//        mAccelerationLabel = (TextView) row.findViewById(R.id.acceleration_label);
         mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
         mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
         mBatteryValue = (TextView) row.findViewById(R.id.battery_value);
-        mDeviceInput = (Button) row.findViewById(R.id.inputDeviceButton);
+        Button mDeviceInput = (Button) row.findViewById(R.id.inputDeviceButton);
 
         if (provider.isFilterable()) {
             mDeviceInput.setOnClickListener(new View.OnClickListener() {
@@ -229,12 +225,12 @@ public class DeviceRowView {
     }
 
     public void display() {
-        updateAcceleration();
+//        updateAcceleration();
         updateBattery();
         updateDeviceName();
         updateDeviceStatus();
-        updateHeartRate();
-        updateTemperature();
+//        updateHeartRate();
+//        updateTemperature();
     }
 
     public void updateDeviceStatus() {
@@ -253,43 +249,43 @@ public class DeviceRowView {
             mStatusIcon.setBackgroundResource(resource);
         }
     }
-
-    public void updateTemperature() {
-        if (state != null && !state.hasTemperature()) {
-            return;
-        }
-        // \u2103 == ℃
-        float temperature = state == null ? Float.NaN : state.getTemperature();
-        if (Objects.equals(previousTemperature, temperature)) {
-            return;
-        }
-        previousTemperature = temperature;
-        setText(mTemperatureLabel, temperature, "\u2103", noDecimals);
-    }
-
-    public void updateHeartRate() {
-        if (state != null && !state.hasHeartRate()) {
-            return;
-        }
-        float heartRate = state == null ? Float.NaN : state.getHeartRate();
-        if (Objects.equals(previousHeartRate, heartRate)) {
-            return;
-        }
-        previousHeartRate = heartRate;
-        setText(mHeartRateLabel, heartRate, "", noDecimals);
-    }
-
-    public void updateAcceleration() {
-        if (state != null && !state.hasAcceleration()) {
-            return;
-        }
-        float acceleration = state == null ? Float.NaN : state.getAccelerationMagnitude();
-        if (Objects.equals(previousAcceleration, acceleration)) {
-            return;
-        }
-        previousAcceleration = acceleration;
-        setText(mAccelerationLabel, acceleration, "g", doubleDecimal);
-    }
+//
+//    public void updateTemperature() {
+//        if (state != null && !state.hasTemperature()) {
+//            return;
+//        }
+//        // \u2103 == ℃
+//        float temperature = state == null ? Float.NaN : state.getTemperature();
+//        if (Objects.equals(previousTemperature, temperature)) {
+//            return;
+//        }
+//        previousTemperature = temperature;
+//        setText(mTemperatureLabel, temperature, "\u2103", noDecimals);
+//    }
+//
+//    public void updateHeartRate() {
+//        if (state != null && !state.hasHeartRate()) {
+//            return;
+//        }
+//        float heartRate = state == null ? Float.NaN : state.getHeartRate();
+//        if (Objects.equals(previousHeartRate, heartRate)) {
+//            return;
+//        }
+//        previousHeartRate = heartRate;
+//        setText(mHeartRateLabel, heartRate, "", noDecimals);
+//    }
+//
+//    public void updateAcceleration() {
+//        if (state != null && !state.hasAcceleration()) {
+//            return;
+//        }
+//        float acceleration = state == null ? Float.NaN : state.getAccelerationMagnitude();
+//        if (Objects.equals(previousAcceleration, acceleration)) {
+//            return;
+//        }
+//        previousAcceleration = acceleration;
+//        setText(mAccelerationLabel, acceleration, "g", doubleDecimal);
+//    }
 
     public void updateBattery() {
         // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1

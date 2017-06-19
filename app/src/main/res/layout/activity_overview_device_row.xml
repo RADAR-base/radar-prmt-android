@@ -42,20 +42,20 @@
             style="@style/BatteryValue" />
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/temperature_label"
-        style="@style/NumberColumn"
-        android:text="@string/disabledText" />
+    <!--<TextView-->
+        <!--android:id="@+id/temperature_label"-->
+        <!--style="@style/NumberColumn"-->
+        <!--android:text="@string/disabledText" />-->
 
-    <TextView
-        android:id="@+id/heartRate_label"
-        style="@style/NumberColumn"
-        android:text="@string/disabledText" />
+    <!--<TextView-->
+        <!--android:id="@+id/heartRate_label"-->
+        <!--style="@style/NumberColumn"-->
+        <!--android:text="@string/disabledText" />-->
 
-    <TextView
-        android:id="@+id/acceleration_label"
-        style="@style/NumberColumn"
-        android:text="@string/disabledText" />
+    <!--<TextView-->
+        <!--android:id="@+id/acceleration_label"-->
+        <!--style="@style/NumberColumn"-->
+        <!--android:text="@string/disabledText" />-->
 
     <ImageButton
         android:id="@+id/refreshButton"
