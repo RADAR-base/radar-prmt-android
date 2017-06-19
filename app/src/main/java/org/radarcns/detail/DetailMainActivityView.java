@@ -21,18 +21,13 @@ import android.content.SharedPreferences;
 import android.os.RemoteException;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
-import org.radarcns.android.device.DeviceServiceConnection;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.android.kafka.ServerStatusListener;
-import org.radarcns.android.util.Boast;
 import org.radarcns.data.TimedInt;
 
 import java.text.DateFormat;
@@ -45,7 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
-import static org.radarcns.android.RadarConfiguration.DEFAULT_GROUP_ID_KEY;
 
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
@@ -67,23 +61,18 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     }
     private final static int serverStatusIconDefault = R.drawable.status_disconnected;
 
-    private final SharedPreferences preferences;
-
     private String previousTopic;
     private TimedInt previousNumberOfTopicsSent;
     private ServerStatusListener.Status previousServerStatus;
     private String newServerStatus;
-    private String userId;
     private RadarConfiguration.FirebaseStatus previousFirebaseStatus;
 
     // View elements
     private View mServerStatusIcon;
     private TextView mServerMessage;
-    private EditText mGroupIdInput;
-    private EditText mPasswordInput;
-    private Button mLoginButton;
     private View mFirebaseStatusIcon;
     private TextView mFirebaseMessage;
+    private TextView mPatientId;
 
     DetailMainActivityView(MainActivity activity, RadarConfiguration radarConfiguration) {
         this.radarConfiguration = radarConfiguration;
@@ -100,7 +89,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             }
         }
 
-        preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
+        SharedPreferences preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
         setUserId(preferences.getString("userId", ""));
     }
 
@@ -148,17 +137,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
         mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
 
-        mGroupIdInput = (EditText) mainActivity.findViewById(R.id.inputGroupId);
-        mGroupIdInput.setText(userId);
-        mPasswordInput = (EditText) mainActivity.findViewById(R.id.inputPassword);
-        mLoginButton = (Button) mainActivity.findViewById(R.id.loginButton);
-        mLoginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                login(mGroupIdInput.getText().toString().trim(),mPasswordInput.getText().toString().trim());
-            }
-        });
-
+        mPatientId = (TextView) mainActivity.findViewById(R.id.userIdLabel);
         mFirebaseStatusIcon = mainActivity.findViewById(R.id.firebaseStatus);
         mFirebaseMessage = (TextView) mainActivity.findViewById(R.id.firebaseStatusMessage);
     }
@@ -222,41 +201,6 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     }
 
     private void setUserId(String newValue) {
-        String oldValue = userId;
-        if (!newValue.isEmpty()) {
-            userId = newValue;
-        } else {
-            userId = radarConfiguration.getString(DEFAULT_GROUP_ID_KEY);
-        }
-        if (Objects.equals(userId, oldValue)) {
-            return;
-        }
-        preferences.edit().putString("userId", userId).apply();
-        radarConfiguration.put(DEFAULT_GROUP_ID_KEY, userId);
-        mGroupIdInput.setText(userId);
-
-        // Set group/user id for each active connection
-        try {
-            for (DeviceServiceProvider provider : mainActivity.getConnections()) {
-                DeviceServiceConnection connection = provider.getConnection();
-                if (connection.hasService()) {
-                    connection.setUserId(userId);
-                }
-            }
-        } catch (RemoteException re) {
-            Boast.makeText(mainActivity, "Could not set the patient id", Toast.LENGTH_LONG).show();
-        }
+        mPatientId.setText(mainActivity.getString(R.string.label_group_id_input, newValue));
     }
-
-    private void login(String username, String password) {
-        // TODO: proper authentication (20170425)
-        if (!password.equals("radarcns")) {
-            Boast.makeText(mainActivity, "Username and password do not match", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        setUserId(username);
-        Boast.makeText(mainActivity, "Login successful", Toast.LENGTH_LONG).show();
-    }
-
 }

@@ -107,39 +107,17 @@
 
                 <!-- Source identifier input for all devices -->
                 <TextView
+                    android:id="@+id/userIdLabel"
                     style="@style/ServerStatusLabel"
                     android:text="@string/label_group_id_input"
                     android:layout_marginTop="15dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:labelFor="@+id/inputGroupId"
-                    android:text="@string/username_label"/>
-                <EditText
-                    android:id="@+id/inputGroupId"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ems="15"
-                    android:inputType="textPersonName" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:labelFor="@+id/inputPassword"
-                    android:text="@string/password_label"/>
-                <EditText
-                    android:id="@+id/inputPassword"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ems="15"
-                    android:inputType="textPassword" />
-
                 <Button
-                    android:id="@+id/loginButton"
+                    android:id="@+id/logoutButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/login_button"/>
+                    android:text="@string/logout_button"
+                    android:onClick="logout"/>
 
             </LinearLayout>
 

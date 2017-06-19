@@ -27,7 +27,7 @@
     <string name="header_scan"></string>
     <string name="header_records_sent">Number of records sent</string>
     <string name="label_firebase_status">Firebase</string>
-    <string name="label_group_id_input">Patient ID</string>
+    <string name="label_group_id_input">Patient ID: %1$s</string>
     <string name="empaticaE4DisplayName">E4</string>
     <string name="deviceTypeLabel2">Angel</string>
     <string name="pebble2DisplayName">Pebble</string>
@@ -58,4 +58,5 @@
     <string name="username_label">Username</string>
     <string name="password_label">Password</string>
     <string name="login_button">Login</string>
+    <string name="logout_button">Log out</string>
 </resources>

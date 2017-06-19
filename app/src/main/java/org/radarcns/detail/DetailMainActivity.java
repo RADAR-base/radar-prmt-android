@@ -17,7 +17,9 @@
 package org.radarcns.detail;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.view.View;
 
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.Manifest.permission.RECEIVE_BOOT_COMPLETED;
+import static org.radarcns.detail.LoginActivity.EXTRA_USERNAME;
 
 public class DetailMainActivity extends MainActivity {
     @Override
@@ -34,7 +37,13 @@ public class DetailMainActivity extends MainActivity {
         // TODO: turn off developer mode
         RadarConfiguration configuration = RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
         SharedPreferences preferences = getSharedPreferences("main", Context.MODE_PRIVATE);
-        String userId = preferences.getString("userId", "");
+        String userId;
+        if (getIntent() != null && getIntent().hasExtra(EXTRA_USERNAME)) {
+            userId = getIntent().getStringExtra(EXTRA_USERNAME);
+            preferences.edit().putString("userId", userId).apply();
+        } else {
+            userId = preferences.getString("userId", "");
+        }
         if (!userId.isEmpty()) {
             configuration.put(RadarConfiguration.DEFAULT_GROUP_ID_KEY, userId);
         }
@@ -58,5 +67,12 @@ public class DetailMainActivity extends MainActivity {
         result.addAll(superPermissions);
         result.add(RECEIVE_BOOT_COMPLETED);
         return result;
+    }
+
+    public void logout(View view) {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.putExtra(Intent.EXTRA_DATA_REMOVED, "username");
+        startActivity(intent);
+        finish();
     }
 }
