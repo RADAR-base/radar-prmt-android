@@ -44,13 +44,6 @@
 
         </GridLayout>
 
-        <Button
-            android:id="@+id/logoutButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/logout_button"
-            android:onClick="logout"/>
-
     </LinearLayout>
 
     <LinearLayout

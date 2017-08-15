@@ -18,7 +18,6 @@ package org.radarcns.detail;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.RemoteException;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -88,7 +87,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         setUserId(preferences.getString("userId", ""));
     }
 
-    public void update() throws RemoteException {
+    public void update() {
         for (DeviceRowView row : rows) {
             row.update();
         }

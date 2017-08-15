@@ -9,6 +9,8 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -29,6 +31,7 @@ repositories {
     jcenter()
     flatDir { dirs 'libs' }
     maven { url  'http://dl.bintray.com/radar-cns/org.radarcns' }
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
 }
 
 dependencies {
@@ -36,7 +39,23 @@ dependencies {
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.google.firebase:firebase-config:10.2.6'
 
-    compile('org.radarcns:radar-commons-android:0.2.1')
+    compile('org.radarcns:radar-commons-android:0.3-SNAPSHOT@aar') {
+        force = true
+        compile 'com.journeyapps:zxing-android-embedded:3.5.0'
+        compile 'com.squareup.okhttp3:okhttp:3.6.0'
+        compile 'org.apache.avro:avro:1.8.1'
+        compile 'org.xerial.snappy:snappy-java:1.1.2.6'
+        compile 'com.google.firebase:firebase-config:10.2.6'
+        compile 'net.openid:appauth:0.6.1'
+        compile ('org.radarcns:radar-commons:0.4.1-SNAPSHOT') {
+            changing = true
+            exclude group: 'io.confluent', module: 'kafka-avro-serializer'
+            exclude group: 'org.apache.kafka', module: 'kafka-clients'
+            exclude group: 'com.fasterxml.jackson.dataformat', module: 'jackson-dataformat-yaml'
+        }
+        compile 'org.radarcns:radar-schemas-commons:0.1'
+        compile 'io.jsonwebtoken:jjwt:0.7.0'
+    }
 
     compile 'org.radarcns:radar-android-empatica:0.1-alpha.3'
 

@@ -20,7 +20,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.RemoteException;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -206,7 +205,7 @@ public class DeviceRowView {
         }
     }
 
-    public void update() throws RemoteException {
+    public void update() {
         if (connection.hasService()) {
             state = connection.getDeviceData();
             switch (state.getStatus()) {
