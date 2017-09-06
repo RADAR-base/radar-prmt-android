@@ -93,7 +93,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         setUserId(preferences.getString("userId", ""));
     }
 
-    public void update() throws RemoteException {
+    public void update() {
         for (DeviceRowView row : rows) {
             row.update();
         }

@@ -18,50 +18,68 @@ package org.radarcns.detail;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import org.radarcns.android.auth.AppAuthState;
+import org.radarcns.android.auth.LoginManager;
 
-import org.radarcns.android.util.Boast;
+import java.util.Arrays;
+import java.util.List;
 
-public class LoginActivity extends Activity {
-    public static final String EXTRA_USERNAME = "org.radarcns.android.userId";
-    public static final String EXTRA_REMOVE_USERNAME = "org.radarcns.android.userId.remove";
+public class LoginActivity extends org.radarcns.android.auth.LoginActivity {
     private TextView passwordView;
     private TextView loginView;
+    private LoginManager localLoginManager;
 
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
-        if (getIntent() != null && getIntent().hasExtra(Intent.EXTRA_DATA_REMOVED) &&
-                getIntent().getStringExtra(Intent.EXTRA_DATA_REMOVED).equals("username")) {
-            getPreferences(MODE_PRIVATE).edit().remove("username").apply();
-        }
-        startActivityWithStoredUsername();
-
         setContentView(R.layout.activity_login);
         loginView = (EditText) findViewById(R.id.inputUserId);
         passwordView = (EditText) findViewById(R.id.inputPassword);
     }
 
     public void login(View view) {
-        if (passwordView.getText().toString().equals("radarcns")) {
-            getPreferences(MODE_PRIVATE).edit().putString("username", loginView.getText().toString()).apply();
-            startActivityWithStoredUsername();
-        } else {
-            Boast.makeText(this, "Invalid user/password combination").show();
-        }
+        localLoginManager.start();
     }
 
-    private void startActivityWithStoredUsername() {
-        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-        if (prefs.contains("username")) {
-            Intent intent = new Intent(this, DetailMainActivity.class);
-            intent.putExtra(EXTRA_USERNAME, prefs.getString("username", "radarcns"));
-            startActivity(intent);
-            finish();
-        }
+    @NonNull
+    @Override
+    protected List<LoginManager> createLoginManagers(AppAuthState appAuthState) {
+        localLoginManager = new LoginManager() {
+            @Override
+            public AppAuthState refresh() {
+                return null;
+            }
+
+            @Override
+            public void start() {
+                if (passwordView.getText().toString().equals("radarcns")) {
+                    loginSucceeded(this, new AppAuthState(loginView.getText().toString(), null, null, 3, Long.MAX_VALUE, null));
+                } else {
+                    loginFailed(this, null);
+                }
+            }
+
+            @Override
+            public void onActivityCreate() {
+
+            }
+
+            @Override
+            public void onActivityResult(int i, int i1, Intent intent) {
+
+            }
+        };
+        return Arrays.asList(localLoginManager);
+    }
+
+    @NonNull
+    @Override
+    protected Class<? extends Activity> nextActivity() {
+        return DetailMainActivity.class;
     }
 }

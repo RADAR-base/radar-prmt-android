@@ -20,37 +20,22 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.os.RemoteException;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
-import android.widget.Toast;
-
+import android.widget.*;
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceServiceConnection;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.android.device.DeviceStatusListener;
 import org.radarcns.android.util.Boast;
-import org.radarcns.data.TimedInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Displays a single device row.
@@ -210,7 +195,7 @@ public class DeviceRowView {
         }
     }
 
-    public void update() throws RemoteException {
+    public void update() {
         if (connection.hasService()) {
             state = connection.getDeviceData();
             switch (state.getStatus()) {
