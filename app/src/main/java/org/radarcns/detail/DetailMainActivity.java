@@ -61,6 +61,6 @@ public class DetailMainActivity extends MainActivity {
 
     public void logout(View view) {
         getAuthState().invalidate(this);
-        startLogin();
+        startLogin(false);
     }
 }

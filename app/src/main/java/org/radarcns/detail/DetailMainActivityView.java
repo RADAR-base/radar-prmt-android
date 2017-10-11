@@ -39,37 +39,16 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
     private final MainActivity mainActivity;
-//    private final RadarConfiguration radarConfiguration;
     private final List<DeviceRowView> rows;
-//
-//    private final static Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
-//    static {
-//        serverStatusIconMap = new EnumMap<>(ServerStatusListener.Status.class);
-//        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTED, R.drawable.status_connected);
-//        serverStatusIconMap.put(ServerStatusListener.Status.DISCONNECTED, R.drawable.status_disconnected);
-//        serverStatusIconMap.put(ServerStatusListener.Status.DISABLED, R.drawable.status_disconnected);
-//        serverStatusIconMap.put(ServerStatusListener.Status.READY, R.drawable.status_searching);
-//        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, R.drawable.status_searching);
-//        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
-//        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_error);
-//    }
-//    private final static int serverStatusIconDefault = R.drawable.status_disconnected;
 
     private long previousTimestamp;
-//    private TimedInt previousNumberOfTopicsSent;
-//    private ServerStatusListener.Status previousServerStatus;
     private String newServerStatus;
-//    private RadarConfiguration.FirebaseStatus previousFirebaseStatus;
 
     // View elements
-//    private View mServerStatusIcon;
     private TextView mServerMessage;
-//    private View mFirebaseStatusIcon;
-//    private TextView mFirebaseMessage;
     private TextView mPatientId;
 
     DetailMainActivityView(MainActivity activity, RadarConfiguration radarConfiguration) {
-//        this.radarConfiguration = radarConfiguration;
         this.mainActivity = activity;
 
         initializeViews();
@@ -106,10 +85,6 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         if (numberOfRecords != null && numberOfRecords.getTime() >= 0 && previousTimestamp != numberOfRecords.getTime()) {
             previousTimestamp = numberOfRecords.getTime();
 
-            // Condensing the message
-//            topic = topic.replaceFirst("_?android_?", "");
-//            topic = topic.replaceFirst("_?empatica_?(e4)?", "E4");
-
             String messageTimeStamp = timeFormat.format(numberOfRecords.getTime());
 
             if (numberOfRecords.getValue() < 0) {
@@ -124,12 +99,9 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void initializeViews() {
         mainActivity.setContentView(R.layout.compact_overview);
 
-//        mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
         mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
 
         mPatientId = (TextView) mainActivity.findViewById(R.id.inputUserId);
-//        mFirebaseStatusIcon = mainActivity.findViewById(R.id.firebaseStatus);
-//        mFirebaseMessage = (TextView) mainActivity.findViewById(R.id.firebaseStatusMessage);
     }
 
     @Override
@@ -138,39 +110,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             row.display();
         }
         updateServerStatus();
-//        updateFirebaseStatus();
     }
-//
-//    private void updateFirebaseStatus() {
-//        RadarConfiguration.FirebaseStatus status = radarConfiguration.getStatus();
-//        if (status == previousFirebaseStatus) {
-//            return;
-//        }
-//        previousFirebaseStatus = status;
-//
-//        switch (status) {
-//            case FETCHED:
-//                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_connected);
-////                mFirebaseMessage.setText("Remote config fetched from the server ("
-////                        + timeFormat.format( System.currentTimeMillis() ) + ")");
-//                break;
-//            case UNAVAILABLE:
-//                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_disconnected);
-////                mFirebaseMessage.setText(R.string.playServicesUnavailable);
-//                break;
-//            case FETCHING:
-////                mFirebaseMessage.setText(R.string.firebase_fetching);
-//                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_searching);
-//                break;
-//            case ERROR:
-//                mFirebaseStatusIcon.setBackgroundResource(R.drawable.status_error);
-////                mFirebaseMessage.setText("Failed to fetch remote config ("
-////                        + timeFormat.format( System.currentTimeMillis() ) + ")");
-//                break;
-//            default:
-//                // no action
-//        }
-//    }
 
     private void updateServerStatus() {
         String message;
@@ -180,14 +120,6 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         if (message != null) {
             mServerMessage.setText(message);
         }
-//
-//        ServerStatusListener.Status status = mainActivity.getServerStatus();
-//        if (!Objects.equals(status, previousServerStatus)) {
-//            previousServerStatus = status;
-//            Integer statusIcon = serverStatusIconMap.get(status);
-//            int resource = statusIcon != null ? statusIcon : serverStatusIconDefault;
-//            mServerStatusIcon.setBackgroundResource(resource);
-//        }
     }
 
     private void setUserId(String newValue) {

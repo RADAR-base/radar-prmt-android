@@ -67,4 +67,6 @@
     <string name="password_label">Password</string>
     <string name="login_button">Log in</string>
     <string name="logout_button">Log out</string>
+    <string name="scan_qr_button">Scan QR code</string>
+    <string name="log_in_without_qr_code">Log in without QR code</string>
 </resources>
