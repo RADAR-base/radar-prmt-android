@@ -17,29 +17,27 @@
 package org.radarcns.detail;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.TextView;
-import org.json.JSONException;
-import org.json.JSONObject;
+
 import org.radarcns.android.auth.AppAuthState;
-import org.radarcns.android.auth.AuthStringParser;
 import org.radarcns.android.auth.LoginActivity;
 import org.radarcns.android.auth.LoginManager;
-import org.radarcns.android.auth.QrLoginManager;
-import org.radarcns.android.auth.oauth2.Jwt;
-import org.radarcns.android.auth.oauth2.OAuth2LoginManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.radarcns.android.auth.LoginManager.AUTH_TYPE_BEARER;
-import static org.radarcns.android.auth.oauth2.OAuth2LoginManager.LOGIN_REFRESH_TOKEN;
-
 public class RadarLoginActivity extends LoginActivity {
-    private OAuth2LoginManager oauthManager;
-    private QrLoginManager qrManager;
+    private LoginManager trivialLoginManager;
+
+    private final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
 
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
@@ -54,32 +52,42 @@ public class RadarLoginActivity extends LoginActivity {
 
     @NonNull
     @Override
-    protected List<LoginManager> createLoginManagers(AppAuthState state) {
-        this.oauthManager = new OAuth2LoginManager(this, null,"sub", state);
-        this.qrManager = new QrLoginManager(this, new AuthStringParser() {
-            @NonNull
+    protected List<LoginManager> createLoginManagers(final AppAuthState state) {
+        this.trivialLoginManager = new LoginManager() {
+            private final AppAuthState authState = state;
+
             @Override
-            public AppAuthState parse(@NonNull String s) {
-                try {
-                    JSONObject object = new JSONObject(s);
-                    if (!object.has("refreshToken")) {
-                        throw new IllegalArgumentException("No valid refresh token found");
-                    }
-                    String refreshToken = object.getString("refreshToken");
-                    Jwt jwt = Jwt.parse(refreshToken);
-                    JSONObject jwtBody = jwt.getBody();
-                    return new AppAuthState.Builder()
-                            .tokenType(AUTH_TYPE_BEARER)
-                            .property(LOGIN_REFRESH_TOKEN, refreshToken)
-                            .userId(jwtBody.getString("sub"))
-                            .expiration(jwtBody.getLong("exp") * 1_000L)
-                            .build();
-                } catch (JSONException e) {
-                    throw new IllegalArgumentException("QR code does not contain valid JSON.", e);
+            public AppAuthState refresh() {
+                if (authState.isValid()) {
+                    return authState;
+                }
+                return null;
+            }
+
+            @Override
+            public void start() {
+                TextView userIdText = (TextView) findViewById(R.id.inputUserId);
+                String userId = userIdText.getText().toString();
+                if (!userId.isEmpty()) {
+                    SharedPreferences preferences = RadarLoginActivity.this.getSharedPreferences("main", Context.MODE_PRIVATE);
+                    preferences.edit().putString("userId", userId).apply();
+                    loginSucceeded(this, new AppAuthState.Builder().projectId("0").userId(userId).expiration(Long.MAX_VALUE).build());
+                } else {
+                    loginFailed(this, null);
                 }
             }
-        });
-        return Arrays.asList(this.qrManager, this.oauthManager);
+
+            @Override
+            public void onActivityCreate() {
+                // noop
+            }
+
+            @Override
+            public void onActivityResult(int requestCode, int resultCode, Intent data) {
+                // noop
+            }
+        };
+        return Arrays.asList(trivialLoginManager);
     }
 
     @NonNull
@@ -89,10 +97,10 @@ public class RadarLoginActivity extends LoginActivity {
     }
 
     public void scan(View view) {
-        this.qrManager.start();
+        logger.warn("Scan functionality not available!");
     }
 
     public void login(View view) {
-        this.oauthManager.start();
+        this.trivialLoginManager.start();
     }
 }
