@@ -182,13 +182,15 @@ public class DeviceRowView {
 
         logger.info("setting device filter {}", allowed);
 
-        this.mainActivity.setAllowedDeviceIds(connection, allowed);
+        this.mainActivity.getRadarService().setAllowedDeviceIds(connection, allowed);
     }
 
     public void reconnectDevice() {
         try {
             // will restart scanning after disconnect
-            this.mainActivity.disconnect(connection);
+            if (connection.isRecording()) {
+                connection.stopRecording();
+            }
         } catch (IndexOutOfBoundsException iobe) {
             Boast.makeText(this.mainActivity, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
             logger.warn(iobe.getMessage());
