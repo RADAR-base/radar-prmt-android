@@ -19,7 +19,6 @@ package org.radarcns.detail;
 import android.view.View;
 
 import org.radarcns.android.*;
-import org.radarcns.android.auth.LoginActivity;
 
 public class DetailMainActivity extends MainActivity {
     @Override

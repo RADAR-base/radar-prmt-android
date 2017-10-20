@@ -18,13 +18,11 @@ package org.radarcns.detail;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.RemoteException;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.radarcns.android.IRadarService;
-import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
@@ -45,8 +43,9 @@ import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
-    private final MainActivity mainActivity;
-    private final List<DeviceRowView> rows;
+    private final DetailMainActivity mainActivity;
+    private final List<DeviceRowView> rows = new ArrayList<>();
+    private List<DeviceServiceProvider> savedConnections;
 
     private final static Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
     static {
@@ -74,12 +73,11 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private TextView mFirebaseMessage;
     private TextView mPatientId;
 
-    DetailMainActivityView(MainActivity activity) {
+    DetailMainActivityView(DetailMainActivity activity) {
         this.mainActivity = activity;
 
         initializeViews();
 
-        rows = new ArrayList<>();
         createRows();
 
         SharedPreferences preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
@@ -87,21 +85,26 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     }
 
     private void createRows() {
-        if (mainActivity.getRadarService() != null) {
+        if (mainActivity.getRadarService() != null
+                && !mainActivity.getRadarService().getConnections().equals(savedConnections)) {
             ViewGroup root = (ViewGroup) mainActivity.findViewById(R.id.deviceTable);
+            while (root.getChildCount() > 1) {
+                root.removeView(root.getChildAt(1));
+            }
+            rows.clear();
             boolean condensed = RadarConfiguration.getInstance().getBoolean(CONDENSED_DISPLAY_KEY, true);
             for (DeviceServiceProvider provider : mainActivity.getRadarService().getConnections()) {
                 if (provider.isDisplayable()) {
                     rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
                 }
             }
+            savedConnections = mainActivity.getRadarService().getConnections();
         }
     }
 
     public void update() {
-        if (rows.isEmpty()) {
-            createRows();
-        }
+        createRows();
+
         for (DeviceRowView row : rows) {
             row.update();
         }
