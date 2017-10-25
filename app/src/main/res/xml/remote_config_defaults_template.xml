@@ -50,5 +50,11 @@
         <key>sender_connection_timeout</key>
         <value>20</value>
     </entry>
+    
+    <!-- Set true for self-signed certificates -->
+    <entry>
+        <key>unsafe_kafka_connection</key>
+        <value>false</value>
+    </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
