@@ -21,11 +21,6 @@ import android.view.View;
 import org.radarcns.android.*;
 
 public class DetailMainActivity extends MainActivity {
-    @Override
-    protected RadarConfiguration createConfiguration() {
-        // TODO: turn off developer mode
-        return RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
-    }
 
     @Override
     protected Class<? extends LoginActivity> loginActivity() {
