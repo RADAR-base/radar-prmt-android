@@ -58,7 +58,10 @@ public class LoginActivity extends org.radarcns.android.auth.LoginActivity {
             @Override
             public void start() {
                 if (passwordView.getText().toString().equals("radarcns")) {
-                    loginSucceeded(this, new AppAuthState(loginView.getText().toString(), null, null, 3, Long.MAX_VALUE, null));
+                    loginSucceeded(this, new AppAuthState.Builder()
+                            .userId(loginView.getText().toString())
+                            .expiration(Long.MAX_VALUE)
+                            .build());
                 } else {
                     loginFailed(this, null);
                 }

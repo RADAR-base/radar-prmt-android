@@ -18,12 +18,11 @@ package org.radarcns.detail;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.RemoteException;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.radarcns.android.MainActivity;
+import org.radarcns.android.IRadarService;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
@@ -44,9 +43,9 @@ import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
-    private final MainActivity mainActivity;
-    private final RadarConfiguration radarConfiguration;
-    private final List<DeviceRowView> rows;
+    private final DetailMainActivity mainActivity;
+    private final List<DeviceRowView> rows = new ArrayList<>();
+    private List<DeviceServiceProvider> savedConnections;
 
     private final static Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
     static {
@@ -74,39 +73,53 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private TextView mFirebaseMessage;
     private TextView mPatientId;
 
-    DetailMainActivityView(MainActivity activity, RadarConfiguration radarConfiguration) {
-        this.radarConfiguration = radarConfiguration;
+    DetailMainActivityView(DetailMainActivity activity) {
         this.mainActivity = activity;
 
         initializeViews();
 
-        rows = new ArrayList<>();
-        ViewGroup root = (ViewGroup) activity.findViewById(R.id.deviceTable);
-        boolean condensed = radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true);
-        for (DeviceServiceProvider provider : activity.getConnections()) {
-            if (provider.isDisplayable()) {
-                rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
-            }
-        }
+        createRows();
 
         SharedPreferences preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
         setUserId(preferences.getString("userId", ""));
     }
 
+    private void createRows() {
+        if (mainActivity.getRadarService() != null
+                && !mainActivity.getRadarService().getConnections().equals(savedConnections)) {
+            ViewGroup root = (ViewGroup) mainActivity.findViewById(R.id.deviceTable);
+            while (root.getChildCount() > 1) {
+                root.removeView(root.getChildAt(1));
+            }
+            rows.clear();
+            boolean condensed = RadarConfiguration.getInstance().getBoolean(CONDENSED_DISPLAY_KEY, true);
+            for (DeviceServiceProvider provider : mainActivity.getRadarService().getConnections()) {
+                if (provider.isDisplayable()) {
+                    rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
+                }
+            }
+            savedConnections = mainActivity.getRadarService().getConnections();
+        }
+    }
+
     public void update() {
+        createRows();
+
         for (DeviceRowView row : rows) {
             row.update();
         }
-        String message = getServerStatusMessage();
-        synchronized (this) {
-            newServerStatus = message;
+        if (mainActivity.getRadarService() != null) {
+            String message = getServerStatusMessage();
+            synchronized (this) {
+                newServerStatus = message;
+            }
         }
         mainActivity.runOnUiThread(this);
     }
 
     private String getServerStatusMessage() {
-        String topic = mainActivity.getLatestTopicSent();
-        TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
+        String topic = mainActivity.getRadarService().getLatestTopicSent();
+        TimedInt numberOfRecords = mainActivity.getRadarService().getLatestNumberOfRecordsSent();
 
         String message = null;
         if (topic != null && (!Objects.equals(topic, previousTopic)
@@ -152,7 +165,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     }
 
     private void updateFirebaseStatus() {
-        RadarConfiguration.FirebaseStatus status = radarConfiguration.getStatus();
+        RadarConfiguration.FirebaseStatus status = RadarConfiguration.getInstance().getStatus();
         if (status == previousFirebaseStatus) {
             return;
         }
@@ -191,7 +204,12 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             mServerMessage.setText(message);
         }
 
-        ServerStatusListener.Status status = mainActivity.getServerStatus();
+        IRadarService radarService = mainActivity.getRadarService();
+
+        ServerStatusListener.Status status =
+                (radarService != null)
+                ? radarService.getServerStatus()
+                : ServerStatusListener.Status.DISCONNECTED;
         if (!Objects.equals(status, previousServerStatus)) {
             previousServerStatus = status;
             Integer statusIcon = serverStatusIconMap.get(status);
