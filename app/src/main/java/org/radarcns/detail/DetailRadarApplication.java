@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.radarcns;
+package org.radarcns.detail;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import org.radarcns.android.RadarApplication;
+import org.radarcns.android.RadarConfiguration;
 
 /**
  * Radar application class for the detailed application.
@@ -27,11 +28,17 @@ import org.radarcns.android.RadarApplication;
 public class DetailRadarApplication extends RadarApplication {
     @Override
     public Bitmap getLargeIcon() {
-        return BitmapFactory.decodeResource(getResources(), org.radarcns.R.mipmap.ic_launcher);
+        return BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
     }
 
     @Override
     public int getSmallIcon() {
         return org.radarcns.android.R.drawable.ic_bt_connected;
+    }
+
+    @Override
+    protected RadarConfiguration createConfiguration() {
+        // TODO: turn off developer mode
+        return RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
     }
 }

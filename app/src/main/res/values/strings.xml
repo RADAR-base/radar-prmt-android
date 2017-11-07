@@ -11,23 +11,23 @@
     <string name="active_device">Device</string>
 
     <!--Overview activity-->
-    <string name="button_connect">Reset</string>
+    <string name="button_connect">X</string>
     <string name="button_details">Details</string>
     <string name="request_E4_key">Enter E4 S/N</string>
     <string name="request_group_id">Enter Patient ID</string>
-    <string name="button_input">Enter Device Key</string>
+    <string name="button_input">-</string>
     <string name="header_battery"></string>
     <string name="header_device_status"></string>
     <string name="header_server_status">Server</string>
     <string name="header_device">Device</string>
-    <string name="header_temp">Temp.</string>
-    <string name="header_hr">HR</string>
-    <string name="header_acceleration">Accel.</string>
+    <string name="header_temp">T</string>
+    <string name="header_hr">H</string>
+    <string name="header_acceleration">A</string>
     <string name="header_device_key"></string>
     <string name="header_scan"></string>
     <string name="header_records_sent">Number of records sent</string>
     <string name="label_firebase_status">Firebase</string>
-    <string name="label_group_id_input">Patient ID</string>
+    <string name="label_group_id_input">Patient ID: %1$s</string>
     <string name="empaticaE4DisplayName">E4</string>
     <string name="deviceTypeLabel2">Angel</string>
     <string name="pebble2DisplayName">Pebble</string>
@@ -52,6 +52,11 @@
     <string name="battery_status">Battery status</string>
 
     <string name="filter_title">Filter device name</string>
-    <string name="filter_help_label">Enter part of a device name or MAC address. Separate multiple options with comma\'s \',\'.</string>
+    <string name="filter_help_label">Enter part of a device name or MAC address. Separate multiple options with commas.</string>
     <string name="firebase_fetching">Fetching remote config</string>
+
+    <string name="username_label">Username</string>
+    <string name="password_label">Password</string>
+    <string name="login_button">Login</string>
+    <string name="logout_button">Log out</string>
 </resources>

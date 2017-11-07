@@ -40,7 +40,7 @@
     </entry>
     <entry>
         <key>kafka_upload_rate</key>
-        <value>10</value>
+        <value>60</value>
     </entry>
     <entry>
         <key>kafka_clean_rate</key>
@@ -50,7 +50,12 @@
         <key>sender_connection_timeout</key>
         <value>20</value>
     </entry>
-    
+    <!-- Cache size per topic -->
+    <entry>
+        <key>max_cache_size_bytes</key>
+        <!-- 450 MB ~ 5.5 million records. With a 64 Hz stream, that fills up after 24 hours. -->
+        <value>450000000</value>
+    </entry>
     <!-- Set true for self-signed certificates -->
     <entry>
         <key>unsafe_kafka_connection</key>

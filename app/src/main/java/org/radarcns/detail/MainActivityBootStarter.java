@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.radarcns;
+package org.radarcns.detail;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
