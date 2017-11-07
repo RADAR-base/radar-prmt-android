@@ -42,7 +42,7 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.google.firebase:firebase-config:10.2.6'
+    compile 'com.google.firebase:firebase-config:11.0.4'
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.25'
