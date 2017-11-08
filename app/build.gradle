@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.3'
+    compile 'org.radarcns:radar-commons-android:0.3.1'
     compile 'org.radarcns:radar-android-empatica:0.1'
     compile 'org.radarcns:radar-android-phone:0.1'
     compile 'org.radarcns:radar-android-application-status:0.2'
