@@ -66,3 +66,7 @@ To add additional plugins to this application, make the following steps (see the
 - Add the `DeviceServiceProvider` you just created to the `device_services_to_connect` property in `app/src/main/res/xml/remote_config_defaults.xml`.
 
 This plugin can remain a separate github repository, but it should be published to Bintray for easy integration.
+
+## Android Installation
+
+The guide for installing Android on Raspberry Pi3 and UDOO boards is available [here](https://github.com/RADAR-CNS/RADAR-AndroidApplication/wiki)
