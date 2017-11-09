@@ -18,68 +18,112 @@ package org.radarcns.detail;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.radarcns.android.MainActivity;
+import org.radarcns.android.IRadarService;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
+import org.radarcns.android.kafka.ServerStatusListener;
 import org.radarcns.data.TimedInt;
+import org.radarcns.phone.PhoneBluetoothProvider;
+import org.radarcns.phone.PhoneContactListProvider;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
 import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
-    private final MainActivity mainActivity;
-    private final List<DeviceRowView> rows;
+    private final DetailMainActivity mainActivity;
+    private final List<DeviceRowView> rows = new ArrayList<>();
+    private List<DeviceServiceProvider> savedConnections;
+
+    private final static Map<ServerStatusListener.Status, Integer> serverStatusIconMap;
+    static {
+        serverStatusIconMap = new EnumMap<>(ServerStatusListener.Status.class);
+        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTED, R.drawable.status_connected);
+        serverStatusIconMap.put(ServerStatusListener.Status.DISCONNECTED, R.drawable.status_disconnected);
+        serverStatusIconMap.put(ServerStatusListener.Status.DISABLED, R.drawable.status_disconnected);
+        serverStatusIconMap.put(ServerStatusListener.Status.READY, R.drawable.status_searching);
+        serverStatusIconMap.put(ServerStatusListener.Status.CONNECTING, R.drawable.status_searching);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING, R.drawable.status_uploading);
+        serverStatusIconMap.put(ServerStatusListener.Status.UPLOADING_FAILED, R.drawable.status_error);
+    }
+    private final static int serverStatusIconDefault = R.drawable.status_disconnected;
 
     private long previousTimestamp;
     private String newServerStatus;
+    private ServerStatusListener.Status previousServerStatus;
 
     // View elements
+    private View mServerStatusIcon;
     private TextView mServerMessage;
     private TextView mPatientId;
 
-    DetailMainActivityView(MainActivity activity, RadarConfiguration radarConfiguration) {
+    DetailMainActivityView(DetailMainActivity activity) {
         this.mainActivity = activity;
 
         initializeViews();
 
-        rows = new ArrayList<>();
-        ViewGroup root = (ViewGroup) activity.findViewById(R.id.deviceTable);
-        boolean condensed = radarConfiguration.getBoolean(CONDENSED_DISPLAY_KEY, true);
-        for (DeviceServiceProvider provider : activity.getConnections()) {
-            if (provider.isDisplayable()) {
-                rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
-            }
-        }
+        createRows();
 
         SharedPreferences preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
         setUserId(preferences.getString("userId", ""));
     }
 
+    private void createRows() {
+        if (mainActivity.getRadarService() != null
+                && !mainActivity.getRadarService().getConnections().equals(savedConnections)) {
+            ViewGroup root = (ViewGroup) mainActivity.findViewById(R.id.deviceTable);
+            while (root.getChildCount() > 1) {
+                root.removeView(root.getChildAt(1));
+            }
+            rows.clear();
+            boolean condensed = RadarConfiguration.getInstance().getBoolean(CONDENSED_DISPLAY_KEY, true);
+            for (DeviceServiceProvider provider : mainActivity.getRadarService().getConnections()) {
+                if (isDisplayable(provider)) {
+                    rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
+                }
+            }
+            savedConnections = mainActivity.getRadarService().getConnections();
+        }
+    }
+
+    private boolean isDisplayable(DeviceServiceProvider provider) {
+        return  !(provider instanceof PhoneContactListProvider)  // TODO: fix PhoneContactListProvider.isDisplayable
+                && !(provider instanceof PhoneBluetoothProvider) // TODO: fix PhoneBluetoothProvider.isDisplayable
+                && provider.isDisplayable();
+    }
+
     public void update() {
+        createRows();
+
         for (DeviceRowView row : rows) {
             row.update();
         }
-        String message = getServerStatusMessage();
-        synchronized (this) {
-            newServerStatus = message;
+        if (mainActivity.getRadarService() != null) {
+            String message = getServerStatusMessage();
+            synchronized (this) {
+                newServerStatus = message;
+            }
         }
         mainActivity.runOnUiThread(this);
     }
 
     private String getServerStatusMessage() {
-//        String topic = mainActivity.getLatestTopicSent();
-        TimedInt numberOfRecords = mainActivity.getLatestNumberOfRecordsSent();
+        String topic = mainActivity.getRadarService().getLatestTopicSent();
+        TimedInt numberOfRecords = mainActivity.getRadarService().getLatestNumberOfRecordsSent();
 
         String message = null;
         if (numberOfRecords != null && numberOfRecords.getTime() >= 0 && previousTimestamp != numberOfRecords.getTime()) {
@@ -99,6 +143,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void initializeViews() {
         mainActivity.setContentView(R.layout.compact_overview);
 
+        mServerStatusIcon = mainActivity.findViewById(R.id.statusServer);
         mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
 
         mPatientId = (TextView) mainActivity.findViewById(R.id.inputUserId);
@@ -119,6 +164,19 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         }
         if (message != null) {
             mServerMessage.setText(message);
+        }
+
+        IRadarService radarService = mainActivity.getRadarService();
+
+        ServerStatusListener.Status status =
+                (radarService != null)
+                ? radarService.getServerStatus()
+                : ServerStatusListener.Status.DISCONNECTED;
+        if (!Objects.equals(status, previousServerStatus)) {
+            previousServerStatus = status;
+            Integer statusIcon = serverStatusIconMap.get(status);
+            int resource = statusIcon != null ? statusIcon : serverStatusIconDefault;
+            mServerStatusIcon.setBackgroundResource(resource);
         }
     }
 

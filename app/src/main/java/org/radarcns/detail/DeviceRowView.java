@@ -24,14 +24,7 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
-import android.widget.Toast;
-
+import android.widget.*;
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceServiceConnection;
@@ -42,11 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Displays a single device row.
@@ -176,13 +165,15 @@ public class DeviceRowView {
 
         logger.info("setting device filter {}", allowed);
 
-        this.mainActivity.setAllowedDeviceIds(connection, allowed);
+        this.mainActivity.getRadarService().setAllowedDeviceIds(connection, allowed);
     }
 
     public void reconnectDevice() {
         try {
             // will restart scanning after disconnect
-            this.mainActivity.disconnect(connection);
+            if (connection.isRecording()) {
+                connection.stopRecording();
+            }
         } catch (IndexOutOfBoundsException iobe) {
             Boast.makeText(this.mainActivity, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show();
             logger.warn(iobe.getMessage());

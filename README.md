@@ -46,7 +46,8 @@ Firebase can be used to remotely configure some device and system parameters, e.
 2. Login to a Google account.
 3. In the [Firebase console](https://console.firebase.google.com/), add the app (`org.radarcns.android`) to a new Firebase project.
 4. Download the `google-services.json` from the Firebase console (under Project Settings) and move the file to the `common-android/` folder. 
-5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`.
+5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`. 
+Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with kafka and schema-registry is using a self-signed certificate over SSL. If the certificate is issued by a valid CA then leave it to `false`. In production, do NOT set this value to `true`.
 
 [Full Firebase guide](https://firebase.google.com/docs/remote-config/use-config-android)
 
@@ -65,3 +66,7 @@ To add additional plugins to this application, make the following steps (see the
 - Add the `DeviceServiceProvider` you just created to the `device_services_to_connect` property in `app/src/main/res/xml/remote_config_defaults.xml`.
 
 This plugin can remain a separate github repository, but it should be published to Bintray for easy integration.
+
+## Android Installation
+
+The guide for installing Android on Raspberry Pi3 and UDOO boards is available [here](https://github.com/RADAR-CNS/RADAR-AndroidApplication/wiki)
