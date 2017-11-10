@@ -7,8 +7,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 2
-        versionName "0.2"
+        versionCode 3
+        versionName "0.2.1"
         multiDexEnabled true
     }
     buildTypes {
@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.3.1'
+    compile 'org.radarcns:radar-commons-android:0.3.2'
     compile 'org.radarcns:radar-android-empatica:0.1'
     compile 'org.radarcns:radar-android-phone:0.1'
     compile 'org.radarcns:radar-android-application-status:0.2'
