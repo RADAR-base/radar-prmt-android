@@ -18,13 +18,14 @@ package org.radarcns.detail;
 
 import android.view.View;
 
+
 import org.radarcns.android.*;
 
 public class DetailMainActivity extends MainActivity {
 
     @Override
-    protected Class<? extends LoginActivity> loginActivity() {
-        return LoginActivity.class;
+    protected Class<RadarLoginActivity> loginActivity() {
+        return RadarLoginActivity.class;
     }
 
     @Override

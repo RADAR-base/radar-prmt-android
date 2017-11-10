@@ -21,40 +21,40 @@
                 android:layout_height="match_parent"
                 android:stretchColumns="*" >
 
-                <TableRow
-                    android:id="@+id/headerRow"
-                    android:layout_width="fill_parent"
-                    android:layout_height="match_parent" >
+                <!--<TableRow-->
+                    <!--android:id="@+id/headerRow"-->
+                    <!--android:layout_width="fill_parent"-->
+                    <!--android:layout_height="match_parent" >-->
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="" />
+                    <!--<TextView-->
+                        <!--style="@style/Header"-->
+                        <!--android:text="" />-->
 
-                    <ImageView
-                        android:src="@drawable/ic_watch"/>
+                    <!--<ImageView-->
+                        <!--android:src="@drawable/ic_watch"/>-->
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_device_status" />
+                    <!--<TextView-->
+                        <!--style="@style/Header"-->
+                        <!--android:text="@string/header_device_status" />-->
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_battery" />
+                    <!--<TextView-->
+                        <!--style="@style/Header"-->
+                        <!--android:text="@string/header_battery" />-->
 
-                    <ImageView
-                        android:src="@drawable/ic_thermometer"/>
+                    <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+                        <!--&lt;!&ndash;android:src="@drawable/ic_thermometer"/>&ndash;&gt;-->
 
-                    <ImageView
-                        android:src="@drawable/ic_heartrate"/>
+                    <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+                        <!--&lt;!&ndash;android:src="@drawable/ic_heartrate"/>&ndash;&gt;-->
 
-                    <ImageView
-                        android:src="@drawable/ic_accelerometer"/>
+                    <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+                        <!--&lt;!&ndash;android:src="@drawable/ic_accelerometer"/>&ndash;&gt;-->
 
-                    <TextView
-                        style="@style/Header"
-                        android:text="@string/header_scan" />
+                    <!--<TextView-->
+                        <!--style="@style/Header"-->
+                        <!--android:text="@string/header_scan" />-->
 
-                </TableRow>
+                <!--</TableRow>-->
             </TableLayout>
 
             <LinearLayout
@@ -65,15 +65,16 @@
                 android:orientation="vertical">
 
                 <!-- Server status -->
+                <LinearLayout
+                    android:layout_height="match_parent"
+                    android:layout_width="wrap_content"
+                    android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/statusServerLabel"
                     style="@style/ServerStatusLabel"
                     android:text="@string/header_server_status" />
 
-                <LinearLayout
-                    android:layout_height="match_parent"
-                    android:layout_width="wrap_content"
-                    android:orientation="horizontal">
                     <View
                         android:id="@+id/statusServer"
                         style="@style/StatusCircle"
@@ -86,23 +87,25 @@
 
 
                 <!-- Firebase status -->
-                <TextView
-                    android:id="@+id/firebaseStatusLabel"
-                    style="@style/ServerStatusLabel"
-                    android:text="@string/label_firebase_status"/>
-
                 <LinearLayout
                     android:layout_height="match_parent"
                     android:layout_width="wrap_content"
                     android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/firebaseStatusLabel"
+                        style="@style/ServerStatusLabel"
+                        android:text="@string/label_firebase_status"/>
+
                     <View
                         android:id="@+id/firebaseStatus"
                         style="@style/StatusCircle"
                         android:background="@drawable/status_disconnected" />
-                    <TextView
-                        android:id="@+id/firebaseStatusMessage"
-                        style="@style/StatusMessage"
-                        android:text="@string/emptyText" />
+
+                    <!--<TextView-->
+                        <!--android:id="@+id/firebaseStatusMessage"-->
+                        <!--style="@style/StatusMessage"-->
+                        <!--android:text="@string/emptyText" />-->
                 </LinearLayout>
 
                 <!-- Source identifier input for all devices -->
