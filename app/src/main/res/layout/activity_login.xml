@@ -19,13 +19,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".LoginActivity">
+    android:columnCount="1"
+    tools:context=".RadarLoginActivity">
+
+    <Button
+        android:id="@+id/scanButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/scan_qr_button"
+        android:onClick="scan" android:layout_above="@+id/linearLayout"
+        android:layout_centerHorizontal="true" android:layout_marginBottom="78dp"/>
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true">
+        android:layout_height="wrap_content" android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" android:layout_marginBottom="88dp"
+        android:id="@+id/linearLayout">
 
         <TextView
             android:layout_width="wrap_content"
@@ -38,7 +48,7 @@
             android:layout_height="wrap_content"
             android:imeOptions="flagNoFullscreen"
             android:ems="15"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -60,4 +70,10 @@
             android:text="@string/login_button"
             android:onClick="login"/>
     </LinearLayout>
+    <TextView
+        android:text="@string/log_in_without_qr_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView5"
+        android:layout_above="@+id/linearLayout" android:layout_centerHorizontal="true"/>
 </RelativeLayout>
