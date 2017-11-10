@@ -37,25 +37,25 @@
             android:src="@drawable/ic_battery_unknown"
             android:contentDescription="@string/battery_status" />
 
-        <TextView
-            android:id="@+id/battery_value"
-            style="@style/BatteryValue" />
+        <!--<TextView-->
+            <!--android:id="@+id/battery_value"-->
+            <!--style="@style/BatteryValue" />-->
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/temperature_label"
-        style="@style/NumberColumn"
-        android:text="@string/disabledText" />
+    <!--<TextView-->
+        <!--android:id="@+id/temperature_label"-->
+        <!--style="@style/NumberColumn"-->
+        <!--android:text="@string/disabledText" />-->
 
-    <TextView
-        android:id="@+id/heartRate_label"
-        style="@style/NumberColumn"
-        android:text="@string/disabledText" />
+    <!--<TextView-->
+        <!--android:id="@+id/heartRate_label"-->
+        <!--style="@style/NumberColumn"-->
+        <!--android:text="@string/disabledText" />-->
 
-    <TextView
-        android:id="@+id/acceleration_label"
-        style="@style/NumberColumn"
-        android:text="@string/disabledText" />
+    <!--<TextView-->
+        <!--android:id="@+id/acceleration_label"-->
+        <!--style="@style/NumberColumn"-->
+        <!--android:text="@string/disabledText" />-->
 
     <ImageButton
         android:id="@+id/refreshButton"
