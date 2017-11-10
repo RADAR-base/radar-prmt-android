@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DetailMainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <!--?android:attr/listSeparatorTextViewStyle"-->
+        <TextView
+            android:id="@+id/patient_separator"
+            style="@style/MyListSeparator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:text="@string/patient_separator"/>
+        <View
+            style="@style/DividerLine" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp">
+
+            <View
+                android:id="@+id/person_icon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/ic_person" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="20dp"
+                android:id="@+id/inputUserId"
+                android:textSize="18sp"
+                android:textAlignment="textStart" />
+
+        </GridLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/devices_separator"
+            style="@style/MyListSeparator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/devices_separator"/>
+        <View
+            style="@style/DividerLine" />
+
+        <TableLayout
+            android:id="@+id/deviceTable"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:stretchColumns="*" >
+
+            <!--<TableRow-->
+            <!--android:id="@+id/headerRow"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="match_parent" >-->
+
+            <!--<TextView-->
+            <!--style="@style/Header"-->
+            <!--android:text="" />-->
+
+            <!--<ImageView-->
+            <!--android:src="@drawable/ic_watch"/>-->
+
+            <!--<TextView-->
+            <!--style="@style/Header"-->
+            <!--android:text="@string/header_device_status" />-->
+
+            <!--<TextView-->
+            <!--style="@style/Header"-->
+            <!--android:text="@string/header_battery" />-->
+
+            <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+            <!--&lt;!&ndash;android:src="@drawable/ic_thermometer"/>&ndash;&gt;-->
+
+            <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+            <!--&lt;!&ndash;android:src="@drawable/ic_heartrate"/>&ndash;&gt;-->
+
+            <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
+            <!--&lt;!&ndash;android:src="@drawable/ic_accelerometer"/>&ndash;&gt;-->
+
+            <!--<TextView-->
+            <!--style="@style/Header"-->
+            <!--android:text="@string/header_scan" />-->
+
+            <!--</TableRow>-->
+        </TableLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/sync_separator"
+            style="@style/MyListSeparator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/sync_separator"/>
+        <View
+            style="@style/DividerLine" />
+
+        <GridLayout
+            android:id="@+id/sync_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:columnCount="2"
+            android:rowCount="1">
+
+            <TextView
+                android:id="@+id/statusServerMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_gravity="center"
+                android:layout_row="0"
+                android:layout_column="0"
+                android:text="@string/sync_default" />
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
