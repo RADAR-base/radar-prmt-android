@@ -1,1 +1,1 @@
-include ':app', ':empalink-2.0', ':avro'
+include ':app'

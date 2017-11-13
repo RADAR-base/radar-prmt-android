@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- START xml_defaults -->
+<defaultsMap>
+    <entry>
+        <key>empatica_api_key</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>kafka_rest_proxy_url</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>schema_registry_url</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>default_group_id</key>
+        <value></value>
+    </entry>
+    <entry>
+        <key>start_at_boot</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>device_data_retention_ms</key>
+        <value>86400000</value>
+    </entry>
+    <entry>
+        <key>ui_refresh_rate_millis</key>
+        <value>250</value>
+    </entry>
+    <entry>
+        <key>device_services_to_connect</key>
+        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .empatica.E4ServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneLogProvider .phone.PhoneUsageProvider</value>
+    </entry>
+    <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
+    <entry>
+        <key>kafka_records_send_limit</key>
+        <value>1000</value>
+    </entry>
+    <entry>
+        <key>kafka_upload_rate</key>
+        <value>60</value>
+    </entry>
+    <entry>
+        <key>kafka_clean_rate</key>
+        <value>3600</value>
+    </entry>
+    <entry>
+        <key>sender_connection_timeout</key>
+        <value>20</value>
+    </entry>
+    <!-- Cache size per topic -->
+    <entry>
+        <key>max_cache_size_bytes</key>
+        <!-- 450 MB ~ 5.5 million records. With a 64 Hz stream, that fills up after 24 hours. -->
+        <value>450000000</value>
+    </entry>
+    <!-- Set true for self-signed certificates -->
+    <entry>
+        <key>unsafe_kafka_connection</key>
+        <value>false</value>
+    </entry>
+</defaultsMap>
+<!-- END xml_defaults -->

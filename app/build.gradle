@@ -1,14 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '24.0.3'
+    compileSdkVersion 25
+    buildToolsVersion '26.0.1'
     defaultConfig {
-        applicationId 'org.radarcns.android.android'
-        minSdkVersion 19
-        targetSdkVersion 24
-        versionCode 1
-        versionName "1.0"
+        applicationId 'org.radarcns.detail'
+        minSdkVersion 21
+        targetSdkVersion 25
+        versionCode 3
+        versionName "0.2.1"
+        manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -23,30 +25,38 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
     }
-    productFlavors {
-    }
+}
+
+configurations.compile {
+    resolutionStrategy.cacheChangingModulesFor 0, 'SECONDS'
+}
+
+repositories {
+    jcenter()
+    maven { url  'http://dl.bintray.com/radar-cns/org.radarcns' }
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
+    flatDir { dirs 'libs' }
 }
 
 dependencies {
-    // logging
-    compile 'org.slf4j:slf4j-android:1.7.21'
-    compile 'com.loopj.android:android-async-http:1.4.6'
-    compile 'com.google.android.gms:play-services-appindexing:9.6.1'
-    compile 'com.android.support:appcompat-v7:24.2.1'
-    compile 'com.squareup.okhttp3:okhttp:3.4.1'
-    compile 'org.apache.avro:avro:1.7.7'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
-    compile ('io.confluent:kafka-avro-serializer:3.0.1') {
-        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-        exclude group: 'log4j'
-        exclude group: 'jline'
-    }
-    // needed to work with testCompile -> kafka-clients
-    compile 'org.xerial.snappy:snappy-java:1.1.2.6'
-    compile 'com.getpebble:pebblekit:4.0.0'
-    compile project(':empalink-2.0')
-    compile project(':avro')
-    testCompile 'org.apache.kafka:kafka-clients:0.10.0.1'
+    compile 'org.radarcns:radar-commons-android:0.3.2'
+    compile 'org.radarcns:radar-android-empatica:0.1'
+    compile 'org.radarcns:radar-android-phone:0.1'
+    compile 'org.radarcns:radar-android-application-status:0.2'
+    compile 'org.radarcns:radar-android-weather:0.1'
+
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.google.firebase:firebase-config:11.0.4'
+    compile 'org.radarcns:radar-android-login-oauth2:0.3'
+    compile 'org.radarcns:radar-android-login-qr:0.3'
+
+    // logging only on device, not for compiling or tests
+    apk 'org.slf4j:slf4j-android:1.7.25'
+
     testCompile 'junit:junit:4.12'
-    testCompile 'org.slf4j:slf4j-simple:1.7.21'
+    testCompile 'org.slf4j:slf4j-simple:1.7.25'
 }
+
+// Needed for Firebase. Put at the bottom so it can detect the Firebase version.
+apply plugin: 'com.google.gms.google-services'
