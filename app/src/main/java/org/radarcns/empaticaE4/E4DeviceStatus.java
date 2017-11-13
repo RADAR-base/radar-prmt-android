@@ -111,6 +111,10 @@ public class E4DeviceStatus implements DeviceState {
         return interBeatInterval;
     }
 
+    public float getHeartRate() {
+        return 60 / interBeatInterval;
+    }
+
     public synchronized void setInterBeatInterval(float interBeatInterval) {
         this.interBeatInterval = interBeatInterval;
     }

@@ -41,7 +41,7 @@ public class RestSender<K, V> implements KafkaSender<K, V> {
     private final AvroEncoder keyEncoder;
     private final AvroEncoder valueEncoder;
     private final JsonFactory jsonFactory;
-    private OkHttpClient httpClient;
+    private final OkHttpClient httpClient;
     public final static String KAFKA_REST_ACCEPT_ENCODING = "application/vnd.kafka.v1+json, application/vnd.kafka+json, application/json";
     public final static MediaType KAFKA_REST_AVRO_ENCODING = MediaType.parse("application/vnd.kafka.avro.v1+json; charset=utf-8");
     private final Request isConnectedRequest;

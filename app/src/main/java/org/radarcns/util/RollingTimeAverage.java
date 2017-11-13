@@ -40,6 +40,11 @@ public class RollingTimeAverage {
         total += x;
     }
 
+    /** Add a value of one. */
+    public void increment() {
+        add(1d);
+    }
+
     /**
      * Get the average value per second over a sliding time window of fixed size.
      *
@@ -68,6 +73,11 @@ public class RollingTimeAverage {
             double value = (total - removedValue) / time;
             return 1000d * value;
         }
+    }
+
+    /** Rounded {@link #getAverage()}. */
+    public int getCount() {
+        return (int)Math.round(getAverage());
     }
 
     private static class TimeCount {

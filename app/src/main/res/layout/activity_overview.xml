@@ -9,16 +9,18 @@
     <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-            <RelativeLayout android:layout_height="wrap_content"
-                android:layout_width="wrap_content">
 
-                <HorizontalScrollView
-                    android:id="@+id/horizontalScroll"
-                    xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content" >
+        <HorizontalScrollView
+            android:id="@+id/horizontalScroll"
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+                <RelativeLayout android:layout_height="wrap_content"
+                    android:layout_width="wrap_content">
 
                     <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/deviceTable"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:stretchColumns="4">
@@ -47,6 +49,10 @@
                             <TextView
                                 style="@style/Header"
                                 android:text="@string/header_temp" />
+                            
+                            <TextView
+                                style="@style/Header"
+                                android:text="@string/header_hr" />
 
                             <TextView
                                 style="@style/Header"
@@ -96,6 +102,11 @@
                                 android:id="@+id/temperatureRow1"
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
+                            
+                            <TextView
+                                android:id="@+id/heartRateRow1"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
 
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow1"
@@ -107,7 +118,7 @@
                                 android:id="@+id/refreshButtonRow1"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow1"
@@ -153,6 +164,11 @@
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
 
+                            <TextView
+                                android:id="@+id/heartRateRow2"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow2"
                                 style="@style/ButtonDeviceKeyColumn"
@@ -163,7 +179,7 @@
                                 android:id="@+id/refreshButtonRow2"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow2"
@@ -206,19 +222,27 @@
                             <TextView
                                 android:id="@+id/temperatureRow3"
                                 style="@style/NumberColumn"
-                                android:text="@string/emptyText" />
+                                android:text="@string/disabledText"
+                                android:enabled="false" />
 
+                            <TextView
+                                android:id="@+id/heartRateRow3"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow3"
                                 style="@style/ButtonDeviceKeyColumn"
-                                android:text="@string/button_input"
-                                android:onClick="dialogInputDeviceName" />
+                                android:text="@string/disabledText"
+                                android:onClick="dialogInputDeviceName"
+                                android:clickable="false"
+                                android:enabled="false" />
 
                             <Button
                                 android:id="@+id/refreshButtonRow3"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow3"
@@ -263,6 +287,11 @@
                                 style="@style/NumberColumn"
                                 android:text="@string/emptyText" />
 
+                            <TextView
+                                android:id="@+id/heartRateRow4"
+                                style="@style/NumberColumn"
+                                android:text="@string/emptyText" />
+                            
                             <Button
                                 android:id="@+id/inputDeviceNameButtonRow4"
                                 style="@style/ButtonDeviceKeyColumn"
@@ -273,7 +302,7 @@
                                 android:id="@+id/refreshButtonRow4"
                                 style="@style/ButtonColumn"
                                 android:text="@string/button_connect"
-                                android:onClick="connectDevice" />
+                                android:onClick="reconnectDevice" />
 
                             <Button
                                 android:id="@+id/detailsButtonRow4"
@@ -283,43 +312,44 @@
                         </TableRow>
                     </TableLayout>
 
-                </HorizontalScrollView>
+                    <!-- Server status -->
+                    <RelativeLayout
+                        android:id="@+id/serverLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_below="@id/deviceTable">
 
-                <!-- Server status -->
-                <RelativeLayout
-                    android:id="@+id/serverLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_below="@id/horizontalScroll">
+                        <TextView
+                            android:id="@+id/statusServerLabel"
+                            style="@style/ServerStatusLabel"
+                            android:layout_marginEnd="11dp"
+                            android:text="@string/header_server_status"
+                            android:layout_alignParentBottom="true"
+                            android:textColor="@android:color/background_dark" />
 
-                    <TextView
-                        android:id="@+id/statusServerLabel"
-                        style="@style/ServerStatusLabel"
-                        android:text="@string/header_server_status"
-                        android:layout_alignParentBottom="true"
-                        android:textColor="@android:color/background_dark" />
+                        <View
+                            android:id="@+id/statusServer"
+                            style="@style/StatusCircle"
+                            android:layout_margin="0dp"
+                            android:layout_alignParentBottom="true"
+                            android:layout_toEndOf="@id/statusServerLabel"
+                            android:background="@drawable/status_disconnected"/>
 
-                    <View
-                        android:id="@+id/statusServer"
-                        style="@style/StatusCircle"
-                        android:layout_alignParentBottom="true"
-                        android:layout_toEndOf="@id/statusServerLabel"
-                        android:background="@drawable/status_disconnected"/>
+                        <TextView
+                            android:id="@+id/statusServerMessage"
+                            style="@style/ServerStatusLabel"
+                            android:text="@string/emptyText"
+                            android:layout_marginStart="11dp"
+                            android:layout_toEndOf="@id/statusServer"
+                            android:layout_alignParentBottom="true"
+                            android:textSize="14sp"
+                            android:textStyle="italic"
+                            android:paddingStart="5dp"
+                            android:paddingEnd="0dp"
+                            android:fontFamily="monospace" />
 
-                    <TextView
-                        android:id="@+id/statusServerMessage"
-                        style="@style/ServerStatusLabel"
-                        android:text="@string/emptyText"
-                        android:layout_toEndOf="@id/statusServer"
-                        android:layout_alignParentBottom="true"
-                        android:textSize="14sp"
-                        android:textStyle="italic"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="0dp"
-                        android:fontFamily="monospace" />
-
-                </RelativeLayout>
-
-        </RelativeLayout>
+                    </RelativeLayout>
+            </RelativeLayout>
+        </HorizontalScrollView>
     </ScrollView>
 </RelativeLayout>
