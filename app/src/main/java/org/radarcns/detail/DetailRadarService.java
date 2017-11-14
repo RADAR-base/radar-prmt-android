@@ -16,33 +16,27 @@
 
 package org.radarcns.detail;
 
-import android.view.View;
+import org.radarcns.android.RadarService;
 
+import java.util.ArrayList;
+import java.util.List;
 
-import org.radarcns.android.*;
+import static android.Manifest.permission.RECEIVE_BOOT_COMPLETED;
 
-public class DetailMainActivity extends MainActivity {
-
+public class DetailRadarService extends RadarService {
     @Override
-    protected Class<RadarLoginActivity> loginActivity() {
-        return RadarLoginActivity.class;
+    protected List<String> getServicePermissions() {
+        List<String> superPermissions = super.getServicePermissions();
+        List<String> result = new ArrayList<>(superPermissions.size() + 1);
+        result.addAll(superPermissions);
+        result.add(RECEIVE_BOOT_COMPLETED);
+        return result;
     }
 
     @Override
-    protected MainActivityView createView() {
-        return new DetailMainActivityView(this);
-    }
-
-    public void logout(View view) {
-        IRadarService radarService = getRadarService();
-        if (radarService != null) {
-            radarService.getAuthState().invalidate(this);
-        }
-        startLogin(false);
-    }
-
-    @Override
-    protected Class<? extends RadarService> radarService() {
-        return DetailRadarService.class;
+    protected void configure() {
+        super.configure();
+        configureRunAtBoot(MainActivityBootStarter.class);
     }
 }
+

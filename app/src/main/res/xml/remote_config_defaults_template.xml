@@ -31,7 +31,7 @@
     </entry>
     <entry>
         <key>device_services_to_connect</key>
-        <value>.application.ApplicationServiceProvider .phone.PhoneSensorProvider .empatica.E4ServiceProvider .pebble.PebbleServiceProvider</value>
+        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .empatica.E4ServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneLogProvider .phone.PhoneUsageProvider</value>
     </entry>
     <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
@@ -55,6 +55,11 @@
         <key>max_cache_size_bytes</key>
         <!-- 450 MB ~ 5.5 million records. With a 64 Hz stream, that fills up after 24 hours. -->
         <value>450000000</value>
+    </entry>
+    <!-- Set true for self-signed certificates -->
+    <entry>
+        <key>unsafe_kafka_connection</key>
+        <value>false</value>
     </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
