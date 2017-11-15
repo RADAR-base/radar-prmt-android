@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2017 The Hyve
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <!-- START xml_defaults -->
 <defaultsMap>
     <entry>
@@ -50,16 +66,21 @@
         <key>sender_connection_timeout</key>
         <value>20</value>
     </entry>
-    <!-- Cache size per topic -->
     <entry>
-        <key>max_cache_size_bytes</key>
-        <!-- 450 MB ~ 5.5 million records. With a 64 Hz stream, that fills up after 24 hours. -->
-        <value>450000000</value>
+        <key>oauth2_authorize_url</key>
+        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/authorize</value>
     </entry>
-    <!-- Set true for self-signed certificates -->
     <entry>
-        <key>unsafe_kafka_connection</key>
-        <value>false</value>
+        <key>oauth2_token_url</key>
+        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/token</value>
+    </entry>
+    <entry>
+        <key>oauth2_client_id</key>
+        <value>pRMT</value>
+    </entry>
+    <entry>
+        <key>oauth2_redirect_url</key>
+        <value>org.radarcns.detail://oauth2/redirect</value>
     </entry>
 </defaultsMap>
 <!-- END xml_defaults -->

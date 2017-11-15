@@ -63,10 +63,7 @@
     <string name="sync_default">-</string>
     <string name="sync_button_description">Synchronize now</string>
 
-    <string name="username_label">Username</string>
-    <string name="password_label">Password</string>
-    <string name="login_button">Log in</string>
+    <string name="login_button">Login on the website</string>
     <string name="logout_button">Log out</string>
     <string name="scan_qr_button">Scan QR code</string>
-    <string name="log_in_without_qr_code">Log in without QR code</string>
 </resources>
