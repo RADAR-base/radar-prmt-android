@@ -39,8 +39,10 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.3.3'
-    compile 'org.radarcns:radar-android-empatica:0.1'
+    compile group: 'org.radarcns', name: 'radar-commons-android', version: '0.3.4-SNAPSHOT', changing: true
+    compile ('org.radarcns:radar-android-empatica:0.1') {
+        exclude group: 'org.radarcns', module: 'radar-commons'
+    }
     compile 'org.radarcns:radar-android-phone:0.1'
     compile 'org.radarcns:radar-android-application-status:0.2'
     compile 'org.radarcns:radar-android-weather:0.1'
@@ -48,8 +50,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.google.firebase:firebase-config:11.0.4'
-    compile 'org.radarcns:radar-android-login-oauth2:0.3'
-    compile 'org.radarcns:radar-android-login-qr:0.3'
+    compile group: 'org.radarcns', name: 'radar-android-login-oauth2', version: '0.3.4-SNAPSHOT', changing: true
+    compile group: 'org.radarcns', name: 'radar-android-login-qr', version: '0.3.4-SNAPSHOT', changing: true
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.25'

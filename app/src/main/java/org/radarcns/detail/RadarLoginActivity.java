@@ -58,7 +58,6 @@ public class RadarLoginActivity extends LoginActivity {
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
         this.oauthManager = new OAuth2LoginManager(this, null, "sub", state);
         this.qrManager = new QrLoginManager(this, new AuthStringParser() {
-            @NonNull
             @Override
             public AppAuthState parse(@NonNull String s) {
                 try {
@@ -69,12 +68,14 @@ public class RadarLoginActivity extends LoginActivity {
                     String refreshToken = object.getString("refreshToken");
                     Jwt jwt = Jwt.parse(refreshToken);
                     JSONObject jwtBody = jwt.getBody();
-                    return new AppAuthState.Builder()
+                    oauthManager.update(new AppAuthState.Builder()
                             .tokenType(AUTH_TYPE_BEARER)
                             .property(LOGIN_REFRESH_TOKEN, refreshToken)
                             .userId(jwtBody.getString("sub"))
                             .expiration(jwtBody.getLong("exp") * 1_000L)
-                            .build();
+                            .build());
+                    oauthManager.refresh();
+                    return null;
                 } catch (JSONException e) {
                     throw new IllegalArgumentException("QR code does not contain valid JSON.", e);
                 }
