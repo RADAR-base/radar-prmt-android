@@ -8,7 +8,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 6
-        versionName "0.2.4-SNAPSHOT"
+        versionName "0.2.4"
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -33,18 +33,16 @@ configurations.compile {
 
 repositories {
     jcenter()
-    maven { url  'http://dl.bintray.com/radar-cns/org.radarcns' }
-    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
     flatDir { dirs 'libs' }
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
+    maven { url  'http://dl.bintray.com/radar-cns/org.radarcns' }
 }
 
 dependencies {
     compile group: 'org.radarcns', name: 'radar-commons-android', version: '0.3.4-SNAPSHOT', changing: true
-    compile ('org.radarcns:radar-android-empatica:0.1') {
-        exclude group: 'org.radarcns', module: 'radar-commons'
-    }
-    compile 'org.radarcns:radar-android-phone:0.1'
-    compile 'org.radarcns:radar-android-application-status:0.2'
+    compile 'org.radarcns:radar-android-empatica:0.1.1'
+    compile 'org.radarcns:radar-android-phone:0.1.1'
+    compile 'org.radarcns:radar-android-application-status:0.2.1'
     compile 'org.radarcns:radar-android-weather:0.1'
 
     compile 'com.android.support:appcompat-v7:25.3.1'

@@ -21,25 +21,35 @@ import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.radarcns.android.RadarConfiguration;
-import org.radarcns.android.auth.*;
-import org.radarcns.android.auth.oauth2.Jwt;
+import org.radarcns.android.auth.AppAuthState;
+import org.radarcns.android.auth.AuthStringParser;
+import org.radarcns.android.auth.LoginActivity;
+import org.radarcns.android.auth.LoginManager;
+import org.radarcns.android.auth.ManagementPortalLoginManager;
+import org.radarcns.android.auth.QrLoginManager;
 import org.radarcns.android.auth.oauth2.OAuth2LoginManager;
+import org.radarcns.android.util.Boast;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.radarcns.android.auth.LoginManager.AUTH_TYPE_BEARER;
-import static org.radarcns.android.auth.oauth2.OAuth2LoginManager.LOGIN_REFRESH_TOKEN;
-
 public class RadarLoginActivity extends LoginActivity {
+    private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
+
     private OAuth2LoginManager oauthManager;
     private QrLoginManager qrManager;
+    private ManagementPortalLoginManager mpManager;
     private boolean canLogin;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
@@ -57,31 +67,54 @@ public class RadarLoginActivity extends LoginActivity {
     @Override
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
         this.oauthManager = new OAuth2LoginManager(this, null, "sub", state);
+        RadarConfiguration config = RadarConfiguration.getInstance();
+        if (managementPortal == null) {
+            Boast.makeText(this, "Remote app configuration invalid. Quitting.", Toast.LENGTH_LONG).show();
+            try {
+                Thread.sleep(5_000L);
+            } catch (InterruptedException e) {
+                logger.error("Login exit sleep interrupted");
+            }
+            System.exit(1);
+        }
+        this.mpManager = new ManagementPortalLoginManager(this, state, managementPortal,
+                config.getString("oauth2_client_id", "pRMT"),
+                config.getString("oauth2_client_secret", ""));
         this.qrManager = new QrLoginManager(this, new AuthStringParser() {
             @Override
             public AppAuthState parse(@NonNull String s) {
+                onProcessing(R.string.logging_in);
                 try {
                     JSONObject object = new JSONObject(s);
                     if (!object.has("refreshToken")) {
                         throw new IllegalArgumentException("No valid refresh token found");
                     }
                     String refreshToken = object.getString("refreshToken");
-                    Jwt jwt = Jwt.parse(refreshToken);
-                    JSONObject jwtBody = jwt.getBody();
-                    oauthManager.update(new AppAuthState.Builder()
-                            .tokenType(AUTH_TYPE_BEARER)
-                            .property(LOGIN_REFRESH_TOKEN, refreshToken)
-                            .userId(jwtBody.getString("sub"))
-                            .expiration(jwtBody.getLong("exp") * 1_000L)
-                            .build());
-                    oauthManager.refresh();
+                    mpManager.setRefreshToken(refreshToken);
+                    mpManager.refresh();
                     return null;
                 } catch (JSONException e) {
                     throw new IllegalArgumentException("QR code does not contain valid JSON.", e);
                 }
             }
         });
-        return Arrays.asList(this.qrManager, this.oauthManager);
+        return Arrays.asList(this.qrManager, this.oauthManager, this.mpManager);
+    }
+
+    private void onProcessing(int titleResource) {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setTitle(titleResource);
+        progressDialog.show();
+    }
+
+    private void onDoneProcessing() {
+        if (progressDialog != null) {
+            logger.info("Closing progress window");
+            progressDialog.cancel();
+            logger.info("Closed progress window");
+            progressDialog = null;
+        }
     }
 
     @NonNull
@@ -100,19 +133,29 @@ public class RadarLoginActivity extends LoginActivity {
     public void login(View view) {
         if (canLogin) {
             canLogin = false;
+            onProcessing(R.string.firebase_fetching);
             final RadarConfiguration config = RadarConfiguration.getInstance();
-            final ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setIndeterminate(true);
-            progressDialog.setTitle(R.string.firebase_fetching);
-            progressDialog.show();
             config.fetch().addOnCompleteListener(this, new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
-                    progressDialog.cancel();
+                    onDoneProcessing();
                     config.activateFetched();
                     oauthManager.start();
                 }
             });
         }
+    }
+
+    @Override
+    protected AppAuthState updateMpInfo(LoginManager manager, @NonNull AppAuthState state) throws IOException {
+        AppAuthState newAuthState = super.updateMpInfo(manager, state);
+        onDoneProcessing();
+        return newAuthState;
+    }
+
+    @Override
+    public void loginFailed(LoginManager manager, Exception ex) {
+        onDoneProcessing();
+        super.loginFailed(manager, ex);
     }
 }
