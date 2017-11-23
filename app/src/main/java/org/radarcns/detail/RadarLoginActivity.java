@@ -17,17 +17,16 @@
 package org.radarcns.detail;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
-import android.widget.TextView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.radarcns.android.auth.AppAuthState;
-import org.radarcns.android.auth.AuthStringParser;
-import org.radarcns.android.auth.LoginActivity;
-import org.radarcns.android.auth.LoginManager;
-import org.radarcns.android.auth.QrLoginManager;
+import org.radarcns.android.RadarConfiguration;
+import org.radarcns.android.auth.*;
 import org.radarcns.android.auth.oauth2.Jwt;
 import org.radarcns.android.auth.oauth2.OAuth2LoginManager;
 
@@ -40,22 +39,24 @@ import static org.radarcns.android.auth.oauth2.OAuth2LoginManager.LOGIN_REFRESH_
 public class RadarLoginActivity extends LoginActivity {
     private OAuth2LoginManager oauthManager;
     private QrLoginManager qrManager;
+    private boolean canLogin;
 
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
         setContentView(R.layout.activity_login);
-        String userId = getAuthState().getUserId();
-        if (userId != null) {
-            TextView userIdText = (TextView) findViewById(R.id.inputUserId);
-            userIdText.setText(userId);
-        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        canLogin = true;
     }
 
     @NonNull
     @Override
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
-        this.oauthManager = new OAuth2LoginManager(this, null,"sub", state);
+        this.oauthManager = new OAuth2LoginManager(this, null, "sub", state);
         this.qrManager = new QrLoginManager(this, new AuthStringParser() {
             @NonNull
             @Override
@@ -89,10 +90,28 @@ public class RadarLoginActivity extends LoginActivity {
     }
 
     public void scan(View view) {
-        this.qrManager.start();
+        if (canLogin) {
+            canLogin = false;
+            this.qrManager.start();
+        }
     }
 
     public void login(View view) {
-        this.oauthManager.start();
+        if (canLogin) {
+            canLogin = false;
+            final RadarConfiguration config = RadarConfiguration.getInstance();
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setIndeterminate(true);
+            progressDialog.setTitle(R.string.firebase_fetching);
+            progressDialog.show();
+            config.fetch().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    progressDialog.cancel();
+                    config.activateFetched();
+                    oauthManager.start();
+                }
+            });
+        }
     }
 }
