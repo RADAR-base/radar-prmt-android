@@ -21,7 +21,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:layout_margin="20pt"
-              android:gravity="bottom"
+              android:gravity="center"
               tools:context=".RadarLoginActivity">
 
     <Button
@@ -31,7 +31,6 @@
             android:text="@string/scan_qr_button"
             android:onClick="scan"
             android:layout_marginBottom="78dp"/>
-
 
     <Button
             android:id="@+id/loginButton"

@@ -18,28 +18,20 @@
 <!-- START xml_defaults -->
 <defaultsMap>
     <entry>
-        <key>empatica_api_key</key>
-        <value></value>
+        <key>management_portal_url</key>
+        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/</value>
     </entry>
     <entry>
         <key>kafka_rest_proxy_url</key>
-        <value></value>
+        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/kafka/</value>
     </entry>
     <entry>
         <key>schema_registry_url</key>
-        <value></value>
-    </entry>
-    <entry>
-        <key>default_group_id</key>
-        <value></value>
+        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/schema/</value>
     </entry>
     <entry>
         <key>start_at_boot</key>
         <value>true</value>
-    </entry>
-    <entry>
-        <key>device_data_retention_ms</key>
-        <value>86400000</value>
     </entry>
     <entry>
         <key>ui_refresh_rate_millis</key>
@@ -77,6 +69,10 @@
     <entry>
         <key>oauth2_client_id</key>
         <value>pRMT</value>
+    </entry>
+    <entry>
+        <key>oauth2_client_secret</key>
+        <value>secret</value>
     </entry>
     <entry>
         <key>oauth2_redirect_url</key>
