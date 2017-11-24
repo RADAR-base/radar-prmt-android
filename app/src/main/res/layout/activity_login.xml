@@ -32,6 +32,19 @@
             android:onClick="scan"
             android:layout_marginBottom="78dp"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/inputUserId"
+        android:text="Username"/>
+    <EditText
+        android:id="@+id/inputUserId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:imeOptions="flagNoFullscreen"
+        android:ems="15"
+        android:inputType="textPersonName"/>
+
     <Button
             android:id="@+id/loginButton"
             android:layout_width="match_parent"

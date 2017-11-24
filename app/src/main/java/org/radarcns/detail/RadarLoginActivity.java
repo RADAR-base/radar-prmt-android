@@ -43,8 +43,8 @@ import org.radarcns.android.auth.LoginActivity;
 import org.radarcns.android.auth.LoginManager;
 
 import org.radarcns.android.auth.ManagementPortalLoginManager;
-import org.radarcns.android.auth.QrLoginManager;
-import org.radarcns.android.auth.oauth2.OAuth2LoginManager;
+//import org.radarcns.android.auth.QrLoginManager;
+//import org.radarcns.android.auth.oauth2.OAuth2LoginManager;
 import org.radarcns.android.util.Boast;
 
 import org.slf4j.Logger;
@@ -60,8 +60,8 @@ public class RadarLoginActivity extends LoginActivity {
 
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
 
-    private OAuth2LoginManager oauthManager;
-    private QrLoginManager qrManager;
+    //private OAuth2LoginManager oauthManager;
+    //private QrLoginManager qrManager;
     private ManagementPortalLoginManager mpManager;
     private boolean canLogin;
     private ProgressDialog progressDialog;
@@ -117,7 +117,7 @@ public class RadarLoginActivity extends LoginActivity {
                 // noop
             }
         };
-        return Arrays.asList(trivialLoginManager);
+        return Arrays.asList(this.trivialLoginManager);
     }
 
     /*
@@ -186,12 +186,12 @@ public class RadarLoginActivity extends LoginActivity {
     }
 
     public void login(View view) {
-        this.trivialLoginManager.start();
-
         if (canLogin) {
             canLogin = false;
-            onProcessing(R.string.firebase_fetching);
+            //onProcessing(R.string.firebase_fetching);
             final RadarConfiguration config = RadarConfiguration.getInstance();
+            trivialLoginManager.start();
+            /*
             config.fetch().addOnCompleteListener(this, new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
@@ -200,14 +200,16 @@ public class RadarLoginActivity extends LoginActivity {
                     oauthManager.start();
                 }
             });
+            */
         }
     }
 
     @Override
     protected AppAuthState updateMpInfo(LoginManager manager, @NonNull AppAuthState state) throws IOException {
-        AppAuthState newAuthState = super.updateMpInfo(manager, state);
+        //AppAuthState newAuthState = super.updateMpInfo(manager, state);
         onDoneProcessing();
-        return newAuthState;
+        //return newAuthState;
+        return state;
     }
 
     @Override
