@@ -32,11 +32,4 @@
             android:onClick="scan"
             android:layout_marginBottom="78dp"/>
 
-    <Button
-            android:id="@+id/loginButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login_button"
-            android:onClick="login"/>
-
 </LinearLayout>

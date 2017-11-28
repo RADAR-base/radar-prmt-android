@@ -16,6 +16,7 @@
 
 package org.radarcns.detail;
 
+import android.support.annotation.CallSuper;
 import android.view.View;
 
 
@@ -33,6 +34,13 @@ public class DetailMainActivity extends MainActivity {
         return new DetailMainActivityView(this);
     }
 
+    @Override
+    protected void onConfigChanged() {
+        super.onConfigChanged();
+        
+    }
+
+
     public void logout(View view) {
         IRadarService radarService = getRadarService();
         if (radarService != null) {
@@ -44,5 +52,9 @@ public class DetailMainActivity extends MainActivity {
     @Override
     protected Class<? extends RadarService> radarService() {
         return DetailRadarService.class;
+    }
+
+    public String getUserId() {
+        return RadarConfiguration.getInstance().getString(RadarConfiguration.USER_ID_KEY, "");
     }
 }

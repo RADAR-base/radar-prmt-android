@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 
@@ -49,16 +50,16 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     // View elements
     private TextView mServerMessage;
     private TextView mPatientId;
+    private String userId;
+    private String previousUserId;
 
     DetailMainActivityView(DetailMainActivity activity) {
         this.mainActivity = activity;
+        this.previousUserId = "";
 
         initializeViews();
 
         createRows();
-
-        SharedPreferences preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
-        setUserId(preferences.getString("userId", ""));
     }
 
     private void createRows() {
@@ -88,6 +89,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     public void update() {
         createRows();
 
+        userId = mainActivity.getUserId();
         for (DeviceRowView row : rows) {
             row.update();
         }
@@ -129,6 +131,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             row.display();
         }
         updateServerStatus();
+        setUserId();
     }
 
     private void updateServerStatus() {
@@ -139,7 +142,10 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         }
     }
 
-    private void setUserId(String newValue) {
-        mPatientId.setText(newValue);
+    private void setUserId() {
+        if (!Objects.equals(userId, previousUserId)) {
+            mPatientId.setText(userId);
+            previousUserId = userId;
+        }
     }
 }
