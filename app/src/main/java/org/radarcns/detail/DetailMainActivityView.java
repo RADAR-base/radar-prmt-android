@@ -16,8 +16,7 @@
 
 package org.radarcns.detail;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -33,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 
@@ -48,17 +48,20 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
     // View elements
     private TextView mServerMessage;
-    private TextView mPatientId;
+    private TextView mUserId;
+    private String userId;
+    private String previousUserId;
+    private TextView mProjectId;
+    private String projectId;
+    private String previousProjectId;
 
     DetailMainActivityView(DetailMainActivity activity) {
         this.mainActivity = activity;
+        this.previousUserId = "";
 
         initializeViews();
 
         createRows();
-
-        SharedPreferences preferences = mainActivity.getSharedPreferences("main", Context.MODE_PRIVATE);
-        setUserId(preferences.getString("userId", ""));
     }
 
     private void createRows() {
@@ -88,6 +91,8 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     public void update() {
         createRows();
 
+        userId = mainActivity.getUserId();
+        projectId = mainActivity.getProjectId();
         for (DeviceRowView row : rows) {
             row.update();
         }
@@ -120,7 +125,8 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
 
-        mPatientId = (TextView) mainActivity.findViewById(R.id.inputUserId);
+        mUserId = (TextView) mainActivity.findViewById(R.id.inputUserId);
+        mProjectId = (TextView) mainActivity.findViewById(R.id.inputProjectId);
     }
 
     @Override
@@ -129,6 +135,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             row.display();
         }
         updateServerStatus();
+        setUserId();
     }
 
     private void updateServerStatus() {
@@ -139,7 +146,28 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         }
     }
 
-    private void setUserId(String newValue) {
-        mPatientId.setText(newValue);
+    private void setUserId() {
+        if (!Objects.equals(userId, previousUserId)) {
+            if (userId == null) {
+                mUserId.setVisibility(View.GONE);
+            } else {
+                if (previousUserId == null) {
+                    mUserId.setVisibility(View.VISIBLE);
+                }
+                mUserId.setText(mainActivity.getString(R.string.user_id_message, userId));
+            }
+            previousUserId = userId;
+        }
+        if (!Objects.equals(projectId, previousProjectId)) {
+            if (projectId == null) {
+                mProjectId.setVisibility(View.GONE);
+            } else {
+                if (previousProjectId == null) {
+                    mProjectId.setVisibility(View.VISIBLE);
+                }
+                mProjectId.setText(mainActivity.getString(R.string.study_id_message, projectId));
+            }
+            previousProjectId = projectId;
+        }
     }
 }

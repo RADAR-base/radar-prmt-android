@@ -17,12 +17,12 @@
 package org.radarcns.detail;
 
 import android.view.View;
-
-
-import org.radarcns.android.*;
+import org.radarcns.android.IRadarService;
+import org.radarcns.android.MainActivity;
+import org.radarcns.android.MainActivityView;
+import org.radarcns.android.RadarService;
 
 public class DetailMainActivity extends MainActivity {
-
     @Override
     protected Class<RadarLoginActivity> loginActivity() {
         return RadarLoginActivity.class;
@@ -31,6 +31,12 @@ public class DetailMainActivity extends MainActivity {
     @Override
     protected MainActivityView createView() {
         return new DetailMainActivityView(this);
+    }
+
+    @Override
+    protected void onConfigChanged() {
+        super.onConfigChanged();
+        
     }
 
     public void logout(View view) {

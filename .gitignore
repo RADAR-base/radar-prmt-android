@@ -94,9 +94,8 @@ fabric.properties
 
 *.iml
 modules.xml
-.idea/misc.xml
+/.idea/
 *.ipr
-.idea/runConfigurations.xml
 
 ## Pebble 2
 .lock*

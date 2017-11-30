@@ -71,10 +71,6 @@
         <value>pRMT</value>
     </entry>
     <entry>
-        <key>oauth2_client_secret</key>
-        <value>secret</value>
-    </entry>
-    <entry>
         <key>oauth2_redirect_url</key>
         <value>org.radarcns.detail://oauth2/redirect</value>
     </entry>
