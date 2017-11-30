@@ -16,8 +16,7 @@
 
 package org.radarcns.detail;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -49,9 +48,12 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
     // View elements
     private TextView mServerMessage;
-    private TextView mPatientId;
+    private TextView mUserId;
     private String userId;
     private String previousUserId;
+    private TextView mProjectId;
+    private String projectId;
+    private String previousProjectId;
 
     DetailMainActivityView(DetailMainActivity activity) {
         this.mainActivity = activity;
@@ -90,6 +92,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         createRows();
 
         userId = mainActivity.getUserId();
+        projectId = mainActivity.getProjectId();
         for (DeviceRowView row : rows) {
             row.update();
         }
@@ -122,7 +125,8 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
 
-        mPatientId = (TextView) mainActivity.findViewById(R.id.inputUserId);
+        mUserId = (TextView) mainActivity.findViewById(R.id.inputUserId);
+        mProjectId = (TextView) mainActivity.findViewById(R.id.inputProjectId);
     }
 
     @Override
@@ -144,8 +148,26 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
     private void setUserId() {
         if (!Objects.equals(userId, previousUserId)) {
-            mPatientId.setText(userId);
+            if (userId == null) {
+                mUserId.setVisibility(View.GONE);
+            } else {
+                if (previousUserId == null) {
+                    mUserId.setVisibility(View.VISIBLE);
+                }
+                mUserId.setText(mainActivity.getString(R.string.user_id_message, userId));
+            }
             previousUserId = userId;
+        }
+        if (!Objects.equals(projectId, previousProjectId)) {
+            if (projectId == null) {
+                mProjectId.setVisibility(View.GONE);
+            } else {
+                if (previousProjectId == null) {
+                    mProjectId.setVisibility(View.VISIBLE);
+                }
+                mProjectId.setText(mainActivity.getString(R.string.study_id_message, projectId));
+            }
+            previousProjectId = projectId;
         }
     }
 }

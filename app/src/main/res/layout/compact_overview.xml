@@ -25,13 +25,16 @@
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp">
+            android:layout_margin="5dp"
+            android:rowCount="2"
+            android:columnCount="2">
 
             <View
                 android:id="@+id/person_icon"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/ic_person" />
+                android:background="@drawable/ic_person"
+                android:layout_rowSpan="2" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -39,8 +42,20 @@
                 android:layout_gravity="start|center_vertical"
                 android:layout_marginStart="20dp"
                 android:id="@+id/inputUserId"
-                android:textSize="18sp"
-                android:textAlignment="textStart" />
+                android:textSize="16sp"
+                android:textAlignment="textStart"
+                android:text="@string/user_id_message"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="5dp"
+                android:id="@+id/inputProjectId"
+                android:textSize="16sp"
+                android:textAlignment="textStart"
+                android:text="@string/study_id_message"/>
 
         </GridLayout>
 

@@ -32,21 +32,15 @@ import org.radarcns.android.auth.AppAuthState;
 import org.radarcns.android.auth.AuthStringParser;
 import org.radarcns.android.auth.LoginActivity;
 import org.radarcns.android.auth.LoginManager;
-import org.radarcns.android.auth.ManagementPortalClient;
-import org.radarcns.android.auth.ManagementPortalLoginManager;
 import org.radarcns.android.auth.QrLoginManager;
-import org.radarcns.config.ServerConfig;
+import org.radarcns.android.auth.portal.ManagementPortalLoginManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.radarcns.android.RadarConfiguration.MANAGEMENT_PORTAL_URL_KEY;
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
-import static org.radarcns.android.RadarConfiguration.UNSAFE_KAFKA_CONNECTION;
 
 public class RadarLoginActivity extends LoginActivity {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
@@ -58,25 +52,8 @@ public class RadarLoginActivity extends LoginActivity {
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            RadarConfiguration config = RadarConfiguration.getInstance();
-
-            String mpString = config.getString(MANAGEMENT_PORTAL_URL_KEY, null);
-            if (mpClient == null && mpString != null && !mpString.isEmpty()) {
-                try {
-                    managementPortal = new ServerConfig(mpString);
-                    managementPortal.setUnsafe(config.getBoolean(UNSAFE_KAFKA_CONNECTION, false));
-                    mpClient = new ManagementPortalClient(managementPortal);
-                } catch (MalformedURLException e) {
-                    logger.error("Cannot create ManagementPortal client from url {}",
-                            mpString);
-                }
-            }
-            if (mpClient != null && mpManager != null) {
-                logger.info("Refreshing mp manager");
-                mpManager.setManagementPortal(mpClient, config.getString(RadarConfiguration.OAUTH2_CLIENT_ID, "pRMT"),
-                        config.getString(RadarConfiguration.OAUTH2_CLIENT_SECRET, null));
-                mpManager.refresh();
-            }
+            onDoneProcessing();
+            mpManager.refresh();
         }
     };
 
@@ -84,24 +61,29 @@ public class RadarLoginActivity extends LoginActivity {
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
         setContentView(R.layout.activity_login);
-        registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (RadarConfiguration.getInstance().getStatus() == RadarConfiguration.FirebaseStatus.READY) {
+            onProcessing(R.string.retrieving_configuration);
+        }
         canLogin = true;
+        registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(configBroadcastReceiver);
     }
 
     @NonNull
     @Override
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
-        getAuthState().invalidate(this);
-        RadarConfiguration config = RadarConfiguration.getInstance();
         logger.info("Creating mpManager");
-        this.mpManager = new ManagementPortalLoginManager(this, state, mpClient,
-                config.getString(RadarConfiguration.OAUTH2_CLIENT_ID, "pRMT"),
-                config.getString(RadarConfiguration.OAUTH2_CLIENT_SECRET, null));
+        this.mpManager = new ManagementPortalLoginManager(this, state);
         this.qrManager = new QrLoginManager(this, new AuthStringParser() {
             @Override
             public AppAuthState parse(@NonNull String s) {
@@ -119,7 +101,6 @@ public class RadarLoginActivity extends LoginActivity {
                 }
             }
         });
-        config.fetch();
         return Arrays.asList(this.qrManager, this.mpManager);
     }
 
@@ -153,21 +134,20 @@ public class RadarLoginActivity extends LoginActivity {
     }
 
     @Override
-    protected AppAuthState updateMpInfo(LoginManager manager, @NonNull AppAuthState state) throws IOException {
-        AppAuthState newAuthState = super.updateMpInfo(manager, state);
-        onDoneProcessing();
-        return newAuthState;
-    }
-
-    @Override
     public void loginFailed(LoginManager manager, Exception ex) {
+        canLogin = true;
         onDoneProcessing();
         super.loginFailed(manager, ex);
     }
 
     @Override
+    public void loginSucceeded(LoginManager manager, @NonNull AppAuthState state) {
+        onDoneProcessing();
+        super.loginSucceeded(manager, state);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(configBroadcastReceiver);
     }
 }

@@ -16,14 +16,13 @@
 
 package org.radarcns.detail;
 
-import android.support.annotation.CallSuper;
 import android.view.View;
-
-
-import org.radarcns.android.*;
+import org.radarcns.android.IRadarService;
+import org.radarcns.android.MainActivity;
+import org.radarcns.android.MainActivityView;
+import org.radarcns.android.RadarService;
 
 public class DetailMainActivity extends MainActivity {
-
     @Override
     protected Class<RadarLoginActivity> loginActivity() {
         return RadarLoginActivity.class;
@@ -40,7 +39,6 @@ public class DetailMainActivity extends MainActivity {
         
     }
 
-
     public void logout(View view) {
         IRadarService radarService = getRadarService();
         if (radarService != null) {
@@ -52,9 +50,5 @@ public class DetailMainActivity extends MainActivity {
     @Override
     protected Class<? extends RadarService> radarService() {
         return DetailRadarService.class;
-    }
-
-    public String getUserId() {
-        return RadarConfiguration.getInstance().getString(RadarConfiguration.USER_ID_KEY, "");
     }
 }

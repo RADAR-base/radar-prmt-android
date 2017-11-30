@@ -67,4 +67,7 @@
     <string name="logout_button">Log out</string>
     <string name="scan_qr_button">Scan QR code</string>
     <string name="logging_in">Logging in</string>
+    <string name="retrieving_configuration">Retrieving configuration</string>
+    <string name="user_id_message">User: %1$s</string>
+    <string name="study_id_message">Study: %1$s</string>
 </resources>

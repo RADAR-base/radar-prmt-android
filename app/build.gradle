@@ -7,8 +7,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 7
-        versionName "0.2.5"
+        versionCode 9
+        versionName "0.2.7"
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -39,7 +39,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.3.5-SNAPSHOT@aar'
+    compile 'org.radarcns:radar-commons-android:0.4'
     compile 'org.radarcns:radar-android-empatica:0.1.1'
     compile 'org.radarcns:radar-android-phone:0.1.1'
     compile 'org.radarcns:radar-android-application-status:0.2.1'
@@ -48,7 +48,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.google.firebase:firebase-config:11.0.4'
-    compile group: 'org.radarcns', name: 'radar-android-login-qr', version: '0.3.4'
+    compile 'org.radarcns:radar-android-login-qr:0.4'
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.25'
