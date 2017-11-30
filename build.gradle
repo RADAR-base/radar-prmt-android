@@ -14,5 +14,5 @@ buildscript {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.1'
-    distributionUrl distributionUrl.replace("bin", "all")
+    distributionType 'all'
 }
