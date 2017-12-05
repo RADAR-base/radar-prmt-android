@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '26.0.1'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.1'
     defaultConfig {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
-        targetSdkVersion 25
-        versionCode 9
-        versionName "0.2.7"
+        targetSdkVersion 27
+        versionCode 10
+        versionName "0.2.8"
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -34,21 +34,22 @@ configurations.compile {
 repositories {
     jcenter()
     flatDir { dirs 'libs' }
+    maven { url 'https://maven.google.com' }
     maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
     maven { url  'http://dl.bintray.com/radar-cns/org.radarcns' }
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.4'
+    compile 'org.radarcns:radar-commons-android:0.5'
     compile 'org.radarcns:radar-android-empatica:0.1.1'
     compile 'org.radarcns:radar-android-phone:0.1.1'
     compile 'org.radarcns:radar-android-application-status:0.2.1'
     compile 'org.radarcns:radar-android-weather:0.1'
 
-    compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.google.firebase:firebase-config:11.0.4'
-    compile 'org.radarcns:radar-android-login-qr:0.4'
+    compile 'com.android.support:appcompat-v7:27.0.1'
+    compile 'com.android.support:support-v4:27.0.1'
+    compile 'com.google.firebase:firebase-config:11.6.2'
+    compile 'org.radarcns:radar-android-login-qr:0.5'
 
     // logging only on device, not for compiling or tests
     apk 'org.slf4j:slf4j-android:1.7.25'
