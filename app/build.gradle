@@ -8,7 +8,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode 10
-        versionName "0.2.8-SNAPSHOT"
+        versionName "0.2.8"
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
