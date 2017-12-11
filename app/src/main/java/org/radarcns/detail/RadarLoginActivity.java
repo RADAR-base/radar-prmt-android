@@ -28,12 +28,13 @@ import android.widget.TextView;
 
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
-import android.widget.Toast;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.radarcns.android.RadarConfiguration;
@@ -42,7 +43,7 @@ import org.radarcns.android.auth.AppAuthState;
 import org.radarcns.android.auth.LoginActivity;
 import org.radarcns.android.auth.LoginManager;
 
-import org.radarcns.android.auth.ManagementPortalLoginManager;
+import org.radarcns.android.auth.portal.ManagementPortalLoginManager;
 //import org.radarcns.android.auth.QrLoginManager;
 //import org.radarcns.android.auth.oauth2.OAuth2LoginManager;
 import org.radarcns.android.util.Boast;
@@ -53,6 +54,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
 
 public class RadarLoginActivity extends LoginActivity {
 
@@ -65,6 +68,13 @@ public class RadarLoginActivity extends LoginActivity {
     private ManagementPortalLoginManager mpManager;
     private boolean canLogin;
     private ProgressDialog progressDialog;
+    private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            onDoneProcessing();
+            mpManager.refresh();
+        }
+    };
 
 
     @Override
@@ -76,7 +86,17 @@ public class RadarLoginActivity extends LoginActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (RadarConfiguration.getInstance().getStatus() == RadarConfiguration.FirebaseStatus.READY) {
+            onProcessing(R.string.retrieving_configuration);
+        }
         canLogin = true;
+        registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(configBroadcastReceiver);
     }
 
     @NonNull
@@ -122,20 +142,8 @@ public class RadarLoginActivity extends LoginActivity {
 
     /*
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
-        this.oauthManager = new OAuth2LoginManager(this, null, "sub", state);
-        RadarConfiguration config = RadarConfiguration.getInstance();
-        if (managementPortal == null) {
-            Boast.makeText(this, "Remote app configuration invalid. Quitting.", Toast.LENGTH_LONG).show();
-            try {
-                Thread.sleep(5_000L);
-            } catch (InterruptedException e) {
-                logger.error("Login exit sleep interrupted");
-            }
-            System.exit(1);
-        }
-        this.mpManager = new ManagementPortalLoginManager(this, state, managementPortal,
-                config.getString("oauth2_client_id", "pRMT"),
-                config.getString("oauth2_client_secret", ""));
+        logger.info("Creating mpManager");
+        this.mpManager = new ManagementPortalLoginManager(this, state);
         this.qrManager = new QrLoginManager(this, new AuthStringParser() {
             @Override
             public AppAuthState parse(@NonNull String s) {
@@ -147,14 +155,13 @@ public class RadarLoginActivity extends LoginActivity {
                     }
                     String refreshToken = object.getString("refreshToken");
                     mpManager.setRefreshToken(refreshToken);
-                    mpManager.refresh();
-                    return null;
+                    return mpManager.refresh();
                 } catch (JSONException e) {
                     throw new IllegalArgumentException("QR code does not contain valid JSON.", e);
                 }
             }
         });
-        return Arrays.asList(this.qrManager, this.oauthManager, this.mpManager);
+        return Arrays.asList(this.qrManager, this.mpManager);
     }
     */
 
@@ -205,16 +212,20 @@ public class RadarLoginActivity extends LoginActivity {
     }
 
     @Override
-    protected AppAuthState updateMpInfo(LoginManager manager, @NonNull AppAuthState state) throws IOException {
-        //AppAuthState newAuthState = super.updateMpInfo(manager, state);
+    public void loginFailed(LoginManager manager, Exception ex) {
+        canLogin = true;
         onDoneProcessing();
-        //return newAuthState;
-        return state;
+        super.loginFailed(manager, ex);
     }
 
     @Override
-    public void loginFailed(LoginManager manager, Exception ex) {
+    public void loginSucceeded(LoginManager manager, @NonNull AppAuthState state) {
         onDoneProcessing();
-        super.loginFailed(manager, ex);
+        super.loginSucceeded(manager, state);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }

@@ -16,16 +16,44 @@
 
 package org.radarcns.detail;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import android.os.SystemClock;
+import com.crashlytics.android.Crashlytics;
 import org.radarcns.android.RadarApplication;
 import org.radarcns.android.RadarConfiguration;
+import org.radarcns.android.util.CrashlyticsLoggerHandler;
+import pl.brightinventions.slf4android.LoggerConfiguration;
 
 /**
  * Radar application class for the detailed application.
  */
 public class DetailRadarApplication extends RadarApplication {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable) {
+                Intent intent = new Intent(DetailRadarApplication.this, DetailRadarApplication.class);
+                intent.putExtra("crash", true);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        | Intent.FLAG_ACTIVITY_NEW_TASK);
+                PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+                AlarmManager mgr = (AlarmManager) getBaseContext().getSystemService(Context.ALARM_SERVICE);
+                mgr.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, pendingIntent);
+                System.exit(2);
+            }
+        });
+    }
+
     @Override
     public Bitmap getLargeIcon() {
         return BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
