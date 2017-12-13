@@ -22,13 +22,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-
 import android.os.SystemClock;
-import com.crashlytics.android.Crashlytics;
+
 import org.radarcns.android.RadarApplication;
 import org.radarcns.android.RadarConfiguration;
-import org.radarcns.android.util.CrashlyticsLoggerHandler;
-import pl.brightinventions.slf4android.LoggerConfiguration;
+import org.slf4j.impl.HandroidLoggerAdapter;
 
 /**
  * Radar application class for the detailed application.
@@ -52,6 +50,12 @@ public class DetailRadarApplication extends RadarApplication {
                 System.exit(2);
             }
         });
+    }
+
+    @Override
+    protected void setupLogging() {
+        HandroidLoggerAdapter.APP_NAME = "pRMT";
+        HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG;
     }
 
     @Override
