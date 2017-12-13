@@ -33,25 +33,24 @@ configurations.compile {
 }
 
 repositories {
-    jcenter()
     flatDir { dirs 'libs' }
-    maven { url 'https://maven.google.com' }
-    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
+    jcenter()
+    google()
     maven { url 'http://dl.bintray.com/radar-cns/org.radarcns' }
-    maven { url 'https://jitpack.io' }
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
 }
 
 dependencies {
-    compile 'org.radarcns:radar-commons-android:0.5.1-SNAPSHOT'
-    compile 'org.radarcns:radar-android-login-qr:0.5'
+    compile 'org.radarcns:radar-commons-android:0.5.2-SNAPSHOT'
+    compile 'org.radarcns:radar-android-login-qr:0.5.1'
 
     compile 'org.radarcns:radar-android-empatica:0.1.1'
     compile 'org.radarcns:radar-android-phone:0.1.1'
     compile 'org.radarcns:radar-android-application-status:0.2.1'
     compile 'org.radarcns:radar-android-weather:0.1'
 
-    compile 'com.android.support:appcompat-v7:27.0.1'
-    compile 'com.android.support:support-v4:27.0.1'
+    compile 'com.android.support:appcompat-v7:27.0.2'
+    compile 'com.android.support:support-v4:27.0.2'
 
     compile 'com.google.firebase:firebase-config:11.6.2'
 
