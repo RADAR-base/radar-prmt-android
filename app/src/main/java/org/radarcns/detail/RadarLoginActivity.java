@@ -25,6 +25,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.widget.Toast;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.radarcns.android.RadarConfiguration;
@@ -34,9 +36,11 @@ import org.radarcns.android.auth.LoginActivity;
 import org.radarcns.android.auth.LoginManager;
 import org.radarcns.android.auth.QrLoginManager;
 import org.radarcns.android.auth.portal.ManagementPortalLoginManager;
+import org.radarcns.android.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -53,6 +57,9 @@ public class RadarLoginActivity extends LoginActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             onDoneProcessing();
+            if (RadarConfiguration.getInstance().has("mp_refresh_token")) {
+                mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
+            }
             mpManager.refresh();
         }
     };
@@ -68,6 +75,10 @@ public class RadarLoginActivity extends LoginActivity {
         super.onResume();
         if (RadarConfiguration.getInstance().getStatus() == RadarConfiguration.FirebaseStatus.READY) {
             onProcessing(R.string.retrieving_configuration);
+        } else {
+            if (RadarConfiguration.getInstance().has("mp_refresh_token")) {
+                mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
+            }
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
@@ -88,16 +99,17 @@ public class RadarLoginActivity extends LoginActivity {
             @Override
             public AppAuthState parse(@NonNull String s) {
                 onProcessing(R.string.logging_in);
+                logger.info("Read token: {}", s);
                 try {
                     JSONObject object = new JSONObject(s);
                     if (!object.has("refreshToken")) {
-                        throw new IllegalArgumentException("No valid refresh token found");
+                        throw new QrException("Please scan the correct QR code.");
                     }
                     String refreshToken = object.getString("refreshToken");
                     mpManager.setRefreshToken(refreshToken);
                     return mpManager.refresh();
                 } catch (JSONException e) {
-                    throw new IllegalArgumentException("QR code does not contain valid JSON.", e);
+                    throw new QrException("Please scan your QR code again.", e);
                 }
             }
         });
@@ -115,7 +127,6 @@ public class RadarLoginActivity extends LoginActivity {
         if (progressDialog != null) {
             logger.info("Closing progress window");
             progressDialog.cancel();
-            logger.info("Closed progress window");
             progressDialog = null;
         }
     }
@@ -134,10 +145,24 @@ public class RadarLoginActivity extends LoginActivity {
     }
 
     @Override
-    public void loginFailed(LoginManager manager, Exception ex) {
+    public void loginFailed(LoginManager manager, final Exception ex) {
         canLogin = true;
         onDoneProcessing();
-        super.loginFailed(manager, ex);
+        logger.error("Failed to log in with {}", manager, ex);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int res;
+                if (ex instanceof QrException) {
+                    res = R.string.login_failed_qr;
+                } else if (ex instanceof IOException) {
+                    res = R.string.login_failed_mp;
+                } else {
+                    res = R.string.login_failed;
+                }
+                Boast.makeText(RadarLoginActivity.this, res, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override

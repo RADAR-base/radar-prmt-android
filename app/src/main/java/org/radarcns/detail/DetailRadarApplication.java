@@ -24,21 +24,28 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.SystemClock;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import org.radarcns.android.RadarApplication;
 import org.radarcns.android.RadarConfiguration;
+import org.slf4j.LoggerFactory;
 import org.slf4j.impl.HandroidLoggerAdapter;
 
 /**
  * Radar application class for the detailed application.
  */
 public class DetailRadarApplication extends RadarApplication {
+    private static final String TEST_PHASE = "test_phase";
+
     @Override
     public void onCreate() {
         super.onCreate();
 
+        final Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
+                LoggerFactory.getLogger(DetailRadarApplication.class).error("Uncaught error", throwable);
                 Intent intent = new Intent(DetailRadarApplication.this, DetailRadarApplication.class);
                 intent.putExtra("crash", true);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -46,7 +53,12 @@ public class DetailRadarApplication extends RadarApplication {
                         | Intent.FLAG_ACTIVITY_NEW_TASK);
                 PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
                 AlarmManager mgr = (AlarmManager) getBaseContext().getSystemService(Context.ALARM_SERVICE);
-                mgr.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, pendingIntent);
+                if (mgr != null) {
+                    mgr.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, pendingIntent);
+                }
+                if (handler != null) {
+                    handler.uncaughtException(thread, throwable);
+                }
                 System.exit(2);
             }
         });
@@ -70,7 +82,10 @@ public class DetailRadarApplication extends RadarApplication {
 
     @Override
     protected RadarConfiguration createConfiguration() {
-        // TODO: turn off developer mode
-        return RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
+        RadarConfiguration config = RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
+        FirebaseAnalytics firebase = FirebaseAnalytics.getInstance(this);
+        firebase.setUserProperty(TEST_PHASE, "dev");
+        config.fetch();
+        return config;
     }
 }

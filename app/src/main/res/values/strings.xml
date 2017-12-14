@@ -70,4 +70,6 @@
     <string name="retrieving_configuration">Retrieving configuration</string>
     <string name="user_id_message">User: %1$s</string>
     <string name="study_id_message">Study: %1$s</string>
+    <string name="login_failed_qr">QR code scanning failed. Please try again.</string>
+    <string name="login_failed_mp">Server did not respond. Please try again later with internet connection turned on.</string>
 </resources>
