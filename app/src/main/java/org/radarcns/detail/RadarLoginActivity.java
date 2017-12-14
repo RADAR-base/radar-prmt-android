@@ -57,7 +57,7 @@ public class RadarLoginActivity extends LoginActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             onDoneProcessing();
-            if (RadarConfiguration.getInstance().has("mp_refresh_token")) {
+            if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
                 mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
             }
             mpManager.refresh();
@@ -75,10 +75,8 @@ public class RadarLoginActivity extends LoginActivity {
         super.onResume();
         if (RadarConfiguration.getInstance().getStatus() == RadarConfiguration.FirebaseStatus.READY) {
             onProcessing(R.string.retrieving_configuration);
-        } else {
-            if (RadarConfiguration.getInstance().has("mp_refresh_token")) {
-                mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
-            }
+        } else if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
+            mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));

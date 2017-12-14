@@ -39,4 +39,3 @@ public class DetailRadarService extends RadarService {
         configureRunAtBoot(MainActivityBootStarter.class);
     }
 }
-

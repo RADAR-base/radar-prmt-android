@@ -84,7 +84,7 @@ public class DetailRadarApplication extends RadarApplication {
     protected RadarConfiguration createConfiguration() {
         RadarConfiguration config = RadarConfiguration.configure(this, true, R.xml.remote_config_defaults);
         FirebaseAnalytics firebase = FirebaseAnalytics.getInstance(this);
-        firebase.setUserProperty(TEST_PHASE, "dev");
+        firebase.setUserProperty(TEST_PHASE, BuildConfig.DEBUG ? "dev" : "production");
         config.fetch();
         return config;
     }
