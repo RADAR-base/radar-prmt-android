@@ -27,6 +27,8 @@ import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.radarcns.android.RadarConfiguration;
@@ -44,7 +46,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.radarcns.android.RadarConfiguration.PROJECT_ID_KEY;
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
+import static org.radarcns.android.RadarConfiguration.USER_ID_KEY;
 
 public class RadarLoginActivity extends LoginActivity {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
@@ -166,6 +170,9 @@ public class RadarLoginActivity extends LoginActivity {
     @Override
     public void loginSucceeded(LoginManager manager, @NonNull AppAuthState state) {
         onDoneProcessing();
+        FirebaseAnalytics firebase = FirebaseAnalytics.getInstance(this);
+        firebase.setUserProperty(USER_ID_KEY, state.getUserId());
+        firebase.setUserProperty(PROJECT_ID_KEY, state.getProjectId());
         super.loginSucceeded(manager, state);
     }
 
