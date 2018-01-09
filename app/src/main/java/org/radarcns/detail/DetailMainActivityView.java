@@ -24,8 +24,6 @@ import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.data.TimedInt;
-import org.radarcns.phone.PhoneBluetoothProvider;
-import org.radarcns.phone.PhoneContactListProvider;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -67,25 +65,19 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void createRows() {
         if (mainActivity.getRadarService() != null
                 && !mainActivity.getRadarService().getConnections().equals(savedConnections)) {
-            ViewGroup root = (ViewGroup) mainActivity.findViewById(R.id.deviceTable);
+            ViewGroup root = mainActivity.findViewById(R.id.deviceTable);
             while (root.getChildCount() > 1) {
                 root.removeView(root.getChildAt(1));
             }
             rows.clear();
             boolean condensed = RadarConfiguration.getInstance().getBoolean(CONDENSED_DISPLAY_KEY, true);
             for (DeviceServiceProvider provider : mainActivity.getRadarService().getConnections()) {
-                if (isDisplayable(provider)) {
+                if (provider.isDisplayable()) {
                     rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
                 }
             }
             savedConnections = mainActivity.getRadarService().getConnections();
         }
-    }
-
-    private boolean isDisplayable(DeviceServiceProvider provider) {
-        return  !(provider instanceof PhoneContactListProvider)  // TODO: fix PhoneContactListProvider.isDisplayable
-                && !(provider instanceof PhoneBluetoothProvider) // TODO: fix PhoneBluetoothProvider.isDisplayable
-                && provider.isDisplayable();
     }
 
     public void update() {
@@ -123,10 +115,10 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void initializeViews() {
         mainActivity.setContentView(R.layout.compact_overview);
 
-        mServerMessage = (TextView) mainActivity.findViewById(R.id.statusServerMessage);
+        mServerMessage = mainActivity.findViewById(R.id.statusServerMessage);
 
-        mUserId = (TextView) mainActivity.findViewById(R.id.inputUserId);
-        mProjectId = (TextView) mainActivity.findViewById(R.id.inputProjectId);
+        mUserId = mainActivity.findViewById(R.id.inputUserId);
+        mProjectId = mainActivity.findViewById(R.id.inputProjectId);
     }
 
     @Override

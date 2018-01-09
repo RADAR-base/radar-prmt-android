@@ -24,7 +24,14 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.device.BaseDeviceState;
 import org.radarcns.android.device.DeviceServiceConnection;
@@ -34,8 +41,11 @@ import org.radarcns.android.util.Boast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DecimalFormat;
-import java.util.*;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Displays a single device row.
@@ -80,9 +90,9 @@ public class DeviceRowView {
         TableRow row = (TableRow) root.getChildAt(root.getChildCount() - 1);
 
         mStatusIcon = row.findViewById(R.id.status_icon);
-        mDeviceNameLabel = (TextView) row.findViewById(R.id.deviceName_label);
-        mBatteryLabel = (ImageView) row.findViewById(R.id.battery_label);
-        Button mDeviceInput = (Button) row.findViewById(R.id.inputDeviceButton);
+        mDeviceNameLabel = row.findViewById(R.id.deviceName_label);
+        mBatteryLabel = row.findViewById(R.id.battery_label);
+        Button mDeviceInput = row.findViewById(R.id.inputDeviceButton);
 
         if (provider.isFilterable()) {
             mDeviceInput.setOnClickListener(new View.OnClickListener() {
@@ -107,7 +117,7 @@ public class DeviceRowView {
         });
     }
 
-    public void dialogDeviceName() {
+    private void dialogDeviceName() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this.mainActivity);
         builder.setTitle(this.mainActivity.getString(R.string.filter_title));
 
@@ -168,7 +178,7 @@ public class DeviceRowView {
         this.mainActivity.getRadarService().setAllowedDeviceIds(connection, allowed);
     }
 
-    public void reconnectDevice() {
+    private void reconnectDevice() {
         try {
             // will restart scanning after disconnect
             if (connection.isRecording()) {
@@ -180,7 +190,7 @@ public class DeviceRowView {
         }
     }
 
-    public void update() {
+    void update() {
         if (connection.hasService()) {
             state = connection.getDeviceData();
             switch (state.getStatus()) {
@@ -201,13 +211,13 @@ public class DeviceRowView {
         }
     }
 
-    public void display() {
+    void display() {
         updateBattery();
         updateDeviceName();
         updateDeviceStatus();
     }
 
-    public void updateDeviceStatus() {
+    private void updateDeviceStatus() {
         // Connection status. Change icon used.
         DeviceStatusListener.Status status;
         if (state == null) {
@@ -224,7 +234,7 @@ public class DeviceRowView {
         }
     }
 
-    public void updateBattery() {
+    private void updateBattery() {
         // Battery levels observed for E4 are 0.01, 0.1, 0.45 or 1
         float batteryLevel = state == null ? Float.NaN : state.getBatteryLevel();
         if (Objects.equals(previousBatteryLevel, batteryLevel)) {
@@ -246,7 +256,7 @@ public class DeviceRowView {
         }
     }
 
-    public void updateDeviceName() {
+    private void updateDeviceName() {
         if (Objects.equals(deviceName, previousName)) {
             return;
         }
