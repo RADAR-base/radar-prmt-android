@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2017 The Hyve
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!-- START xml_defaults -->
+<defaultsMap>
+    <entry>
+        <key>empatica_api_key</key>
+    </entry>
+    <entry>
+        <key>management_portal_url</key>
+        <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/</value>-->
+    </entry>
+    <entry>
+        <key>kafka_rest_proxy_url</key>
+        <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/kafka/</value>-->
+    </entry>
+    <entry>
+        <key>schema_registry_url</key>
+        <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/schema/</value>-->
+    </entry>
+    <entry>
+        <key>unsafe_kafka_connection</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>start_at_boot</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>ui_refresh_rate_millis</key>
+        <value>250</value>
+    </entry>
+    <entry>
+        <key>device_services_to_connect</key>
+        <value>.application.ApplicationServiceProvider .phone.PhoneSensorProvider .empatica.E4ServiceProvider .biovotion.BiovotionServiceProvider</value>
+    </entry>
+    <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
+    <entry>
+        <key>kafka_records_send_limit</key>
+        <value>1000</value>
+    </entry>
+    <entry>
+        <key>kafka_upload_rate</key>
+        <value>10</value>
+    </entry>
+    <entry>
+        <key>kafka_clean_rate</key>
+        <value>3600</value>
+    </entry>
+    <entry>
+        <key>sender_connection_timeout</key>
+        <value>20</value>
+    </entry>
+    <entry>
+        <key>kafka_upload_minimum_battery_level</key>
+        <value>0.1</value>
+    </entry>
+    <entry>
+        <key>ntp_server</key>
+        <value>ntp.ukl.uni-freiburg.de</value>
+    </entry>
+    <entry>
+        <key>application_status_update_rate</key>
+        <value>10</value>
+    </entry>
+    <entry>
+        <key>application_send_ip</key>
+        <value>true</value>
+    </entry>
+
+    <!-- Cache size per topic -->
+    <entry>
+        <key>max_cache_size_bytes</key>
+        <!-- 450 MB ~ 5.5 million records. With a 64 Hz stream, that fills up after 24 hours. -->
+        <value>450000000</value>
+    </entry>
+    <entry>
+        <key>send_only_with_wifi</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>send_with_compression</key>
+        <value>false</value>
+    </entry>
+
+    <!-- oauth2 -->
+    <entry>
+        <key>oauth2_authorize_url</key>
+        <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/authorize</value>-->
+    </entry>
+    <entry>
+        <key>oauth2_token_url</key>
+        <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/token</value>-->
+    </entry>
+    <entry>
+        <key>oauth2_client_id</key>
+        <value>pRMT</value>
+    </entry>
+    <entry>
+        <key>oauth2_client_secret</key>
+        <value>secret</value>
+    </entry>
+    <entry>
+        <key>oauth2_redirect_url</key>
+        <value>org.radarcns.detail://oauth2/redirect</value>
+    </entry>
+
+    <!-- Disk space notifications -->
+    <entry>
+        <key>disk_space_notification_min_mb</key>
+        <value>300</value>
+    </entry>
+    <!-- How often to check the disk space. -->
+    <entry>
+        <key>disk_space_notification_poll_minutes</key>
+        <value>15</value>
+    </entry>
+    <!-- When to send another notification if one was already sent. Defaults to 1 day. -->
+    <entry>
+        <key>disk_space_notification_cooldown_minutes</key>
+        <value>1440</value>
+    </entry>
+    <!-- Enable disk space notifications. Disabled by default. -->
+    <entry>
+        <key>disk_space_notification_enable</key>
+        <value>false</value>
+    </entry>
+</defaultsMap>
+<!-- END xml_defaults -->
