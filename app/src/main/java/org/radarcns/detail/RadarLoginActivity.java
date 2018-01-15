@@ -118,6 +118,11 @@ public class RadarLoginActivity extends LoginActivity {
                 if (authState.isValid()) {
                     return authState;
                 }
+                SharedPreferences preferences = RadarLoginActivity.this.getSharedPreferences("main", Context.MODE_PRIVATE);
+                String userId = preferences.getString("userId", "");
+                if (!Objects.equals(userId, "")) {
+                    return new AppAuthState.Builder().projectId("0").userId(userId).expiration(Long.MAX_VALUE).build();
+                }
                 return null;
             }
 
