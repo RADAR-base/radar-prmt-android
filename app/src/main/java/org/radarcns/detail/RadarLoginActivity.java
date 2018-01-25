@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
 
@@ -74,6 +75,7 @@ public class RadarLoginActivity extends LoginActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             onDoneProcessing();
+            if (mpManager == null) return;
             if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
                 mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
             }

@@ -1,1 +1,20 @@
 include ':app'
+
+include 'biovotion'
+project(':biovotion').projectDir = new File('/home/boettche/code/RADAR-CNS-DEV/RADAR-Android-Biovotion')
+
+include 'empatica'
+project(':empatica').projectDir = new File('/home/boettche/code/RADAR-CNS-DEV/RADAR-Android-Empatica')
+
+include 'phone'
+project(':phone').projectDir = new File('/home/boettche/code/RADAR-CNS-DEV/RADAR-Android-Phone')
+
+include 'application-status'
+project(':application-status').projectDir = new File('/home/boettche/code/RADAR-CNS-DEV/RADAR-Android-Application-Status')
+
+include 'radar-commons'
+project(':radar-commons').projectDir = new File('/home/boettche/code/RADAR-CNS-DEV/RADAR-Commons')
+
+include 'commons-android'
+project(':commons-android').projectDir = new File('/home/boettche/code/RADAR-CNS-DEV/RADAR-Commons-Android')
+
