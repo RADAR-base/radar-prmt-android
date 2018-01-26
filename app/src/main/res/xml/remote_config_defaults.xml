@@ -19,18 +19,22 @@
 <defaultsMap>
     <entry>
         <key>empatica_api_key</key>
+        <value></value>
     </entry>
     <entry>
         <key>management_portal_url</key>
         <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/</value>-->
+        <value></value>
     </entry>
     <entry>
         <key>kafka_rest_proxy_url</key>
         <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/kafka/</value>-->
+        <value></value>
     </entry>
     <entry>
         <key>schema_registry_url</key>
         <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/schema/</value>-->
+        <value></value>
     </entry>
     <entry>
         <key>unsafe_kafka_connection</key>
@@ -71,7 +75,7 @@
     </entry>
     <entry>
         <key>ntp_server</key>
-        <value>ntp.ukl.uni-freiburg.de</value>
+        <value></value>
     </entry>
     <entry>
         <key>application_status_update_rate</key>
@@ -101,10 +105,12 @@
     <entry>
         <key>oauth2_authorize_url</key>
         <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/authorize</value>-->
+        <value></value>
     </entry>
     <entry>
         <key>oauth2_token_url</key>
         <!--<value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/token</value>-->
+        <value></value>
     </entry>
     <entry>
         <key>oauth2_client_id</key>
