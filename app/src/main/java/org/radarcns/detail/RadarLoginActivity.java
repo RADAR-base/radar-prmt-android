@@ -27,6 +27,8 @@ import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.radarcns.android.RadarConfiguration;
@@ -37,10 +39,12 @@ import org.radarcns.android.auth.LoginManager;
 import org.radarcns.android.auth.QrLoginManager;
 import org.radarcns.android.auth.portal.ManagementPortalLoginManager;
 import org.radarcns.android.util.Boast;
+import org.radarcns.producer.AuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -153,6 +157,12 @@ public class RadarLoginActivity extends LoginActivity {
                 int res;
                 if (ex instanceof QrException) {
                     res = R.string.login_failed_qr;
+                } else if (ex instanceof AuthenticationException) {
+                    res = R.string.login_failed_authentication;
+                } else if (ex instanceof FirebaseRemoteConfigException) {
+                    res = R.string.login_failed_firebase;
+                } else if (ex instanceof ConnectException) {
+                    res = R.string.login_failed_connection;
                 } else if (ex instanceof IOException) {
                     res = R.string.login_failed_mp;
                 } else {
