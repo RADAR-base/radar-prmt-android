@@ -22,9 +22,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
@@ -72,6 +76,14 @@ public class RadarLoginActivity extends LoginActivity {
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
         setContentView(R.layout.activity_login);
+
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connManager != null ? connManager.getActiveNetworkInfo() : null;
+
+        TextView messageBox = findViewById(R.id.messageText);
+        if (networkInfo == null || !networkInfo.isConnected()) {
+            messageBox.setText(R.string.no_connection);
+        }
     }
 
     @Override

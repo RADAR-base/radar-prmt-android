@@ -73,6 +73,7 @@
     <string name="login_failed_qr">QR code scanning failed. Please try again.</string>
     <string name="login_failed_authentication">Authentication failed. Please login with different credentials or QR code.</string>
     <string name="login_failed_firebase">Settings are incomplete. Please update the Firebase Remote Configuration</string>
-    <string name="login_failed_connection">No network connection available. Please try again when internet connection is turned on.</string>
+    <string name="login_failed_connection">No network connection available. Please connect your phone to the internet and try again.</string>
     <string name="login_failed_mp">Login failed. Please try again later.</string>
+    <string name="no_connection">Internet connection might be disabled. Please enable internet before starting scanning.</string>
 </resources>
