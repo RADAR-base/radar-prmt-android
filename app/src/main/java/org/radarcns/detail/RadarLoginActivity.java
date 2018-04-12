@@ -61,6 +61,9 @@ public class RadarLoginActivity extends LoginActivity {
     private ManagementPortalLoginManager mpManager;
     private boolean canLogin;
     private ProgressDialog progressDialog;
+    private TextView messageBox;
+    private Button scanButton;
+
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -72,18 +75,29 @@ public class RadarLoginActivity extends LoginActivity {
         }
     };
 
+    private final BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NetworkInfo networkInfo = intent.getParcelableExtra("networkInfo");
+            if (networkInfo == null)
+                return;
+
+            if (networkInfo.isConnected()) {
+                scanButton.setEnabled(true);
+                messageBox.setText("");
+            } else {
+                scanButton.setEnabled(false);
+                messageBox.setText(R.string.no_connection);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
         setContentView(R.layout.activity_login);
-
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connManager != null ? connManager.getActiveNetworkInfo() : null;
-
-        TextView messageBox = findViewById(R.id.messageText);
-        if (networkInfo == null || !networkInfo.isConnected()) {
-            messageBox.setText(R.string.no_connection);
-        }
+        messageBox = findViewById(R.id.messageText);
+        scanButton = findViewById(R.id.scanButton);
     }
 
     @Override
@@ -96,12 +110,14 @@ public class RadarLoginActivity extends LoginActivity {
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
+        registerReceiver(networkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(configBroadcastReceiver);
+        unregisterReceiver(networkStateReceiver);
     }
 
     @NonNull
