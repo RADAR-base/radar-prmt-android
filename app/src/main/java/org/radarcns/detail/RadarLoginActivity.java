@@ -22,8 +22,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
@@ -43,6 +41,7 @@ import org.radarcns.android.auth.LoginManager;
 import org.radarcns.android.auth.QrLoginManager;
 import org.radarcns.android.auth.portal.ManagementPortalLoginManager;
 import org.radarcns.android.util.Boast;
+import org.radarcns.android.util.NetworkConnectedReceiver;
 import org.radarcns.producer.AuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +53,7 @@ import java.util.List;
 
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
 
-public class RadarLoginActivity extends LoginActivity {
+public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
 
     private QrLoginManager qrManager;
@@ -63,6 +62,7 @@ public class RadarLoginActivity extends LoginActivity {
     private ProgressDialog progressDialog;
     private TextView messageBox;
     private Button scanButton;
+    private NetworkConnectedReceiver networkReceiver;
 
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -75,29 +75,13 @@ public class RadarLoginActivity extends LoginActivity {
         }
     };
 
-    private final BroadcastReceiver networkStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            NetworkInfo networkInfo = intent.getParcelableExtra("networkInfo");
-            if (networkInfo == null)
-                return;
-
-            if (networkInfo.isConnected()) {
-                scanButton.setEnabled(true);
-                messageBox.setText("");
-            } else {
-                scanButton.setEnabled(false);
-                messageBox.setText(R.string.no_connection);
-            }
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
         setContentView(R.layout.activity_login);
         messageBox = findViewById(R.id.messageText);
         scanButton = findViewById(R.id.scanButton);
+        networkReceiver = new NetworkConnectedReceiver(this, this);
     }
 
     @Override
@@ -110,14 +94,14 @@ public class RadarLoginActivity extends LoginActivity {
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
-        registerReceiver(networkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        networkReceiver.register();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(configBroadcastReceiver);
-        unregisterReceiver(networkStateReceiver);
+        networkReceiver.unregister();
     }
 
     @NonNull
@@ -158,6 +142,18 @@ public class RadarLoginActivity extends LoginActivity {
             logger.info("Closing progress window");
             progressDialog.cancel();
             progressDialog = null;
+        }
+    }
+
+    @Override
+    public void onNetworkConnectionChanged(boolean isConnected, boolean isWifiOrEthernet) {
+        logger.info("Network change: {}", isConnected);
+        if (isConnected) {
+            scanButton.setEnabled(true);
+            messageBox.setText("");
+        } else {
+            scanButton.setEnabled(false);
+            messageBox.setText(R.string.no_connection);
         }
     }
 
