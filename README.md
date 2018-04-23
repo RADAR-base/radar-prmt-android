@@ -1,6 +1,6 @@
 # RADAR-pRMT
 
-Application to be run on an Android 4.4 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
+Application to be run on an Android 5 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
 
 Currently the Empatica E4 and Pebble 2 are supported. Also note that the application only runs on an ARM architecture.
 
