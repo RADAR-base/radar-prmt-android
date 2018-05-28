@@ -20,6 +20,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
+
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
@@ -115,6 +117,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void initializeViews() {
         mainActivity.setContentView(R.layout.compact_overview);
 
+
         mServerMessage = mainActivity.findViewById(R.id.statusServerMessage);
 
         mUserId = mainActivity.findViewById(R.id.inputUserId);
@@ -142,10 +145,12 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         if (!Objects.equals(userId, previousUserId)) {
             if (userId == null) {
                 mUserId.setVisibility(View.GONE);
+                Crashlytics.setUserIdentifier("");
             } else {
                 if (previousUserId == null) {
                     mUserId.setVisibility(View.VISIBLE);
                 }
+                Crashlytics.setUserIdentifier(userId);
                 mUserId.setText(mainActivity.getString(R.string.user_id_message, userId));
             }
             previousUserId = userId;

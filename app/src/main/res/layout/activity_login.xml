@@ -32,4 +32,10 @@
             android:onClick="scan"
             android:layout_marginBottom="78dp"/>
 
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="78dp"/>
+
 </LinearLayout>

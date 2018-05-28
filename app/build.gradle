@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
+apply plugin: 'com.google.gms.oss.licenses.plugin'
 
 android {
     compileSdkVersion 27
@@ -34,8 +35,8 @@ configurations.all {
 
 repositories {
     flatDir { dirs 'libs' }
-    jcenter()
     google()
+    jcenter()
     maven { url 'http://dl.bintray.com/radar-cns/org.radarcns' }
     maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
     maven { url  'https://repo.thehyve.nl/content/repositories/releases' }
@@ -45,7 +46,9 @@ dependencies {
     api 'org.radarcns:radar-commons-android:0.6.1-SNAPSHOT'
 
     implementation 'org.radarcns:radar-android-login-qr:0.6.1-SNAPSHOT'
+    implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation 'com.google.firebase:firebase-config:16.0.0'
+    implementation 'com.google.android.gms:play-services-oss-licenses:15.0.1'
 
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.3'
@@ -61,6 +64,7 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
     testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 }
 
 // Needed for Firebase. Put at the bottom so it can detect the Firebase version.

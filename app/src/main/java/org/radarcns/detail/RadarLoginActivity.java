@@ -25,9 +25,12 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,10 +42,13 @@ import org.radarcns.android.auth.LoginManager;
 import org.radarcns.android.auth.QrLoginManager;
 import org.radarcns.android.auth.portal.ManagementPortalLoginManager;
 import org.radarcns.android.util.Boast;
+import org.radarcns.android.util.NetworkConnectedReceiver;
+import org.radarcns.producer.AuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -50,13 +56,17 @@ import static org.radarcns.android.RadarConfiguration.PROJECT_ID_KEY;
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
 import static org.radarcns.android.RadarConfiguration.USER_ID_KEY;
 
-public class RadarLoginActivity extends LoginActivity {
+public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
 
     private QrLoginManager qrManager;
     private ManagementPortalLoginManager mpManager;
     private boolean canLogin;
     private ProgressDialog progressDialog;
+    private TextView messageBox;
+    private Button scanButton;
+    private NetworkConnectedReceiver networkReceiver;
+
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -72,6 +82,9 @@ public class RadarLoginActivity extends LoginActivity {
     protected void onCreate(Bundle savedBundleInstance) {
         super.onCreate(savedBundleInstance);
         setContentView(R.layout.activity_login);
+        messageBox = findViewById(R.id.messageText);
+        scanButton = findViewById(R.id.scanButton);
+        networkReceiver = new NetworkConnectedReceiver(this, this);
     }
 
     @Override
@@ -84,12 +97,14 @@ public class RadarLoginActivity extends LoginActivity {
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
+        networkReceiver.register();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(configBroadcastReceiver);
+        networkReceiver.unregister();
     }
 
     @NonNull
@@ -133,6 +148,18 @@ public class RadarLoginActivity extends LoginActivity {
         }
     }
 
+    @Override
+    public void onNetworkConnectionChanged(boolean isConnected, boolean isWifiOrEthernet) {
+        logger.info("Network change: {}", isConnected);
+        if (isConnected) {
+            scanButton.setEnabled(true);
+            messageBox.setText("");
+        } else {
+            scanButton.setEnabled(false);
+            messageBox.setText(R.string.no_connection);
+        }
+    }
+
     @NonNull
     @Override
     protected Class<? extends Activity> nextActivity() {
@@ -157,6 +184,12 @@ public class RadarLoginActivity extends LoginActivity {
                 int res;
                 if (ex instanceof QrException) {
                     res = R.string.login_failed_qr;
+                } else if (ex instanceof AuthenticationException) {
+                    res = R.string.login_failed_authentication;
+                } else if (ex instanceof FirebaseRemoteConfigException) {
+                    res = R.string.login_failed_firebase;
+                } else if (ex instanceof ConnectException) {
+                    res = R.string.login_failed_connection;
                 } else if (ex instanceof IOException) {
                     res = R.string.login_failed_mp;
                 } else {

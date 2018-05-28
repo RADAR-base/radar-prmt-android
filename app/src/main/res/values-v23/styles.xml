@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Toolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">58dp</item>
+        <item name="android:background">@android:color/background_dark</item>
+        <item name="android:minHeight">58dp</item>
+        <item name="android:titleTextColor">#ffffff</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:color">#ffffff</item>
+    </style>
+</resources>
