@@ -99,3 +99,5 @@ modules.xml
 
 ## Pebble 2
 .lock*
+
+releases/

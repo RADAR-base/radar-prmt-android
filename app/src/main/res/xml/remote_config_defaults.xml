@@ -39,7 +39,7 @@
     </entry>
     <entry>
         <key>device_services_to_connect</key>
-        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .empatica.E4ServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneLogProvider .phone.PhoneUsageProvider</value>
+        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .empatica.E4ServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneLogProvider .phone.PhoneUsageProvider .passive.bittium.FarosProvider</value>
     </entry>
     <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
