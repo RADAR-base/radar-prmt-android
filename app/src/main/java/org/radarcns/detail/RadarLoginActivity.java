@@ -22,6 +22,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
@@ -55,6 +56,7 @@ import java.util.List;
 import static org.radarcns.android.RadarConfiguration.PROJECT_ID_KEY;
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
 import static org.radarcns.android.RadarConfiguration.USER_ID_KEY;
+import static org.radarcns.detail.DetailInfoActivity.PRIVACY_POLICY;
 
 public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
@@ -66,6 +68,8 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     private TextView messageBox;
     private Button scanButton;
     private NetworkConnectedReceiver networkReceiver;
+    private String policyUrl = null;
+    private TextView policyLink;
 
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -75,6 +79,7 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
                 mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
             }
             mpManager.refresh();
+            updatePrivacyStatement(true);
         }
     };
 
@@ -85,6 +90,7 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         messageBox = findViewById(R.id.messageText);
         scanButton = findViewById(R.id.scanButton);
         networkReceiver = new NetworkConnectedReceiver(this, this);
+        policyLink = findViewById(R.id.loginPrivacyStatement);
     }
 
     @Override
@@ -95,9 +101,46 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         } else if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
             mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
         }
+        updatePrivacyStatement(false);
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
         networkReceiver.register();
+    }
+
+    private void updatePrivacyStatement(boolean runInUiThread) {
+        final String newPolicyUrl = RadarConfiguration.getInstance().getString(PRIVACY_POLICY, null);
+        synchronized (this) {
+            policyUrl = newPolicyUrl;
+        }
+        logger.info("Setting privacy policy {}", newPolicyUrl);
+        if (runInUiThread) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (newPolicyUrl == null) {
+                        policyLink.setVisibility(View.INVISIBLE);
+                    } else {
+                        policyLink.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+        } else {
+            if (newPolicyUrl == null) {
+                policyLink.setVisibility(View.INVISIBLE);
+            } else {
+                policyLink.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    public void openPrivacyPolicy(View view) {
+        String localPolicyUrl;
+        synchronized (this) {
+            localPolicyUrl = policyUrl;
+        }
+        if (localPolicyUrl != null) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(localPolicyUrl)));
+        }
     }
 
     @Override
