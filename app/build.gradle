@@ -43,9 +43,9 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.6.1-SNAPSHOT'
+    api 'org.radarcns:radar-commons-android:0.6.1'
 
-    implementation 'org.radarcns:radar-android-login-qr:0.6.1-SNAPSHOT'
+    implementation 'org.radarcns:radar-android-login-qr:0.6.1'
     implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation 'com.google.firebase:firebase-config:16.0.0'
     implementation 'com.google.android.gms:play-services-oss-licenses:15.0.1'
