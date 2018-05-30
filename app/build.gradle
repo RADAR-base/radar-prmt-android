@@ -59,12 +59,12 @@ dependencies {
     runtimeOnly 'org.radarcns:radar-android-weather:0.1'
     runtimeOnly 'org.radarcns:radar-android-faros:0.1.0-alpha.2'
 
-    api 'com.android.support:support-v4:27.1.1'
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 
     testImplementation 'junit:junit:4.12'
     testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
 }
 
 // Needed for Firebase. Put at the bottom so it can detect the Firebase version.

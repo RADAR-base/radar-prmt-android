@@ -77,4 +77,10 @@
     <string name="login_failed_mp">Login failed. Please try again later.</string>
     <string name="no_connection">No internet connection available. Please make sure wifi and/or cellphone data is turned on.</string>
     <string name="info">Info</string>
+    <string name="radar_prmt_title">RADAR pRMT</string>
+    <string name="licences_button">Used code licences</string>
+    <string name="privacy_policy"><u>Privacy Policy</u></string>
+    <string name="app_description">%1$s version %2$s</string>
+    <string name="app_name_head">App name</string>
+    <string name="version">Version</string>
 </resources>

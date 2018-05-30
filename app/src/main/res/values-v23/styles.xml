@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Toolbar">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">58dp</item>
-        <item name="android:background">@android:color/background_dark</item>
-        <item name="android:minHeight">58dp</item>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- colorPrimary is used for coloring the Toolbar -->
+        <item name="colorPrimary">#3F51B5</item>
+        <!-- colorPrimaryDark is used for coloring the status bar -->
+        <item name="colorPrimaryDark">#303F9F</item>
+        <!-- colorAccent is used as the default value for colorControlActivated
+             which is used to tint widgets -->
+        <item name="colorAccent">#FFAB40</item>
+    </style>
+
+    <style name="toolbar">
         <item name="android:titleTextColor">#ffffff</item>
         <item name="android:elevation">4dp</item>
         <item name="android:color">#ffffff</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textColorPrimary">#ffffff</item>
     </style>
 </resources>

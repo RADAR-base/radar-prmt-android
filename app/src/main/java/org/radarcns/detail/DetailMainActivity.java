@@ -19,8 +19,6 @@ package org.radarcns.detail;
 import android.content.Intent;
 import android.view.View;
 
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
-
 import org.radarcns.android.IRadarService;
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
@@ -46,7 +44,7 @@ public class DetailMainActivity extends MainActivity {
     }
 
     public void showInfo(View view) {
-        startActivity(new Intent(this, OssLicensesMenuActivity.class));
+        startActivity(new Intent(this, DetailInfoActivity.class));
     }
 
     @Override

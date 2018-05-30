@@ -16,6 +16,7 @@
 
 package org.radarcns.detail;
 
+import android.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -117,6 +118,10 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void initializeViews() {
         mainActivity.setContentView(R.layout.compact_overview);
 
+        Toolbar toolbar = mainActivity.findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.radar_prmt_title);
+
+        mainActivity.setActionBar(toolbar);
 
         mServerMessage = mainActivity.findViewById(R.id.statusServerMessage);
 

@@ -2,8 +2,6 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="windowActionBar">false</item>
         <!-- colorPrimary is used for coloring the Toolbar -->
         <item name="colorPrimary">#3F51B5</item>
         <!-- colorPrimaryDark is used for coloring the status bar -->
@@ -12,6 +10,9 @@
              which is used to tint widgets -->
         <item name="colorAccent">#FFAB40</item>
     </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <!--Overview Activity table styles-->
     <style name="DefaultColumn">
@@ -130,12 +131,10 @@
         <item name="android:background">#ff0000</item>
     </style>
 
-    <style name="Toolbar">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">58dp</item>
-        <item name="android:background">@android:color/background_dark</item>
-        <item name="android:minHeight">58dp</item>
+    <style name="toolbar">
         <item name="android:elevation">4dp</item>
         <item name="android:color">#ffffff</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:textColorPrimary">#ffffff</item>
     </style>
 </resources>

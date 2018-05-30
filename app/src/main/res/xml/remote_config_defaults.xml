@@ -74,5 +74,9 @@
         <key>oauth2_redirect_url</key>
         <value>org.radarcns.detail://oauth2/redirect</value>
     </entry>
+    <entry>
+        <key>privacy_policy</key>
+        <value>http://info.thehyve.nl/radar-cns-privacy-policy</value>
+    </entry>
 </defaultsMap>
 <!-- END xml_defaults -->

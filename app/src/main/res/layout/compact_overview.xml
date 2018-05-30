@@ -1,127 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/constraintLayout"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DetailMainActivity">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        app:title="RADAR pRMT"
-        app:layout_constraintTop_toTopOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        style="@style/Toolbar">
-        <ImageButton
-            android:id="@+id/infoButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@color/zxing_transparent"
-            android:src="@android:drawable/ic_dialog_info"
-            android:onClick="showInfo"
-            android:contentDescription="@string/info"
-            android:gravity="end"/>
-    </android.support.v7.widget.Toolbar>
-
-    <TextView
-        android:id="@+id/patient_header"
-        style="@style/MyListSeparator"
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/info_header"
+                style="@style/MyListSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/patient_separator"
+                app:layout_constraintTop_toTopOf="@id/constraintLayout"
+                app:layout_constraintBottom_toTopOf="@id/info_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"/>
+
+            <View
+                android:id="@+id/info_divider"
+                style="@style/DividerLine"
+                android:layout_marginTop="4dp"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/info_header"
+                app:layout_constraintBottom_toTopOf="@id/person_icon"/>
+
+            <View
+                android:id="@+id/person_icon"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/ic_person"
+                app:layout_constraintTop_toBottomOf="@id/info_divider"
+                app:layout_constraintLeft_toLeftOf="@id/constraintLayout"
+                app:layout_constraintBottom_toBottomOf="@id/inputProjectId"
+                app:layout_constraintDimensionRatio="H,1:1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/person_icon"
+                app:layout_constraintTop_toTopOf="@id/person_icon"
+                app:layout_constraintBottom_toTopOf="@id/inputProjectId"
+                android:layout_marginStart="20dp"
+                android:id="@+id/inputUserId"
+                android:textSize="16sp"
+                android:textAlignment="textStart"
+                android:text="@string/user_id_message"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="@id/inputUserId"
+                app:layout_constraintTop_toBottomOf="@id/inputUserId"
+                android:layout_marginTop="4dp"
+                android:id="@+id/inputProjectId"
+                android:textSize="16sp"
+                android:textAlignment="textStart"
+                android:text="@string/study_id_message"/>
+
+            <TextView
+                android:id="@+id/devices_header"
+                style="@style/MyListSeparator"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/inputProjectId"
+                app:layout_constraintBottom_toTopOf="@id/devices_divider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/devices_separator"/>
+            <View
+                style="@style/DividerLine"
+                android:id="@+id/devices_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/devices_header"
+                app:layout_constraintBottom_toTopOf="@id/deviceTable"/>
+
+            <TableLayout
+                app:layout_constraintTop_toBottomOf="@id/devices_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                android:id="@+id/deviceTable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stretchColumns="*"
+                tools:layout_editor_absoluteX="27dp"
+                tools:layout_editor_absoluteY="0dp"/>
+
+            <TextView
+                android:id="@+id/sync_header"
+                style="@style/MyListSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sync_separator"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/deviceTable"
+                app:layout_constraintBottom_toTopOf="@id/sync_divider"/>
+
+            <View
+                style="@style/DividerLine"
+                android:id="@+id/sync_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/sync_header"
+                app:layout_constraintBottom_toTopOf="@id/statusServerMessage"/>
+
+            <TextView
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/sync_divider"
+                android:id="@+id/statusServerMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/sync_default" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.v4.widget.NestedScrollView>
+
+    <android.support.design.widget.AppBarLayout
         android:layout_height="wrap_content"
-        android:text="@string/patient_separator"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintBottom_toTopOf="@id/inputProjectId"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"/>
+        android:layout_width="match_parent">
 
-    <View
-        android:id="@+id/patient_divider"
-        style="@style/DividerLine"
-        android:layout_marginTop="4dp"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/patient_header" />
+        <Toolbar
+            android:id="@+id/toolbar"
+            app:title="RADAR pRMT"
+            app:layout_constraintTop_toTopOf="@id/constraintLayout"
+            app:layout_constraintStart_toStartOf="@id/constraintLayout"
+            android:background="?attr/colorPrimary"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:theme="@style/AppTheme.AppBarOverlay"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:layout_scrollFlags="scroll|enterAlways">
 
-    <View
-        android:id="@+id/person_icon"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginStart="10dp"
-        android:background="@drawable/ic_person"
-        app:layout_constraintTop_toBottomOf="@id/patient_divider"
-        app:layout_constraintLeft_toLeftOf="@id/constraintLayout"
-        app:layout_constraintBottom_toBottomOf="@id/inputProjectId"
-        app:layout_constraintDimensionRatio="H,1:1"/>
+            <ImageButton
+                android:id="@+id/infoButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@color/zxing_transparent"
+                android:contentDescription="@string/info"
+                android:onClick="showInfo"
+                android:src="@android:drawable/ic_dialog_info" />
+        </Toolbar>
+    </android.support.design.widget.AppBarLayout>
+</android.support.design.widget.CoordinatorLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@id/person_icon"
-        app:layout_constraintTop_toTopOf="@id/person_icon"
-        android:layout_marginStart="20dp"
-        android:id="@+id/inputUserId"
-        android:textSize="16sp"
-        android:textAlignment="textStart"
-        android:text="@string/user_id_message"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="@id/inputUserId"
-        app:layout_constraintTop_toBottomOf="@id/inputUserId"
-        android:layout_marginTop="4dp"
-        android:id="@+id/inputProjectId"
-        android:textSize="16sp"
-        android:textAlignment="textStart"
-        android:text="@string/study_id_message"/>
-
-    <TextView
-        android:id="@+id/devices_header"
-        style="@style/MyListSeparator"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/inputProjectId"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/devices_separator"/>
-    <View
-        style="@style/DividerLine"
-        android:id="@+id/devices_divider"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/devices_header"/>
-
-    <TableLayout
-        app:layout_constraintTop_toBottomOf="@id/devices_divider"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        android:id="@+id/deviceTable"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:stretchColumns="*"
-        tools:layout_editor_absoluteX="27dp"
-        tools:layout_editor_absoluteY="0dp"/>
-
-    <TextView
-        android:id="@+id/sync_header"
-        style="@style/MyListSeparator"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/sync_separator"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/deviceTable"/>
-
-    <View
-        style="@style/DividerLine"
-        android:id="@+id/sync_divider"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/sync_header"/>
-
-    <TextView
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-        android:id="@+id/statusServerMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:text="@string/sync_default" />
-
-</android.support.constraint.ConstraintLayout>
