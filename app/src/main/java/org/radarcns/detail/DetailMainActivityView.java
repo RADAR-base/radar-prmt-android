@@ -16,9 +16,12 @@
 
 package org.radarcns.detail;
 
+import android.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.crashlytics.android.Crashlytics;
 
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
@@ -115,6 +118,11 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
     private void initializeViews() {
         mainActivity.setContentView(R.layout.compact_overview);
 
+        Toolbar toolbar = mainActivity.findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.radar_prmt_title);
+
+        mainActivity.setActionBar(toolbar);
+
         mServerMessage = mainActivity.findViewById(R.id.statusServerMessage);
 
         mUserId = mainActivity.findViewById(R.id.inputUserId);
@@ -142,10 +150,12 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         if (!Objects.equals(userId, previousUserId)) {
             if (userId == null) {
                 mUserId.setVisibility(View.GONE);
+                Crashlytics.setUserIdentifier("");
             } else {
                 if (previousUserId == null) {
                     mUserId.setVisibility(View.VISIBLE);
                 }
+                Crashlytics.setUserIdentifier(userId);
                 mUserId.setText(mainActivity.getString(R.string.user_id_message, userId));
             }
             previousUserId = userId;

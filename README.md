@@ -1,6 +1,6 @@
 # RADAR-pRMT
 
-Application to be run on an Android 4.4 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
+Application to be run on an Android 5 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
 
 Currently the Empatica E4 and Pebble 2 are supported. Also note that the application only runs on an ARM architecture.
 
@@ -9,7 +9,7 @@ Currently the Empatica E4 and Pebble 2 are supported. Also note that the applica
 To clone this respository, use the command
 
 ```shell
-git clone --recursive https://github.com/RADAR-CNS/RADAR-AndroidApplication.git
+git clone --recursive https://github.com/RADAR-base/RADAR-AndroidApplication.git
 ```
 
 If the repository is already cloned, go to the source directory and run
@@ -29,12 +29,11 @@ Copy the `src/main/res/xml/remote_config_defaults_TEMPLATE.xml` from the [RADAR-
 
 This application depends on plugins to collect information. The application currently supports plugins the following plugins:
 
-- [Application status](https://github.com/RADAR-CNS/RADAR-Android-Application-Status.git)
-- [Android Phone telemetry](https://github.com/RADAR-CNS/RADAR-Android-Phone.git)
-- [Audio](https://github.com/RADAR-CNS/RADAR-Android-Audio.git)
-- [Empatica E4](https://github.com/RADAR-CNS/RADAR-Android-Empatica.git)
-- [Pebble](https://github.com/RADAR-CNS/RADAR-Android-Pebble.git)
-- [Biovotion](https://github.com/RADAR-CNS/RADAR-Android-Biovotion.git)
+- [Application status](https://github.com/RADAR-base/RADAR-Android-Application-Status.git)
+- [Android Phone telemetry](https://github.com/RADAR-base/RADAR-Android-Phone.git)
+- [Empatica E4](https://github.com/RADAR-base/RADAR-Android-Empatica.git)
+- [Weather](https://github.com/RADAR-base/RADAR-Android-Weather.git)
+- [Bittium Faros](https://github.com/RADAR-base/RADAR-Android-faros.git)
 
 See the link to each plugin for its installation instructions. In general, a dependency needs to be added in build.gradle, and a service needs to be aded in the `device_services_to_connect` property in `app/src/main/res/xml/remote_config_defaults.xml`.
 
@@ -55,7 +54,7 @@ Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with 
 
 To add additional plugins to this application, make the following steps (see the [Pebble plugin](https://github.com/RADAR/RADAR-Android-Pebble.git) as an example):
 
-- Add the schemas of the data you intend to send to the [RADAR-CNS Schemas repository](https://github.com/RADAR-CNS/RADAR-Schemas). Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
+- Add the schemas of the data you intend to send to the [RADAR-base Schemas repository](https://github.com/RADAR-base/RADAR-Schemas). Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
 - Create a new package `org.radarcns.mydevicetype`. In that package, create classes that:
   - implement `org.radarcns.android.device.DeviceManager` to connect to a device and collect its data.
   - implement `org.radarcns.android.DeviceState` to keep the current state of the device.
@@ -69,4 +68,4 @@ This plugin can remain a separate github repository, but it should be published 
 
 ## Android Installation
 
-The guide for installing Android on Raspberry Pi3 and UDOO boards is available [here](https://github.com/RADAR-CNS/RADAR-AndroidApplication/wiki)
+The guide for installing Android on Raspberry Pi3 and UDOO boards is available [here](https://github.com/RADAR-base/RADAR-AndroidApplication/wiki)

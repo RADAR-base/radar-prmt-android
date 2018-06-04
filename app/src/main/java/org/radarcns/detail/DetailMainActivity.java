@@ -16,7 +16,9 @@
 
 package org.radarcns.detail;
 
+import android.content.Intent;
 import android.view.View;
+
 import org.radarcns.android.IRadarService;
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
@@ -33,18 +35,16 @@ public class DetailMainActivity extends MainActivity {
         return new DetailMainActivityView(this);
     }
 
-    @Override
-    protected void onConfigChanged() {
-        super.onConfigChanged();
-        
-    }
-
     public void logout(View view) {
         IRadarService radarService = getRadarService();
         if (radarService != null) {
             radarService.getAuthState().invalidate(this);
         }
         startLogin(false);
+    }
+
+    public void showInfo(View view) {
+        startActivity(new Intent(this, DetailInfoActivity.class));
     }
 
     @Override

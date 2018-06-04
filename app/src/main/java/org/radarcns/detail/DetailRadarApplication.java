@@ -41,7 +41,7 @@ public class DetailRadarApplication extends RadarApplication {
     public void onCreate() {
         super.onCreate();
 
-        final Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
+        final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
@@ -56,8 +56,8 @@ public class DetailRadarApplication extends RadarApplication {
                 if (mgr != null) {
                     mgr.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, pendingIntent);
                 }
-                if (handler != null) {
-                    handler.uncaughtException(thread, throwable);
+                if (defaultHandler != null) {
+                    defaultHandler.uncaughtException(thread, throwable);
                 }
                 System.exit(2);
             }
