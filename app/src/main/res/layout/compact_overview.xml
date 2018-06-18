@@ -159,7 +159,7 @@
                 android:background="@color/zxing_transparent"
                 android:contentDescription="@string/info"
                 android:onClick="showInfo"
-                android:src="@android:drawable/ic_dialog_info" />
+                android:src="@drawable/ic_info_black" />
         </Toolbar>
     </android.support.design.widget.AppBarLayout>
 </android.support.design.widget.CoordinatorLayout>
