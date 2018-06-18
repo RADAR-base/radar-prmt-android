@@ -142,6 +142,16 @@
             app:layout_scrollFlags="scroll|enterAlways">
 
             <ImageButton
+                android:id="@+id/settingsButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@color/zxing_transparent"
+                android:contentDescription="@string/info"
+                android:onClick="showSettings"
+                android:src="@drawable/ic_settings_white" />
+
+            <ImageButton
                 android:id="@+id/infoButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"

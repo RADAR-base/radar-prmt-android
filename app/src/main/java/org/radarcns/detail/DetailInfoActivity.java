@@ -1,5 +1,6 @@
 package org.radarcns.detail;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -36,8 +37,9 @@ public class DetailInfoActivity extends Activity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.info);
         setActionBar(toolbar);
-        Objects.requireNonNull(getActionBar()).setDisplayShowHomeEnabled(true);
-        Objects.requireNonNull(getActionBar()).setDisplayHomeAsUpEnabled(true);
+        ActionBar actionBar = Objects.requireNonNull(getActionBar());
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true);
     }
 
     public void showLicenses(View view) {
