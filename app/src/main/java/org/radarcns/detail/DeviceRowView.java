@@ -18,7 +18,6 @@ package org.radarcns.detail;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -95,26 +94,15 @@ public class DeviceRowView {
         Button mDeviceInput = row.findViewById(R.id.inputDeviceButton);
 
         if (provider.isFilterable()) {
-            mDeviceInput.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dialogDeviceName();
-                }
-            });
-//            mDeviceInput.setVisibility(View.VISIBLE);
-            mDeviceInput.setEnabled(true);
+            mDeviceInput.setOnClickListener(v -> dialogDeviceName());
+             mDeviceInput.setEnabled(true);
         }
 
         mDeviceInput.setText(provider.getDisplayName());
 
         filter = "";
         setFilter(devicePreferences.getString("filter", ""));
-        row.findViewById(R.id.refreshButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                reconnectDevice();
-            }
-        });
+        row.findViewById(R.id.refreshButton).setOnClickListener(v -> reconnectDevice());
     }
 
     private void dialogDeviceName() {
@@ -139,18 +127,8 @@ public class DeviceRowView {
 
         // Set up the buttons
         input.setText(filter);
-        builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                setFilter(input.getText().toString().trim());
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
+        builder.setPositiveButton(R.string.ok, (dialog, which) -> setFilter(input.getText().toString().trim()));
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
 
         builder.show();
     }
