@@ -51,4 +51,8 @@ public class DetailMainActivity extends MainActivity {
     protected Class<? extends RadarService> radarService() {
         return DetailRadarService.class;
     }
+
+    public void showSettings(View view) {
+        startActivity(new Intent(this, DetailSettingsActivity.class));
+    }
 }

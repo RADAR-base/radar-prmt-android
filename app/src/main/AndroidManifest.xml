@@ -48,7 +48,9 @@
 
         <activity android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
+
         <activity android:name=".DetailInfoActivity" />
+        <activity android:name=".DetailSettingsActivity" />
 
         <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
      App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->

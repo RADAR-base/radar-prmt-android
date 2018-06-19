@@ -16,15 +16,14 @@
 
 package org.radarcns.detail;
 
-import android.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.crashlytics.android.Crashlytics;
 
 import org.radarcns.android.MainActivityView;
-import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.data.TimedInt;
 
@@ -34,8 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import static org.radarcns.android.RadarConfiguration.CONDENSED_DISPLAY_KEY;
 
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
@@ -73,10 +70,9 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
                 root.removeView(root.getChildAt(1));
             }
             rows.clear();
-            boolean condensed = RadarConfiguration.getInstance().getBoolean(CONDENSED_DISPLAY_KEY, true);
             for (DeviceServiceProvider provider : mainActivity.getRadarService().getConnections()) {
                 if (provider.isDisplayable()) {
-                    rows.add(new DeviceRowView(mainActivity, provider, root, condensed));
+                    rows.add(new DeviceRowView(mainActivity, provider, root));
                 }
             }
             savedConnections = mainActivity.getRadarService().getConnections();

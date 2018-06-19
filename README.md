@@ -1,29 +1,23 @@
 # RADAR-pRMT
 
-Application to be run on an Android 5 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices. The app is cloned from the [Empatica sample app][2].
-
-Currently the Empatica E4 and Pebble 2 are supported. Also note that the application only runs on an ARM architecture.
+Application to be run on an Android 5 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices.
 
 ![Screenshot](/man/screen20161215_edited.png?raw=True "Screenshot 2016-12-15")
 
 To clone this respository, use the command
 
 ```shell
-git clone --recursive https://github.com/RADAR-base/RADAR-AndroidApplication.git
-```
-
-If the repository is already cloned, go to the source directory and run
-
-```shell
-git submodule update --init --recursive
+git clone https://github.com/RADAR-base/radar-prmt-android.git
 ```
 
 ## Building
 
-Copy the `src/main/res/xml/remote_config_defaults_TEMPLATE.xml` from the [RADAR-Commons repository](https://github.com/RADAR/RADAR-Commons.git) to `app/src/main/res/xml/remote_config_defaults.xml`. These are the configuration defaults for the app.
+Modify`app/src/main/res/xml/remote_config_defaults.xml`. These are the configuration defaults for the app.
 
 - Set the `kafka_rest_proxy_url` and the `schema_registry_url`. If the app should not upload any data, leave them blank.
 - Set the `device_group_id` string to a suitable user ID.
+
+Get other possible parameters from the README of [radar-commons-android](https://github.com/RADAR-base/radar-commons-android) and those from the plugins below.
 
 ### Plugins
 
@@ -45,7 +39,7 @@ Firebase can be used to remotely configure some device and system parameters, e.
 2. Login to a Google account.
 3. In the [Firebase console](https://console.firebase.google.com/), add the app (`org.radarcns.android`) to a new Firebase project.
 4. Download the `google-services.json` from the Firebase console (under Project Settings) and move the file to the `common-android/` folder. 
-5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults_TEMPLATE.xml`. 
+5. [Optional] Set the parameter values on the server. The avaiable parameters can be found in `app/src/main/res/xml/remote_config_defaults.xml`. 
 Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with kafka and schema-registry is using a self-signed certificate over SSL. If the certificate is issued by a valid CA then leave it to `false`. In production, do NOT set this value to `true`.
 
 [Full Firebase guide](https://firebase.google.com/docs/remote-config/use-config-android)

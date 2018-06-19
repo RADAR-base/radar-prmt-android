@@ -9,8 +9,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 13
-        versionName "0.2.11"
+        versionCode 14
+        versionName "0.2.12"
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -27,9 +27,14 @@ android {
         exclude 'META-INF/ASL2.0'
         exclude 'META-INF/LICENSE'
     }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 configurations.all {
+    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
@@ -43,9 +48,9 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.6.1'
+    api 'org.radarcns:radar-commons-android:0.6.2'
 
-    implementation 'org.radarcns:radar-android-login-qr:0.6.1'
+    implementation 'org.radarcns:radar-android-login-qr:0.6.2'
     implementation 'com.google.firebase:firebase-core:16.0.0'
     implementation 'com.google.firebase:firebase-config:16.0.0'
     implementation 'com.google.android.gms:play-services-oss-licenses:15.0.1'
@@ -61,7 +66,7 @@ dependencies {
 
     implementation 'com.android.support:support-v4:27.1.1'
     implementation 'com.android.support:design:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
 
     testImplementation 'junit:junit:4.12'
     testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'

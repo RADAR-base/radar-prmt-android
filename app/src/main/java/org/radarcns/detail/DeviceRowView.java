@@ -79,7 +79,7 @@ public class DeviceRowView {
     private String previousName;
     private DeviceStatusListener.Status previousStatus = null;
 
-    DeviceRowView(MainActivity mainActivity, DeviceServiceProvider provider, ViewGroup root, boolean condensedDisplay) {
+    DeviceRowView(MainActivity mainActivity, DeviceServiceProvider provider, ViewGroup root) {
         this.mainActivity = mainActivity;
         this.connection = provider.getConnection();
         devicePreferences = this.mainActivity.getSharedPreferences("device." + connection.getServiceClassName(), Context.MODE_PRIVATE);
