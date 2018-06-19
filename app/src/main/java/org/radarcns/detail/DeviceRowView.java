@@ -262,8 +262,8 @@ public class DeviceRowView {
         }
         previousName = deviceName;
         // Restrict length of name that is shown.
-        if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH - 3) {
-            deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH) + "...";
+        if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH) {
+            deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH - 3) + "...";
         }
 
         // \u2014 == —
