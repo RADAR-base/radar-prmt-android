@@ -36,6 +36,7 @@ import java.util.Objects;
 
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+    private static final int MAX_USERNAME_LENGTH = 20;
 
     private final DetailMainActivity mainActivity;
     private final List<DeviceRowView> rows = new ArrayList<>();
@@ -152,7 +153,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
                     mUserId.setVisibility(View.VISIBLE);
                 }
                 Crashlytics.setUserIdentifier(userId);
-                mUserId.setText(mainActivity.getString(R.string.user_id_message, userId));
+                mUserId.setText(mainActivity.getString(R.string.user_id_message, truncate(userId, MAX_USERNAME_LENGTH)));
             }
             previousUserId = userId;
         }
@@ -163,9 +164,17 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
                 if (previousProjectId == null) {
                     mProjectId.setVisibility(View.VISIBLE);
                 }
-                mProjectId.setText(mainActivity.getString(R.string.study_id_message, projectId));
+                mProjectId.setText(mainActivity.getString(R.string.study_id_message, truncate(projectId, MAX_USERNAME_LENGTH)));
             }
             previousProjectId = projectId;
+        }
+    }
+
+    static String truncate(String orig, int maxLength) {
+        if (orig.length() > maxLength) {
+            return orig.substring(0, maxLength - 3) + "...";
+        } else {
+            return orig;
         }
     }
 }

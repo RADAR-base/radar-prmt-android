@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.radarcns.detail.DetailMainActivityView.truncate;
+
 /**
  * Displays a single device row.
  */
@@ -239,12 +241,8 @@ public class DeviceRowView {
             return;
         }
         previousName = deviceName;
-        // Restrict length of name that is shown.
-        if (deviceName != null && deviceName.length() > MAX_UI_DEVICE_NAME_LENGTH) {
-            deviceName = deviceName.substring(0, MAX_UI_DEVICE_NAME_LENGTH - 3) + "...";
-        }
 
         // \u2014 == —
-        mDeviceNameLabel.setText(deviceName == null ? "\u2014" : deviceName);
+        mDeviceNameLabel.setText(deviceName == null ? "\u2014" : truncate(deviceName, MAX_UI_DEVICE_NAME_LENGTH));
     }
 }
