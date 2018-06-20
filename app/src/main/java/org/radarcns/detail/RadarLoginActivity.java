@@ -37,7 +37,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.auth.AppAuthState;
-import org.radarcns.android.auth.AuthStringParser;
 import org.radarcns.android.auth.LoginActivity;
 import org.radarcns.android.auth.LoginManager;
 import org.radarcns.android.auth.QrLoginManager;
@@ -114,14 +113,11 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         }
         logger.info("Setting privacy policy {}", newPolicyUrl);
         if (runInUiThread) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (newPolicyUrl == null) {
-                        policyLink.setVisibility(View.INVISIBLE);
-                    } else {
-                        policyLink.setVisibility(View.VISIBLE);
-                    }
+            runOnUiThread(() -> {
+                if (newPolicyUrl == null) {
+                    policyLink.setVisibility(View.INVISIBLE);
+                } else {
+                    policyLink.setVisibility(View.VISIBLE);
                 }
             });
         } else {
@@ -155,22 +151,19 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
         logger.info("Creating mpManager");
         this.mpManager = new ManagementPortalLoginManager(this, state);
-        this.qrManager = new QrLoginManager(this, new AuthStringParser() {
-            @Override
-            public AppAuthState parse(@NonNull String s) {
-                onProcessing(R.string.logging_in);
-                logger.info("Read token: {}", s);
-                try {
-                    JSONObject object = new JSONObject(s);
-                    if (!object.has("refreshToken")) {
-                        throw new QrException("Please scan the correct QR code.");
-                    }
-                    String refreshToken = object.getString("refreshToken");
-                    mpManager.setRefreshToken(refreshToken);
-                    return mpManager.refresh();
-                } catch (JSONException e) {
-                    throw new QrException("Please scan your QR code again.", e);
+        this.qrManager = new QrLoginManager(this, s -> {
+            onProcessing(R.string.logging_in);
+            logger.info("Read token: {}", s);
+            try {
+                JSONObject object = new JSONObject(s);
+                if (!object.has("refreshToken")) {
+                    throw new QrException("Please scan the correct QR code.");
                 }
+                String refreshToken = object.getString("refreshToken");
+                mpManager.setRefreshToken(refreshToken);
+                return mpManager.refresh();
+            } catch (JSONException e) {
+                throw new QrException("Please scan your QR code again.", e);
             }
         });
         return Arrays.asList(this.qrManager, this.mpManager);
@@ -221,25 +214,22 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         canLogin = true;
         onDoneProcessing();
         logger.error("Failed to log in with {}", manager, ex);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                int res;
-                if (ex instanceof QrException) {
-                    res = R.string.login_failed_qr;
-                } else if (ex instanceof AuthenticationException) {
-                    res = R.string.login_failed_authentication;
-                } else if (ex instanceof FirebaseRemoteConfigException) {
-                    res = R.string.login_failed_firebase;
-                } else if (ex instanceof ConnectException) {
-                    res = R.string.login_failed_connection;
-                } else if (ex instanceof IOException) {
-                    res = R.string.login_failed_mp;
-                } else {
-                    res = R.string.login_failed;
-                }
-                Boast.makeText(RadarLoginActivity.this, res, Toast.LENGTH_LONG).show();
+        runOnUiThread(() -> {
+            int res;
+            if (ex instanceof QrException) {
+                res = R.string.login_failed_qr;
+            } else if (ex instanceof AuthenticationException) {
+                res = R.string.login_failed_authentication;
+            } else if (ex instanceof FirebaseRemoteConfigException) {
+                res = R.string.login_failed_firebase;
+            } else if (ex instanceof ConnectException) {
+                res = R.string.login_failed_connection;
+            } else if (ex instanceof IOException) {
+                res = R.string.login_failed_mp;
+            } else {
+                res = R.string.login_failed;
             }
+            Boast.makeText(RadarLoginActivity.this, res, Toast.LENGTH_LONG).show();
         });
     }
 
