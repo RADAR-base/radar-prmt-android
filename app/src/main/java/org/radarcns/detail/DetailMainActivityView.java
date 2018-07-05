@@ -172,7 +172,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
     static String truncate(String orig, int maxLength) {
         if (orig.length() > maxLength) {
-            return orig.substring(0, maxLength - 3) + "...";
+            return orig.substring(0, maxLength - 3) + "\u2026";
         } else {
             return orig;
         }
