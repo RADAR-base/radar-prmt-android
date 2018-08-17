@@ -49,6 +49,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
@@ -69,6 +72,7 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     private NetworkConnectedReceiver networkReceiver;
     private String policyUrl = null;
     private TextView policyLink;
+    private List<String> VALID_PROTOCOLS = Arrays.asList("http", "https");
 
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -153,16 +157,23 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         this.mpManager = new ManagementPortalLoginManager(this, state);
         this.qrManager = new QrLoginManager(this, s -> {
             onProcessing(R.string.logging_in);
-            logger.info("Read token: {}", s);
+            logger.info("Read tokenUrl: {}", s);
+
+            if (s.isEmpty()) {
+                throw new QrException("Please scan the correct QR code.");
+            }
+
             try {
-                JSONObject object = new JSONObject(s);
-                if (!object.has("refreshToken")) {
-                    throw new QrException("Please scan the correct QR code.");
+                // validate scanned url
+                URL tokenUrl = URI.create(s).toURL();
+                if (VALID_PROTOCOLS.contains(tokenUrl.getProtocol())) {
+                    mpManager.setTokenFromUrl(s);
+                    return mpManager.refresh();
+                } else {
+                    throw new QrException("Unsupported protocol");
                 }
-                String refreshToken = object.getString("refreshToken");
-                mpManager.setRefreshToken(refreshToken);
-                return mpManager.refresh();
-            } catch (JSONException e) {
+
+            } catch (MalformedURLException e) {
                 throw new QrException("Please scan your QR code again.", e);
             }
         });
