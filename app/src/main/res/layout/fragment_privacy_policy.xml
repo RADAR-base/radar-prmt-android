@@ -1,0 +1,32 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.radarcns.detail.PrivacyPolicyFragment"
+    >
+
+    <RelativeLayout android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/privacyPolicyFragmentLayout">
+
+        <TextView
+            android:id="@+id/loginPrivacyStatement"
+            android:text="@string/privacy_policy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:onClick="openPrivacyPolicy"/>
+
+        <Button android:id="@+id/accept_privacy_policy_button"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/loginPrivacyStatement"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="5dp"
+            android:text="Accept"
+            android:onClick="acceptPrivacyPolicy">
+        </Button>
+    </RelativeLayout>
+</FrameLayout>
