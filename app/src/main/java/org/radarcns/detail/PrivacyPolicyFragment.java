@@ -17,13 +17,19 @@ import org.radarcns.android.auth.AppAuthState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.radarcns.android.auth.portal.ManagementPortalClient.BASE_URL_PROPERTY;
 import static org.radarcns.detail.DetailInfoActivity.PRIVACY_POLICY;
+import static org.radarcns.detail.DetailMainActivityView.MAX_USERNAME_LENGTH;
+import static org.radarcns.detail.DetailMainActivityView.truncate;
 
 public class PrivacyPolicyFragment extends Fragment implements MainActivityView, View.OnClickListener {
 
     private static final Logger logger = LoggerFactory.getLogger(PrivacyPolicyFragment.class);
-    private TextView policyLink;
-    private Button acceptedButton;
+    private TextView dataCollectionPolicyLink;
+    private TextView generalPrivacyPolicyLink;
+    private TextView acceptanceStatement;
+    private TextView mProjectId;
+    private TextView mUserId;
     private String policyUrl = null;
     private OnFragmentInteractionListener mListener;
     private AppAuthState authState;
@@ -49,21 +55,38 @@ public class PrivacyPolicyFragment extends Fragment implements MainActivityView,
         if (args != null) {
             authState = AppAuthState.Builder.from(args).build();
         }
+
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_privacy_policy, container, false);
-        policyLink = (TextView) view.findViewById(R.id.loginPrivacyStatement);
         policyUrl = RadarConfiguration.getInstance().getString(PRIVACY_POLICY);
-        policyLink.setText(policyUrl);
-        policyLink.setVisibility(View.VISIBLE);
-        policyLink.setOnClickListener(this);
 
-        acceptedButton = view.findViewById(R.id.accept_privacy_policy_button);
+        View view = inflater.inflate(R.layout.fragment_privacy_policy, container, false);
+
+        dataCollectionPolicyLink = (TextView) view.findViewById(R.id.dataCollectionDescriptionStatement);
+        dataCollectionPolicyLink.setOnClickListener(this);
+
+
+        generalPrivacyPolicyLink = (TextView) view.findViewById(R.id.generalPrivacyPolicyStatement);
+        generalPrivacyPolicyLink.setOnClickListener(this);
+
+        Button acceptedButton = view.findViewById(R.id.accept_privacy_policy_button);
         acceptedButton.setOnClickListener(this);
+
+        String projectId = getString(R.string.study_id_message, authState.getProjectId());
+        mProjectId =  view.findViewById(R.id.inputProjectId);
+        mProjectId.setText(projectId);
+
+        String userId = getString(R.string.user_id_message, truncate(authState.getUserId(), MAX_USERNAME_LENGTH));
+        mUserId = view.findViewById(R.id.inputUserId);
+        mUserId.setText(userId);
+
+        String baseUrl = (String) authState.getProperties().get(BASE_URL_PROPERTY);
+        acceptanceStatement = view.findViewById(R.id.policyAcceptanceStatement);
+        acceptanceStatement.setText(getString(R.string.policy_acceptance_message, baseUrl));
         return view;
     }
 
@@ -77,33 +100,28 @@ public class PrivacyPolicyFragment extends Fragment implements MainActivityView,
                     + " must implement OnFragmentInteractionListener");
         }
     }
-    private void updatePrivacyStatement(boolean runInUiThread) {
+
+    private void updatePrivacyStatement() {
         final String newPolicyUrl = RadarConfiguration.getInstance().getString(PRIVACY_POLICY);
         synchronized (this) {
             policyUrl = newPolicyUrl;
         }
         logger.info("Setting privacy policy {}", newPolicyUrl);
-        if (runInUiThread) {
-//            runOnUiThread(() -> {
-//                if (newPolicyUrl == null) {
-//                    policyLink.setVisibility(View.INVISIBLE);
-//                } else {
-//                    policyLink.setVisibility(View.VISIBLE);
-//                }
-//            });
+
+        if (newPolicyUrl == null) {
+            dataCollectionPolicyLink.setVisibility(View.INVISIBLE);
         } else {
-            if (newPolicyUrl == null) {
-                policyLink.setVisibility(View.INVISIBLE);
-            } else {
-                policyLink.setVisibility(View.VISIBLE);
-                policyLink.setText(policyUrl);
-            }
+            dataCollectionPolicyLink.setVisibility(View.VISIBLE);
+            dataCollectionPolicyLink.setText(R.string.collected_data_description);
+
+            generalPrivacyPolicyLink.setVisibility(View.VISIBLE);
+            generalPrivacyPolicyLink.setText(getString(R.string.general_privacy_policy));
         }
     }
 
 
     public void openPrivacyPolicy(View view) {
-        updatePrivacyStatement(true);
+        updatePrivacyStatement();
         String localPolicyUrl;
         synchronized (this) {
             localPolicyUrl = policyUrl;
@@ -120,7 +138,7 @@ public class PrivacyPolicyFragment extends Fragment implements MainActivityView,
 
     @Override
     public void update() {
-        updatePrivacyStatement(true);
+        updatePrivacyStatement();
     }
 
     @Override
@@ -129,11 +147,11 @@ public class PrivacyPolicyFragment extends Fragment implements MainActivityView,
         switch (viewId) {
             case R.id.accept_privacy_policy_button:
                 acceptPrivacyPolicy(view);
-                return;
-            case R.id.loginPrivacyStatement:
+                break;
+            case R.id.dataCollectionDescriptionStatement:
+            case R.id.generalPrivacyPolicyStatement:
                 openPrivacyPolicy(view);
-                return;
-
+                break;
         }
     }
 

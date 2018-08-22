@@ -43,7 +43,6 @@
         android:id="@+id/messageText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/loginPrivacyStatement"
         app:layout_constraintEnd_toEndOf="@id/constraintLayout"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/constraintLayout"
