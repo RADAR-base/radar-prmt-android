@@ -48,7 +48,7 @@ Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with 
 
 To add additional plugins to this application, make the following steps (see the [Pebble plugin](https://github.com/RADAR/RADAR-Android-Pebble.git) as an example):
 
-- Add the schemas of the data you intend to send to the [RADAR-base Schemas repository](https://github.com/RADAR-base/RADAR-Schemas). Your record keys should be `org.radarcns.key.MeasurementKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
+- Add the schemas of the data you intend to send to the [RADAR-base Schemas repository](https://github.com/RADAR-base/RADAR-Schemas). Your record keys should be `org.radarcns.kafka.ObservationKey`. Be sure to set the `namespace` property to `org.radarcns.mydevicetype` so that generated classes will be put in the right package. All values should have `time` and `timeReceived` fields, with type `double`. These represent the time in seconds since the Unix Epoch (1 January 1970, 00:00:00 UTC). Subsecond precision is possible by using floating point decimals.
 - Create a new package `org.radarcns.mydevicetype`. In that package, create classes that:
   - implement `org.radarcns.android.device.DeviceManager` to connect to a device and collect its data.
   - implement `org.radarcns.android.DeviceState` to keep the current state of the device.
