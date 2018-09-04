@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,7 +71,6 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     private NetworkConnectedReceiver networkReceiver;
     private String policyUrl = null;
     private TextView policyLink;
-    private List<String> VALID_PROTOCOLS = Arrays.asList("http", "https");
 
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -155,29 +153,41 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
         logger.info("Creating mpManager");
         this.mpManager = new ManagementPortalLoginManager(this, state);
-        this.qrManager = new QrLoginManager(this, s -> {
-            onProcessing(R.string.logging_in);
-            logger.info("Read tokenUrl: {}", s);
+        this.qrManager = new QrLoginManager(this, this::parseQrCode);
+        return Arrays.asList(this.qrManager, this.mpManager);
+    }
 
-            if (s.isEmpty()) {
-                throw new QrException("Please scan the correct QR code.");
+    private AppAuthState parseQrCode(String qrCode) {
+        onProcessing(R.string.logging_in);
+        logger.info("Read tokenUrl: {}", qrCode);
+
+        if (qrCode.isEmpty()) {
+            throw new QrException("Please scan the correct QR code.");
+        }
+
+        qrCode = qrCode.trim();
+
+        if (qrCode.charAt(0) == '{') {
+            // parse as JSON with embedded refresh token
+            try {
+                String refreshToken = new JSONObject(qrCode).get("refreshToken").toString();
+                mpManager.setRefreshToken(refreshToken);
+            } catch (JSONException e) {
+                throw new QrException("Failed to parse JSON refresh token", e);
             }
-
+        } else if (qrCode.startsWith("http://") || qrCode.startsWith("https://")) {
+            // parse as URL containing refresh token
             try {
                 // validate scanned url
-                URL tokenUrl = URI.create(s).toURL();
-                if (VALID_PROTOCOLS.contains(tokenUrl.getProtocol())) {
-                    mpManager.setTokenFromUrl(s);
-                    return mpManager.refresh();
-                } else {
-                    throw new QrException("Unsupported protocol");
-                }
-
-            } catch (MalformedURLException e) {
+                mpManager.setTokenFromUrl(URI.create(qrCode).toURL().toString());
+            } catch (MalformedURLException | IllegalArgumentException e) {
                 throw new QrException("Please scan your QR code again.", e);
             }
-        });
-        return Arrays.asList(this.qrManager, this.mpManager);
+        } else {
+            // unknown QR code format
+            throw new QrException("Please scan your QR code again.");
+        }
+        return mpManager.refresh();
     }
 
     private void onProcessing(int titleResource) {
