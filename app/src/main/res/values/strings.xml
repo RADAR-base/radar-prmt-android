@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RADAR-CNS passive Remote Monitoring</string>
+    <string name="app_name">RADAR-base passive Remote Monitoring</string>
 
     <string name="ibi_label">IBI</string>
     <string name="emptyText">—</string>
