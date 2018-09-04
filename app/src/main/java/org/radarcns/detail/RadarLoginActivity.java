@@ -38,7 +38,6 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.radarcns.android.MainActivityView;
 import org.radarcns.android.RadarConfiguration;
 import org.radarcns.android.auth.AppAuthState;
 import org.radarcns.android.auth.LoginActivity;
@@ -253,7 +252,7 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         inFragment = FRAGMENT_PRIVACY_POLICY;
     }
 
-    private <T extends Fragment & MainActivityView> void createFragmentLayout(int id, T fragment) {
+    private void createFragmentLayout(int id, Fragment fragment) {
         FrameLayout fragmentLayout = new FrameLayout(this);
         fragmentLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         fragmentLayout.setId(id);
