@@ -89,7 +89,7 @@
     <string name="button_reset">Reset</string>
     <string name="settings">Settings</string>
     <string name="network_settings_header">Network settings</string>
-    <string name="collected_data_description"><u>Description of collected data </u></string>
+    <string name="collected_data_description"><u>Description of collected data</u></string>
     <string name="general_privacy_policy"><u>General privacy policy</u></string>
-    <string name="policy_acceptance_message">By pressing the "Accept" button, you agree to our General privacy policy and have read our Description of collected data. You agree to send data to <u>%1$s</u>.</string>
+    <string name="policy_acceptance_message">By pressing the “Accept” button, you agree to our General privacy policy and have read our Description of collected data. You agree to send data to <u>%1$s</u>.</string>
 </resources>

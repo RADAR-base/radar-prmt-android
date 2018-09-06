@@ -4,7 +4,11 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.StringRes;
+import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,7 +53,14 @@ public class PrivacyPolicyFragment extends Fragment implements View.OnClickListe
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        if (args != null) {
+        if (args == null) {
+            logger.error("No arguments given for privacy policy. Using stored auth state");
+            authState = AppAuthState.Builder.from(getActivity()).build();
+            if (authState.getUserId() == null || authState.getProjectId() == null) {
+                logger.error("Stored auth state does not contain a user/study");
+                getActivity().onBackPressed();
+            }
+        } else {
             authState = AppAuthState.Builder.from(args).build();
         }
     }
@@ -68,7 +79,6 @@ public class PrivacyPolicyFragment extends Fragment implements View.OnClickListe
             privacyPolicyUrl = privacyPolicy.toString();
             generalPrivacyPolicyLink.setOnClickListener(this);
             generalPrivacyPolicyLink.setVisibility(View.VISIBLE);
-            generalPrivacyPolicyLink.setText(getString(R.string.general_privacy_policy));
         } else {
             generalPrivacyPolicyLink.setVisibility(View.INVISIBLE);
         }
@@ -86,8 +96,17 @@ public class PrivacyPolicyFragment extends Fragment implements View.OnClickListe
 
         String baseUrl = (String) authState.getProperties().get(BASE_URL_PROPERTY);
         TextView acceptanceStatement = view.findViewById(R.id.policyAcceptanceStatement);
-        acceptanceStatement.setText(getString(R.string.policy_acceptance_message, baseUrl));
+        acceptanceStatement.setText(fromHtml(R.string.policy_acceptance_message, baseUrl));
         return view;
+    }
+
+    private Spanned fromHtml(@StringRes int resourceId, Object... parameters) {
+        String s = getString(resourceId, parameters);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY);
+        } else {
+            return Html.fromHtml(s);
+        }
     }
 
     @Override

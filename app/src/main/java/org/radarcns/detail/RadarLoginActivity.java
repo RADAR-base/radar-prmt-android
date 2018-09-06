@@ -72,18 +72,10 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     private Button scanButton;
     private NetworkConnectedReceiver networkReceiver;
 
-    private int inFragment = FRAGMENT_NONE;
-    private static final int FRAGMENT_NONE = 0;
-    private static final int FRAGMENT_PRIVACY_POLICY = 1;
-    private static final String IN_FRAGMENT = "inFragment";
-
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             onDoneProcessing();
-            if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
-                mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
-            }
             mpManager.refresh();
         }
     };
@@ -102,8 +94,6 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         super.onResume();
         if (RadarConfiguration.getInstance().getStatus() == RadarConfiguration.FirebaseStatus.READY) {
             onProcessing(R.string.retrieving_configuration);
-        } else if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
-            mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
@@ -248,8 +238,6 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
 
         PrivacyPolicyFragment fragment = PrivacyPolicyFragment.newInstance(state);
         createFragmentLayout(R.id.privacy_policy_fragment, fragment);
-
-        inFragment = FRAGMENT_PRIVACY_POLICY;
     }
 
     private void createFragmentLayout(int id, Fragment fragment) {
@@ -262,13 +250,6 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         transaction.commit();
     }
 
-
-    @Override
-    public void onSaveInstanceState(final Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(IN_FRAGMENT, inFragment);
-    }
-
     @Override
     public void onAcceptPrivacyPolicy(AppAuthState state) {
         // set privacyPolicyAccepted to true.
@@ -276,6 +257,4 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         logger.info("Updating privacyPolicyAccepted {}" , updated.toString());
         super.loginSucceeded(null, updated);
     }
-
-
 }
