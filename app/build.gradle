@@ -58,9 +58,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
 
-    runtimeOnly 'org.radarcns:radar-android-phone:0.1.5'
+    runtimeOnly 'org.radarcns:radar-android-phone:0.1.6'
     //runtimeOnly 'org.radarcns:radar-android-empatica:0.1.1'
-    runtimeOnly 'org.radarcns:radar-android-application-status:0.3'
+    runtimeOnly 'org.radarcns:radar-android-application-status:0.3.1'
     runtimeOnly 'org.radarcns:radar-android-weather:0.1'
     runtimeOnly 'org.radarcns:radar-android-audio:0.1-alpha.1'
     implementation 'org.radarcns:radar-android-faros:0.1.0'
