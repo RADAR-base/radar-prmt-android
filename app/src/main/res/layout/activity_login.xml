@@ -43,22 +43,9 @@
         android:id="@+id/messageText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/loginPrivacyStatement"
         app:layout_constraintEnd_toEndOf="@id/constraintLayout"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/constraintLayout"
         app:layout_constraintTop_toBottomOf="@id/scanButton" />
-
-    <TextView
-        android:id="@+id/loginPrivacyStatement"
-        android:text="@string/privacy_policy"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/messageText"
-        android:visibility="invisible"
-        android:onClick="openPrivacyPolicy"/>
 
 </android.support.constraint.ConstraintLayout>

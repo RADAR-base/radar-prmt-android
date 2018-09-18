@@ -1,0 +1,115 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="org.radarcns.detail.PrivacyPolicyFragment"
+    >
+
+    <RelativeLayout android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/privacyPolicyFragmentLayout">
+
+        <TextView
+            android:id="@+id/info_header"
+            style="@style/MyListSeparator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/patient_separator"/>
+
+        <View
+            android:id="@+id/info_divider"
+            style="@style/DividerLine"
+            android:layout_below="@id/info_header"
+            android:layout_marginTop="4dp"/>
+
+        <View
+            android:id="@+id/person_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/ic_person"
+            android:layout_below="@id/info_divider"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            />
+        <TextView
+            android:id="@+id/inputProjectId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_below="@id/info_divider"
+            android:layout_toEndOf="@id/person_icon"
+            android:textSize="16sp"
+            android:textAlignment="textStart"
+            android:text="@string/study_id_message"
+            />
+
+        <TextView
+            android:id="@+id/inputUserId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_below="@id/inputProjectId"
+            android:layout_toEndOf="@id/person_icon"
+            android:textSize="16sp"
+            android:textAlignment="textStart"
+            android:text="@string/user_id_message"/>
+
+        <View
+            style="@style/DividerLine"
+            android:id="@+id/fragment_divider"
+            android:layout_below="@id/inputUserId"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_below="@id/fragment_divider"
+            android:id="@+id/generalPrivacyPolicyStatement"
+            android:textAlignment="textStart"
+            android:textSize="20sp"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:text="@string/general_privacy_policy"
+             />
+
+        <TextView
+            android:id="@+id/dataCollectionDescriptionStatement"
+            android:text="@string/collected_data_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="20sp"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:textAlignment="textStart"
+            android:layout_below="@id/generalPrivacyPolicyStatement"
+            />
+
+        <TextView
+            android:id="@+id/policyAcceptanceStatement"
+            android:text="@string/policy_acceptance_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="textStart"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:layout_below="@id/dataCollectionDescriptionStatement"
+            />
+
+        <Button android:id="@+id/accept_privacy_policy_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/policyAcceptanceStatement"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="5dp"
+            android:text="Accept"
+            android:onClick="acceptPrivacyPolicy">
+        </Button>
+    </RelativeLayout>
+</FrameLayout>

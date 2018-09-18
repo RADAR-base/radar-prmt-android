@@ -17,16 +17,19 @@
 package org.radarcns.detail;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,15 +52,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.radarcns.android.RadarConfiguration.PROJECT_ID_KEY;
 import static org.radarcns.android.RadarConfiguration.RADAR_CONFIGURATION_CHANGED;
 import static org.radarcns.android.RadarConfiguration.USER_ID_KEY;
-import static org.radarcns.detail.DetailInfoActivity.PRIVACY_POLICY;
 
-public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener {
+public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
 
     private QrLoginManager qrManager;
@@ -67,18 +71,12 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     private TextView messageBox;
     private Button scanButton;
     private NetworkConnectedReceiver networkReceiver;
-    private String policyUrl = null;
-    private TextView policyLink;
 
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             onDoneProcessing();
-            if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
-                mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
-            }
             mpManager.refresh();
-            updatePrivacyStatement(true);
         }
     };
 
@@ -89,7 +87,6 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         messageBox = findViewById(R.id.messageText);
         scanButton = findViewById(R.id.scanButton);
         networkReceiver = new NetworkConnectedReceiver(this, this);
-        policyLink = findViewById(R.id.loginPrivacyStatement);
     }
 
     @Override
@@ -97,46 +94,10 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         super.onResume();
         if (RadarConfiguration.getInstance().getStatus() == RadarConfiguration.FirebaseStatus.READY) {
             onProcessing(R.string.retrieving_configuration);
-        } else if (BuildConfig.DEBUG && RadarConfiguration.getInstance().has("mp_refresh_token")) {
-            mpManager.setRefreshToken(RadarConfiguration.getInstance().getString("mp_refresh_token"));
         }
-        updatePrivacyStatement(false);
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
         networkReceiver.register();
-    }
-
-    private void updatePrivacyStatement(boolean runInUiThread) {
-        final String newPolicyUrl = RadarConfiguration.getInstance().getString(PRIVACY_POLICY, null);
-        synchronized (this) {
-            policyUrl = newPolicyUrl;
-        }
-        logger.info("Setting privacy policy {}", newPolicyUrl);
-        if (runInUiThread) {
-            runOnUiThread(() -> {
-                if (newPolicyUrl == null) {
-                    policyLink.setVisibility(View.INVISIBLE);
-                } else {
-                    policyLink.setVisibility(View.VISIBLE);
-                }
-            });
-        } else {
-            if (newPolicyUrl == null) {
-                policyLink.setVisibility(View.INVISIBLE);
-            } else {
-                policyLink.setVisibility(View.VISIBLE);
-            }
-        }
-    }
-
-    public void openPrivacyPolicy(View view) {
-        String localPolicyUrl;
-        synchronized (this) {
-            localPolicyUrl = policyUrl;
-        }
-        if (localPolicyUrl != null) {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(localPolicyUrl)));
-        }
     }
 
     @Override
@@ -151,22 +112,41 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     protected List<LoginManager> createLoginManagers(AppAuthState state) {
         logger.info("Creating mpManager");
         this.mpManager = new ManagementPortalLoginManager(this, state);
-        this.qrManager = new QrLoginManager(this, s -> {
-            onProcessing(R.string.logging_in);
-            logger.info("Read token: {}", s);
+        this.qrManager = new QrLoginManager(this, this::parseQrCode);
+        return Arrays.asList(this.qrManager, this.mpManager);
+    }
+
+    private AppAuthState parseQrCode(String qrCode) {
+        onProcessing(R.string.logging_in);
+        logger.info("Read tokenUrl: {}", qrCode);
+
+        if (qrCode.isEmpty()) {
+            throw new QrException("Please scan the correct QR code.");
+        }
+
+        qrCode = qrCode.trim();
+
+        if (qrCode.charAt(0) == '{') {
+            // parse as JSON with embedded refresh token
             try {
-                JSONObject object = new JSONObject(s);
-                if (!object.has("refreshToken")) {
-                    throw new QrException("Please scan the correct QR code.");
-                }
-                String refreshToken = object.getString("refreshToken");
+                String refreshToken = new JSONObject(qrCode).get("refreshToken").toString();
                 mpManager.setRefreshToken(refreshToken);
-                return mpManager.refresh();
             } catch (JSONException e) {
+                throw new QrException("Failed to parse JSON refresh token", e);
+            }
+        } else if (qrCode.startsWith("http://") || qrCode.startsWith("https://")) {
+            // parse as URL containing refresh token
+            try {
+                // validate scanned url
+                mpManager.setTokenFromUrl(URI.create(qrCode).toURL().toString());
+            } catch (MalformedURLException | IllegalArgumentException e) {
                 throw new QrException("Please scan your QR code again.", e);
             }
-        });
-        return Arrays.asList(this.qrManager, this.mpManager);
+        } else {
+            // unknown QR code format
+            throw new QrException("Please scan your QR code again.");
+        }
+        return mpManager.refresh();
     }
 
     private void onProcessing(int titleResource) {
@@ -236,14 +216,45 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     @Override
     public void loginSucceeded(LoginManager manager, @NonNull AppAuthState state) {
         onDoneProcessing();
-        FirebaseAnalytics firebase = FirebaseAnalytics.getInstance(this);
-        firebase.setUserProperty(USER_ID_KEY, state.getUserId());
-        firebase.setUserProperty(PROJECT_ID_KEY, state.getProjectId());
-        super.loginSucceeded(manager, state);
+        if (!state.isPrivacyPolicyAccepted()) {
+            logger.info("Login succeeded. Calling privacy-policy fragment");
+            startPrivacyPolicyFragment(state);
+        } else {
+            FirebaseAnalytics firebase = FirebaseAnalytics.getInstance(this);
+            firebase.setUserProperty(USER_ID_KEY, state.getUserId());
+            firebase.setUserProperty(PROJECT_ID_KEY, state.getProjectId());
+            super.loginSucceeded(manager, state);
+        }
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    public void startPrivacyPolicyFragment(AppAuthState state) {
+        logger.info("Starting privacy policy fragment");
+
+        PrivacyPolicyFragment fragment = PrivacyPolicyFragment.newInstance(state);
+        createFragmentLayout(R.id.privacy_policy_fragment, fragment);
+    }
+
+    private void createFragmentLayout(int id, Fragment fragment) {
+        FrameLayout fragmentLayout = new FrameLayout(this);
+        fragmentLayout.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        fragmentLayout.setId(id);
+        setContentView(fragmentLayout);
+        FragmentTransaction transaction = getFragmentManager().beginTransaction().add(id, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    @Override
+    public void onAcceptPrivacyPolicy(AppAuthState state) {
+        // set privacyPolicyAccepted to true.
+        final AppAuthState updated = state.newBuilder().privacyPolicyAccepted(true).build();
+        logger.info("Updating privacyPolicyAccepted {}" , updated.toString());
+        super.loginSucceeded(null, updated);
     }
 }

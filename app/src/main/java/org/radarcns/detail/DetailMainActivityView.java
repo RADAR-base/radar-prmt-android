@@ -36,7 +36,7 @@ import java.util.Objects;
 
 public class DetailMainActivityView implements Runnable, MainActivityView {
     private static final DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
-    private static final int MAX_USERNAME_LENGTH = 20;
+    static final int MAX_USERNAME_LENGTH = 20;
 
     private final DetailMainActivity mainActivity;
     private final List<DeviceRowView> rows = new ArrayList<>();
