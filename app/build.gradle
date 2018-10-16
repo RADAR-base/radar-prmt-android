@@ -3,12 +3,12 @@ apply plugin: 'io.fabric'
 apply plugin: 'com.google.gms.oss.licenses.plugin'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
     defaultConfig {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 17
         versionName "0.3.1-SNAPSHOT"
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.7.0'
+    api 'org.radarcns:radar-commons-android:0.7.1'
 
     implementation 'org.radarcns:radar-android-login-qr:0.7.0'
     implementation 'com.google.firebase:firebase-core:16.0.3'
@@ -62,11 +62,11 @@ dependencies {
     //runtimeOnly 'org.radarcns:radar-android-empatica:0.1.1'
     runtimeOnly 'org.radarcns:radar-android-application-status:0.3.1'
     runtimeOnly 'org.radarcns:radar-android-weather:0.1'
-    runtimeOnly 'org.radarcns:radar-android-audio:0.1-alpha.1'
+    runtimeOnly 'org.radarcns:radar-android-audio:0.1-alpha.2'
     implementation 'org.radarcns:radar-android-faros:0.1.1'
 
-    implementation 'com.android.support:support-v4:27.1.1'
-    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
     testImplementation 'junit:junit:4.12'
