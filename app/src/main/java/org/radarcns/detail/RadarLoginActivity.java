@@ -33,6 +33,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException;
 
@@ -236,8 +237,14 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     public void startPrivacyPolicyFragment(AppAuthState state) {
         logger.info("Starting privacy policy fragment");
 
-        PrivacyPolicyFragment fragment = PrivacyPolicyFragment.newInstance(state);
-        createFragmentLayout(R.id.privacy_policy_fragment, fragment);
+        try {
+            PrivacyPolicyFragment fragment = PrivacyPolicyFragment.newInstance(state);
+            createFragmentLayout(R.id.privacy_policy_fragment, fragment);
+        } catch (IllegalStateException ex) {
+            logger.error("Failed to start privacy policy fragment:" +
+                    " is LoginActivity is already closed?", ex);
+            Crashlytics.logException(ex);
+        }
     }
 
     private void createFragmentLayout(int id, Fragment fragment) {
