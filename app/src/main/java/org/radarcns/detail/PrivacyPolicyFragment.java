@@ -1,5 +1,6 @@
 package org.radarcns.detail;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
@@ -106,6 +107,18 @@ public class PrivacyPolicyFragment extends Fragment implements View.OnClickListe
             return Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY);
         } else {
             return Html.fromHtml(s);
+        }
+    }
+
+    // Deprecated, added here for API level < 23.
+    @Override
+    public void onAttach(Activity context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
         }
     }
 

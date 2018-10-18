@@ -260,7 +260,9 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     @Override
     public void onAcceptPrivacyPolicy(AppAuthState state) {
         // set privacyPolicyAccepted to true.
-        final AppAuthState updated = state.newBuilder().privacyPolicyAccepted(true).build();
+        final AppAuthState updated = state.newBuilder()
+                .privacyPolicyAccepted(true)
+                .build();
         logger.info("Updating privacyPolicyAccepted {}" , updated.toString());
         super.loginSucceeded(null, updated);
     }

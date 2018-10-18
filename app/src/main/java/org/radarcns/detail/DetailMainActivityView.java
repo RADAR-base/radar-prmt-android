@@ -16,6 +16,7 @@
 
 package org.radarcns.detail;
 
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -170,8 +171,10 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
         }
     }
 
-    static String truncate(String orig, int maxLength) {
-        if (orig.length() > maxLength) {
+    static String truncate(@Nullable String orig, int maxLength) {
+        if (orig == null) {
+            return "";
+        } else if (orig.length() > maxLength) {
             return orig.substring(0, maxLength - 3) + "\u2026";
         } else {
             return orig;
