@@ -26,11 +26,6 @@ import org.radarcns.android.RadarService;
 
 public class DetailMainActivity extends MainActivity {
     @Override
-    protected Class<RadarLoginActivity> loginActivity() {
-        return RadarLoginActivity.class;
-    }
-
-    @Override
     protected MainActivityView createView() {
         return new DetailMainActivityView(this);
     }

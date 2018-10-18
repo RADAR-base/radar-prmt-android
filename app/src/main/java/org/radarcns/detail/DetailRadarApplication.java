@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
 
@@ -84,5 +85,17 @@ public class DetailRadarApplication extends RadarApplication {
         firebase.setUserProperty(TEST_PHASE, BuildConfig.DEBUG ? "dev" : "production");
         config.fetch();
         return config;
+    }
+
+    @NonNull
+    @Override
+    public Class<DetailMainActivity> getMainActivity() {
+        return DetailMainActivity.class;
+    }
+
+    @NonNull
+    @Override
+    public Class<RadarLoginActivity> getLoginActivity() {
+        return RadarLoginActivity.class;
     }
 }
