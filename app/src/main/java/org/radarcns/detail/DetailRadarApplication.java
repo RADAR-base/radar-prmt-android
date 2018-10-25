@@ -98,4 +98,10 @@ public class DetailRadarApplication extends RadarApplication {
     public Class<RadarLoginActivity> getLoginActivity() {
         return RadarLoginActivity.class;
     }
+
+    @NonNull
+    @Override
+    public Class<DetailRadarService> getRadarService() {
+        return DetailRadarService.class;
+    }
 }

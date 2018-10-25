@@ -97,13 +97,46 @@
                 tools:layout_editor_absoluteY="0dp"/>
 
             <TextView
+                android:id="@+id/action_header"
+                style="@style/MyListSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_header"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/deviceTable"
+                app:layout_constraintBottom_toTopOf="@id/action_divider"/>
+
+            <View
+                style="@style/DividerLine"
+                android:id="@+id/action_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/action_header"
+                app:layout_constraintBottom_toTopOf="@id/startPpg"/>
+
+            <Button
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/action_divider"
+                android:id="@+id/startPpg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/startPpgMeasurement"/>
+
+            <android.support.constraint.Barrier
+                android:id="@+id/actionBarrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="startPpg,deviceTable" />
+
+            <TextView
                 android:id="@+id/sync_header"
                 style="@style/MyListSeparator"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/sync_separator"
                 app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintTop_toBottomOf="@id/deviceTable"
+                app:layout_constraintTop_toBottomOf="@id/actionBarrier"
                 app:layout_constraintBottom_toTopOf="@id/sync_divider"/>
 
             <View

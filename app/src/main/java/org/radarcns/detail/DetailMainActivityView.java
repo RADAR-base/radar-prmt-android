@@ -24,6 +24,7 @@ import android.widget.Toolbar;
 
 import com.crashlytics.android.Crashlytics;
 
+import org.radarbase.passive.phone.ppg.PhonePpgProvider;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.data.TimedInt;
@@ -125,6 +126,22 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
 
         mUserId = mainActivity.findViewById(R.id.inputUserId);
         mProjectId = mainActivity.findViewById(R.id.inputProjectId);
+
+        boolean hasPpg = false;
+        for (DeviceServiceProvider provider : mainActivity.getRadarService().getConnections()) {
+            if (provider instanceof PhonePpgProvider) {
+                hasPpg = true;
+                mainActivity.findViewById(R.id.startPpg)
+                        .setOnClickListener(view -> mainActivity.startPpgFragment(provider));
+                break;
+            }
+        }
+
+        if (!hasPpg) {
+            mainActivity.findViewById(R.id.action_header).setVisibility(View.GONE);
+            mainActivity.findViewById(R.id.action_divider).setVisibility(View.GONE);
+            mainActivity.findViewById(R.id.startPpg).setVisibility(View.GONE);
+        }
     }
 
     @Override

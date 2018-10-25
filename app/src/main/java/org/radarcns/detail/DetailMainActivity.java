@@ -19,10 +19,11 @@ package org.radarcns.detail;
 import android.content.Intent;
 import android.view.View;
 
-import org.radarcns.android.IRadarService;
+import org.radarbase.passive.phone.ppg.PhonePpgActivity;
+import org.radarcns.android.IRadarBinder;
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
-import org.radarcns.android.RadarService;
+import org.radarcns.android.device.DeviceServiceProvider;
 
 public class DetailMainActivity extends MainActivity {
     @Override
@@ -31,7 +32,7 @@ public class DetailMainActivity extends MainActivity {
     }
 
     public void logout(View view) {
-        IRadarService radarService = getRadarService();
+        IRadarBinder radarService = getRadarService();
         if (radarService != null) {
             radarService.getAuthState().invalidate(this);
         }
@@ -42,12 +43,14 @@ public class DetailMainActivity extends MainActivity {
         startActivity(new Intent(this, DetailInfoActivity.class));
     }
 
-    @Override
-    protected Class<? extends RadarService> radarService() {
-        return DetailRadarService.class;
-    }
-
     public void showSettings(View view) {
         startActivity(new Intent(this, DetailSettingsActivity.class));
+    }
+
+    public void startPpgFragment(DeviceServiceProvider provider) {
+        startActivity(new Intent(this, PhonePpgActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION));
+        overridePendingTransition(0, 0);
+        finish();
     }
 }

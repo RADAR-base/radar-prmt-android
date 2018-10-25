@@ -64,6 +64,7 @@ import static org.radarcns.android.RadarConfiguration.USER_ID_KEY;
 
 public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
+    private static final String BASE_URL_KEY = "radar_base_url";
 
     private QrLoginManager qrManager;
     private ManagementPortalLoginManager mpManager;
@@ -72,6 +73,8 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     private TextView messageBox;
     private Button scanButton;
     private NetworkConnectedReceiver networkReceiver;
+    private boolean didLogin;
+    private boolean didCreate;
 
     private final BroadcastReceiver configBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -83,11 +86,16 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
 
     @Override
     protected void onCreate(Bundle savedBundleInstance) {
+        didLogin = false;
+        didCreate = false;
         super.onCreate(savedBundleInstance);
-        setContentView(R.layout.activity_login);
-        messageBox = findViewById(R.id.messageText);
-        scanButton = findViewById(R.id.scanButton);
-        networkReceiver = new NetworkConnectedReceiver(this, this);
+        if (!didLogin) {
+            setContentView(R.layout.activity_login);
+            messageBox = findViewById(R.id.messageText);
+            scanButton = findViewById(R.id.scanButton);
+            networkReceiver = new NetworkConnectedReceiver(this, this);
+        }
+        didCreate = true;
     }
 
     @Override
@@ -216,6 +224,7 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
 
     @Override
     public void loginSucceeded(LoginManager manager, @NonNull AppAuthState state) {
+        didLogin = true;
         onDoneProcessing();
         if (!state.isPrivacyPolicyAccepted()) {
             logger.info("Login succeeded. Calling privacy-policy fragment");
@@ -225,6 +234,9 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
             firebase.setUserProperty(USER_ID_KEY, state.getUserId());
             firebase.setUserProperty(PROJECT_ID_KEY, state.getProjectId());
             super.loginSucceeded(manager, state);
+            if (!didCreate) {
+                overridePendingTransition(0, 0);
+            }
         }
 
     }
