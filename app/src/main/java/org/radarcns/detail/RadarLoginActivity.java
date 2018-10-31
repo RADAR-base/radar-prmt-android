@@ -64,7 +64,6 @@ import static org.radarcns.android.RadarConfiguration.USER_ID_KEY;
 
 public class RadarLoginActivity extends LoginActivity implements NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
     private static final Logger logger = LoggerFactory.getLogger(RadarLoginActivity.class);
-    private static final String BASE_URL_KEY = "radar_base_url";
 
     private QrLoginManager qrManager;
     private ManagementPortalLoginManager mpManager;

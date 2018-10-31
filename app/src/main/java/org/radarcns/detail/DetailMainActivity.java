@@ -19,11 +19,10 @@ package org.radarcns.detail;
 import android.content.Intent;
 import android.view.View;
 
-import org.radarbase.passive.phone.ppg.PhonePpgActivity;
 import org.radarcns.android.IRadarBinder;
 import org.radarcns.android.MainActivity;
 import org.radarcns.android.MainActivityView;
-import org.radarcns.android.device.DeviceServiceProvider;
+import org.radarcns.passive.ppg.PhonePpgActivity;
 
 public class DetailMainActivity extends MainActivity {
     @Override
@@ -47,7 +46,7 @@ public class DetailMainActivity extends MainActivity {
         startActivity(new Intent(this, DetailSettingsActivity.class));
     }
 
-    public void startPpgFragment(DeviceServiceProvider provider) {
+    public void startPpgFragment() {
         startActivity(new Intent(this, PhonePpgActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION));
         overridePendingTransition(0, 0);

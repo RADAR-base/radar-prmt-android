@@ -24,7 +24,7 @@ import android.widget.Toolbar;
 
 import com.crashlytics.android.Crashlytics;
 
-import org.radarbase.passive.phone.ppg.PhonePpgProvider;
+import org.radarcns.passive.ppg.PhonePpgProvider;
 import org.radarcns.android.MainActivityView;
 import org.radarcns.android.device.DeviceServiceProvider;
 import org.radarcns.data.TimedInt;
@@ -132,7 +132,7 @@ public class DetailMainActivityView implements Runnable, MainActivityView {
             if (provider instanceof PhonePpgProvider) {
                 hasPpg = true;
                 mainActivity.findViewById(R.id.startPpg)
-                        .setOnClickListener(view -> mainActivity.startPpgFragment(provider));
+                        .setOnClickListener(view -> mainActivity.startPpgFragment());
                 break;
             }
         }
