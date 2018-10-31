@@ -10,7 +10,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 22
-        versionName "0.3.5-SNAPSHOT"
+        versionName '0.3.5'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -74,11 +74,11 @@ dependencies {
 
     runtimeOnly 'org.radarcns:radar-android-phone:0.1.8'
     //runtimeOnly 'org.radarcns:radar-android-empatica:0.1.1'
-    implementation 'org.radarcns:radar-android-application-status:0.3.2'
+    runtimeOnly 'org.radarcns:radar-android-application-status:0.3.2'
     runtimeOnly 'org.radarcns:radar-android-weather:0.2.0'
     runtimeOnly 'org.radarcns:radar-android-audio:0.1-alpha.2'
+    runtimeOnly 'org.radarcns:radar-android-faros:0.1.1'
     implementation 'org.radarcns:radar-android-ppg:0.1.1'
-    implementation 'org.radarcns:radar-android-faros:0.1.1'
 
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:design:28.0.0'

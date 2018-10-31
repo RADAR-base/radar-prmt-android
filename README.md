@@ -1,6 +1,6 @@
 # RADAR-pRMT
 
-Application to be run on an Android 5 (or later) device with Bluetooth Low Energy (Bluetooth 4.0 or later), to interact with wearable devices.
+Application to be run on an Android 5 (or later) device. If Bluetooth devices are to be used, the Android device should support Bluetooth Low Energy (Bluetooth 4.0 or later).
 
 ![Screenshot](/man/screen20161215_edited.png?raw=True "Screenshot 2016-12-15")
 
