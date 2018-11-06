@@ -9,8 +9,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 23
-        versionName '0.3.6'
+        versionCode 24
+        versionName '0.3.7'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -58,9 +58,9 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.8.2'
+    api 'org.radarcns:radar-commons-android:0.8.3'
 
-    implementation 'org.radarcns:radar-android-login-qr:0.8.2'
+    implementation 'org.radarcns:radar-android-login-qr:0.8.3'
     implementation 'com.google.firebase:firebase-core:16.0.4'
     implementation 'com.google.firebase:firebase-config:16.1.0'
     implementation 'com.google.android.gms:play-services-oss-licenses:16.0.1'
