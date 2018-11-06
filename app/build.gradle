@@ -58,13 +58,9 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.8.1'
+    api 'org.radarcns:radar-commons-android:0.8.2'
 
-    implementation ('org.radarcns:radar-commons:0.11.2-SNAPSHOT') {
-        exclude group: 'org.json', module: 'json'
-    }
-
-    implementation 'org.radarcns:radar-android-login-qr:0.8.1'
+    implementation 'org.radarcns:radar-android-login-qr:0.8.2'
     implementation 'com.google.firebase:firebase-core:16.0.4'
     implementation 'com.google.firebase:firebase-config:16.1.0'
     implementation 'com.google.android.gms:play-services-oss-licenses:16.0.1'
