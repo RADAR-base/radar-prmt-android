@@ -105,14 +105,18 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
-        networkReceiver.register();
+        if (networkReceiver != null) {
+            networkReceiver.register();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(configBroadcastReceiver);
-        networkReceiver.unregister();
+        if (networkReceiver != null) {
+            networkReceiver.unregister();
+        }
     }
 
     @NonNull
