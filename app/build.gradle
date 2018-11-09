@@ -9,8 +9,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 25
-        versionName '0.3.8'
+        versionCode 27
+        versionName '0.3.10'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
@@ -58,19 +58,19 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.8.3'
+    api 'org.radarcns:radar-commons-android:0.8.4-SNAPSHOT'
 
     implementation ('org.radarcns:radar-commons:0.11.3-SNAPSHOT') {
         exclude group: 'org.json', module: 'json'
     }
 
-    implementation 'org.radarcns:radar-android-login-qr:0.8.3'
-    implementation 'com.google.firebase:firebase-core:16.0.4'
+    implementation 'org.radarcns:radar-android-login-qr:0.8.4-SNAPSHOT'
+    implementation 'com.google.firebase:firebase-core:16.0.5'
     implementation 'com.google.firebase:firebase-config:16.1.0'
     implementation 'com.google.android.gms:play-services-oss-licenses:16.0.1'
 
     implementation 'org.slf4j:slf4j-api:1.7.25'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.5'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.6'
 
     runtimeOnly 'org.radarcns:radar-android-phone:0.1.8'
     //runtimeOnly 'org.radarcns:radar-android-empatica:0.1.1'
