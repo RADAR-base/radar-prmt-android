@@ -95,4 +95,5 @@
     <string name="filter_open_prmt">Open RADAR pRMT</string>
     <string name="action_header">Actions</string>
     <string name="startPpgMeasurement">PPG measurement</string>
+    <string name="appUpdated">pRMT successfully updated</string>
 </resources>
