@@ -179,13 +179,15 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     @Override
     public void onNetworkConnectionChanged(boolean isConnected, boolean isWifiOrEthernet) {
         logger.info("Network change: {}", isConnected);
-        if (isConnected) {
-            scanButton.setEnabled(true);
-            messageBox.setText("");
-        } else {
-            scanButton.setEnabled(false);
-            messageBox.setText(R.string.no_connection);
-        }
+        runOnUiThread(() -> {
+            if (isConnected) {
+                scanButton.setEnabled(true);
+                messageBox.setText("");
+            } else {
+                scanButton.setEnabled(false);
+                messageBox.setText(R.string.no_connection);
+            }
+        });
     }
 
     @NonNull
