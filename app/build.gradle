@@ -58,8 +58,8 @@ repositories {
 }
 
 dependencies {
-    api 'org.radarcns:radar-commons-android:0.9.2'
-    implementation 'org.radarcns:radar-schemas-commons:0.4.2'
+    api 'org.radarcns:radar-commons-android:0.9.3'
+    implementation 'org.radarcns:radar-schemas-commons:0.4.3'
 
     implementation 'org.radarcns:radar-android-login-qr:0.9.2'
     implementation 'com.google.firebase:firebase-core:16.0.6'
@@ -69,9 +69,11 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
 
-    runtimeOnly 'org.radarcns:radar-android-phone:0.1.8'
+    runtimeOnly 'org.radarcns:radar-android-phone:0.2.0'
+    runtimeOnly 'org.radarcns:radar-android-phone-usage:0.2.0'
+    runtimeOnly 'org.radarcns:radar-android-phone-telephony:0.2.0'
     runtimeOnly 'org.radarcns:radar-android-empatica:0.2.0'
-    runtimeOnly 'org.radarcns:radar-android-application-status:0.3.2'
+    runtimeOnly 'org.radarcns:radar-android-application-status:0.3.3'
     runtimeOnly 'org.radarcns:radar-android-weather:0.2.0'
     runtimeOnly 'org.radarcns:radar-android-audio:0.1.0'
     runtimeOnly 'org.radarcns:radar-android-faros:0.1.2'
