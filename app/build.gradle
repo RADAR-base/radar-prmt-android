@@ -86,3 +86,17 @@ dependencies {
 
 // Needed for Firebase. Put at the bottom so it can detect the Firebase version.
 apply plugin: 'com.google.gms.google-services'
+
+
+configurations.all {
+    resolutionStrategy {
+        force 'org.radarcns:radar-commons-android:0.6'
+    }
+}
+
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
