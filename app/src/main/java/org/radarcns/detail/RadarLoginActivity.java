@@ -105,14 +105,18 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
         }
         canLogin = true;
         registerReceiver(configBroadcastReceiver, new IntentFilter(RADAR_CONFIGURATION_CHANGED));
-        networkReceiver.register();
+        if (networkReceiver != null) {
+            networkReceiver.register();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(configBroadcastReceiver);
-        networkReceiver.unregister();
+        if (networkReceiver != null) {
+            networkReceiver.unregister();
+        }
     }
 
     @NonNull
@@ -175,13 +179,15 @@ public class RadarLoginActivity extends LoginActivity implements NetworkConnecte
     @Override
     public void onNetworkConnectionChanged(boolean isConnected, boolean isWifiOrEthernet) {
         logger.info("Network change: {}", isConnected);
-        if (isConnected) {
-            scanButton.setEnabled(true);
-            messageBox.setText("");
-        } else {
-            scanButton.setEnabled(false);
-            messageBox.setText(R.string.no_connection);
-        }
+        runOnUiThread(() -> {
+            if (isConnected) {
+                scanButton.setEnabled(true);
+                messageBox.setText("");
+            } else {
+                scanButton.setEnabled(false);
+                messageBox.setText(R.string.no_connection);
+            }
+        });
     }
 
     @NonNull

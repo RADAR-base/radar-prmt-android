@@ -16,12 +16,15 @@
 
 package org.radarcns.detail;
 
+import android.os.Build;
+
 import org.radarcns.android.RadarService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static android.Manifest.permission.RECEIVE_BOOT_COMPLETED;
+import static android.Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
 
 public class DetailRadarService extends RadarService {
     @Override
@@ -30,6 +33,9 @@ public class DetailRadarService extends RadarService {
         List<String> result = new ArrayList<>(superPermissions.size() + 1);
         result.addAll(superPermissions);
         result.add(RECEIVE_BOOT_COMPLETED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            result.add(REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+        }
         return result;
     }
 
