@@ -74,7 +74,7 @@ dependencies {
     runtimeOnly 'org.radarcns:radar-android-phone-telephony:0.2.0'
     runtimeOnly 'org.radarcns:radar-android-empatica:0.2.0'
     runtimeOnly 'org.radarcns:radar-android-application-status:0.3.3'
-    runtimeOnly 'org.radarcns:radar-android-weather:0.2.0'
+    runtimeOnly 'org.radarcns:radar-android-weather:0.2.1'
     runtimeOnly 'org.radarcns:radar-android-audio:0.1.0'
     runtimeOnly 'org.radarcns:radar-android-faros:0.1.2'
     implementation 'org.radarcns:radar-android-ppg:0.1.2'
