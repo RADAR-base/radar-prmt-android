@@ -9,8 +9,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 33
-        versionName '0.3.15-SNAPSHOT'
+        versionCode 34
+        versionName '0.3.15'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarcns.detail']
         multiDexEnabled true
     }
