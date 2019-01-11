@@ -64,7 +64,7 @@ dependencies {
     implementation 'org.radarcns:radar-android-login-qr:0.9.2'
     implementation 'com.google.firebase:firebase-core:16.0.6'
     implementation 'com.google.firebase:firebase-config:16.1.2'
-    implementation 'com.google.android.gms:play-services-oss-licenses:16.0.1'
+    implementation 'com.google.android.gms:play-services-oss-licenses:16.0.2'
 
     implementation 'org.slf4j:slf4j-api:1.7.25'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
