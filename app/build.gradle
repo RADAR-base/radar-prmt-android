@@ -67,7 +67,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-oss-licenses:16.0.1'
 
     implementation 'org.slf4j:slf4j-api:1.7.25'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
+    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
 
     runtimeOnly 'org.radarcns:radar-android-phone:0.2.0'
     runtimeOnly 'org.radarcns:radar-android-phone-usage:0.2.0'
