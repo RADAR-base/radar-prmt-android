@@ -84,7 +84,7 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
     testImplementation 'junit:junit:4.12'
-    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.25'
+    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.26'
 }
 
 // Needed for Firebase. Put at the bottom so it can detect the Firebase version.
