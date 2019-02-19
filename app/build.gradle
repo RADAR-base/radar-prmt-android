@@ -66,7 +66,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-config:16.1.2'
     implementation 'com.google.android.gms:play-services-oss-licenses:16.0.1'
 
-    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'org.slf4j:slf4j-api:1.7.26'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
 
     runtimeOnly 'org.radarcns:radar-android-phone:0.2.0'
