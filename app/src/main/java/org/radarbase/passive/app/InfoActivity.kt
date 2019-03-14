@@ -38,11 +38,11 @@ class InfoActivity : AppCompatActivity() {
         }
     }
 
-    fun showLicenses(view: View) {
+    fun showLicenses(@Suppress("UNUSED_PARAMETER") view: View) {
         startActivity(Intent(this, OssLicensesMenuActivity::class.java))
     }
 
-    fun openPrivacyPolicy(view: View) {
+    fun openPrivacyPolicy(@Suppress("UNUSED_PARAMETER") view: View) {
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(policyUrl)))
     }
 

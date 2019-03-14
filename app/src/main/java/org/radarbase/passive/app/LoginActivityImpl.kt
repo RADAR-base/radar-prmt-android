@@ -163,7 +163,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    fun scan(view: View) {
+    fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
         if (canLogin) {
             canLogin = false
             qrCodeScanner.start()
@@ -250,7 +250,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    fun enterCredentials(view: View) {
+    fun enterCredentials(@Suppress("UNUSED_PARAMETER") view: View) {
         val baseUrlInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT
             setCompoundDrawables(TextDrawable(this, "https://"), null, null, null)

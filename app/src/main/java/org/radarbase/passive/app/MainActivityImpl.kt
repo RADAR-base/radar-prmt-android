@@ -28,15 +28,15 @@ class MainActivityImpl : MainActivity() {
         return MainActivityViewImpl(this)
     }
 
-    fun logout(view: View) {
+    fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
         logout(true)
     }
 
-    fun showInfo(view: View) {
+    fun showInfo(@Suppress("UNUSED_PARAMETER")view: View) {
         startActivity(Intent(this, InfoActivity::class.java))
     }
 
-    fun showSettings(view: View) {
+    fun showSettings(@Suppress("UNUSED_PARAMETER")view: View) {
         startActivity(Intent(this, SettingsActivity::class.java))
     }
 

@@ -50,7 +50,7 @@ class SettingsActivity : AppCompatActivity() {
         enableDataPriorityButton.isChecked = config.getBoolean(RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY, RadarConfiguration.SEND_ONLY_WITH_WIFI_DEFAULT)
     }
 
-    fun startReset(view: View) {
+    fun startReset(@Suppress("UNUSED_PARAMETER") view: View) {
         AlertDialog.Builder(this).apply {
             setTitle("Reset")
             setMessage("Do you really want to reset to default settings?")
