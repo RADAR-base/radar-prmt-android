@@ -9,8 +9,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:text="E4"
-        android:textSize="10sp"
+        android:text=""
+        android:textSize="12sp"
         android:minHeight="0dp"
         android:minWidth="0dp"
         android:visibility="visible"
@@ -60,7 +60,5 @@
     <ImageButton
         android:id="@+id/refreshButton"
         android:src="@drawable/ic_cancel"
-        />
-
-
+        android:contentDescription="@string/refresh" />
 </TableRow>

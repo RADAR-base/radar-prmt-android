@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DetailMainActivity">
+    tools:context="org.radarbase.passive.app.MainActivityImpl">
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -122,7 +122,7 @@
                 android:layout_marginStart="5dp"
                 android:text="@string/startPpgMeasurement"/>
 
-            <android.support.constraint.Barrier
+            <androidx.constraintlayout.widget.Barrier
                 android:id="@+id/actionBarrier"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -155,15 +155,15 @@
                 android:layout_marginStart="5dp"
                 android:text="@string/sync_default" />
 
-        </android.support.constraint.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <android.support.design.widget.AppBarLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_height="wrap_content"
         android:layout_width="match_parent">
 
-        <Toolbar
+        <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             app:title="RADAR pRMT"
             app:layout_constraintTop_toTopOf="@id/constraintLayout"
@@ -193,7 +193,7 @@
                 android:contentDescription="@string/info"
                 android:onClick="showInfo"
                 android:src="@drawable/ic_info_black" />
-        </Toolbar>
-    </android.support.design.widget.AppBarLayout>
-</android.support.design.widget.CoordinatorLayout>
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
 

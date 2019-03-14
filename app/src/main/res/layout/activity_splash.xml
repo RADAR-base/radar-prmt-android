@@ -23,7 +23,7 @@
     android:layout_height="match_parent"
     android:layout_margin="20pt"
     android:gravity="center"
-    tools:context="org.radarbase.passive.app.LoginActivityImpl"
+    tools:context="org.radarbase.passive.app.SplashActivityImpl"
     android:id="@+id/constraintLayout">
 
     <ImageView
@@ -33,45 +33,24 @@
         android:layout_margin="32dp"
         android:adjustViewBounds="true"
         android:src="@mipmap/ic_launcher"
-        app:layout_constraintBottom_toTopOf="@id/scanButton"
+        app:layout_constraintBottom_toTopOf="@id/splashMessageText"
         app:layout_constraintEnd_toEndOf="@id/constraintLayout"
         app:layout_constraintStart_toStartOf="@id/constraintLayout"
         app:layout_constraintTop_toTopOf="@id/constraintLayout"
         app:layout_constraintVertical_bias="0.503"
-        android:contentDescription="@string/radar_cns_logo"
-        app:layout_constraintVertical_chainStyle="spread"/>
-
-    <Button
-        android:id="@+id/scanButton"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:onClick="scan"
-        android:text="@string/scan_qr_button"
-        app:layout_constraintBottom_toTopOf="@id/enterCredentialsButton"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/splash_image"
-        app:layout_constraintVertical_chainStyle="spread" />
-
-    <Button
-        android:id="@+id/enterCredentialsButton"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:onClick="enterCredentials"
-        android:text="@string/enter_credentials"
-        app:layout_constraintBottom_toTopOf="@id/messageText"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/scanButton"
-        app:layout_constraintVertical_chainStyle="spread"/>
+        android:contentDescription="@string/radar_cns_logo" />
 
     <TextView
-        android:id="@+id/messageText"
+        android:id="@+id/splashMessageText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:gravity="center"
         app:layout_constraintEnd_toEndOf="@id/constraintLayout"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/enterCredentialsButton" />
+        app:layout_constraintTop_toBottomOf="@id/splash_image"
+        app:layout_constraintBottom_toBottomOf="@id/constraintLayout"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

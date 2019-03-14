@@ -96,4 +96,23 @@
     <string name="action_header">Actions</string>
     <string name="startPpgMeasurement">PPG measurement</string>
     <string name="appUpdated">pRMT successfully updated</string>
+    <string name="radar_cns_logo">RADAR-CNS logo</string>
+    <string name="app_initializing">Initializing…</string>
+    <string name="app_authorizing">Authorizing…</string>
+    <string name="app_fetching_config">Fetching configuration…</string>
+    <string name="app_disconnected">Cannot initialize settings. Please ensure your device is connected to the internet.</string>
+    <string name="firebase_unavailable">Because Google Firebase is unavailable on your device so this app will not work. You may try to install the app on a device with Google Play store installed instead.</string>
+    <string name="app_starting">Starting app…</string>
+    <string name="enter_credentials">Enter token</string>
+    <string name="enter_credentials_title">Enter credentials</string>
+    <string name="enter_credentials_description">Enter the base URL and token listed in the ManagementPortal Pair App screen.</string>
+    <string name="baseUrlPrefix">https://</string>
+    <string name="label_base_url">Base URL:</string>
+    <string name="label_meta_token">Token:</string>
+    <string name="person_logo">Person logo</string>
+    <string name="accept_privacy_policy_button">Accept</string>
+    <string name="privacy_statement_header">Privacy statement</string>
+    <string name="base_url_message">Server: <u>%1$s</u></string>
+    <string name="recovered_from_crash">pRMT recovered from a crash and restarted.</string>
+    <string name="refresh">Refresh</string>
 </resources>

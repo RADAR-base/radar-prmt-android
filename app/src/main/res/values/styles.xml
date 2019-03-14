@@ -137,4 +137,9 @@
         <item name="android:textColor">#ffffff</item>
         <item name="android:textColorPrimary">#ffffff</item>
     </style>
+
+    <style name="FadeAnimationTransition">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
+    </style>
 </resources>
