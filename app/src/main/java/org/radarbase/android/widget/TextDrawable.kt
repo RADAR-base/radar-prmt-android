@@ -32,12 +32,7 @@ class TextDrawable(textView: TextView, mText: String) : Drawable(), TextWatcher 
     private val heightBounds: Rect = Rect()
 
     //Since this can change the font used, we need to recalculate bounds.
-    var paint: Paint = Paint(textView.paint)
-        set(value) {
-            field = Paint(value)
-            calculateBounds()
-            invalidateSelf()
-        }
+    private val paint: Paint = Paint(textView.paint)
 
     //Since this can change the bounds of the text, we need to recalculate.
     var text: String = mText

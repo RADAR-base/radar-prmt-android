@@ -6,8 +6,8 @@ import android.view.View
 import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import org.radarcns.android.RadarApplication
-import org.radarcns.android.RadarConfiguration
+import org.radarbase.android.RadarConfiguration
+import org.radarbase.android.radarConfig
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var enableDataButton: Switch
@@ -16,7 +16,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(bundle: Bundle?) {
         super.onCreate(bundle)
-        config = (application as RadarApplication).configuration
+        config = radarConfig
         setContentView(R.layout.activity_settings)
 
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar).apply {

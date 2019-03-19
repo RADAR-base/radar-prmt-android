@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimaryDark"
-                android:layout_margin="5dp"
+                android:layout_margin="8dp"
                 app:layout_constraintStart_toStartOf="@id/constraintLayout"
                 app:layout_constraintBottom_toTopOf="@id/version_head"
                 app:layout_constraintTop_toTopOf="@id/constraintLayout"/>
@@ -33,7 +33,7 @@
                 android:id="@+id/app_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 app:layout_constraintStart_toEndOf="@id/app_name_head"
                 app:layout_constraintBaseline_toBaselineOf="@id/app_name_head"/>
 
@@ -41,12 +41,12 @@
                 android:id="@+id/version_head"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_margin="8dp"
                 android:text="@string/version"
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimaryDark"
                 app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintBottom_toTopOf="@id/privacyStatement"
+                app:layout_constraintBottom_toTopOf="@id/server_base_url_head"
                 app:layout_constraintTop_toBottomOf="@id/app_name_head"/>
 
             <TextView
@@ -58,17 +58,37 @@
                 app:layout_constraintBaseline_toBaselineOf="@id/version_head"/>
 
             <TextView
+                android:id="@+id/server_base_url_head"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:text="@string/server_base_url"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimaryDark"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintBottom_toTopOf="@id/privacyStatement"
+                app:layout_constraintTop_toBottomOf="@id/version_head"/>
+
+            <TextView
+                android:id="@+id/server_base_url"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="@id/app_name"
+                app:layout_constraintBottom_toBottomOf="@id/server_base_url_head"
+                app:layout_constraintBaseline_toBaselineOf="@id/server_base_url_head"/>
+
+            <TextView
                 android:id="@+id/privacyStatement"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="openPrivacyPolicy"
                 android:text="@string/privacy_policy"
                 android:textColor="#57a0d4"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
                 app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintTop_toBottomOf="@id/version_head"
+                app:layout_constraintTop_toBottomOf="@id/server_base_url_head"
                 app:layout_constraintBottom_toTopOf="@id/licenses_button"/>
 
             <Button
@@ -77,6 +97,8 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:onClick="showLicenses"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="16dp"
                 app:layout_constraintStart_toStartOf="@id/constraintLayout"
                 app:layout_constraintTop_toBottomOf="@id/privacyStatement"/>
         </androidx.constraintlayout.widget.ConstraintLayout>

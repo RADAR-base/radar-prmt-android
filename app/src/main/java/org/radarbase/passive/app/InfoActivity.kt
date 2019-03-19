@@ -8,7 +8,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
-import org.radarbase.android.RadarApplication
+import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
+import org.radarbase.android.radarConfig
 
 class InfoActivity : AppCompatActivity() {
     private var policyUrl: String? = null
@@ -20,8 +21,9 @@ class InfoActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.app_name).setText(R.string.app_name)
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
+        findViewById<TextView>(R.id.server_base_url).text = radarConfig.getString(BASE_URL_KEY, "")
 
-        policyUrl = (application as RadarApplication).configuration.optString(PRIVACY_POLICY)
+        policyUrl = radarConfig.optString(PRIVACY_POLICY)
 
         if (policyUrl == null) {
             findViewById<TextView>(R.id.privacyStatement).apply {

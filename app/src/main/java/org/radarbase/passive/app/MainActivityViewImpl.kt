@@ -20,6 +20,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
+import org.radarbase.android.IRadarBinder
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.device.DeviceServiceProvider
 import org.radarcns.passive.ppg.PhonePpgProvider
@@ -67,27 +68,30 @@ class MainActivityViewImpl internal constructor(private val mainActivity: MainAc
 
         initializeViews()
 
-        createRows()
+        mainActivity.radarService?.let { createRows(it) }
     }
 
-    private fun createRows() {
-        if (mainActivity.radarService != null && mainActivity.radarService!!.connections != savedConnections) {
+    private fun createRows(binder: IRadarBinder) {
+        if (binder.connections != savedConnections) {
             val root = mainActivity.findViewById<ViewGroup>(R.id.deviceTable)
             while (root.childCount > 1) {
                 root.removeView(root.getChildAt(1))
             }
             rows.clear()
 
-            rows += mainActivity.radarService?.connections
-                    ?.filter { it.isDisplayable }
-                    ?.map { DeviceRowView(mainActivity, it, root) } ?: emptyList()
+            rows += binder.connections
+                    .filter { it.isDisplayable }
+                    .map { DeviceRowView(mainActivity, it, root) }
 
-            savedConnections = mainActivity.radarService!!.connections
+            savedConnections = binder.connections
         }
     }
 
+    override fun onRadarServiceBound(binder: IRadarBinder) {
+        createRows(binder)
+    }
+
     override fun update() {
-        createRows()
         for (row in rows) {
             row.update()
         }

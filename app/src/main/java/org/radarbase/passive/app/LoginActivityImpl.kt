@@ -32,13 +32,13 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import kotlinx.android.synthetic.main.activity_login.*
 import org.json.JSONException
 import org.json.JSONObject
-import org.radarbase.android.RadarApplication
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.AuthService
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
+import org.radarbase.android.radarConfig
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.widget.TextDrawable
@@ -254,7 +254,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         val baseUrlInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT
             setCompoundDrawables(TextDrawable(this, "https://"), null, null, null)
-            setText((application as RadarApplication).configuration.getString(BASE_URL_KEY, ""))
+            setText(radarConfig.getString(BASE_URL_KEY, ""))
         }
         val tokenInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT

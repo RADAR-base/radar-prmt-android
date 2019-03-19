@@ -13,15 +13,15 @@ import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_privacy_policy.*
-import org.radarbase.android.RadarApplication
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
 import org.radarbase.android.auth.AppAuthState
 import org.radarbase.android.auth.portal.ManagementPortalClient.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.portal.ManagementPortalClient.Companion.PRIVACY_POLICY_URL_PROPERTY
+import org.radarbase.android.radarConfig
+import org.radarbase.passive.app.InfoActivity.Companion.PRIVACY_POLICY
 import org.radarbase.passive.app.MainActivityViewImpl.Companion.MAX_USERNAME_LENGTH
 import org.radarbase.passive.app.MainActivityViewImpl.Companion.truncate
-import org.radarbase.passive.app.InfoActivity.Companion.PRIVACY_POLICY
 import org.slf4j.LoggerFactory
 
 class PrivacyPolicyFragment : Fragment() {
@@ -146,9 +146,7 @@ class PrivacyPolicyFragment : Fragment() {
                     putString(PROJECT_ID_KEY, state.projectId)
                     putString(USER_ID_KEY, state.userId)
                     putString(PRIVACY_POLICY_URL_PROPERTY, state.getAttribute(PRIVACY_POLICY_URL_PROPERTY))
-                    putString(PRIVACY_POLICY, (context.applicationContext as RadarApplication)
-                            .configuration
-                            .optString(PRIVACY_POLICY))
+                    putString(PRIVACY_POLICY, context.radarConfig.optString(PRIVACY_POLICY))
                 }
             }
         }

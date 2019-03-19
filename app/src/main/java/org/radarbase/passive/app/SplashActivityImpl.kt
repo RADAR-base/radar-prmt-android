@@ -10,7 +10,7 @@ import org.radarbase.android.util.Boast
 class SplashActivityImpl : SplashActivity() {
     private lateinit var messageText: TextView
     override val delayMs: Long = 500L
-    var notifyResume = false
+    private var notifyResume = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
