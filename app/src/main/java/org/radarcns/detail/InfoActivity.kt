@@ -1,4 +1,4 @@
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.content.Intent
 import android.net.Uri

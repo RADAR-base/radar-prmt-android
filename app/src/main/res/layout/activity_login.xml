@@ -23,7 +23,7 @@
     android:layout_height="match_parent"
     android:layout_margin="20pt"
     android:gravity="center"
-    tools:context="org.radarbase.passive.app.LoginActivityImpl"
+    tools:context=".LoginActivityImpl"
     android:id="@+id/constraintLayout">
 
     <ImageView

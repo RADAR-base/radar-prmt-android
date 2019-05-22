@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.content.Intent
 import android.view.View
-
 import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
-import org.radarcns.passive.ppg.PhonePpgActivity
 
 class MainActivityImpl : MainActivity() {
     override fun createView(): MainActivityView {
@@ -38,13 +36,5 @@ class MainActivityImpl : MainActivity() {
 
     fun showSettings(@Suppress("UNUSED_PARAMETER")view: View) {
         startActivity(Intent(this, SettingsActivity::class.java))
-    }
-
-    fun startPpgFragment() {
-        startActivity(Intent(this, PhonePpgActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        })
-        overridePendingTransition(0, 0)
-        finish()
     }
 }

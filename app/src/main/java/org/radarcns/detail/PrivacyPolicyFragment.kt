@@ -1,4 +1,4 @@
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.content.Context
 import android.content.Intent
@@ -16,12 +16,12 @@ import kotlinx.android.synthetic.main.fragment_privacy_policy.*
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
 import org.radarbase.android.auth.AppAuthState
-import org.radarbase.android.auth.portal.ManagementPortalClient.Companion.BASE_URL_PROPERTY
-import org.radarbase.android.auth.portal.ManagementPortalClient.Companion.PRIVACY_POLICY_URL_PROPERTY
+import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
+import org.radarbase.android.auth.AuthService.Companion.PRIVACY_POLICY_URL_PROPERTY
 import org.radarbase.android.radarConfig
-import org.radarbase.passive.app.InfoActivity.Companion.PRIVACY_POLICY
-import org.radarbase.passive.app.MainActivityViewImpl.Companion.MAX_USERNAME_LENGTH
-import org.radarbase.passive.app.MainActivityViewImpl.Companion.truncate
+import org.radarcns.detail.InfoActivity.Companion.PRIVACY_POLICY
+import org.radarcns.detail.MainActivityViewImpl.Companion.MAX_USERNAME_LENGTH
+import org.radarcns.detail.MainActivityViewImpl.Companion.truncate
 import org.slf4j.LoggerFactory
 
 class PrivacyPolicyFragment : Fragment() {
@@ -65,7 +65,7 @@ class PrivacyPolicyFragment : Fragment() {
         accept_privacy_policy_button.setOnClickListener { acceptPrivacyPolicy() }
 
         inputProjectId.text = getString(R.string.study_id_message, projectId)
-        inputUserId.text = getString(R.string.user_id_message, truncate(userId, MAX_USERNAME_LENGTH))
+        inputUserId.text = getString(R.string.user_id_message, userId.truncate(MAX_USERNAME_LENGTH))
 
         val baseUrl = baseUrl ?: "Unknown server"
         policyAcceptanceStatement.text = fromHtml(R.string.policy_acceptance_message, baseUrl)
@@ -145,6 +145,7 @@ class PrivacyPolicyFragment : Fragment() {
                 arguments = Bundle().apply {
                     putString(PROJECT_ID_KEY, state.projectId)
                     putString(USER_ID_KEY, state.userId)
+                    putString(BASE_URL_PROPERTY, state.getAttribute(BASE_URL_PROPERTY))
                     putString(PRIVACY_POLICY_URL_PROPERTY, state.getAttribute(PRIVACY_POLICY_URL_PROPERTY))
                     putString(PRIVACY_POLICY, context.radarConfig.optString(PRIVACY_POLICY))
                 }

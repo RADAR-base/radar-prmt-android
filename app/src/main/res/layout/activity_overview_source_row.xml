@@ -5,7 +5,7 @@
     android:layout_height="match_parent" >
 
     <Button
-        android:id="@+id/inputDeviceButton"
+        android:id="@+id/filterSourceButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -17,7 +17,7 @@
         android:clickable="false"/>
 
     <TextView
-        android:id="@+id/deviceName_label"
+        android:id="@+id/sourceNameLabel"
         style="@style/DeviceNameColumn"
         android:text="@string/emptyText" />
 
@@ -32,7 +32,7 @@
     <FrameLayout android:layout_width="match_parent"
         android:layout_height="match_parent">
         <ImageView
-            android:id="@+id/battery_label"
+            android:id="@+id/batteryStatusLabel"
             style="@style/BatteryColumn"
             android:src="@drawable/ic_battery_unknown"
             android:contentDescription="@string/battery_status" />

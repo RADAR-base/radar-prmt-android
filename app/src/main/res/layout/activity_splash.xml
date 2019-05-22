@@ -23,7 +23,7 @@
     android:layout_height="match_parent"
     android:layout_margin="20pt"
     android:gravity="center"
-    tools:context="org.radarbase.passive.app.SplashActivityImpl"
+    tools:context=".SplashActivityImpl"
     android:id="@+id/constraintLayout">
 
     <ImageView

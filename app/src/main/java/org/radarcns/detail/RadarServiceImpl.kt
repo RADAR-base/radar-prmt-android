@@ -14,14 +14,41 @@
  * limitations under the License.
  */
 
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.Manifest.permission.RECEIVE_BOOT_COMPLETED
 import android.os.Build
 import org.radarbase.android.RadarService
+import org.radarbase.android.source.SourceProvider
+import org.radarbase.monitor.application.ApplicationStatusProvider
+import org.radarbase.passive.audio.OpenSmileAudioProvider
+import org.radarbase.passive.bittium.FarosProvider
+import org.radarbase.passive.empatica.E4Provider
+import org.radarbase.passive.phone.PhoneBluetoothProvider
+import org.radarbase.passive.phone.PhoneContactListProvider
+import org.radarbase.passive.phone.PhoneLocationProvider
+import org.radarbase.passive.phone.PhoneSensorProvider
+import org.radarbase.passive.phone.usage.PhoneUsageProvider
+import org.radarbase.passive.ppg.PhonePpgProvider
+import org.radarbase.passive.weather.WeatherApiProvider
 import java.util.*
 
 class RadarServiceImpl : RadarService() {
+    override val plugins: List<SourceProvider<*>> = listOf(
+            ApplicationStatusProvider(this),
+            OpenSmileAudioProvider(this),
+            E4Provider(this),
+            FarosProvider(this),
+            PhoneBluetoothProvider(this),
+            PhoneContactListProvider(this),
+            PhoneLocationProvider(this),
+            PhoneSensorProvider(this),
+//            PhoneLogProvider(this),
+            PhoneUsageProvider(this),
+            PhonePpgProvider(this),
+            WeatherApiProvider(this)
+    )
+
     override val servicePermissions: List<String>
         get() {
             return ArrayList(super.servicePermissions).also {

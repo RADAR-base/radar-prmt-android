@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -24,6 +24,7 @@ import android.graphics.BitmapFactory
 import android.os.SystemClock
 import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
+import org.radarbase.android.FirebaseRadarConfiguration
 import org.radarbase.android.RadarApplication
 import org.radarbase.android.RadarConfiguration
 import org.slf4j.LoggerFactory
@@ -67,11 +68,13 @@ class RadarApplicationImpl : RadarApplication() {
             get() = R.drawable.ic_bt_connected
 
     override fun createConfiguration(): RadarConfiguration {
-        val config = RadarConfiguration.configure(this, true, R.xml.remote_config_defaults)
-        val firebase = FirebaseAnalytics.getInstance(this)
-        firebase.setUserProperty(TEST_PHASE, if (BuildConfig.DEBUG) "dev" else "production")
-        config.fetch()
-        return config
+        FirebaseAnalytics.getInstance(this).apply {
+            setUserProperty(TEST_PHASE, if (BuildConfig.DEBUG) "dev" else "production")
+        }
+
+        return FirebaseRadarConfiguration(this, true, R.xml.remote_config_defaults).apply {
+            fetch()
+        }
     }
 
     override val mainActivity: Class<MainActivityImpl>
@@ -80,8 +83,8 @@ class RadarApplicationImpl : RadarApplication() {
     override val loginActivity: Class<LoginActivityImpl>
             get() = LoginActivityImpl::class.java
 
-    override val authService: Class<AuthService>
-            get() = AuthService::class.java
+    override val authService: Class<AuthServiceImpl>
+            get() = AuthServiceImpl::class.java
 
     override val radarService: Class<RadarServiceImpl>
             get() = RadarServiceImpl::class.java

@@ -94,7 +94,6 @@
     <string name="policy_acceptance_message">By pressing the “Accept” button, you agree to our General privacy policy and have read our Description of collected data. You agree to send data to <u>%1$s</u>.</string>
     <string name="filter_open_prmt">Open RADAR pRMT</string>
     <string name="action_header">Actions</string>
-    <string name="startPpgMeasurement">PPG measurement</string>
     <string name="appUpdated">pRMT successfully updated</string>
     <string name="radar_cns_logo">RADAR-CNS logo</string>
     <string name="app_initializing">Initializing…</string>
@@ -116,4 +115,8 @@
     <string name="recovered_from_crash">pRMT recovered from a crash and restarted.</string>
     <string name="refresh">Refresh</string>
     <string name="server_base_url">Server</string>
+    <string name="last_upload_succeeded">last upload at %1$s</string>
+    <string name="last_upload_failed">last upload failed at %1$s</string>
+
+    <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 </resources>

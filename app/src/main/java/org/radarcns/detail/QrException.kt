@@ -1,4 +1,4 @@
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 class QrException : IllegalArgumentException {
     constructor(message: String) : super(message)

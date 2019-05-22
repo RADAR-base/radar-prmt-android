@@ -1,4 +1,4 @@
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.os.Bundle
 import android.widget.TextView

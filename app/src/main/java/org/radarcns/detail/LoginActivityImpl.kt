@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.app.AlertDialog
 import android.app.ProgressDialog
@@ -36,11 +36,11 @@ import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
 import org.radarbase.android.auth.*
-import org.radarbase.android.auth.AuthService
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.radarConfig
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
+import org.radarbase.android.util.takeTrimmedIfNotEmpty
 import org.radarbase.android.widget.TextDrawable
 import org.radarbase.producer.AuthenticationException
 import org.slf4j.LoggerFactory
@@ -66,7 +66,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         networkReceiver = NetworkConnectedReceiver(this, this)
         didCreate = true
         qrCodeScanner = QrCodeScanner(this) { value ->
-            value?.let { s -> s.trim { it <= ' ' } }
+            value?.takeTrimmedIfNotEmpty()
                 ?.also { parseQrCode(it) }
         }
     }
@@ -150,10 +150,10 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         progressDialog = null
     }
 
-    override fun onNetworkConnectionChanged(isConnected: Boolean, hasWifiOrEthernet: Boolean) {
-        logger.info("Network change: {}", isConnected)
+    override fun onNetworkConnectionChanged(state: NetworkConnectedReceiver.NetworkState) {
+        logger.info("Network change: {}", state.isConnected)
         runOnUiThread {
-            if (isConnected) {
+            if (state.isConnected) {
                 scanButton.isEnabled = true
                 messageText.text = ""
             } else {

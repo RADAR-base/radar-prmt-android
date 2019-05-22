@@ -1,4 +1,4 @@
-package org.radarbase.passive.app
+package org.radarcns.detail
 
 import android.app.AlertDialog
 import android.os.Bundle
