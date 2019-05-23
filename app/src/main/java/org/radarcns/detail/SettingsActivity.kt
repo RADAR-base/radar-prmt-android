@@ -6,8 +6,8 @@ import android.view.View
 import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
-import org.radarbase.android.radarConfig
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var enableDataButton: Switch
@@ -64,7 +64,8 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     companion object {
-
-        private val MANAGED_SETTINGS = arrayOf(RadarConfiguration.SEND_ONLY_WITH_WIFI, RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY)
+        private val MANAGED_SETTINGS = arrayOf(
+                RadarConfiguration.SEND_ONLY_WITH_WIFI,
+                RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY)
     }
 }

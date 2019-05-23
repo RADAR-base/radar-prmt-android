@@ -8,8 +8,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
-import org.radarbase.android.radarConfig
 
 class InfoActivity : AppCompatActivity() {
     private var policyUrl: String? = null

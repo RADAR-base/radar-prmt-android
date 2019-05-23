@@ -29,10 +29,10 @@ import android.widget.TextView
  * @param s
  */
 class TextDrawable(textView: TextView, mText: String) : Drawable(), TextWatcher {
-    private val heightBounds: Rect = Rect()
+    private val heightBounds = Rect()
 
     //Since this can change the font used, we need to recalculate bounds.
-    private val paint: Paint = Paint(textView.paint)
+    private val paint = Paint(textView.paint)
 
     //Since this can change the bounds of the text, we need to recalculate.
     var text: String = mText
@@ -58,12 +58,10 @@ class TextDrawable(textView: TextView, mText: String) : Drawable(), TextWatcher 
         paint.colorFilter = colorFilter
     }
 
-    override fun getOpacity(): Int {
-        return when (paint.alpha) {
-            0 -> PixelFormat.TRANSPARENT
-            255 -> PixelFormat.OPAQUE
-            else -> PixelFormat.TRANSLUCENT
-        }
+    override fun getOpacity(): Int = when (paint.alpha) {
+        0 -> PixelFormat.TRANSPARENT
+        255 -> PixelFormat.OPAQUE
+        else -> PixelFormat.TRANSLUCENT
     }
 
     private fun calculateBounds() {

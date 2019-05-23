@@ -13,12 +13,12 @@ import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_privacy_policy.*
+import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
 import org.radarbase.android.auth.AppAuthState
 import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.AuthService.Companion.PRIVACY_POLICY_URL_PROPERTY
-import org.radarbase.android.radarConfig
 import org.radarcns.detail.InfoActivity.Companion.PRIVACY_POLICY
 import org.radarcns.detail.MainActivityViewImpl.Companion.MAX_USERNAME_LENGTH
 import org.radarcns.detail.MainActivityViewImpl.Companion.truncate

@@ -62,10 +62,9 @@ class RadarApplicationImpl : RadarApplication() {
     }
 
     override val largeIcon: Bitmap
-            get() = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        get() = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
 
-    override val smallIcon: Int
-            get() = R.drawable.ic_bt_connected
+    override val smallIcon = R.drawable.ic_bt_connected
 
     override fun createConfiguration(): RadarConfiguration {
         FirebaseAnalytics.getInstance(this).apply {
@@ -77,17 +76,13 @@ class RadarApplicationImpl : RadarApplication() {
         }
     }
 
-    override val mainActivity: Class<MainActivityImpl>
-            get() = MainActivityImpl::class.java
+    override val mainActivity: Class<MainActivityImpl> = MainActivityImpl::class.java
 
-    override val loginActivity: Class<LoginActivityImpl>
-            get() = LoginActivityImpl::class.java
+    override val loginActivity: Class<LoginActivityImpl> = LoginActivityImpl::class.java
 
-    override val authService: Class<AuthServiceImpl>
-            get() = AuthServiceImpl::class.java
+    override val authService: Class<AuthServiceImpl> = AuthServiceImpl::class.java
 
-    override val radarService: Class<RadarServiceImpl>
-            get() = RadarServiceImpl::class.java
+    override val radarService: Class<RadarServiceImpl> = RadarServiceImpl::class.java
 
     companion object {
         private const val TEST_PHASE = "test_phase"

@@ -143,10 +143,10 @@ class SourceRowView internal constructor(private val mainActivity: MainActivity,
     }
 
     private fun updateSourceStatus() {
-        statusCache.applyIfChanged(sourceState?.status ?: SourceStatusListener.Status.DISCONNECTED) {
-            logger.info("Source status is {}", it)
+        statusCache.applyIfChanged(sourceState?.status ?: SourceStatusListener.Status.DISCONNECTED) { status ->
+            logger.info("Source status is {}", status)
 
-            mStatusIcon.setBackgroundResource(when(it) {
+            mStatusIcon.setBackgroundResource(when(status) {
                 SourceStatusListener.Status.CONNECTED -> R.drawable.status_connected
                 SourceStatusListener.Status.DISCONNECTED -> R.drawable.status_disconnected
                 SourceStatusListener.Status.READY -> R.drawable.status_searching
