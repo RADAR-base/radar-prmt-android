@@ -30,6 +30,14 @@
         <value>https://radar-cns-platform.rosalind.kcl.ac.uk/schema/</value>
     </entry>
     <entry>
+        <key>unsafe_kafka_connection</key>
+        <value>false</value>
+    </entry>
+    <entry>
+        <key>send_only_with_wifi</key>
+        <value>true</value>
+    </entry>
+    <entry>
         <key>start_at_boot</key>
         <value>true</value>
     </entry>
@@ -39,7 +47,7 @@
     </entry>
     <entry>
         <key>device_services_to_connect</key>
-        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneLogProvider .phone.PhoneUsageProvider .passive.bittium.FarosProvider</value>
+        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneUsageProvider .passive.bittium.FarosProvider</value>
     </entry>
     <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
     <entry>
