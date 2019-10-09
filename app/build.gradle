@@ -51,9 +51,10 @@ repositories {
     flatDir { dirs 'libs' }
     google()
     jcenter()
+    maven { url 'http://dl.bintray.com/radar-base/org.radarbase' }
     maven { url 'http://dl.bintray.com/radar-cns/org.radarcns' }
-    maven { url  'https://repo.thehyve.nl/content/repositories/snapshots' }
     maven { url  'https://repo.thehyve.nl/content/repositories/releases' }
+//    maven { url  'https://repo.thehyve.nl/content/repositories/snapshots' }
 }
 
 ext.radarCommonsVersion = '1.0.0-alpha1'

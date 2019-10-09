@@ -35,8 +35,7 @@ class PrivacyPolicyFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val args = arguments
-                ?: throw IllegalStateException("Cannot start without AppAuthState arguments")
+        val args = checkNotNull(arguments) { "Cannot start without AppAuthState arguments" }
 
         projectId = args.getString(PROJECT_ID_KEY)
         userId = args.getString(USER_ID_KEY)
@@ -82,12 +81,12 @@ class PrivacyPolicyFragment : Fragment() {
         }
     }
 
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is OnFragmentInteractionListener) {
             mListener = context
         } else {
-            throw RuntimeException(context?.toString() + " must implement OnFragmentInteractionListener")
+            throw RuntimeException("$context must implement OnFragmentInteractionListener")
         }
     }
 

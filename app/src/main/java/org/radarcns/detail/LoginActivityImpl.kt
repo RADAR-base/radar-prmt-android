@@ -171,6 +171,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         data?.let {
             qrCodeScanner.onActivityResult(requestCode, resultCode, it)
         }
@@ -291,7 +292,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                             mpManager.setTokenFromUrl(authState, url)
                             dialog.dismiss()
                         } catch (ex: MalformedURLException) {
-                            loginFailed(mpManager, java.lang.IllegalArgumentException("Cannot parse URL $url"))
+                            loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
                         }
                     }
                 }
