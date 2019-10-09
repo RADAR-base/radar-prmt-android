@@ -6,10 +6,10 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    buildToolsVersion '29.0.2'
 
     defaultConfig {
-        applicationId 'org.radarbase.passive.app'
+        applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 39
@@ -61,15 +61,15 @@ ext.radarCommonsVersion = '1.0.0-alpha1'
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     api "org.radarbase:radar-commons-android:$radarCommonsVersion"
-    implementation 'org.radarcns:radar-schemas-commons:0.5.0'
+    implementation 'org.radarcns:radar-schemas-commons:0.5.2'
 
     implementation "org.radarbase:radar-android-login-qr:$radarCommonsVersion"
-    implementation 'com.google.firebase:firebase-core:16.0.9'
-    implementation 'com.google.firebase:firebase-config:17.0.0'
-    implementation 'com.google.android.gms:play-services-oss-licenses:16.0.2'
+    implementation 'com.google.firebase:firebase-core:17.2.0'
+    implementation 'com.google.firebase:firebase-config:19.0.2'
+    implementation 'com.google.android.gms:play-services-oss-licenses:17.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    implementation 'org.slf4j:slf4j-api:1.7.26'
+    implementation 'org.slf4j:slf4j-api:1.7.28'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
     implementation 'sk.baka.slf4j:slf4j-handroid:1.7.27'
 

@@ -35,14 +35,14 @@
 
 # Avro
 -keep class org.apache.avro.** { *; }
--keep class org.codehaus.jackson.** { *; }
--dontwarn org.apache.avro.**
--dontwarn org.codehaus.jackson.map.ext.**
-
 -keep @org.apache.avro.specific.AvroGenerated class * {
     public <fields>;
     public <methods>;
 }
+-keep class org.codehaus.jackson.** { *; }
+-dontwarn org.apache.avro.**
+-dontwarn org.codehaus.jackson.map.ext.**
+
 
 # ==== OkHttp3 ==== #
 # JSR 305 annotations are for embedding nullability information.
