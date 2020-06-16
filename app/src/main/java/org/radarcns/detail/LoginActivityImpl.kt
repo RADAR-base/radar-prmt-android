@@ -26,7 +26,7 @@ import android.view.ViewGroup
 import android.widget.*
 import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
-import com.crashlytics.android.Crashlytics
+//import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import kotlinx.android.synthetic.main.activity_login.*
@@ -224,7 +224,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             createFragmentLayout(R.id.privacy_policy_fragment, fragment)
         } catch (ex: IllegalStateException) {
             logger.error("Failed to start privacy policy fragment:" + " is LoginActivity is already closed?", ex)
-            Crashlytics.logException(ex)
+            //Crashlytics.logException(ex)
         }
 
     }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  package="org.radarbase.garmin">
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Foreground Permission required for newer Android SDKs -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- /PERMISSIONS THAT ENABLE GENERAL NOTIFICATIONS -->
+    <!-- SDK Required Permission -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <uses-permission android:name="${applicationId}.permission.RECEIVE_BROADCASTS" />
+
+    <permission
+      android:name="${applicationId}.permission.RECEIVE_BROADCASTS"
+      android:protectionLevel="normal" />
+
+    <application>
+        <activity android:name=".ui.MainActivity" />
+        <activity android:name=".ui.DataDisplayActivity" />
+        <activity android:name=".ui.TestActivity"/>
+
+        <meta-data
+          android:name="com.garmin.android.gncs.permission"
+          android:value="${applicationId}.permission.RECEIVE_BROADCASTS" />
+
+        <service android:name=".GarminService" />
+    </application>
+</manifest>

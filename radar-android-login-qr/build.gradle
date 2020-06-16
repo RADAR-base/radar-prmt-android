@@ -1,0 +1,9 @@
+apply from: "$rootDir/gradle/android.gradle"
+apply plugin: 'kotlin-android-extensions'
+description = 'RADAR Android QR LoginManager.'
+
+dependencies {
+    api project(':radar-commons-android')
+    implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
+}
+

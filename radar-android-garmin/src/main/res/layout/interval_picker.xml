@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:app="http://schemas.android.com/apk/res-auto">
+  <TextView
+    android:id="@+id/start_title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="25dp"
+    android:text="Start:"
+    android:textSize="18sp"
+    app:layout_constraintTop_toBottomOf="@+id/interval_picker_top_anchor"
+    app:layout_constraintEnd_toStartOf="@+id/interval_picker_align"/>
+
+  <TextView
+    android:id="@+id/end_title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="35dp"
+    android:text="End:"
+    android:textSize="18sp"
+    app:layout_constraintTop_toBottomOf="@+id/start_title"
+    app:layout_constraintEnd_toStartOf="@+id/interval_picker_align"/>
+
+  <EditText
+    android:id="@+id/start_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="8dp"
+    android:ems="10"
+    android:inputType="date"
+    android:textAlignment="center"
+    android:textColor="@color/colorPrimaryDark"
+    app:layout_constraintBottom_toBottomOf="@+id/start_title"
+    app:layout_constraintStart_toEndOf="@+id/start_title"
+    app:layout_constraintTop_toTopOf="@+id/start_title"/>
+
+  <EditText
+    android:id="@+id/end_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="8dp"
+    android:ems="10"
+    android:inputType="date"
+    android:textAlignment="center"
+    android:textColor="@color/colorPrimaryDark"
+    app:layout_constraintBottom_toBottomOf="@+id/end_title"
+    app:layout_constraintStart_toEndOf="@+id/end_title"
+    app:layout_constraintTop_toTopOf="@+id/end_title"/>
+
+  <ImageView
+    android:id="@+id/start_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="20dp"
+    app:layout_constraintBottom_toBottomOf="@+id/start_text"
+    app:layout_constraintStart_toEndOf="@+id/start_text"
+    app:layout_constraintTop_toTopOf="@+id/start_text"
+    app:srcCompat="@drawable/ic_av_timer_black_24dp" />
+
+  <ImageView
+    android:id="@+id/end_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="8dp"
+    app:layout_constraintBottom_toBottomOf="@+id/end_text"
+    app:layout_constraintStart_toEndOf="@+id/end_text"
+    app:layout_constraintTop_toTopOf="@+id/end_text"
+    app:srcCompat="@drawable/ic_av_timer_black_24dp" />
+
+  <androidx.constraintlayout.widget.Guideline
+  android:id="@+id/interval_picker_align"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  app:layout_constraintGuide_percent=".25" />
+
+  <androidx.constraintlayout.widget.Guideline
+    android:id="@+id/interval_picker_bottom_anchor"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    app:layout_constraintTop_toBottomOf="@id/end_text" />
+
+</merge>

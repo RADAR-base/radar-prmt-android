@@ -1,1 +1,1 @@
-include ':app'
+include ':app', ':radar-commons-android', ':radar-android-garmin', ':radar-android-login-qr', ':radar-android-login-oauth2'

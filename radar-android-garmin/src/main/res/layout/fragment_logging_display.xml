@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+  <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              tools:layout_editor_absoluteX="0dp"
+              tools:layout_editor_absoluteY="0dp">
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_marginLeft="5dp"
+                  android:layout_marginRight="5dp"
+                  android:keepScreenOn="true"
+                  android:orientation="vertical"
+                  tools:context=".ui.DataDisplayActivity">
+      <!-- Heart rate chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/hrv_24h_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+          <TextView
+            android:id="@+id/hrv_24h_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/hrv_24h_description" />
+          <org.radarbase.garmin.ui.charts.HeartRateVariabilityChart
+            android:id="@+id/hrv_24h_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+
+
+      </androidx.cardview.widget.CardView>
+
+      <!-- Heart rate variability chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/hrv_1h_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/hrv_1h_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/hrv_1h_description" />
+
+          <org.radarbase.garmin.ui.charts.HeartRateVariabilityChart
+            android:id="@+id/hrv_1h_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Accelerometer chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/hrv_30m_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/hrv_30m_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/hrv_30m_description" />
+
+          <org.radarbase.garmin.ui.charts.HeartRateVariabilityChart
+            android:id="@+id/hrv_30m_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Steps chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/hrv_10m_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/hrv_10m_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/hrv_10m_description" />
+
+          <org.radarbase.garmin.ui.charts.HeartRateVariabilityChart
+            android:id="@+id/hrv_10m_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Calories chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/accelerometer_24h_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/accelerometer_24h_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/accel_24h_description" />
+
+          <org.radarbase.garmin.ui.charts.AccelerometerChart
+            android:id="@+id/accelerometer_24h_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Floors chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/accelerometer_1h_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/accelerometer_1h_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/accel_1h_description" />
+
+          <org.radarbase.garmin.ui.charts.AccelerometerChart
+            android:id="@+id/accelerometer_1h_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Intensity minutes chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/accelerometer_30m_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/accelerometer_30m_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/accel_30m_description" />
+
+          <org.radarbase.garmin.ui.charts.AccelerometerChart
+            android:id="@+id/accelerometer_30m_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Intensity minutes chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/accelerometer_10m_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/accelerometer_10m_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/accel_10m_description" />
+
+          <org.radarbase.garmin.ui.charts.AccelerometerChart
+            android:id="@+id/accelerometer_10m_chart"
+            style="@style/ChartStyle" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+  </ScrollView>
+</LinearLayout>

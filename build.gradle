@@ -13,8 +13,21 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
         classpath 'com.google.gms:google-services:4.3.3'
-        classpath 'io.fabric.tools:gradle:1.27.0'
+//        classpath 'io.fabric.tools:gradle:1.28.0'
         classpath 'com.google.android.gms:oss-licenses-plugin:0.9.5'
+
+    }
+}
+allprojects {
+    repositories {
+        // Check that you have the following line (if not, add it):
+        google()
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven { url 'https://maven.fabric.io/public' } // Google's Maven repository
+        flatDir { dirs 'libs'
+                  dirs project(':radar-android-garmin').file('libs')
+        }
     }
 }
 

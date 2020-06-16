@@ -1,0 +1,12 @@
+<manifest package="org.radarbase.android.auth.qr"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application android:hardwareAccelerated="true">
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="user"
+            tools:replace="android:screenOrientation"/>
+    </application>
+
+</manifest>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content">
+
+  <Switch
+    android:id="@+id/auto_switch"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/small_vertical_margin"
+    android:text="@string/running"
+    android:textColor="@color/grey_text_color" />
+
+  <EditText
+    android:id="@+id/custom_value"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/medium_vertical_margin"
+    android:layout_weight="1"
+    android:ems="10"
+    android:visibility="gone" />
+</merge>

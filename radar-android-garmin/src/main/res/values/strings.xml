@@ -1,0 +1,322 @@
+<resources>
+
+  <string name="alert_error_title">Error</string>
+  <string name="alert_ok_button">OK</string>
+  <string formatted="false" name="error_failed_to_connect_to_device">Failed to connect to device {%s}Reason: %s</string>
+
+  <string name="scan_start">Start</string>
+  <string name="scan_stop">Stop</string>
+
+  <string name="companion_license" translatable="false">EoACeeZrjn7SQx+gXDXFdHgPgiCt+XcK0MIZqDxLkTjC0HJJu9PUSTF2RuxY3BK+eCzhGYaOadSlc81JhtnuXd9/EECSXxX6DDRkMwgZHvK2cziKwOdqwZZQLfHVaCZrBghY5IR+Nw/Tbzcht4gwDVfVD7Ng6pXUd124VKBM4RSnjXDWSwa3F6BJ2lFhWJPb35NQSv2rc4ilp5rx1VlN8H8oKeU2bZXKpF56ZOpc09ra18Eh8hBUxIyXyC32lSmc7bT4V4SLHLx16Df7GDoY3/52S4siMBk6I/1Oy4jnatZxrLZihWgDyalYN/s1S2tINQRMU6XsrcpCci4q84p20KKlOxiAwOKrtC4iCgECAwQFBgcICQoqBwECAwQFBwg=</string>
+
+  <string name="config_female">Female</string>
+  <string name="config_male">Male</string>
+  <string name="config_gender">Gender</string>
+  <string name="config_height">Height (m)</string>
+  <string name="config_weight">Weight (kg)</string>
+  <string name="config_age">Age (y)</string>
+  <string name="config_menu_done">Done</string>
+  <string name="config_menu_disable_archive">Disable fit archive</string>
+  <string name="config_menu_enable_archive">Enable fit archive</string>
+  <string name="config_empty_field_error">All fields should be filled with positive values.</string>
+
+  <string name="pair_success_button">Done</string>
+  <string name="pair_screen_device_disconnected">Device %s disconnected.</string>
+  <string name="pair_screen_device_connection_failed">Device %s failed to connect.</string>
+  <string name="pair_screen_device_pairing_failed">Device failed to pair.</string>
+
+  <string name="action_bar_connected_devs">Connected devices</string>
+  <string name="action_bar_scanning">Scanning</string>
+  <string name="action_bar_config">Configuration</string>
+  <string name="action_bar_pair">Pairing devices</string>
+  <string name="action_bar_add_goal">Add goal</string>
+
+  <string name="pair_enter_pass_key">Enter passkey</string>
+
+  <string name="connected_forget_device_message">Do you want to forget this device?</string>
+  <string name="no_internet_connection">No internet connection</string>
+  <string name="alert_dialog_ok">Go Ahead</string>
+  <string name="alert_dialog_cancel">Cancel</string>
+  <string name="scan_devices_title">Pair a Device</string>
+  <string name="scan_devices_msg">No paired device found. Do you want to pair a device?</string>
+
+  <string name="button_keep">Keep</string>
+  <string name="button_delete">Delete</string>
+
+  <string name="sync_dialog_results">Sync results</string>
+
+  <string name="date_format_day_month">DD-MM</string>
+  <string name="date_format_month_day">MM-DD</string>
+  <string name="time_format_twelve_hour">12h</string>
+  <string name="time_format_twenty_four_hour">24h</string>
+  <string name="time_format">Time Format</string>
+  <string name="date_format">Date Format</string>
+  <string name="config_language">Language</string>
+
+  <string name="display_orientation">Orientation</string>
+  <string name="display_orientation_landscape">Landscape</string>
+  <string name="display_orientation_portrait">Portrait</string>
+  <string name="display_orientation_landscape_flipped">Landscape flipped</string>
+  <string name="display_orientation_portrait_flipped">Portrait flipped</string>
+
+  <string name="display_screen_steps">Steps</string>
+  <string name="display_screen_steps_goal">Steps goal</string>
+  <string name="display_screen_distance">Distance</string>
+  <string name="display_screen_calories">Calories</string>
+  <string name="display_screen_time">Time</string>
+  <string name="display_screen_date">Date</string>
+  <string name="display_screen_heart_rate">Heart rate</string>
+  <string name="display_screen_intensity_minutes">Intensity minutes</string>
+  <string name="display_screen_floors_climbed">Floors climbed</string>
+  <string name="display_screen_timer">Timer</string>
+  <string name="display_screen_notifications">Notifications</string>
+
+  <string name="unit_settings">Unit settings</string>
+  <string name="screen_settings">Screen settings</string>
+  <string name="display_screens">Display screens</string>
+  <string name="data_sources">Data Sources</string>
+  <string name="custom_apps">Custom Apps</string>
+  <string name="watch_faces">Watch Faces</string>
+  <string name="auto_activity">Auto activity</string>
+  <string name="move_alert">Move Alert</string>
+  <string name="heart_rate">Heart rate</string>
+  <string name="custom_stride_length">Custom Stride Length</string>
+  <string name="walking">Walking (m)</string>
+  <string name="running">Running (m)</string>
+  <string name="goals">Custom Goals</string>
+  <string name="goal_value">Goal value</string>
+  <string name="custom_stride_unit">m</string>
+  <string name="user_settings">User settings</string>
+  <string name="initial_screen">Initial screen</string>
+  <string name="auto_upload">Auto upload</string>
+  <string name="sync_frequency">Sync frequency</string>
+  <string name="backlight_mode">Backlight mode</string>
+  <string name="screen_mode">Screen mode</string>
+
+  <string name="custom_stride_step_length">Step length</string>
+
+  <string name="notification">Notification</string>
+  <string name="custom_logging">Custom Logging</string>
+  <string name="message">Message</string>
+  <string name="title">Title</string>
+  <string name="send">Send</string>
+  <string name="clear">Clear</string>
+  <string name="goal_steps">Steps</string>
+  <string name="goal_intensity">Intensity minutes</string>
+  <string name="goal_floors_climbed">Floors climbed</string>
+  <string name="add_goal_existent_goal">Goal already added.</string>
+  <string name="unit_system">Unit measurement system</string>
+  <string name="unit_system_statute">Statute</string>
+  <string name="unit_system_metric">Metric</string>
+
+  <string name="init_failed_title">SDK initialization failed.</string>
+  <string name="init_failed_message">Garmin Health SDK failed to initialize. Check your license.</string>
+  <string name="init_failed_generic_message">Garmin Health SDK failed to initialize because of unexpected exception.</string>
+
+  <string name="monitoring_tab_title">Monitoring</string>
+  <string name="activity_tab_title">Activity</string>
+  <string name="activity_move_iq">Move IQ Activity</string>
+  <string name="activity_motion_intensity">Motion intensity</string>
+  <string name="empty_move_iq_list_message">No move iq activity yet!</string>
+  <string name="empty_activity_list_message">No activity yet!</string>
+  <string name="empty_monitoring_list_message">No monitoring activity yet!</string>
+
+  <string name="config_english">English</string>
+  <string name="config_french">French</string>
+  <string name="config_german">German</string>
+  <string name="config_italian">Italian</string>
+  <string name="config_spanish">Spanish</string>
+  <string name="config_croatian">Croatian</string>
+  <string name="config_czech">Czech</string>
+  <string name="config_danish">Danish</string>
+  <string name="config_dutch">Dutch</string>
+  <string name="config_finnish">Finnish</string>
+  <string name="config_greek">Greek</string>
+  <string name="config_hungarian">Hungarian</string>
+  <string name="config_norwegian">Norwegian</string>
+  <string name="config_polish">Polish</string>
+  <string name="config_portuguese">Portuguese</string>
+  <string name="config_slovenian">Slovenian</string>
+  <string name="config_slovakian">Slovakian</string>
+  <string name="config_swedish">Swedish</string>
+  <string name="config_russian">Russian</string>
+  <string name="config_turkish">Turkish</string>
+  <string name="config_latvian">Latvian</string>
+  <string name="config_ukrainian">Ukrainian</string>
+  <string name="config_arabic">Arabic</string>
+  <string name="config_farsi">Farsi</string>
+  <string name="config_bulgarian">Bulgarian</string>
+  <string name="config_romanian">Romanian</string>
+  <string name="config_chinese">Chinese</string>
+  <string name="config_japanese">Japanese</string>
+  <string name="config_korean">Korean</string>
+  <string name="config_taiwanese">Taiwanese</string>
+  <string name="config_thai">Thai</string>
+  <string name="config_hebrew">Hebrew</string>
+  <string name="config_brazilian_portuguese">Brazilian Portuguese</string>
+  <string name="config_indonesian">Indonesian</string>
+  <string name="config_custom">Custom</string>
+
+  <string name="dialog_keep_data">Do you want to keep data on device after sync?</string>
+  <string name="dialog_keep_data_on">Data is not being deleted</string>
+  <string name="dialog_keep_data_off">Data is deleted on sync</string>
+
+  <string name="battery_level">Battery level: %s</string>
+
+  <string name="device_uid">UnitId: %s</string>
+  <string name="device_address">Address: %s</string>
+
+  <string name="motion_intensity_graph">Motion intensity graph</string>
+  <string name="sleep_graph">Sleep graph</string>
+
+  <string name="title_real_time">Real Time Data</string>
+  <string name="real_time_steps">Steps\nCurrent: %1$s\nGoal: %2$s</string>
+  <string name="real_time_hrv">Heart Rate Variability\n%s</string>
+  <string name="real_time_calories">Calories\nActive: %1$s\nTotal: %2$s</string>
+  <string name="real_time_floors">Floors\nCurrent: %1$s\nGoal: %2$s</string>
+  <string name="real_time_intensity">Intensity Minutes\nDaily Total: %1$s\nWeekly Total: %2$s</string>
+  <string name="real_time_heart_rate">Heart Rate\nCurrent Rate: %1$s\nResting Rate: %2$s</string>
+  <string name="real_time_stress">Stress\nScore: %s</string>
+
+  <string name="hr_dataSet">Heart Rate/min</string>
+  <string name="hr_resting_dataSet">Resting Heart Rate/min</string>
+  <string name="hr_description">Heart Rate Chart</string>
+  <string name="spo2_dataSet">SPO2</string>
+  <string name="stress_description">Stress Level Chart</string>
+  <string name="steps_dataSet">Steps</string>
+  <string name="steps_goal_dataSet">Steps Goal</string>
+  <string name="steps_description">Steps Chart</string>
+  <string name="active_calories_dataSet">Active Calories</string>
+  <string name="total_calories_dataSet">Total Calories</string>
+  <string name="calories_description">Calories Chart</string>
+  <string name="floors_climbed_dataSet">Floors Climbed</string>
+  <string name="floors_descended_dataSet">Floors Descended</string>
+  <string name="floors_description">Floors Chart</string>
+  <string name="moderate_intensity_minutes_dataSet">Moderate Intensity Minutes</string>
+  <string name="vigorous_intensity_minutes_dataSet">Vigorous Intensity Minutes</string>
+  <string name="intensity_minutes_description">Intensity Minutes Chart</string>
+  <string name="hrv_dataSet">Heart Rate Variability</string>
+  <string name="hrv_description">Heart Rate Variability Chart</string>
+  <string name="reset_charts">Reset Charts</string>
+  <string name="garmin_health_charts">Garmin Health Charts</string>
+  <string name="refresh_charts">Refresh Charts</string>
+  <string name="all_charts_refreshed">All charts refreshed.</string>
+
+  <string name="bluetooth_frag_title">Select a Garmin Device</string>
+  <string name="location_service_not_available">Location services are not currently available, please try again later.</string>
+  <string name="bluetooth_activity_header">Select a Garmin Device</string>
+  <string name="scan_switch_label">Scan</string>
+  <string name="null_str">null</string>
+  <string name="scan_on">\tScanning…</string>
+  <string name="scan_off">\tStopped</string>
+  <string name="unit_measure_prompt">Select Units</string>
+  <string name="gender_prompt">Gender</string>
+  <string name="age_hint">Age</string>
+  <string name="age_error">Age must be an integer number.</string>
+  <string name="sleep_error">Sleep Window must be a string representing a number.</string>
+  <string formatted="false" name="age_bound">Age must be &gt; %d and &lt; %d.</string>
+  <string formatted="false" name="sleep_bound">Sleep window should be valid military time.</string>
+  <string name="weight_hint">Weight</string>
+  <string name="weight_error">Weight must be a decimal number.</string>
+  <string formatted="false" name="weight_out_of_bounds">Weight must be &gt; %.2f%s and &lt; %.2f%s.</string>
+  <string name="height_hint">Height</string>
+  <string name="height_error">Height must be a decimal number.</string>
+  <string formatted="false" name="height_out_of_bounds">Height must be &gt; %.2f%s and &lt; %.2f%s.</string>
+  <string name="back_button_label">Cancel</string>
+  <string name="auto_button_label">Use Defaults</string>
+  <string name="forward_button_label">Save</string>
+  <string name="reset_device">Reset this device?</string>
+  <string name="reset_device_msg">Resetting a device will wipe out all existing settings.</string>
+  <string name="button_yes">Yes</string>
+  <string name="button_no">No</string>
+  <string name="enter_passkey">Enter the passkey shown on the device.</string>
+  <string name="button_ok">OK</string>
+  <string name="button_cancel">Cancel</string>
+  <string name="loc_service_unavailable">Location services are not available, please try again later.</string>
+  <string name="initialization_failed">SDK Initialization Failed</string>
+  <string name="device_image">Device Image</string>
+  <string name="pairing_title">Pair a Device</string>
+  <string name="connected_devices_title">Paired Devices</string>
+  <string name="scanning_title">Scan for Devices</string>
+  <string name="never_synced">Never Synced</string>
+  <string name="daily_goals_summary">Daily Goals Summary</string>
+  <string name="seamless_day_summary">Seamless Day Summary</string>
+  <string name="device_settings">Device Settings</string>
+  <string name="y">Yes</string>
+  <string name="x_axis_dataset">x-axis</string>
+  <string name="y_axis_dataset">y-axis</string>
+  <string name="z_axis_dataset">z-axis</string>
+  <string name="accelerometer_description">Accelerometer Chart</string>
+  <string name="pairing">Pairing...</string>
+  <string name="minutes">minutes</string>
+  <string name="sync_history">Sync History</string>
+  <string name="hrv_24h_description">HRV Last 24 Hours</string>
+  <string name="hrv_1h_description">HRV Last 1 Hour</string>
+  <string name="hrv_30m_description">HRV Last 30 Minutes</string>
+  <string name="hrv_10m_description">HRV Last 10 Minutes</string>
+  <string name="accel_24h_description">Accelerometer Last 24 Hours</string>
+  <string name="accel_1h_description">Accelerometer Last 1 Hour</string>
+  <string name="accel_30m_description">Accelerometer Last 30 Minutes</string>
+  <string name="accel_10m_description">Accelerometer Last 10 Minutes</string>
+  <string name="goal_meters_climbed">Meters climbed</string>
+  <string name="device_detail_title">Device Details</string>
+  <string name="date_tab_title">By Date</string>
+  <string name="interval_tab_title">By Interval</string>
+  <string name="record_tab_title">By Sync Record</string>
+  <string name="widgets">CIQ Widgets</string>
+  <string name="spo2_data_tab_title">SPO2</string>
+  <string name="empty_spo2_list_message">No SPO2 Data Yet!</string>
+  <string name="spo2_description">SPO2 Chart</string>
+  <string name="stress_dataSet">Stress Level</string>
+  <string name="sleep_window_start">Sleep Start Time</string>
+  <string name="sleep_window_end">Sleep End Time</string>
+  <string name="spo2_sleep_description">SPO2 Sleep Monitoring</string>
+  <string name="config_sleep_start">Sleep Time</string>
+  <string name="config_sleep_end">Wake Time</string>
+  <string name="logging_source_title">Logging source</string>
+  <string name="logging_title">Data Logging</string>
+  <string name="zero_crossing_description">Zero Crossing Chart</string>
+  <string name="hr_logging_dataset">Logged HR</string>
+  <string name="hrv_logging_dataset">Logged BBI</string>
+  <string name="zc_logging_dataset">Zero Crossing Count</string>
+  <string name="energy_logging_dataset">Total Energy</string>
+  <string name="step_logging_dataset">Logged Steps</string>
+  <string name="step_description">Step Chart</string>
+  <string name="pulse_ox_logging_dataset">Logged Pulse Ox</string>
+  <string name="stress_logging_dataset">Logged Stress</string>
+  <string name="pulse_ox_description">Pulse Ox Chart</string>
+  <string name="stress_logging_description">Stress Chart</string>
+  <string name="motion_level_graph_label">Raw Sleep</string>
+  <string name="sleep_graph_label">Sleep Result</string>
+  <string name="min_dataset">Min Set</string>
+  <string name="rem_dataset">REM</string>
+  <string name="deep_dataset">Deep</string>
+  <string name="light_dataset">Light</string>
+  <string name="awake_dataset">Awake</string>
+  <string name="motion_level_dataset">Motion Level</string>
+  <string name="stress_level_dataset">Stress Level</string>
+  <string name="energy_level_dataset">Energy Level</string>
+  <string name="datetime">Date/Time</string>
+  <string name="respiration_dataSet">RESPIRATION</string>
+  <string name="respiration_description">Respiration Chart</string>
+  <string name="respiration_level_dataset">respiration</string>
+  <string name="spo2_graph_label">SPO2</string>
+  <string name="respiration_graph_label">Respiration</string>
+  <string name="spo2_level_dataset">spo2</string>
+  <string name="alerts">Alert Options</string>
+  <string name="respiration_logging_dataset">RESPIRATION</string>
+  <string name="respiration_logging_description">Respiration</string>
+  <string name="garminlabel">Garmin</string>
+  <string name="pair">PAIR GARMIN</string>
+
+  <string-array name="unit_measures">
+    <item>Imperial</item>
+    <item>Metric</item>
+  </string-array>
+
+  <string-array name="gender_options">
+    <item>Male</item>
+    <item>Female</item>
+  </string-array>
+
+</resources>

@@ -22,13 +22,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.SystemClock
-import com.crashlytics.android.Crashlytics
+//import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
 import org.radarbase.android.FirebaseRadarConfiguration
 import org.radarbase.android.RadarApplication
 import org.radarbase.android.RadarConfiguration
 import org.slf4j.LoggerFactory
-import org.slf4j.impl.HandroidLoggerAdapter
+//import org.slf4j.impl.HandroidLoggerAdapter
 
 /**
  * Radar application class for the detailed application.
@@ -43,7 +43,7 @@ class RadarApplicationImpl : RadarApplication() {
                 putExtra("crash", true)
             }
             if (intent == null) {
-                Crashlytics.logException(IllegalStateException("Cannot find launch intent for app"))
+                //Crashlytics.logException(IllegalStateException("Cannot find launch intent for app"))
                 return@setDefaultUncaughtExceptionHandler
             }
 
@@ -57,8 +57,8 @@ class RadarApplicationImpl : RadarApplication() {
     }
 
     override fun setupLogging() {
-        HandroidLoggerAdapter.APP_NAME = "pRMT"
-        HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG
+       // HandroidLoggerAdapter.APP_NAME = "pRMT"
+       // HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG
     }
 
     override val largeIcon: Bitmap

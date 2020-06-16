@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">RADAR common android app</string>
+
+    <string name="service_notification_ticker">Wearables data collection</string>
+    <string name="service_notification_text">Collecting data from your wearable bluetooth device.</string>
+    <string name="service_notification_title">Wearables data collection</string>
+
+    <string name="filter_split_regex">,</string>
+    <string name="retry_oauth_login">Failed to login to authorization service, please retry</string>
+    <string name="login_failed">Failed to log in</string>
+    <string name="enable_location">
+        <![CDATA[Location information needed to enable Bluetooth Low Energy. Enable location settings in Settings -> Location]]></string>
+    <string name="enable_package_usage">Enable usage access to keep track of what kind of applications you use.</string>
+    <string name="enable_location_title">Enable location tracking</string>
+    <string name="enable_package_usage_title">Enable usage tracking</string>
+
+    <string name="device_connected">CONNECTED</string>
+    <string name="device_connecting">CONNECTING</string>
+    <string name="device_disconnected">DISCONNECTED</string>
+    <string name="device_ready">READY</string>
+    <string name="storage_full">Storage almost full</string>
+    <string name="storage_full_text">Your storage space is almost full. Please ensure that you have
+        an internet connection to upload the data and/or move unnecessary photos and multimedia from
+        your device.
+    </string>
+    <string name="channel_info_name">Information</string>
+    <string name="channel_info_description">Informs about the app status.</string>
+    <string name="channel_notify_name">Tasks</string>
+    <string name="channel_notify_description">Notifies about recurring tasks and anomalous behaviour.</string>
+    <string name="channel_alert_name">Missed tasks</string>
+    <string name="channel_alert_description">Alerts about missed tasks or continuing anomalous behaviour.</string>
+    <string name="channel_final_alert_name">Final warning for missed tasks</string>
+    <string name="channel_final_alert_description">Final warning about missed tasks or continuing anomalous behaviour.</string>
+    <string name="notification_bluetooth_needed_text">Bluetooth is needed for data collection. Please enable it as soon as possible.</string>
+    <string name="notification_bluetooth_needed_title">Enable Bluetooth for RADAR</string>
+    <string name="disable_battery_optimization">Disable battery optimization to keep a consistent connection with attached devices.</string>
+    <string name="disable_battery_optimization_title">Disable battery optimization</string>
+    <string name="cannot_connect_device">Cannot connect to device $1%s</string>
+</resources>

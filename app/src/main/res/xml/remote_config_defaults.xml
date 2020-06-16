@@ -19,15 +19,15 @@
 <defaultsMap>
     <entry>
         <key>management_portal_url</key>
-        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/</value>
+        <value>https://radar-backend.co.uk/managementportal/</value>
     </entry>
     <entry>
         <key>kafka_rest_proxy_url</key>
-        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/kafka/</value>
+        <value>https://radar-backend.co.uk/kafka/</value>
     </entry>
     <entry>
         <key>schema_registry_url</key>
-        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/schema/</value>
+        <value>https://radar-backend.co.uk/schema/</value>
     </entry>
     <entry>
         <key>unsafe_kafka_connection</key>
@@ -47,9 +47,9 @@
     </entry>
     <entry>
         <key>device_services_to_connect</key>
-        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneUsageProvider .passive.bittium.FarosProvider</value>
+        <value>.phone.PhoneSensorProvider .application.ApplicationServiceProvider .weather.WeatherApiProvider .phone.PhoneLocationProvider .phone.PhoneBluetoothProvider .phone.PhoneContactListProvider .phone.PhoneUsageProvider .passive.bittium.FarosProvider .garmin.GarminProvider</value>
     </entry>
-    <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->
+    <!--Assume max. sensor frequency is 64Hz and send every 10 seconds. ~=640 records-->Acc
     <entry>
         <key>kafka_records_send_limit</key>
         <value>1000</value>
@@ -68,16 +68,22 @@
     </entry>
     <entry>
         <key>oauth2_authorize_url</key>
-        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/authorize</value>
+        <value>https://radar-backend.co.uk/managementportal/oauth/authorize</value>
     </entry>
     <entry>
         <key>oauth2_token_url</key>
-        <value>https://radar-cns-platform.rosalind.kcl.ac.uk/managementportal/oauth/token</value>
+        <value>https://radar-backend.co.uk/managementportal/oauth/token</value>
     </entry>
     <entry>
         <key>oauth2_client_id</key>
         <value>pRMT</value>
     </entry>
+    <entry>
+        <key>oauth2_client_secret</key>
+        <value>||72|draw|CENTER|malta|29</value>
+    </entry>
+
+
     <entry>
         <key>oauth2_redirect_url</key>
         <value>org.radarcns.detail://oauth2/redirect</value>
@@ -86,5 +92,9 @@
         <key>privacy_policy</key>
         <value>http://info.thehyve.nl/radar-cns-privacy-policy</value>
     </entry>
+    <entry>
+        <key>garmin_api_key</key>
+        <value>Test api key</value>
+    </entry>
 </defaultsMap>
-<!-- END xml_defaults -->
+  <!-- END xml_defaults -->

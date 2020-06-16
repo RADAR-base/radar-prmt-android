@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+  <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              tools:layout_editor_absoluteX="0dp"
+              tools:layout_editor_absoluteY="0dp">
+
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:layout_marginLeft="5dp"
+                  android:layout_marginRight="5dp"
+                  android:keepScreenOn="true"
+                  android:orientation="vertical">
+
+      <!-- Heart rate chart -->
+      <androidx.cardview.widget.CardView
+        android:id="@+id/zc_logging_chart_card"
+        style="@style/ChartCardStyle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/zero_crossing_logging_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/zero_crossing_description" />
+
+          <org.radarbase.garmin.ui.charts.ZeroCrossingLoggingChart
+            android:id="@+id/zero_crossing_logging_chart"
+            style="@style/ChartStyle" />
+
+          <org.radarbase.garmin.ui.charts.DayPieChart
+            android:id="@+id/zc_day_logging_chart"
+            style="@style/ChartStyle"
+            android:visibility="gone" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/hr_logging_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+          <TextView
+            android:id="@+id/hr_logging_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/hr_description" />
+          <org.radarbase.garmin.ui.charts.HeartRateLoggingChart
+            android:id="@+id/hr_logging_chart"
+            style="@style/ChartStyle" />
+
+          <org.radarbase.garmin.ui.charts.DayPieChart
+          android:id="@+id/hr_day_logging_chart"
+          style="@style/ChartStyle"
+          android:visibility="gone" />
+        </LinearLayout>
+
+
+      </androidx.cardview.widget.CardView>
+
+      <!-- Heart rate variability chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/hrv_logging_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/hrv_logging_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/hrv_description" />
+
+          <org.radarbase.garmin.ui.charts.HeartRateVariabilityLoggingChart
+            android:id="@+id/hrv_logging_chart"
+            style="@style/ChartStyle" />
+
+          <org.radarbase.garmin.ui.charts.DayPieChart
+            android:id="@+id/hrv_day_logging_chart"
+            style="@style/ChartStyle"
+            android:visibility="gone" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Zero Crossing chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/step_logging_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/step_logging_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/step_description" />
+
+          <org.radarbase.garmin.ui.charts.StepLoggingChart
+            android:id="@+id/step_logging_chart"
+            style="@style/ChartStyle" />
+
+          <TableLayout
+            android:id="@+id/step_table"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <TableRow
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_margin="4dip"
+              android:background="@android:color/holo_blue_light"
+              android:padding="5dip">
+
+              <TextView
+                android:layout_width="wrap_content"
+                android:layout_column="0"
+                android:paddingRight="25dip"
+                android:text="@string/datetime" />
+
+              <TextView
+                android:layout_width="wrap_content"
+                android:layout_column="1"
+                android:paddingRight="25dip"
+                android:text="Step Delta" />
+
+              <TextView
+                android:layout_width="wrap_content"
+                android:layout_column="2"
+                android:paddingRight="25dip"
+                android:text="Step Total" />
+
+            </TableRow>
+          </TableLayout>
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Pulse Ox chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/pulse_ox_logging_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/pulse_ox_logging_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/pulse_ox_description" />
+
+          <org.radarbase.garmin.ui.charts.PulseOxLoggingChart
+            android:id="@+id/pulse_ox_logging_chart"
+            style="@style/ChartStyle" />
+
+          <org.radarbase.garmin.ui.charts.DayPieChart
+            android:id="@+id/pulse_ox_day_logging_chart"
+            style="@style/ChartStyle"
+            android:visibility="gone" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Stress chart -->
+      <androidx.cardview.widget.CardView
+        style="@style/ChartCardStyle"
+        android:id="@+id/stress_logging_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+            android:id="@+id/stress_logging_text"
+            style="@style/ChartHeadingStyle"
+            android:text="@string/stress_logging_description" />
+
+          <org.radarbase.garmin.ui.charts.StressLoggingChart
+            android:id="@+id/stress_logging_chart"
+            style="@style/ChartStyle" />
+
+          <org.radarbase.garmin.ui.charts.DayPieChart
+            android:id="@+id/stress_day_logging_chart"
+            style="@style/ChartStyle"
+            android:visibility="gone" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+
+      <!-- Respiration chart -->
+      <androidx.cardview.widget.CardView
+              style="@style/ChartCardStyle"
+              android:id="@+id/respiration_logging_chart_card">
+
+        <LinearLayout style="@style/ChartLayoutStyle"
+                      xmlns:android="http://schemas.android.com/apk/res/android"
+                      xmlns:tools="http://schemas.android.com/tools">
+
+          <TextView
+                  android:id="@+id/respiration_logging_text"
+                  style="@style/ChartHeadingStyle"
+                  android:text="@string/respiration_logging_description" />
+
+          <org.radarbase.garmin.ui.charts.RespirationLoggingChart
+                  android:id="@+id/respiration_logging_chart"
+                  style="@style/ChartStyle" />
+
+          <org.radarbase.garmin.ui.charts.DayPieChart
+                  android:id="@+id/respiration_day_logging_chart"
+                  style="@style/ChartStyle"
+                  android:visibility="gone" />
+        </LinearLayout>
+      </androidx.cardview.widget.CardView>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

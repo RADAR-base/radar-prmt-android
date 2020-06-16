@@ -1,0 +1,11 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="small_vertical_margin">5dp</dimen>
+    <dimen name="medium_vertical_margin">10dp</dimen>
+    <dimen name="medium_horizontal_margin">10dp</dimen>
+    <dimen name="large_vertical_margin">15dp</dimen>
+    <dimen name="chart_height">187dp</dimen>
+</resources>

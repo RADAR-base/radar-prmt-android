@@ -28,11 +28,12 @@ import org.radarbase.android.source.SourceProvider
 import org.radarbase.android.util.ChangeApplier
 import org.radarbase.android.util.ChangeRunner
 import org.radarbase.android.util.TimedLong
+import org.radarbase.garmin.ui.BaseGarminHealthActivity
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MainActivityViewImpl internal constructor(private val mainActivity: MainActivityImpl) : MainActivityView {
+class MainActivityViewImpl internal constructor(private val mainActivity: MainActivityImpl) : MainActivityView{
     private val connectionRows = ChangeRunner<List<SourceProvider<*>>>(emptyList())
     private val actionsCells = ChangeRunner<List<SourceProvider.Action>>(emptyList())
 

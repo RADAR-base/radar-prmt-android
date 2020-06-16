@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!--
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+-->
+    <color name="divider_color">#26000000</color>
+    <color name="grey_text_color">#606060</color>
+    <color name="dark_grey">#222222</color>
+    <color name="light_grey">#fafafa</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryAlpha">#2442bfe9</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorPrimaryDarkAlpha">#902aa4e6</color>
+    <color name="colorAccent">#fe0bc130</color>
+    <color name="colorAccentAlpha">#110bc130</color>
+    <color name="colorVoid">#fecdcecd</color>
+    <color name="colorVoidDark">#fe929392</color>
+</resources>
