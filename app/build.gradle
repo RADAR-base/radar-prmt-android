@@ -57,7 +57,7 @@ repositories {
     maven { url  'https://repo.thehyve.nl/content/repositories/snapshots' }
 }
 
-ext.radarCommonsVersion = '1.0.0-alpha2'
+ext.radarCommonsVersion = '1.0.0-SNAPSHOT'
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
