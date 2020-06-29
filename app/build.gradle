@@ -16,6 +16,7 @@ android {
         versionName '1.0.2'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
+        // Comment the next line out for x86 emulator support. In that case, disable the Empatica plugin.
         ndk { abiFilters "armeabi", "armeabi-v7a" }
     }
     lintOptions {
