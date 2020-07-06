@@ -6,16 +6,18 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
-    buildToolsVersion '29.0.2'
+    buildToolsVersion '29.0.3'
 
     defaultConfig {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 41
-        versionName '1.0.2'
+        versionCode 42
+        versionName '1.0.3'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
+        // Comment the next line out for x86 emulator support. In that case, disable the Empatica plugin.
+        ndk { abiFilters "armeabi", "armeabi-v7a" }
     }
     lintOptions {
         abortOnError false
@@ -57,7 +59,7 @@ repositories {
     maven { url  'https://repo.thehyve.nl/content/repositories/snapshots' }
 }
 
-ext.radarCommonsVersion = '1.0.0-alpha2'
+ext.radarCommonsVersion = '1.0.0-alpha3'
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

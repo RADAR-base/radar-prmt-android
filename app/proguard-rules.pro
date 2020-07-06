@@ -24,7 +24,13 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep public class * implements org.radarbase.android.device.DeviceServiceProvider
+-keep public class * implements org.radarbase.android.source.SourceProvider { *; }
+-keep class * implements org.radarbase.android.source.SourceManager { *; }
+-keep class com.empatica.empalink.delegate.** { *; }
+-keep class com.empatica.empalink.** { *; }
+
+-keep interface com.empatica.empalink.delegate.** { *; }
+-keep interface com.empatica.empalink.** { *; }
 
 # Native methods: https://www.guardsquare.com/en/products/proguard/manual/examples#native
 # note that <methods> means any method
