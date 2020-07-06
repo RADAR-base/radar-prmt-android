@@ -37,7 +37,10 @@ import org.slf4j.LoggerFactory
 /**
  * Displays a single source row.
  */
-class SourceRowView internal constructor(private val mainActivity: MainActivity, provider: SourceProvider<*>, root: ViewGroup) {
+class SourceRowView internal constructor(
+        private val mainActivity: MainActivity,
+        provider: SourceProvider<*>, root: ViewGroup
+) {
     private val connection: SourceServiceConnection<*> = provider.connection
     private val mStatusIcon: View
     private val mBatteryLabel: ImageView
