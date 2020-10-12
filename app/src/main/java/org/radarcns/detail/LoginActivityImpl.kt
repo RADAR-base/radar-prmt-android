@@ -26,7 +26,6 @@ import android.view.ViewGroup
 import android.widget.*
 import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
-import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import kotlinx.android.synthetic.main.activity_login.*
@@ -123,14 +122,12 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     private fun applyMpManager(callback: (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState) -> Unit) {
-        authConnection.applyBinder { auth ->
-            auth.managers.find { it is ManagementPortalLoginManager }
-                    ?.let { it as ManagementPortalLoginManager }
-                    ?.also { manager ->
-                        auth.applyState { authState ->
-                            callback(auth, manager, authState)
-                        }
-                    }
+        authConnection.applyBinder {
+            val manager = managers.find { it is ManagementPortalLoginManager }
+                    as? ManagementPortalLoginManager ?: return@applyBinder
+            applyState {
+                callback(this@applyBinder, manager, this)
+            }
         }
     }
 
@@ -198,9 +195,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         onDoneProcessing()
         runOnUiThread {
             if (authState.isPrivacyPolicyAccepted) {
-                val firebase = FirebaseAnalytics.getInstance(this)
-                firebase.setUserProperty(USER_ID_KEY, authState.userId)
-                firebase.setUserProperty(PROJECT_ID_KEY, authState.projectId)
                 super.loginSucceeded(manager, authState)
                 if (!didCreate) {
                     overridePendingTransition(0, 0)
@@ -223,8 +217,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             val fragment = PrivacyPolicyFragment.newInstance(this, state)
             createFragmentLayout(R.id.privacy_policy_fragment, fragment)
         } catch (ex: IllegalStateException) {
-            logger.error("Failed to start privacy policy fragment:" + " is LoginActivity is already closed?", ex)
-            Crashlytics.logException(ex)
+            logger.error("Failed to start privacy policy fragment: is LoginActivity is already closed?", ex)
         }
 
     }
@@ -240,13 +233,13 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     override fun onAcceptPrivacyPolicy() {
-        authConnection.applyBinder { binder ->
-            binder.updateState {
+        authConnection.applyBinder {
+            updateState {
                 isPrivacyPolicyAccepted = true
             }
-            binder.applyState {
-                logger.info("Updating privacyPolicyAccepted {}", it)
-                super.loginSucceeded(null, it)
+            applyState {
+                logger.info("Updating privacyPolicyAccepted {}", this)
+                super.loginSucceeded(null, this)
             }
         }
     }
@@ -255,7 +248,9 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         val baseUrlInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT
             setCompoundDrawables(TextDrawable(this, "https://"), null, null, null)
-            setText(radarConfig.getString(BASE_URL_KEY, ""))
+            radarConfig.config.observe(this@LoginActivityImpl, {
+                setText(it.getString(BASE_URL_KEY, ""))
+            })
         }
         val tokenInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT

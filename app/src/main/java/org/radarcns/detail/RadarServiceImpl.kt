@@ -19,6 +19,7 @@ package org.radarcns.detail
 import android.Manifest.permission.RECEIVE_BOOT_COMPLETED
 import android.os.Build
 import org.radarbase.android.RadarService
+import org.radarbase.android.config.SingleRadarConfiguration
 import org.radarbase.android.source.SourceProvider
 import org.radarbase.monitor.application.ApplicationStatusProvider
 import org.radarbase.passive.audio.OpenSmileAudioProvider
@@ -59,8 +60,8 @@ class RadarServiceImpl : RadarService() {
             }
         }
 
-    override fun doConfigure() {
-        super.doConfigure()
-        configureRunAtBoot(MainActivityBootStarter::class.java)
+    override fun doConfigure(config: SingleRadarConfiguration) {
+        super.doConfigure(config)
+        configureRunAtBoot(config, MainActivityBootStarter::class.java)
     }
 }

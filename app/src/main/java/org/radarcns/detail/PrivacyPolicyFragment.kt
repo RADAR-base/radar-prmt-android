@@ -146,7 +146,7 @@ class PrivacyPolicyFragment : Fragment() {
                     putString(USER_ID_KEY, state.userId)
                     putString(BASE_URL_PROPERTY, state.getAttribute(BASE_URL_PROPERTY))
                     putString(PRIVACY_POLICY_URL_PROPERTY, state.getAttribute(PRIVACY_POLICY_URL_PROPERTY))
-                    putString(PRIVACY_POLICY, context.radarConfig.optString(PRIVACY_POLICY))
+                    putString(PRIVACY_POLICY, context.radarConfig.latestConfig.optString(PRIVACY_POLICY))
                 }
             }
         }

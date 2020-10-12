@@ -31,7 +31,7 @@
                 app:layout_constraintBottom_toTopOf="@id/enableDataSwitch"
                 android:textColor="?attr/colorPrimaryDark"/>
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/enableDataSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
                 app:layout_constraintTop_toBottomOf="@id/network_settings_header"
                 app:layout_constraintBottom_toTopOf="@id/enableDataHighPrioritySwitch"/>
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/enableDataHighPrioritySwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

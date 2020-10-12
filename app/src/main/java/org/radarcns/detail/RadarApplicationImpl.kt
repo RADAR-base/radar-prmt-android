@@ -22,18 +22,22 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.SystemClock
-import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
-import org.radarbase.android.FirebaseRadarConfiguration
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import org.radarbase.android.AbstractRadarApplication
 import org.radarbase.android.RadarApplication
 import org.radarbase.android.RadarConfiguration
+import org.radarbase.android.config.AppConfigRadarConfiguration
+import org.radarbase.android.config.FirebaseRemoteConfiguration
+import org.radarbase.android.config.RemoteConfig
 import org.slf4j.LoggerFactory
 import org.slf4j.impl.HandroidLoggerAdapter
+import kotlin.system.exitProcess
 
 /**
  * Radar application class for the detailed application.
  */
-class RadarApplicationImpl : RadarApplication() {
+class RadarApplicationImpl : AbstractRadarApplication() {
     fun enableCrashProcessing() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
@@ -43,7 +47,8 @@ class RadarApplicationImpl : RadarApplication() {
                 putExtra("crash", true)
             }
             if (intent == null) {
-                Crashlytics.logException(IllegalStateException("Cannot find launch intent for app"))
+                FirebaseCrashlytics.getInstance()
+                        .recordException(IllegalStateException("Cannot find launch intent for app"))
                 return@setDefaultUncaughtExceptionHandler
             }
 
@@ -52,7 +57,7 @@ class RadarApplicationImpl : RadarApplication() {
                     .set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 100, pendingIntent)
 
             defaultHandler?.uncaughtException(thread, throwable)
-            System.exit(2)
+            exitProcess(2)
         }
     }
 
@@ -66,12 +71,17 @@ class RadarApplicationImpl : RadarApplication() {
 
     override val smallIcon = R.drawable.ic_bt_connected
 
+    override fun createRemoteConfiguration(): List<RemoteConfig> = listOf(
+            FirebaseRemoteConfiguration(this, BuildConfig.DEBUG, R.xml.remote_config_defaults),
+            AppConfigRadarConfiguration(this)
+    )
+
+
     override fun createConfiguration(): RadarConfiguration {
         FirebaseAnalytics.getInstance(this).apply {
             setUserProperty(TEST_PHASE, if (BuildConfig.DEBUG) "dev" else "production")
         }
-
-        return FirebaseRadarConfiguration(this, true, R.xml.remote_config_defaults).apply {
+        return super.createConfiguration().apply {
             fetch()
         }
     }

@@ -21,15 +21,18 @@ class InfoActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.app_name).setText(R.string.app_name)
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
-        findViewById<TextView>(R.id.server_base_url).text = radarConfig.getString(BASE_URL_KEY, "")
 
-        policyUrl = radarConfig.optString(PRIVACY_POLICY)
+        radarConfig.config.observe(this, { config ->
+            findViewById<TextView>(R.id.server_base_url).text = config.getString(BASE_URL_KEY, "")
 
-        if (policyUrl == null) {
-            findViewById<TextView>(R.id.privacyStatement).apply {
-                visibility = View.GONE
+            policyUrl = config.optString(PRIVACY_POLICY)
+
+            if (policyUrl == null) {
+                findViewById<TextView>(R.id.privacyStatement).apply {
+                    visibility = View.GONE
+                }
             }
-        }
+        })
 
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar).apply {
             setTitle(R.string.info)

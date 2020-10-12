@@ -20,7 +20,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import com.crashlytics.android.Crashlytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.radarbase.android.util.Boast
 
 /**
@@ -42,6 +42,6 @@ class MainActivityBootStarter : BroadcastReceiver() {
     private fun startApp(context: Context) {
         context.packageManager.getLaunchIntentForPackage(context.packageName)?.also {
             context.startActivity(it)
-        } ?: Crashlytics.logException(IllegalStateException("Cannot start RADAR app ${context.packageName} without launch intent"))
+        } ?: FirebaseCrashlytics.getInstance().recordException(IllegalStateException("Cannot start RADAR app ${context.packageName} without launch intent"))
     }
 }
