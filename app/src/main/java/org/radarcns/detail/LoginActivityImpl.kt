@@ -26,15 +26,12 @@ import android.view.ViewGroup
 import android.widget.*
 import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import kotlinx.android.synthetic.main.activity_login.*
 import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
-import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
-import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.util.Boast
@@ -282,7 +279,10 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                 if (canLogin) {
                     canLogin = false
                     applyMpManager { _, mpManager, authState ->
-                        val url = "https://${baseUrlInput.text}/managementportal/api/meta-token/${tokenInput.text}"
+                        val baseUrl = baseUrlInput.text.toString()
+                                .replace(baseUrlPrefixRegex, "")
+                                .replace(baseUrlPostfixRegex, "")
+                        val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.text}"
                         try {
                             mpManager.setTokenFromUrl(authState, url)
                             dialog.dismiss()
@@ -298,5 +298,9 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     companion object {
         private val logger = LoggerFactory.getLogger(LoginActivityImpl::class.java)
+
+        private val baseUrlPrefixRegex = "^https?:?/?/?".toRegex()
+        // Allow for typos in managementportal.
+        private val baseUrlPostfixRegex = "/[mangetporl]+/?$".toRegex()
     }
 }
