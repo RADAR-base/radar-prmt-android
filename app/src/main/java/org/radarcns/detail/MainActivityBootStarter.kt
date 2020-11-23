@@ -33,7 +33,7 @@ class MainActivityBootStarter : BroadcastReceiver() {
                 startApp(context)
                 Boast.makeText(context, R.string.appUpdated, Toast.LENGTH_LONG).show()
             }
-            Intent.ACTION_BOOT_COMPLETED -> {
+            Intent.ACTION_BOOT_COMPLETED, "android.intent.action.QUICKBOOT_POWERON" -> {
                 startApp(context)
             }
         }
