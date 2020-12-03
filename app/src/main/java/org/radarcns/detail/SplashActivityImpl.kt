@@ -1,16 +1,17 @@
 package org.radarcns.detail
 
 import android.os.Bundle
-import android.widget.TextView
 import android.widget.Toast.LENGTH_LONG
-import kotlinx.android.synthetic.main.activity_splash.*
+import org.radarbase.android.AbstractRadarApplication.Companion.radarApp
 import org.radarbase.android.splash.SplashActivity
 import org.radarbase.android.util.Boast
+import org.radarcns.detail.MainActivityBootStarter.Companion.BOOT_START_NOTIFICATION_ID
+import org.radarcns.detail.databinding.ActivitySplashBinding
 
 class SplashActivityImpl : SplashActivity() {
-    private lateinit var messageText: TextView
     override val delayMs: Long = 500L
     private var notifyResume = false
+    private lateinit var binding: ActivitySplashBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,12 +20,12 @@ class SplashActivityImpl : SplashActivity() {
         } else {
             (application as RadarApplicationImpl).enableCrashProcessing()
         }
+        radarApp.notificationHandler.cancel(BOOT_START_NOTIFICATION_ID)
     }
 
     override fun createView() {
-        setContentView(R.layout.activity_splash)
-
-        messageText = splashMessageText
+        binding = ActivitySplashBinding.inflate(layoutInflater)
+        setContentView(binding.root)
     }
 
     override fun onDidStartActivity() {
@@ -38,7 +39,7 @@ class SplashActivityImpl : SplashActivity() {
             Boast.makeText(this, R.string.recovered_from_crash, LENGTH_LONG).show()
             notifyResume = false
         }
-        messageText.setText(when (state) {
+        binding.splashMessageText.setText(when (state) {
             STATE_INITIAL -> R.string.app_initializing
             STATE_STARTING, STATE_FINISHED -> R.string.app_starting
             STATE_AUTHORIZING -> R.string.app_authorizing

@@ -22,6 +22,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.SystemClock
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.radarbase.android.AbstractRadarApplication
@@ -37,7 +41,12 @@ import kotlin.system.exitProcess
 /**
  * Radar application class for the detailed application.
  */
-class RadarApplicationImpl : AbstractRadarApplication() {
+class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
+    override fun onCreate() {
+        super.onCreate()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+    }
+
     fun enableCrashProcessing() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
@@ -66,6 +75,10 @@ class RadarApplicationImpl : AbstractRadarApplication() {
         HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG
     }
 
+    @Volatile
+    var isInForeground: Boolean = false
+        private set
+
     override val largeIcon: Bitmap
         get() = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
 
@@ -84,6 +97,16 @@ class RadarApplicationImpl : AbstractRadarApplication() {
         return super.createConfiguration().apply {
             fetch()
         }
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onAppBackgrounded() {
+        isInForeground = false
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onAppForegrounded() {
+        isInForeground = true
     }
 
     override val mainActivity: Class<MainActivityImpl> = MainActivityImpl::class.java

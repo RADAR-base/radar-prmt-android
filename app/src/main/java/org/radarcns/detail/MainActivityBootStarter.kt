@@ -19,29 +19,56 @@ package org.radarcns.detail
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.core.app.NotificationCompat.CATEGORY_ALARM
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import org.radarbase.android.AbstractRadarApplication.Companion.radarApp
 import org.radarbase.android.util.Boast
+import org.radarbase.android.util.NotificationHandler.Companion.NOTIFICATION_CHANNEL_ALERT
 
 /**
  * Starts MainActivity on boot if configured to do so
  */
 class MainActivityBootStarter : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if ((context.applicationContext as RadarApplicationImpl).isInForeground) {
+            return
+        }
         when (intent.action) {
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
-                startApp(context)
+                context.startApp()
                 Boast.makeText(context, R.string.appUpdated, Toast.LENGTH_LONG).show()
             }
             Intent.ACTION_BOOT_COMPLETED, "android.intent.action.QUICKBOOT_POWERON" -> {
-                startApp(context)
+                context.startApp()
             }
         }
     }
 
-    private fun startApp(context: Context) {
-        context.packageManager.getLaunchIntentForPackage(context.packageName)?.also {
-            context.startActivity(it)
-        } ?: FirebaseCrashlytics.getInstance().recordException(IllegalStateException("Cannot start RADAR app ${context.packageName} without launch intent"))
+    private fun Context.startApp() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            radarApp.notificationHandler.notify(
+                id = BOOT_START_NOTIFICATION_ID,
+                channel = NOTIFICATION_CHANNEL_ALERT,
+                includeStartIntent = true,
+            ) {
+                setContentTitle(getString(R.string.bootstart_title))
+                setContentTitle(getString(R.string.bootstart_text))
+                setCategory(CATEGORY_ALARM)
+                setAutoCancel(true)
+                setOngoing(true)
+            }
+        } else {
+            packageManager.getLaunchIntentForPackage(packageName)?.also {
+                startActivity(it)
+            } ?: FirebaseCrashlytics.getInstance()
+                .recordException(IllegalStateException("Cannot start RADAR app $packageName without launch intent"))
+        }
+    }
+
+    companion object {
+        const val BOOT_START_NOTIFICATION_ID = 35002
     }
 }

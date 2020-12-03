@@ -27,7 +27,6 @@ import android.widget.*
 import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
-import kotlinx.android.synthetic.main.activity_login.*
 import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
@@ -39,6 +38,7 @@ import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
 import org.radarbase.android.widget.TextDrawable
 import org.radarbase.producer.AuthenticationException
+import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.ConnectException
@@ -52,12 +52,15 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private lateinit var networkReceiver: NetworkConnectedReceiver
     private var didCreate: Boolean = false
 
+    private lateinit var binding: ActivityLoginBinding
+
     private lateinit var qrCodeScanner: QrCodeScanner
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
         super.onCreate(savedInstanceBundle)
-        setContentView(R.layout.activity_login)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         networkReceiver = NetworkConnectedReceiver(this, this)
         didCreate = true
@@ -147,12 +150,14 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     override fun onNetworkConnectionChanged(state: NetworkConnectedReceiver.NetworkState) {
         logger.info("Network change: {}", state.isConnected)
         runOnUiThread {
-            if (state.isConnected) {
-                scanButton.isEnabled = true
-                messageText.text = ""
-            } else {
-                scanButton.isEnabled = false
-                messageText.setText(R.string.no_connection)
+            binding.apply {
+                if (state.isConnected) {
+                    scanButton.isEnabled = true
+                    messageText.text = ""
+                } else {
+                    scanButton.isEnabled = false
+                    messageText.setText(R.string.no_connection)
+                }
             }
         }
     }

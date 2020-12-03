@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_privacy_policy.*
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
@@ -22,6 +21,7 @@ import org.radarbase.android.auth.AuthService.Companion.PRIVACY_POLICY_URL_PROPE
 import org.radarcns.detail.InfoActivity.Companion.PRIVACY_POLICY
 import org.radarcns.detail.MainActivityViewImpl.Companion.MAX_USERNAME_LENGTH
 import org.radarcns.detail.MainActivityViewImpl.Companion.truncate
+import org.radarcns.detail.databinding.FragmentPrivacyPolicyBinding
 import org.slf4j.LoggerFactory
 
 class PrivacyPolicyFragment : Fragment() {
@@ -30,6 +30,7 @@ class PrivacyPolicyFragment : Fragment() {
     private var projectId: String? = null
     private var userId: String? = null
     private var baseUrl: String? = null
+    private var binding: FragmentPrivacyPolicyBinding? = null
 
     private var dataCollectionUrl: String? = null
 
@@ -44,31 +45,42 @@ class PrivacyPolicyFragment : Fragment() {
         dataCollectionUrl = args.getString(PRIVACY_POLICY)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_privacy_policy, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View = FragmentPrivacyPolicyBinding.inflate(inflater, container, false)
+        .also { binding = it }
+        .root
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        dataCollectionDescriptionStatement.setOnClickListener { openUrl(updatePrivacyStatement()) }
+        binding?.apply {
+            dataCollectionDescriptionStatement.setOnClickListener { openUrl(updatePrivacyStatement()) }
 
-        generalPrivacyPolicyStatement.apply {
-            visibility = if (privacyPolicyUrl != null) {
-                setOnClickListener { openUrl(privacyPolicyUrl) }
-                View.VISIBLE
-            } else {
-                View.INVISIBLE
+            generalPrivacyPolicyStatement.apply {
+                visibility = if (privacyPolicyUrl != null) {
+                    setOnClickListener { openUrl(privacyPolicyUrl) }
+                    View.VISIBLE
+                } else {
+                    View.INVISIBLE
+                }
             }
+
+            acceptPrivacyPolicyButton.setOnClickListener { acceptPrivacyPolicy() }
+
+            inputProjectId.text = getString(R.string.study_id_message, projectId)
+            inputUserId.text =
+                getString(R.string.user_id_message, userId.truncate(MAX_USERNAME_LENGTH))
+
+            val baseUrl = baseUrl ?: "Unknown server"
+            policyAcceptanceStatement.text = fromHtml(R.string.policy_acceptance_message, baseUrl)
+            inputDestinationUrl.text = fromHtml(R.string.base_url_message, baseUrl)
         }
-
-        accept_privacy_policy_button.setOnClickListener { acceptPrivacyPolicy() }
-
-        inputProjectId.text = getString(R.string.study_id_message, projectId)
-        inputUserId.text = getString(R.string.user_id_message, userId.truncate(MAX_USERNAME_LENGTH))
-
-        val baseUrl = baseUrl ?: "Unknown server"
-        policyAcceptanceStatement.text = fromHtml(R.string.policy_acceptance_message, baseUrl)
-        inputDestinationUrl.text = fromHtml(R.string.base_url_message, baseUrl)
     }
 
     @Suppress("DEPRECATION")
@@ -94,7 +106,7 @@ class PrivacyPolicyFragment : Fragment() {
         val url = dataCollectionUrl
         logger.info("Setting privacy policy {}", url)
 
-        dataCollectionDescriptionStatement.apply {
+        binding?.dataCollectionDescriptionStatement?.apply {
             if (url != null) {
                 visibility = View.VISIBLE
                 setText(R.string.collected_data_description)

@@ -119,4 +119,6 @@
     <string name="last_upload_failed">last upload failed at %1$s</string>
 
     <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="bootstart_title">Please start RADAR pRMT</string>
+    <string name="bootstart_text">RADAR pRMT has automatically been stopped. Please press this notification to start it again.</string>
 </resources>

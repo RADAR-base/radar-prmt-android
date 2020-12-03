@@ -17,11 +17,19 @@
 package org.radarcns.detail
 
 import android.content.Intent
+import android.os.Bundle
+import android.os.PersistableBundle
 import android.view.View
+import org.radarbase.android.AbstractRadarApplication.Companion.radarApp
 import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
 
 class MainActivityImpl : MainActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        radarApp.notificationHandler.cancel(MainActivityBootStarter.BOOT_START_NOTIFICATION_ID)
+        super.onCreate(savedInstanceState)
+    }
+
     override fun createView(): MainActivityView {
         return MainActivityViewImpl(this)
     }

@@ -17,7 +17,10 @@
 package org.radarcns.detail
 
 import android.Manifest.permission.RECEIVE_BOOT_COMPLETED
+import android.Manifest.permission.SYSTEM_ALERT_WINDOW
 import android.os.Build
+import org.radarbase.android.RadarConfiguration
+import org.radarbase.android.RadarConfiguration.Companion.START_AT_BOOT
 import org.radarbase.android.RadarService
 import org.radarbase.android.config.SingleRadarConfiguration
 import org.radarbase.android.source.SourceProvider
@@ -51,12 +54,13 @@ class RadarServiceImpl : RadarService() {
     )
 
     override val servicePermissions: List<String>
-        get() {
-            return ArrayList(super.servicePermissions).also {
-                it += RECEIVE_BOOT_COMPLETED
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    it += REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT
-                }
+        get() = ArrayList(super.servicePermissions).apply {
+            this += RECEIVE_BOOT_COMPLETED
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                this += REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT
+            }
+            if (configuration.latestConfig.getBoolean(START_AT_BOOT, false)) {
+                this += SYSTEM_ALERT_WINDOW
             }
         }
 

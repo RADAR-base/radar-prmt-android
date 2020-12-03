@@ -2,16 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.firebase.crashlytics'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '29.0.3'
+    compileSdkVersion 30
+    buildToolsVersion '30.0.2'
 
     defaultConfig {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 49
         versionName '1.0.10-SNAPSHOT'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
@@ -40,6 +39,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
         sourceCompatibility JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 configurations.all {
@@ -57,7 +59,7 @@ repositories {
     maven { url  'https://repo.thehyve.nl/content/repositories/snapshots' }
 }
 
-ext.radarCommonsVersion = '1.0.4'
+ext.radarCommonsVersion = '1.0.5'
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
@@ -86,6 +88,7 @@ dependencies {
     implementation "org.radarbase:radar-android-faros:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-ppg:$radarCommonsVersion"
 
+    implementation 'androidx.lifecycle:lifecycle-process:2.2.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
