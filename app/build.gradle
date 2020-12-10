@@ -11,8 +11,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 49
-        versionName '1.0.10'
+        versionCode 50
+        versionName '1.0.11'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
     }
@@ -42,6 +42,17 @@ android {
     buildFeatures {
         viewBinding true
     }
+    flavorDimensions "channel"
+    productFlavors {
+        playStore {
+            dimension "channel"
+            versionNameSuffix "-playStore"
+        }
+        selfRelease {
+            dimension "channel"
+            versionNameSuffix "-selfRelease"
+        }
+    }
 }
 
 configurations.all {
@@ -59,7 +70,7 @@ repositories {
     maven { url  'https://repo.thehyve.nl/content/repositories/snapshots' }
 }
 
-ext.radarCommonsVersion = '1.0.5'
+ext.radarCommonsVersion = '1.0.7-SNAPSHOT'
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
@@ -67,7 +78,7 @@ dependencies {
 
     implementation "org.radarbase:radar-android-login-qr:$radarCommonsVersion"
     implementation 'com.google.firebase:firebase-core:18.0.0'
-    implementation 'com.google.firebase:firebase-config:20.0.1'
+    implementation 'com.google.firebase:firebase-config:20.0.2'
     implementation 'com.google.android.gms:play-services-oss-licenses:17.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
@@ -80,7 +91,7 @@ dependencies {
 
     implementation "org.radarbase:radar-android-phone:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-phone-usage:$radarCommonsVersion"
-//    implementation "org.radarbase:radar-android-phone-telephony:$radarCommonsVersion"
+    selfReleaseImplementation "org.radarbase:radar-android-phone-telephony:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-empatica:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-application-status:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-weather:$radarCommonsVersion"
