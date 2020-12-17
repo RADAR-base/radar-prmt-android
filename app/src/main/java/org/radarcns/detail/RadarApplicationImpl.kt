@@ -72,7 +72,6 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
     }
 
     override fun setupLogging() {
-        HandroidLoggerAdapter.APP_NAME = "pRMT"
         HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG
         if (FirebaseCrashlytics.getInstance().didCrashOnPreviousExecution()) {
             Log.e("pRMT", "Crashed on previous boot")

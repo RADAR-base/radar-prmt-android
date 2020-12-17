@@ -49,6 +49,11 @@
 -dontwarn org.apache.avro.**
 -dontwarn org.codehaus.jackson.map.ext.**
 
+-keep class com.google.firebase.crashlytics.FirebaseCrashlytics {
+    static com.google.firebase.crashlytics.FirebaseCrashlytics getInstance();
+    void log(java.lang.String);
+    void recordException(java.lang.Throwable);
+}
 
 # ==== OkHttp3 ==== #
 # JSR 305 annotations are for embedding nullability information.
