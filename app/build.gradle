@@ -11,8 +11,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 50
-        versionName '1.0.11-SNAPSHOT'
+        versionCode 51
+        versionName '1.0.12-SNAPSHOT'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
     }
@@ -41,6 +41,17 @@ android {
     }
     buildFeatures {
         viewBinding true
+    }
+    flavorDimensions "channel"
+    productFlavors {
+        playStore {
+            dimension "channel"
+            versionNameSuffix "-playStore"
+        }
+        selfRelease {
+            dimension "channel"
+            versionNameSuffix "-selfRelease"
+        }
     }
 }
 
@@ -80,7 +91,7 @@ dependencies {
 
     implementation "org.radarbase:radar-android-phone:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-phone-usage:$radarCommonsVersion"
-//    implementation "org.radarbase:radar-android-phone-telephony:$radarCommonsVersion"
+    selfReleaseImplementation "org.radarbase:radar-android-phone-telephony:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-empatica:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-application-status:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-weather:$radarCommonsVersion"

@@ -74,8 +74,7 @@ class PrivacyPolicyFragment : Fragment() {
             acceptPrivacyPolicyButton.setOnClickListener { acceptPrivacyPolicy() }
 
             inputProjectId.text = getString(R.string.study_id_message, projectId)
-            inputUserId.text =
-                getString(R.string.user_id_message, userId.truncate(MAX_USERNAME_LENGTH))
+            inputUserId.text = getString(R.string.user_id_message, userId.truncate(MAX_USERNAME_LENGTH))
 
             val baseUrl = baseUrl ?: "Unknown server"
             policyAcceptanceStatement.text = fromHtml(R.string.policy_acceptance_message, baseUrl)

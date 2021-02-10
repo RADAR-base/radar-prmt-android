@@ -21,12 +21,15 @@ import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
@@ -47,6 +50,7 @@ import java.net.URI
 
 
 class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
+    private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
     private var progressDialog: ProgressDialog? = null
     private lateinit var networkReceiver: NetworkConnectedReceiver
@@ -58,6 +62,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
+        didModifyBaseUrl = false
         super.onCreate(savedInstanceBundle)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -221,7 +226,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         } catch (ex: IllegalStateException) {
             logger.error("Failed to start privacy policy fragment: is LoginActivity is already closed?", ex)
         }
-
     }
 
     private fun createFragmentLayout(id: Int, fragment: Fragment) {
@@ -250,10 +254,22 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         val baseUrlInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT
             setCompoundDrawables(TextDrawable(this, "https://"), null, null, null)
-            radarConfig.config.observe(this@LoginActivityImpl, {
-                setText(it.getString(BASE_URL_KEY, ""))
-            })
+            setOnKeyListener { _, _, e ->
+                if (e.action == KeyEvent.ACTION_UP) {
+                    didModifyBaseUrl = true
+                }
+                true
+            }
         }
+
+        radarConfig.config.observe(this, { config ->
+            if (!didModifyBaseUrl) {
+                val baseUrl = config.getString(BASE_URL_KEY, "").toHttpUrlOrNull() ?: return@observe
+                val urlString = baseUrl.toString().substring(baseUrl.scheme.length + 3)
+                baseUrlInput.setText(urlString)
+            }
+        })
+
         val tokenInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT
         }

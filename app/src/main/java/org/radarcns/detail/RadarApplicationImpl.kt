@@ -18,6 +18,7 @@ package org.radarcns.detail
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -48,9 +49,11 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
     }
 
     override fun setupLogging() {
-        FirebaseCrashlytics.getInstance().sendUnsentReports()
         HandroidLoggerAdapter.APP_NAME = "pRMT"
         HandroidLoggerAdapter.DEBUG = BuildConfig.DEBUG
+        if (FirebaseCrashlytics.getInstance().didCrashOnPreviousExecution()) {
+            Log.e("pRMT", "Crashed on previous boot")
+        }
         HandroidLoggerAdapter.enableLoggingToFirebaseCrashlytics()
     }
 

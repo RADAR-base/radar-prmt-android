@@ -50,16 +50,17 @@ class SettingsActivity : AppCompatActivity() {
             setTitle("Reset")
             setMessage("Do you really want to reset to default settings?")
             setIcon(android.R.drawable.ic_dialog_alert)
-            setPositiveButton(android.R.string.yes) { _, _ ->
+            setPositiveButton(android.R.string.ok) { _, _ ->
                 config.reset(*MANAGED_SETTINGS)
             }
-            setNegativeButton(android.R.string.no, null)
+            setNegativeButton(android.R.string.cancel, null)
         }.show()
     }
 
     companion object {
         private val MANAGED_SETTINGS = arrayOf(
-                RadarConfiguration.SEND_ONLY_WITH_WIFI,
-                RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY)
+            RadarConfiguration.SEND_ONLY_WITH_WIFI,
+            RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY,
+        )
     }
 }

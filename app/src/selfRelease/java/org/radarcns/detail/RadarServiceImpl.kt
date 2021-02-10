@@ -32,6 +32,7 @@ import org.radarbase.passive.phone.PhoneBluetoothProvider
 import org.radarbase.passive.phone.PhoneContactListProvider
 import org.radarbase.passive.phone.PhoneLocationProvider
 import org.radarbase.passive.phone.PhoneSensorProvider
+import org.radarbase.passive.phone.telephony.PhoneLogProvider
 import org.radarbase.passive.phone.usage.PhoneUsageProvider
 import org.radarbase.passive.ppg.PhonePpgProvider
 import org.radarbase.passive.weather.WeatherApiProvider
@@ -39,18 +40,18 @@ import java.util.*
 
 class RadarServiceImpl : RadarService() {
     override val plugins: List<SourceProvider<*>> = listOf(
-            ApplicationStatusProvider(this),
-            OpenSmileAudioProvider(this),
-            E4Provider(this),
-            FarosProvider(this),
-            PhoneBluetoothProvider(this),
-            PhoneContactListProvider(this),
-            PhoneLocationProvider(this),
-            PhoneSensorProvider(this),
-//            PhoneLogProvider(this),
-            PhoneUsageProvider(this),
-            PhonePpgProvider(this),
-            WeatherApiProvider(this)
+        ApplicationStatusProvider(this),
+        OpenSmileAudioProvider(this),
+        E4Provider(this),
+        FarosProvider(this),
+        PhoneBluetoothProvider(this),
+        PhoneContactListProvider(this),
+        PhoneLocationProvider(this),
+        PhoneSensorProvider(this),
+        PhoneLogProvider(this),
+        PhoneUsageProvider(this),
+        PhonePpgProvider(this),
+        WeatherApiProvider(this),
     )
 
     override val servicePermissions: List<String>
