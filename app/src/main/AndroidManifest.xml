@@ -5,6 +5,9 @@
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" tools:replace="required" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" tools:replace="required" />
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <!-- Start on boot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -95,5 +98,11 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <provider
+            android:name=".UncaughtExceptionHandlerContentProvider"
+            android:authorities="${applicationId}"
+            android:exported="false"
+            android:initOrder="101"
+            android:grantUriPermissions="false" />
     </application>
 </manifest>

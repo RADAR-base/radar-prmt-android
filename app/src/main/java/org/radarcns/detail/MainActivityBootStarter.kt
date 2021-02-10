@@ -24,7 +24,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.core.app.NotificationCompat.CATEGORY_ALARM
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import org.radarbase.android.AbstractRadarApplication.Companion.radarApp
+import org.radarbase.android.RadarApplication.Companion.radarApp
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NotificationHandler.Companion.NOTIFICATION_CHANNEL_ALERT
 
