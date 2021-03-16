@@ -38,14 +38,15 @@ import org.slf4j.LoggerFactory
  * Displays a single source row.
  */
 class SourceRowView internal constructor(
-        private val mainActivity: MainActivity,
-        provider: SourceProvider<*>, root: ViewGroup
+    private val mainActivity: MainActivity,
+    provider: SourceProvider<*>, root: ViewGroup
 ) {
     private val connection: SourceServiceConnection<*> = provider.connection
     private val mStatusIcon: View
     private val mBatteryLabel: ImageView
     private val sourceNameLabel: TextView
-    private val devicePreferences: SharedPreferences
+    private val devicePreferences: SharedPreferences =
+        mainActivity.getSharedPreferences("device." + connection.serviceClassName, Context.MODE_PRIVATE)
     private val filter = ChangeRunner("")
     private var sourceState: BaseSourceState? = null
     private var sourceName: String? = null
@@ -56,7 +57,6 @@ class SourceRowView internal constructor(
     private val splitRegex = this.mainActivity.getString(R.string.filter_split_regex).toRegex()
 
     init {
-        devicePreferences = this.mainActivity.getSharedPreferences("device." + connection.serviceClassName, Context.MODE_PRIVATE)
         logger.info("Creating source row for provider {} and connection {}", provider, connection)
         val inflater = this.mainActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         inflater.inflate(R.layout.activity_overview_source_row, root)

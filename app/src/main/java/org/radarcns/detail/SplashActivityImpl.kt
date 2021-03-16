@@ -2,7 +2,7 @@ package org.radarcns.detail
 
 import android.os.Bundle
 import android.widget.Toast.LENGTH_LONG
-import org.radarbase.android.AbstractRadarApplication.Companion.radarApp
+import org.radarbase.android.RadarApplication.Companion.radarApp
 import org.radarbase.android.splash.SplashActivity
 import org.radarbase.android.util.Boast
 import org.radarcns.detail.MainActivityBootStarter.Companion.BOOT_START_NOTIFICATION_ID
@@ -12,6 +12,10 @@ class SplashActivityImpl : SplashActivity() {
     override val delayMs: Long = 500L
     private var notifyResume = false
     private lateinit var binding: ActivitySplashBinding
+
+    init {
+        waitForFullFetchMs = 3_000L
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
