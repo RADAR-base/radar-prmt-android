@@ -183,7 +183,7 @@ class MainActivityViewImpl internal constructor(private val mainActivity: MainAc
 
     companion object {
         private val logger = LoggerFactory.getLogger(MainActivityViewImpl::class.java)
-        private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
+        private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         internal const val MAX_USERNAME_LENGTH = 20
 
         internal fun String?.truncate(maxLength: Int): String {
