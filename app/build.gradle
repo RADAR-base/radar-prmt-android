@@ -11,8 +11,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 51
-        versionName '1.0.12'
+        versionCode 52
+        versionName '1.0.13-SNAPSHOT'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
     }
