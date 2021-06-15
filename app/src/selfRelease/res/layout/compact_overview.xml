@@ -185,6 +185,16 @@
                 android:contentDescription="@string/info"
                 android:onClick="showInfo"
                 android:src="@drawable/ic_info_black" />
+
+            <ImageButton
+                android:id="@+id/updateButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/updates"
+                android:onClick="showUpdates"
+                android:src="@drawable/ic_baseline_update_24" />
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import org.radarbase.android.RadarApplication.Companion.radarConfig
+//import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 
 class InfoActivity : AppCompatActivity() {
@@ -23,6 +24,9 @@ class InfoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
 
         radarConfig.config.observe(this, { config ->
+
+//            println("%%%" + config.getBoolean(RadarConfiguration.SEND_ONLY_WITH_WIFI, false))
+
             findViewById<TextView>(R.id.server_base_url).text = config.getString(BASE_URL_KEY, "")
 
             policyUrl = config.optString(PRIVACY_POLICY)

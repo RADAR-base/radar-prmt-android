@@ -62,5 +62,8 @@ class SettingsActivity : AppCompatActivity() {
             RadarConfiguration.SEND_ONLY_WITH_WIFI,
             RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY,
         )
+
+        const val CHECK_FOR_UPDATE = "check_for_update"
+        const val UPDATE_NOTIFICATION = "update_notification"
     }
 }

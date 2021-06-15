@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SettingsActivity">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/network_settings_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/network_settings_header"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="@+id/enableDataSwitch"
+                app:layout_constraintStart_toStartOf="@+id/enableDataSwitch"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/enableDataSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:minHeight="48dp"
+                android:text="@string/enable_data_for_sending"
+                app:layout_constraintTop_toBottomOf="@+id/network_settings_header"
+                tools:layout_editor_absoluteX="16dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/enableDataHighPrioritySwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:minHeight="48dp"
+                android:text="@string/enable_data_high_priority_only"
+                app:layout_constraintTop_toBottomOf="@id/enableDataSwitch"
+                tools:layout_editor_absoluteX="16dp" />
+
+            <Button
+                android:id="@+id/resetSettingsButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="startReset"
+                android:text="@string/button_reset"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/enableDataHighPrioritySwitch" />
+
+            <TextView
+                android:id="@+id/update_settings_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/update_settings_header"
+                android:textSize="20sp"
+                android:layout_marginTop="32dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/resetSettingsButton" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/update_check_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/enable_check_for_update"
+                app:layout_constraintTop_toBottomOf="@+id/update_settings_header"
+                tools:layout_editor_absoluteX="16dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/update_check_notification_switch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:minHeight="48dp"
+                android:text="@string/enable_update_notification"
+                app:layout_constraintTop_toBottomOf="@+id/update_check_switch"
+                tools:layout_editor_absoluteX="16dp" />
+
+            <LinearLayout
+                android:id="@+id/update_check_frequency_layout"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/update_check_notification_switch">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_update_frequency"
+                    android:layout_marginTop="16dp"/>
+
+                <RadioGroup
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/radio_hour"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:onClick="onUpdateCheckFrequencyRadioButtonClicked"
+                        android:text="@string/hour" />
+
+                    <RadioButton
+                        android:id="@+id/radio_day"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:onClick="onUpdateCheckFrequencyRadioButtonClicked"
+                        android:text="@string/day" />
+
+                    <RadioButton
+                        android:id="@+id/radio_week"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minHeight="48dp"
+                        android:onClick="onUpdateCheckFrequencyRadioButtonClicked"
+                        android:text="@string/week" />
+
+                </RadioGroup>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/update_check_time_layout"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/update_check_frequency_layout"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:id="@+id/update_check_time_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/setting_update_time"
+                />
+                <TextView
+                    android:id="@+id/update_check_time_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/setting_update_time_hint"
+                    android:onClick="showUpdateCheckTimePickerDialog"
+                />
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            app:title="Settings"
+            android:background="?attr/colorPrimary"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:layout_scrollFlags="scroll|enterAlways">
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
