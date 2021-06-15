@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 class MainActivityViewImpl internal constructor(private val mainActivity: MainActivityImpl) : MainActivityView {
     private val connectionRows = ChangeRunner<List<SourceProvider<*>>>(emptyList())
     private val actionsCells = ChangeRunner<List<SourceProvider.Action>>(emptyList())
@@ -87,6 +88,8 @@ class MainActivityViewImpl internal constructor(private val mainActivity: MainAc
             mActionLayout = findViewById(R.id.actionLayout)
             this@MainActivityViewImpl.update()
         }
+
+
     }
 
     override fun onRadarServiceBound(binder: IRadarBinder) {

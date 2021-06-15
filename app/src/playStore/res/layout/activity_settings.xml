@@ -22,50 +22,39 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/network_settings_header"
+                android:textColor="?attr/colorPrimaryDark"
+
                 android:textStyle="bold"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="5dp"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintTop_toTopOf="@id/constraintLayout"
-                app:layout_constraintBottom_toTopOf="@id/enableDataSwitch"
-                android:textColor="?attr/colorPrimaryDark"/>
+                app:layout_constraintEnd_toEndOf="@+id/enableDataSwitch"
+                app:layout_constraintStart_toStartOf="@+id/enableDataSwitch"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/enableDataSwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/enable_data_for_sending"
-                android:layout_marginBottom="5dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="5dp"
-                app:layout_constraintStart_toStartOf="@id/network_settings_header"
-                app:layout_constraintTop_toBottomOf="@id/network_settings_header"
-                app:layout_constraintBottom_toTopOf="@id/enableDataHighPrioritySwitch"/>
+                app:layout_constraintTop_toBottomOf="@+id/network_settings_header" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/enableDataHighPrioritySwitch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/enable_data_high_priority_only"
                 android:enabled="false"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:layout_marginStart="35dp"
-                app:layout_constraintTop_toBottomOf="@id/enableDataSwitch"
-                app:layout_constraintStart_toStartOf="@id/enableDataSwitch" />
+                android:text="@string/enable_data_high_priority_only"
+                app:layout_constraintTop_toBottomOf="@id/enableDataSwitch" />
 
             <Button
                 android:id="@+id/resetSettingsButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginStart="5dp"
-                android:text="@string/button_reset"
                 android:onClick="startReset"
-                app:layout_constraintTop_toBottomOf="@id/enableDataHighPrioritySwitch"
-                app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout" />
+                android:text="@string/button_reset"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/enableDataHighPrioritySwitch" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 

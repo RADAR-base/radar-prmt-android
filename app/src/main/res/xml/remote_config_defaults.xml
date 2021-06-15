@@ -86,5 +86,25 @@
         <key>privacy_policy</key>
         <value>http://info.thehyve.nl/radar-cns-privacy-policy</value>
     </entry>
+    <entry>
+        <key>update_check</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>update_check_notification</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>update_check_frequency</key>
+        <value>day</value>
+    </entry>
+    <entry>
+        <key>update_check_time</key>
+        <value>600</value>
+    </entry>
+    <entry>
+        <key>releases_url</key>
+        <value>https://api.github.com/repos/peyman-mohtashami/auto-update-test/releases</value>
+    </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
