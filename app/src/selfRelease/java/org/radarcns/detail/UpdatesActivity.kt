@@ -4,7 +4,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.text.format.DateFormat
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -20,29 +19,16 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
-import org.radarbase.android.auth.portal.ManagementPortalClient
-import org.radarbase.producer.rest.RestClient
 import org.radarcns.detail.DownloadFileFromUrl.Companion.DOWNLOADED_FILE
 import org.radarcns.detail.OneTimeScheduleWorker.Companion.FROM_NOTIFICATION_KEY
-import org.radarcns.detail.SettingsActivity.Companion.UPDATE_CHECK_FREQUENCY
 import org.radarcns.detail.UpdateScheduledService.Companion.LAST_UPDATE_CHECK_TIMESTAMP
 import org.radarcns.detail.UpdateScheduledService.Companion.UPDATE_VERSION_NAME_KEY
 import org.radarcns.detail.UpdateScheduledService.Companion.UPDATE_VERSION_URL_KEY
-import org.radarcns.detail.UpdateScheduledService.Companion.getCurrentVersion
-import org.radarcns.detail.UpdateScheduledService.Companion.getNewVersion
 import java.io.File
-import java.util.*
-//import java.net.Authenticator;
-//import java.net.PasswordAuthentication;
-//import java.net.URI;
-//import okhttp3.OkHttpClient
-//import okhttp3.Request
-
 
 class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     private lateinit var config: RadarConfiguration
     private var releasesUrl: String = ""
-    private var lastUpdateCheckTimestamp: Long = 0
 
     private lateinit var currentVersion: TextView
     private lateinit var updateStatus: TextView
@@ -50,18 +36,13 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     private lateinit var updateLinearLayout: LinearLayout
     private lateinit var startDownloadingButton: Button
     private lateinit var cancelUpdateButton: Button
-    private lateinit var stopNotificationButton: Button
+    private lateinit var stopNotificationButton: TextView
 
     private lateinit var progressBarContainerLayout: ConstraintLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var progressBarPercent: TextView
 
-    private lateinit var checkForUpdatesPBar: ProgressBar
-    private lateinit var checkForUpdateButton: Button
-
-    private lateinit var lastCheckStatus: TextView
-
-    private lateinit var newVersionDownloadUrl: String
+    private lateinit var newVersionApkUrl: String
     private var firstTime = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,9 +59,7 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         config = radarConfig
 
         config.config.observe(this, { config ->
-            releasesUrl = config.getString(SettingsActivity.RELEASES_URL)
-            lastUpdateCheckTimestamp = config.getLong(LAST_UPDATE_CHECK_TIMESTAMP, 0)
-            println("firstTime: $firstTime")
+            releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY, UPDATE_RELEASE_URL)
             if(firstTime) {
                 firstTime = false
                 checkForUpdates()
@@ -99,19 +78,12 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         progressBar = findViewById(R.id.progressBar)
         progressBarPercent = findViewById(R.id.progressbar_percent)
 
-        checkForUpdatesPBar = findViewById(R.id.check_for_updates_pbar)
-        checkForUpdateButton = findViewById(R.id.check_for_updates_button)
-
-        lastCheckStatus = findViewById(R.id.last_check_status)
-
         // TODO not all notifications should be canceled
         val notificationMng =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationMng.cancelAll()
 
         setCurrentVersion()
-
-        setUpdateLastCheck()
 
         if (intent.extras?.getBoolean(FROM_NOTIFICATION_KEY, false) == true){
             updateLinearLayout.visibility = View.VISIBLE
@@ -126,12 +98,6 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
             stopNotificationButton.visibility = View.VISIBLE
         }
 
-//        checkForUpdates()
-
-        checkForUpdateButton.setOnClickListener {
-            checkForUpdates()
-        }
-
         startDownloadingButton.setOnClickListener {
             startDownloading()
         }
@@ -141,59 +107,17 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         }
 
         stopNotificationButton.setOnClickListener {
-            val updateCheckFrequency = SettingsActivity.WEEK
-            config.put(UPDATE_CHECK_FREQUENCY, updateCheckFrequency)
+            config.put(UPDATE_CHECK_PERIOD_KEY, WEEK)
             config.persistChanges()
             finish()
         }
     }
 
     private fun setCurrentVersion() {
-        currentVersion.text = getString(R.string.currentVersion, getCurrentVersion(packageManager, packageName))
-    }
-
-    private fun setUpdateLastCheck() {
-        val cal: Calendar = Calendar.getInstance(Locale.ENGLISH)
-        cal.timeInMillis = lastUpdateCheckTimestamp
-        val date: String = DateFormat.format(LAST_CHECK_DATE_FORMAT, cal).toString()
-        lastCheckStatus.text = getString(R.string.last_check, date)
+        currentVersion.text = getString(R.string.currentVersion, getInstalledPackageVersion(this, packageName))
     }
 
     private fun checkForUpdates() {
-        checkForUpdatesPBar.visibility = View.VISIBLE
-        checkForUpdateButton.visibility = View.GONE
-
-//        val url = releasesUrl
-//
-//        val client: RestClient = RestClient.newClient()
-//            //.server(managementPortal)
-//            .build()
-//
-//        val request = client.requestBuilder(url)
-//            .header("Accept", ManagementPortalClient.APPLICATION_JSON)
-//            .build()
-//        val client = OkHttpClient()
-//
-//        val request: Request = Request.Builder()
-//            .url("https://www.vogella.com/index.html")
-//            .build()
-//
-//        client.newCall(request).enqueue(new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, final Response response) throws IOException {
-//                if (!response.isSuccessful()) {
-//                    throw new IOException ("Unexpected code " + response);
-//                } else {
-//                    // do something wih the result
-//                }
-//            }
-//        }
-
         val queue = Volley.newRequestQueue(this)
         val url = releasesUrl
         val stringRequest = StringRequest(
@@ -201,16 +125,15 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
             { response ->
                 config.put(LAST_UPDATE_CHECK_TIMESTAMP, System.currentTimeMillis())
                 config.persistChanges()
-                setUpdateLastCheck()
 
-                val newVersion = getNewVersion(response, packageManager, packageName)
-                if (newVersion !== null) {
+                val updatePackage = getUpdatePackage(this, response, packageName)
+                if (updatePackage != null) {
                     val updateStatus: TextView = findViewById(R.id.update_status)
-                    newVersionDownloadUrl = newVersion.get(UPDATE_VERSION_URL_KEY) as String
+                    newVersionApkUrl = updatePackage.get(UPDATE_VERSION_URL_KEY) as String
                     updateStatus.text = getString(
                         R.string.new_version_available,
                         getString(R.string.app_name),
-                        newVersion.get(UPDATE_VERSION_NAME_KEY)
+                        updatePackage.get(UPDATE_VERSION_NAME_KEY)
                     )
                 } else {
                     val updateStatus: TextView = findViewById(R.id.update_status)
@@ -221,11 +144,8 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
                     )
                 }
                 updateLinearLayout.visibility = View.VISIBLE
-                checkForUpdatesPBar.visibility = View.GONE
-                checkForUpdateButton.visibility = View.VISIBLE
             },
             {
-                // show error
                 Log.v("ScheduleService", "Error")
             })
         queue.add(stringRequest)
@@ -234,17 +154,25 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     private fun startDownloading() {
         updateLinearLayout.visibility = View.GONE
         progressBarContainerLayout.visibility = View.VISIBLE
-        checkForUpdateButton.visibility = View.GONE
         progressBar.progress = 0
         val downloader = DownloadFileFromUrl(this, this)
         downloader.setProgressBar(progressBar)
-        val apkUrl = newVersionDownloadUrl
-        downloader.execute(apkUrl)
+        downloader.execute(newVersionApkUrl)
+    }
+
+    private fun isInstallApkValid(): Boolean {
+        val fileName = DOWNLOADED_FILE
+        val fileLocation = File(filesDir, fileName)
+
+        val isPackageNameSame = isPackageNameSame(this, packageName, fileLocation.absolutePath)
+        val isSignatureSame = isSignatureSame(this, "org.radarcns.detail", fileLocation.absolutePath)
+        return isSignatureSame && isPackageNameSame
     }
 
     private fun install() {
         val fileName = DOWNLOADED_FILE
         val fileLocation = File(filesDir, fileName)
+
         val uri = FileProvider.getUriForFile(
             this,
             applicationContext.packageName.toString() + PROVIDER_PATH,
@@ -261,16 +189,25 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     }
 
     override fun taskCompletionResult(result: String?) {
-        install()
-        progressBarContainerLayout.visibility = View.GONE
-        updateLinearLayout.visibility = View.VISIBLE
-        checkForUpdateButton.visibility = View.VISIBLE
+        if(isInstallApkValid()) {
+            install()
+            progressBarContainerLayout.visibility = View.GONE
+            updateLinearLayout.visibility = View.VISIBLE
+        }else{
+            updateStatus.text = getString(R.string.error_in_package_name_or_signature)
+            progressBarContainerLayout.visibility = View.GONE
+        }
     }
 
     companion object {
         private const val MIME_TYPE = "application/vnd.android.package-archive"
         private const val PROVIDER_PATH = ".provider"
-        private const val LAST_CHECK_DATE_FORMAT = "MMM dd, yyyy HH:mm:ss"
+        private const val HOUR = 15 * 1000L // 60 * 60 * 1000L
+        const val DAY = 2 * HOUR // 24 * HOUR
+        const val WEEK = 2 * DAY // 7 * DAY
+        const val UPDATE_RELEASES_URL_KEY = "update_releases_url"
+        const val UPDATE_CHECK_PERIOD_KEY = "update_check_period"
+        const val UPDATE_RELEASE_URL = "https://api.github.com/repos/peyman-mohtashami/auto-update-test/releases"
     }
 }
 
