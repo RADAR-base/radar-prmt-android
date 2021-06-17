@@ -10,7 +10,8 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+        android:fillViewport="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout"
@@ -65,23 +66,25 @@
                     />
 
                 <Button
+                    android:id="@+id/start_downloading_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/start_downloading" />
+
+                <Button
                     android:id="@+id/cancel_update_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/no" />
 
-                <Button
+                <TextView
                     android:id="@+id/stop_notification_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/dont_show_again"
+                    android:layout_marginTop="64dp"
+                    android:textAlignment="center"
                     android:visibility="gone"/>
-
-                <Button
-                    android:id="@+id/start_downloading_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/start_downloading" />
             </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -121,47 +124,46 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/check_for_updates"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/progressbar_container"
-                android:layout_marginTop="32dp"
-                >
+<!--            <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--                android:id="@+id/check_for_updates"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                app:layout_constraintBottom_toTopOf="@+id/last_check_status"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent">-->
 
-                <ProgressBar
-                    android:id="@+id/check_for_updates_pbar"
-                    style="@style/Widget.AppCompat.ProgressBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    />
+<!--                <ProgressBar-->
+<!--                    android:id="@+id/check_for_updates_pbar"-->
+<!--                    style="@style/Widget.AppCompat.ProgressBar"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                    app:layout_constraintEnd_toEndOf="parent"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toTopOf="parent" />-->
 
-                <Button
-                    android:id="@+id/check_for_updates_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/check_for_updates"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:visibility="gone"/>
-            </androidx.constraintlayout.widget.ConstraintLayout>
+<!--                <Button-->
+<!--                    android:id="@+id/check_for_updates_button"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="@string/check_for_updates"-->
+<!--                    android:visibility="gone"-->
+<!--                    app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                    app:layout_constraintEnd_toEndOf="parent"-->
+<!--                    app:layout_constraintStart_toStartOf="parent"-->
+<!--                    app:layout_constraintTop_toTopOf="parent" />-->
+<!--            </androidx.constraintlayout.widget.ConstraintLayout>-->
 
-            <TextView
-                android:id="@+id/last_check_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/last_check"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/check_for_updates"
-                android:layout_marginTop="8dp"/>
+<!--            <TextView-->
+<!--                android:id="@+id/last_check_status"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="@string/last_check"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                android:layout_marginTop="8dp"-->
+<!--                android:layout_marginBottom="64dp"/>-->
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
