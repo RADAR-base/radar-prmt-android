@@ -28,7 +28,7 @@ import java.io.File
 
 class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     private lateinit var config: RadarConfiguration
-    private var releasesUrl: String = ""
+    private var releasesUrl: String? = null
 
     private lateinit var currentVersion: TextView
     private lateinit var updateStatus: TextView
@@ -43,7 +43,6 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     private lateinit var progressBarPercent: TextView
 
     private lateinit var newVersionApkUrl: String
-    private var firstTime = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,9 +58,9 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         config = radarConfig
 
         config.config.observe(this, { config ->
-            releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY, UPDATE_RELEASE_URL)
-            if(firstTime) {
-                firstTime = false
+            val newReleaseUrl = config.getString(UPDATE_RELEASES_URL_KEY)
+            if( releasesUrl != newReleaseUrl ) {
+                releasesUrl = newReleaseUrl
                 checkForUpdates()
             }
         })
@@ -114,7 +113,7 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     }
 
     private fun setCurrentVersion() {
-        currentVersion.text = getString(R.string.currentVersion, getInstalledPackageVersion(this, packageName))
+        currentVersion.text = getString(R.string.currentVersion, getInstalledPackageVersion(this))
     }
 
     private fun checkForUpdates() {
@@ -126,7 +125,7 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
                 config.put(LAST_UPDATE_CHECK_TIMESTAMP, System.currentTimeMillis())
                 config.persistChanges()
 
-                val updatePackage = getUpdatePackage(this, response, packageName)
+                val updatePackage = getUpdatePackage(this, response)
                 if (updatePackage != null) {
                     val updateStatus: TextView = findViewById(R.id.update_status)
                     newVersionApkUrl = updatePackage.get(UPDATE_VERSION_URL_KEY) as String
@@ -135,6 +134,7 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
                         getString(R.string.app_name),
                         updatePackage.get(UPDATE_VERSION_NAME_KEY)
                     )
+                    updateLinearLayout.visibility = View.VISIBLE
                 } else {
                     val updateStatus: TextView = findViewById(R.id.update_status)
                     updateStatus.text = getString(
@@ -142,8 +142,8 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
                             R.string.app_name
                         )
                     )
+                    updateLinearLayout.visibility = View.GONE
                 }
-                updateLinearLayout.visibility = View.VISIBLE
             },
             {
                 Log.v("ScheduleService", "Error")
@@ -164,9 +164,7 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         val fileName = DOWNLOADED_FILE
         val fileLocation = File(filesDir, fileName)
 
-        val isPackageNameSame = isPackageNameSame(this, packageName, fileLocation.absolutePath)
-        val isSignatureSame = isSignatureSame(this, "org.radarcns.detail", fileLocation.absolutePath)
-        return isSignatureSame && isPackageNameSame
+        return isPackageNameSame(this, fileLocation.absolutePath)
     }
 
     private fun install() {
@@ -202,12 +200,11 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     companion object {
         private const val MIME_TYPE = "application/vnd.android.package-archive"
         private const val PROVIDER_PATH = ".provider"
-        private const val HOUR = 15 * 1000L // 60 * 60 * 1000L
-        const val DAY = 2 * HOUR // 24 * HOUR
-        const val WEEK = 2 * DAY // 7 * DAY
+        private const val HOUR = 60 * 60 * 1000L
+        const val DAY = 24 * HOUR
+        const val WEEK = 7 * DAY
         const val UPDATE_RELEASES_URL_KEY = "update_releases_url"
         const val UPDATE_CHECK_PERIOD_KEY = "update_check_period"
-        const val UPDATE_RELEASE_URL = "https://api.github.com/repos/peyman-mohtashami/auto-update-test/releases"
     }
 }
 

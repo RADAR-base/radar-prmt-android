@@ -11,8 +11,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 51
-        versionName '1.0.12'
+        versionCode 52
+        versionName '1.0.13'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
     }
@@ -90,7 +90,7 @@ dependencies {
     implementation "org.radarbase:radar-android-phone:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-phone-usage:$radarCommonsVersion"
     selfReleaseImplementation "org.radarbase:radar-android-phone-telephony:$radarCommonsVersion"
-    // implementation "org.radarbase:radar-android-empatica:$radarCommonsVersion"
+    implementation "org.radarbase:radar-android-empatica:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-application-status:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-weather:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-audio:$radarCommonsVersion"

@@ -125,7 +125,7 @@
     <!-- Auto update -->
 <!--    <string name="update_notification_title">Auto Update App</string>-->
     <string name="update_notification_content">New version is available.\nClick to download.</string>
-    <string name="notification_update_channel_id">com.example.autoupdatetest1</string>
+<!--    <string name="notification_update_channel_id">com.example.autoupdatetest1</string>-->
 <!--    <string name="notification_update_channel_name">auto_update_test</string>-->
     <string name="action_favorite">Favorites</string>
     <string name="action_settings">Settings</string>

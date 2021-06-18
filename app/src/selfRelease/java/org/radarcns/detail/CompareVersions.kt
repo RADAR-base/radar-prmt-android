@@ -13,7 +13,13 @@ import org.radarcns.detail.UpdateScheduledService.Companion.UPDATE_VERSION_URL_K
 fun getUpdatePackage(context: Context, response: String): JSONObject? {
     val updatePackage = getUpdatePackageVersionAndUrl(response)
     val currentPackageVersion = getInstalledPackageVersion(context)
-    if (currentPackageVersion != updatePackage?.get(UPDATE_VERSION_NAME_KEY)) {
+
+    val pattern = Regex("\\d+(\\.\\d+)+")
+
+    val rawCurrentPackageVersion = currentPackageVersion?.let { pattern.find(it)?.value }
+    val rawUpdatePackageVersion = updatePackage?.getString(UPDATE_VERSION_NAME_KEY)?.let { pattern.find(it)?.value }
+
+    if (rawCurrentPackageVersion != rawUpdatePackageVersion) {
         return updatePackage
     }
     return null
@@ -33,9 +39,7 @@ fun getUpdatePackageVersionAndUrl(response: String): JSONObject? {
     val responseObject = Json.parseToJsonElement(response)
     if (responseObject.jsonArray.size > 0) {
         val latestRelease = responseObject.jsonArray[0]
-        // todo
         val tagName = latestRelease.jsonObject["tag_name"]?.toString()?.replace("\"", "")
-        // todo
         val browserDownloadUrl = latestRelease.jsonObject["assets"]?.jsonArray?.get(0)?.jsonObject?.getValue("browser_download_url").toString().replace("\"", "")
         val updateApk = JSONObject()
         updateApk.put(UPDATE_VERSION_URL_KEY, browserDownloadUrl)
