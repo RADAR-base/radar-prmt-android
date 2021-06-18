@@ -185,7 +185,6 @@
                 android:contentDescription="@string/info"
                 android:onClick="showInfo"
                 android:src="@drawable/ic_info_black" />
-
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
