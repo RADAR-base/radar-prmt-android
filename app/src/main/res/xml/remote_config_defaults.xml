@@ -103,8 +103,8 @@
         <value>600</value>
     </entry>
     <entry>
-        <key>releases_url</key>
-        <value>https://api.github.com/repos/peyman-mohtashami/auto-update-test/releases</value>
+        <key>update_releases_url</key>
+        <value>https://api.github.com/repos/RADAR-base/radar-prmt-android/releases</value>
     </entry>
 </defaultsMap>
 <!-- END xml_defaults -->

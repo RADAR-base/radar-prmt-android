@@ -18,7 +18,6 @@ import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarcns.detail.UpdatesActivity.Companion.DAY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_CHECK_PERIOD_KEY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_RELEASES_URL_KEY
-import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_RELEASE_URL
 
 class UpdateScheduledService: LifecycleService() {
     private var timerStarted: Boolean = false
@@ -26,7 +25,7 @@ class UpdateScheduledService: LifecycleService() {
 
     private var updateNotificationConfig = true
     private var updateCheckPeriod: Long = DAY
-    private var releasesUrl: String = ""
+    private var releasesUrl: String? = null
 
     override fun onRebind(intent: Intent?) {
         super.onRebind(intent)
@@ -37,7 +36,7 @@ class UpdateScheduledService: LifecycleService() {
 
         radarConfig.config.observe(this, { config ->
             updateCheckPeriod = config.getLong(UPDATE_CHECK_PERIOD_KEY, DAY)
-            releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY, UPDATE_RELEASE_URL)
+            releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY)
 
             if (timerStarted) {
                 timer.cancel()
@@ -69,7 +68,7 @@ class UpdateScheduledService: LifecycleService() {
             val stringRequest = StringRequest(
                 Request.Method.GET, url,
                 { response ->
-                    val updatePackage = getUpdatePackage(this@UpdateScheduledService, response, packageName)
+                    val updatePackage = getUpdatePackage(this@UpdateScheduledService, response)
                     if (updatePackage != null && updateNotificationConfig) {
                         scheduleOneTimeNotification(0, updatePackage)
                     }

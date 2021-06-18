@@ -25,10 +25,10 @@ class OneTimeScheduleWorker(
 
         val intent = Intent(context, UpdatesActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(FROM_NOTIFICATION_KEY, true)
+            putExtra(UPDATE_VERSION_NAME_KEY, versionName)
+            putExtra(UPDATE_VERSION_URL_KEY, url)
         }
-        intent.putExtra(FROM_NOTIFICATION_KEY, true)
-        intent.putExtra(UPDATE_VERSION_NAME_KEY, versionName)
-        intent.putExtra(UPDATE_VERSION_URL_KEY, url)
 
         val uniqueInt = (System.currentTimeMillis() and 0xfffffff).toInt()
         val pendingIntent = PendingIntent.getActivity(
