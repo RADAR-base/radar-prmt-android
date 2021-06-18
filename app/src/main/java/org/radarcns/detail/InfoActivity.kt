@@ -23,7 +23,6 @@ class InfoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
 
         radarConfig.config.observe(this, { config ->
-
             findViewById<TextView>(R.id.server_base_url).text = config.getString(BASE_URL_KEY, "")
 
             policyUrl = config.optString(PRIVACY_POLICY)

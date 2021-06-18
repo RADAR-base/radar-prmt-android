@@ -24,7 +24,6 @@ import org.radarbase.android.MainActivityView
 import org.radarbase.android.RadarApplication.Companion.radarApp
 
 class MainActivityImpl : MainActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         radarApp.notificationHandler.cancel(MainActivityBootStarter.BOOT_START_NOTIFICATION_ID)
         super.onCreate(savedInstanceState)

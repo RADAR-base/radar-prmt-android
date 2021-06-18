@@ -192,7 +192,7 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
             progressBarContainerLayout.visibility = View.GONE
             updateLinearLayout.visibility = View.VISIBLE
         }else{
-            updateStatus.text = getString(R.string.error_in_package_name_or_signature)
+            updateStatus.text = getString(R.string.error_in_package_name)
             progressBarContainerLayout.visibility = View.GONE
         }
     }
