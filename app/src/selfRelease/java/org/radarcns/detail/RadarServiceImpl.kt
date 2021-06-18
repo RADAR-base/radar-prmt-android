@@ -39,7 +39,6 @@ import org.radarbase.passive.weather.WeatherApiProvider
 import java.util.*
 
 class RadarServiceImpl : RadarService() {
-
     override val plugins: List<SourceProvider<*>> = listOf(
         ApplicationStatusProvider(this),
         OpenSmileAudioProvider(this),

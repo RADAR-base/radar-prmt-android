@@ -185,7 +185,6 @@
                 android:contentDescription="@string/info"
                 android:onClick="showInfo"
                 android:src="@drawable/ic_info_black" />
-
             <ImageButton
                 android:id="@+id/updateButton"
                 android:layout_width="40dp"

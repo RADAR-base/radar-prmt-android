@@ -122,59 +122,15 @@
     <string name="bootstart_title">Please start RADAR pRMT</string>
     <string name="bootstart_text">RADAR pRMT has automatically been stopped. Please press this notification to start it again.</string>
 
-    <!-- Auto update -->
-<!--    <string name="update_notification_title">Auto Update App</string>-->
-    <string name="update_notification_content">New version is available.\nClick to download.</string>
-<!--    <string name="notification_update_channel_id">com.example.autoupdatetest1</string>-->
-<!--    <string name="notification_update_channel_name">auto_update_test</string>-->
-    <string name="action_favorite">Favorites</string>
-    <string name="action_settings">Settings</string>
-    <string name="title_activity_main">MainActivity</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
-    <string name="title_activity_settings">SettingsActivity</string>
-
-    <!-- Preference Titles -->
-    <string name="messages_header">Messages</string>
-    <string name="sync_header">Sync</string>
-
-    <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
-
-    <!-- Updates -->
+    <!-- Updates  -->
     <string name="updates">Updates</string>
+    <string name="update_notification_content">New version is available.\nClick to download.</string>
     <string name="currentVersion">Version: %1$s</string>
     <string name="new_version_available">A new version of %1$s App (%2$s) is available.</string>
     <string name="new_version_not_available">You installed the latest version of %1$s App.</string>
-    <string name="check_for_updates">Check For Updates</string>
     <string name="no">No</string>
     <string name="dont_show_again">Don\'t Show Again</string>
     <string name="start_downloading">Start Downloading</string>
-    <string name="install">Install</string>
-    <string name="update_settings">Update Settings</string>
-    <string name="setting_update_header">Auto Update Settings</string>
-    <string name="settings_update_enable_disable_auto_check_update">Automatically check for updates</string>
-    <string name="settings_update_enable_disable_notification">Receive notifications on new updates</string>
-    <string name="settings_update_frequency">Check for updates every:</string>
-    <string name="settings_update_time">Check for updates at:</string>
-    <string name="settings_update_notification_time">Notification Time</string>
-    <string name="last_check">Last check on %1$s</string>
-    <string name="update_settings_header">Update settings</string>
-    <string name="enable_update_notification">Receive notifications on new updates</string>
-    <string name="enable_check_for_update">Automatically check for updates</string>
     <string name="update_question">Do you want to install it?</string>
-    <string name="title_activity_updates">Updates</string>
-    <string name="hour">Hour</string>
-    <string name="day">Day</string>
-    <string name="week">Week</string>
-    <string name="setting_update_time_hint">Enter Time</string>
-    <string name="setting_update_time">Check for updates at:</string>
-    <string name="error_in_package_name_or_signature">Error in package name or signature!</string>
+    <string name="error_in_package_name">Error in package name!</string>
 </resources>
