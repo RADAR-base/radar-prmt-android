@@ -18,8 +18,8 @@ package org.radarcns.detail
 
 import android.Manifest.permission.RECEIVE_BOOT_COMPLETED
 import android.Manifest.permission.SYSTEM_ALERT_WINDOW
+import android.content.Intent
 import android.os.Build
-import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.RadarConfiguration.Companion.START_AT_BOOT
 import org.radarbase.android.RadarService
 import org.radarbase.android.config.SingleRadarConfiguration
@@ -68,5 +68,6 @@ class RadarServiceImpl : RadarService() {
     override fun doConfigure(config: SingleRadarConfiguration) {
         super.doConfigure(config)
         configureRunAtBoot(config, MainActivityBootStarter::class.java)
+        startService(Intent(this, UpdateScheduledService::class.java))
     }
 }

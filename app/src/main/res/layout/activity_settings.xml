@@ -65,7 +65,7 @@
                 android:onClick="startReset"
                 app:layout_constraintTop_toBottomOf="@id/enableDataHighPrioritySwitch"
                 app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout" />
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 

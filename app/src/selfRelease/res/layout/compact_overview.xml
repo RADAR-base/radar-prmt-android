@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivityImpl">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/info_header"
+                style="@style/MyListSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/patient_separator"
+                app:layout_constraintTop_toTopOf="@id/constraintLayout"
+                app:layout_constraintBottom_toTopOf="@id/info_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"/>
+
+            <View
+                android:id="@+id/info_divider"
+                style="@style/DividerLine"
+                android:layout_marginTop="4dp"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/info_header"
+                app:layout_constraintBottom_toTopOf="@id/person_icon"/>
+
+            <View
+                android:id="@+id/person_icon"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/ic_person"
+                app:layout_constraintTop_toBottomOf="@id/info_divider"
+                app:layout_constraintLeft_toLeftOf="@id/constraintLayout"
+                app:layout_constraintBottom_toBottomOf="@id/inputProjectId"
+                app:layout_constraintDimensionRatio="H,1:1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toEndOf="@id/person_icon"
+                app:layout_constraintTop_toTopOf="@id/person_icon"
+                app:layout_constraintBottom_toTopOf="@id/inputProjectId"
+                android:layout_marginStart="20dp"
+                android:id="@+id/inputUserId"
+                android:textSize="16sp"
+                android:textAlignment="textStart"
+                android:text="@string/user_id_message"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="@id/inputUserId"
+                app:layout_constraintTop_toBottomOf="@id/inputUserId"
+                android:layout_marginTop="4dp"
+                android:id="@+id/inputProjectId"
+                android:textSize="16sp"
+                android:textAlignment="textStart"
+                android:text="@string/study_id_message"/>
+
+            <TextView
+                android:id="@+id/devices_header"
+                style="@style/MyListSeparator"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/inputProjectId"
+                app:layout_constraintBottom_toTopOf="@id/devices_divider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/devices_separator"/>
+
+            <View
+                style="@style/DividerLine"
+                android:id="@+id/devices_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/devices_header"
+                app:layout_constraintBottom_toTopOf="@id/sourcesTable"/>
+
+            <TableLayout
+                app:layout_constraintTop_toBottomOf="@id/devices_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintEnd_toEndOf="@id/constraintLayout"
+                android:id="@+id/sourcesTable"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stretchColumns="*"/>
+
+            <TextView
+                android:id="@+id/actionHeader"
+                style="@style/MyListSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/action_header"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/sourcesTable"
+                app:layout_constraintEnd_toEndOf="@id/constraintLayout"
+                app:layout_constraintBottom_toTopOf="@id/actionDivider"/>
+
+            <View
+                style="@style/DividerLine"
+                android:id="@+id/actionDivider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/actionHeader"/>
+
+            <GridLayout
+                app:layout_constraintEnd_toEndOf="@id/constraintLayout"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/actionDivider"
+                tools:showIn="@layout/compact_overview"
+                android:id="@+id/actionLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="3" />
+
+            <TextView
+                android:id="@+id/sync_header"
+                style="@style/MyListSeparator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sync_separator"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/actionLayout"/>
+
+            <View
+                style="@style/DividerLine"
+                android:id="@+id/sync_divider"
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/sync_header"/>
+
+            <TextView
+                app:layout_constraintStart_toStartOf="@id/constraintLayout"
+                app:layout_constraintTop_toBottomOf="@id/sync_divider"
+                android:id="@+id/statusServerMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:text="@string/sync_default" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            app:title="RADAR pRMT"
+            app:layout_constraintTop_toTopOf="@id/constraintLayout"
+            app:layout_constraintStart_toStartOf="@id/constraintLayout"
+            android:background="?attr/colorPrimary"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+            <ImageButton
+                android:id="@+id/settingsButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/info"
+                android:onClick="showSettings"
+                android:src="@drawable/ic_settings_white" />
+
+            <ImageButton
+                android:id="@+id/infoButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/info"
+                android:onClick="showInfo"
+                android:src="@drawable/ic_info_black" />
+            <ImageButton
+                android:id="@+id/updateButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/updates"
+                android:onClick="showUpdates"
+                android:src="@drawable/ic_baseline_update_24" />
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
