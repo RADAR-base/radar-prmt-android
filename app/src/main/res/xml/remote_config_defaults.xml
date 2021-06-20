@@ -102,5 +102,13 @@
         <key>update_releases_url</key>
         <value>https://api.github.com/repos/RADAR-base/radar-prmt-android/releases</value>
     </entry>
+    <entry>
+        <key>contact_phone</key>
+        <value>+31 123456789</value>
+    </entry>
+    <entry>
+        <key>contact_email</key>
+        <value>myemail@email.com</value>
+    </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
