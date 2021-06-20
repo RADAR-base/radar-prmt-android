@@ -21,6 +21,8 @@ import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
 import org.radarcns.detail.DownloadFileFromUrl.Companion.DOWNLOADED_FILE
 import org.radarcns.detail.OneTimeScheduleWorker.Companion.FROM_NOTIFICATION_KEY
+import org.radarcns.detail.UpdateScheduledService.Companion.CONTACT_EMAIL_KEY
+import org.radarcns.detail.UpdateScheduledService.Companion.CONTACT_PHONE_KEY
 import org.radarcns.detail.UpdateScheduledService.Companion.LAST_UPDATE_CHECK_TIMESTAMP
 import org.radarcns.detail.UpdateScheduledService.Companion.UPDATE_VERSION_NAME_KEY
 import org.radarcns.detail.UpdateScheduledService.Companion.UPDATE_VERSION_URL_KEY
@@ -42,6 +44,8 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
     private lateinit var progressBar: ProgressBar
     private lateinit var progressBarPercent: TextView
 
+    private lateinit var contactTextView: TextView
+
     private lateinit var newVersionApkUrl: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,13 +59,20 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
             setDisplayShowHomeEnabled(true)
             setDisplayHomeAsUpEnabled(true)
         }
-        config = radarConfig
 
+        contactTextView = findViewById(R.id.contact)
+
+        config = radarConfig
         config.config.observe(this, { config ->
             val newReleaseUrl = config.getString(UPDATE_RELEASES_URL_KEY)
             if( releasesUrl != newReleaseUrl ) {
                 releasesUrl = newReleaseUrl
                 checkForUpdates()
+            }
+            val contactPhone = config.optString(CONTACT_PHONE_KEY)
+            val contactEmail = config.optString(CONTACT_EMAIL_KEY)
+            if (contactPhone != null && contactEmail != null) {
+                contactTextView.text = this.getString(R.string.update_notification_contact, contactPhone, contactEmail)
             }
         })
 
@@ -76,6 +87,8 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         progressBarContainerLayout = findViewById(R.id.progressbar_container)
         progressBar = findViewById(R.id.progressBar)
         progressBarPercent = findViewById(R.id.progressbar_percent)
+
+
 
         // TODO not all notifications should be canceled
         val notificationMng =

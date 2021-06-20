@@ -83,6 +83,8 @@ class UpdateScheduledService: LifecycleService() {
     companion object {
         const val UPDATE_VERSION_URL_KEY = "updateVersionUrl"
         const val UPDATE_VERSION_NAME_KEY = "updateVersionName"
+        const val CONTACT_PHONE_KEY = "contact_phone"
+        const val CONTACT_EMAIL_KEY = "contact_email"
         const val LAST_UPDATE_CHECK_TIMESTAMP = "last_update_check_timestamp"
     }
 }
