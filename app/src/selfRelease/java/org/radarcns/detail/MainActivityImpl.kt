@@ -17,7 +17,6 @@
 package org.radarcns.detail
 
 import android.content.Intent
-//import android.os.Build
 import android.os.Bundle
 import android.view.View
 import org.radarbase.android.MainActivity
@@ -28,9 +27,6 @@ class MainActivityImpl : MainActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         radarApp.notificationHandler.cancel(MainActivityBootStarter.BOOT_START_NOTIFICATION_ID)
         super.onCreate(savedInstanceState)
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//            AutoStartHelper.instance.getAutoStartPermission(this)
-//        }
     }
 
     override fun createView(): MainActivityView {

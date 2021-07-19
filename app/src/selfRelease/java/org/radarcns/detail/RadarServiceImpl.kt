@@ -93,12 +93,12 @@ class RadarServiceImpl : RadarService() {
 
     private fun setupUpdateCheckAlarmManager(config: SingleRadarConfiguration){
         val updateCheckInterval = config.getLong(UPDATE_CHECK_INTERVAL_KEY, DAY)
-        val releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY) //todo
+        val releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY)
         val lastUpdateCheckTimeStamp = config.getLong(LAST_AUTO_UPDATE_CHECK_TIME_KEY, 0L)
 
         handler.removeCallbacksAndMessages(null)
         handler.postDelayed(
-            Runnable {
+            {
                 if(lastUpdateCheckTimeStamp == 0L){
                     val calendar: Calendar = Calendar.getInstance().apply {
                         timeInMillis = System.currentTimeMillis()
