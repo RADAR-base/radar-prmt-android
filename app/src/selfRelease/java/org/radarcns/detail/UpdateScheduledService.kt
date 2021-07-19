@@ -1,23 +1,22 @@
 package org.radarcns.detail
-
+/*
 import android.content.Intent
-import android.util.Log
 import androidx.lifecycle.LifecycleService
 import java.util.*
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.android.volley.Request
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
+import okhttp3.OkHttpClient
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
 import java.util.concurrent.TimeUnit
-import kotlinx.serialization.*
-import kotlinx.serialization.json.*
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarcns.detail.UpdatesActivity.Companion.DAY
-import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_CHECK_PERIOD_KEY
+import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_CHECK_INTERVAL_KEY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_RELEASES_URL_KEY
+import java.io.IOException
 
 class UpdateScheduledService: LifecycleService() {
     private var timerStarted: Boolean = false
@@ -35,7 +34,7 @@ class UpdateScheduledService: LifecycleService() {
         super.onCreate()
 
         radarConfig.config.observe(this, { config ->
-            updateCheckPeriod = config.getLong(UPDATE_CHECK_PERIOD_KEY, DAY)
+            updateCheckPeriod = config.getLong(UPDATE_CHECK_INTERVAL_KEY, DAY)
             releasesUrl = config.getString(UPDATE_RELEASES_URL_KEY)
 
             if (timerStarted) {
@@ -63,20 +62,28 @@ class UpdateScheduledService: LifecycleService() {
 
     inner class CheckUpdateTask : TimerTask() {
         override fun run() {
-            val queue = Volley.newRequestQueue(this@UpdateScheduledService)
             val url = releasesUrl
-            val stringRequest = StringRequest(
-                Request.Method.GET, url,
-                { response ->
-                    val updatePackage = getUpdatePackage(this@UpdateScheduledService, response)
-                    if (updatePackage != null && updateNotificationConfig) {
-                        scheduleOneTimeNotification(0, updatePackage)
+            if(url != null){
+                val request = okhttp3.Request.Builder().url(url).build()
+
+                val client = OkHttpClient()
+                client.newCall(request).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        e.printStackTrace()
                     }
-                },
-                {
-                    Log.v("ScheduleService", "Error")
+
+                    override fun onResponse(call: Call, response: Response) {
+                        response.use {
+                            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                            val responseBody = response.body!!.string()
+                            val updatePackage = getUpdatePackage(this@UpdateScheduledService, responseBody)
+                            if (updatePackage != null && updateNotificationConfig) {
+                                scheduleOneTimeNotification(0, updatePackage)
+                            }
+                        }
+                    }
                 })
-            queue.add(stringRequest)
+            }
         }
     }
 
@@ -87,4 +94,4 @@ class UpdateScheduledService: LifecycleService() {
         const val CONTACT_EMAIL_KEY = "contact_email"
         const val LAST_UPDATE_CHECK_TIMESTAMP = "last_update_check_timestamp"
     }
-}
+}*/

@@ -1,5 +1,5 @@
 package org.radarcns.detail
-
+/*
 import android.content.Context
 import android.os.AsyncTask
 import android.widget.ProgressBar
@@ -97,4 +97,4 @@ class DownloadFileFromUrl(context: Context, delegate: TaskDelegate) :
 interface TaskDelegate {
     fun taskCompletionResult(result: String?)
 }
-
+*/
