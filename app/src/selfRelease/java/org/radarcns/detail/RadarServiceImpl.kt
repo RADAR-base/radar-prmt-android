@@ -99,27 +99,21 @@ class RadarServiceImpl : RadarService() {
         handler.removeCallbacksAndMessages(null)
         handler.postDelayed(
             {
-                if(lastUpdateCheckTimeStamp == 0L){
-                    val calendar: Calendar = Calendar.getInstance().apply {
+                val calendar = Calendar.getInstance().apply {
+                    if (lastUpdateCheckTimeStamp != 0L) {
+                        timeInMillis = lastUpdateCheckTimeStamp
+                    } else {
                         timeInMillis = System.currentTimeMillis()
                         set(Calendar.HOUR_OF_DAY, UPDATE_CHECK_DEFAULT_HOUR_OF_DAY)
                         set(Calendar.MINUTE, UPDATE_CHECK_DEFAULT_MINUTE)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
                     }
-                    val newCalendar = setCalendarAfterCurrentTime(calendar, updateCheckInterval)
-                    radarConfig.put(LAST_AUTO_UPDATE_CHECK_TIME_KEY, newCalendar.timeInMillis)
-                    radarConfig.persistChanges()
-                    createUpdateCheckAlarmManager(newCalendar, releasesUrl, updateCheckInterval)
-                }else{
-                    val calendar: Calendar = Calendar.getInstance().apply {
-                        timeInMillis = lastUpdateCheckTimeStamp
-                    }
-                    val newCalendar = setCalendarAfterCurrentTime(calendar, updateCheckInterval)
-                    radarConfig.put(LAST_AUTO_UPDATE_CHECK_TIME_KEY, newCalendar.timeInMillis)
-                    radarConfig.persistChanges()
-                    createUpdateCheckAlarmManager(newCalendar, releasesUrl, updateCheckInterval)
                 }
+                val newCalendar = setCalendarAfterCurrentTime(calendar, updateCheckInterval)
+                radarConfig.put(LAST_AUTO_UPDATE_CHECK_TIME_KEY, newCalendar.timeInMillis)
+                radarConfig.persistChanges()
+                createUpdateCheckAlarmManager(newCalendar, releasesUrl, updateCheckInterval)
             },
             MINUTE
         )

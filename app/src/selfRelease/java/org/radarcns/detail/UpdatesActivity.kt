@@ -21,6 +21,7 @@ import okhttp3.Response
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
 import org.radarcns.detail.DownloadProgress.Companion.DOWNLOADED_FILE
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.lang.Exception
@@ -87,7 +88,6 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
         progressBar = findViewById(R.id.progressBar)
         progressBarPercent = findViewById(R.id.progressbar_percent)
 
-        // TODO not all notifications should be canceled
         val notificationMng =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationMng.cancelAll()
@@ -100,7 +100,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
                 R.string.new_version_available,
                 getString(R.string.app_name),
                 intent.extras?.getString(
-                    "versionName", // todo
+                    "versionName",
                     ""
                 )
             )
@@ -127,45 +127,48 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
     }
 
     private fun checkForUpdates() {
-        val url = releasesUrl
-        if(url != null){
-            val request = okhttp3.Request.Builder().url(url).build()
+        val url = releasesUrl ?: return
+        val request = okhttp3.Request.Builder().url(url).build()
 
-            val client = OkHttpClient()
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    e.printStackTrace()
-                }
+        val client = OkHttpClient()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                logger.error("Failed to get latest release.", e)
+            }
 
-                override fun onResponse(call: Call, response: Response) {
-                    response.use {
-                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                        val responseBody = response.body!!.string()
-                        runOnUiThread {
-                            val updatePackage = getUpdatePackage(this@UpdatesActivity, responseBody)
-                            if (updatePackage != null) {
-                                val updateStatus: TextView = findViewById(R.id.update_status)
-                                newVersionApkUrl = updatePackage.get(UPDATE_VERSION_URL_KEY) as String
-                                updateStatus.text = getString(
-                                    R.string.new_version_available,
-                                    getString(R.string.app_name),
-                                    updatePackage.get(UPDATE_VERSION_NAME_KEY)
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        logger.error("Failed to retrieve updated APK url: ${response.code}")
+                        return@use
+                    }
+                    val responseBody = response.body?.string() ?: run {
+                        logger.error("Failed to retrieve updated APK url: empty response body")
+                        return@use
+                    }
+                    runOnUiThread {
+                        val updatePackage = getUpdatePackage(this@UpdatesActivity, responseBody)
+                        val updateStatus: TextView = findViewById(R.id.update_status)
+                        if (updatePackage != null) {
+                            newVersionApkUrl = updatePackage.get(UPDATE_VERSION_URL_KEY) as String
+                            updateStatus.text = getString(
+                                R.string.new_version_available,
+                                getString(R.string.app_name),
+                                updatePackage.get(UPDATE_VERSION_NAME_KEY)
+                            )
+                            updateLinearLayout.visibility = View.VISIBLE
+                        } else {
+                            updateStatus.text = getString(
+                                R.string.new_version_not_available, getString(
+                                    R.string.app_name
                                 )
-                                updateLinearLayout.visibility = View.VISIBLE
-                            } else {
-                                val updateStatus: TextView = findViewById(R.id.update_status)
-                                updateStatus.text = getString(
-                                    R.string.new_version_not_available, getString(
-                                        R.string.app_name
-                                    )
-                                )
-                                updateLinearLayout.visibility = View.GONE
-                            }
+                            )
+                            updateLinearLayout.visibility = View.GONE
                         }
                     }
                 }
-            })
-        }
+            }
+        })
     }
 
     private fun startDownloading() {
@@ -178,7 +181,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
                 val downloader = DownloadProgress(this, this)
                 downloader.run(newVersionApkUrl)
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("Failed to download new apk", e)
             }
         }
 
@@ -228,6 +231,8 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(LoginActivityImpl::class.java)
+
         private const val MIME_TYPE = "application/vnd.android.package-archive"
         private const val PROVIDER_PATH = ".provider"
 

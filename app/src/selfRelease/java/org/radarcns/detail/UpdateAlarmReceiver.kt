@@ -13,9 +13,11 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import org.radarbase.producer.rest.RestClient
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_RELEASES_URL_KEY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_VERSION_NAME_KEY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_VERSION_URL_KEY
+import org.slf4j.LoggerFactory
 import java.io.IOException
 
 class UpdateAlarmReceiver: BroadcastReceiver() {
@@ -28,10 +30,12 @@ class UpdateAlarmReceiver: BroadcastReceiver() {
         val url: String? = intent?.extras?.getString(UPDATE_RELEASES_URL_KEY)
         if(url != null){
             val request = okhttp3.Request.Builder().url(url).build()
-            val client = OkHttpClient()
+            val client: OkHttpClient = RestClient.global()
+                .httpClientBuilder()
+                .build()
             client.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
-                    e.printStackTrace()
+                    logger.error("Failed to get latest release.", e)
                 }
 
                 override fun onResponse(call: Call, response: Response) {
@@ -81,8 +85,6 @@ class UpdateAlarmReceiver: BroadcastReceiver() {
                 }
             })
         }
-
-
     }
 
     private fun createNotificationChannel(context: Context) {
@@ -104,6 +106,8 @@ class UpdateAlarmReceiver: BroadcastReceiver() {
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(LoginActivityImpl::class.java)
+
         const val FROM_NOTIFICATION_KEY = "from_notification"
         const val UPDATE_NOTIFICATION_ID = "com.radarcns.detail.update"
         const val UPDATE_NOTIFICATION_CHANNEL_NAME = "update_notification"

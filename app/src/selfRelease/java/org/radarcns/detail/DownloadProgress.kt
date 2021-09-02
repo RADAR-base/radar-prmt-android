@@ -5,15 +5,19 @@ import android.content.Context
 import okhttp3.*
 import okhttp3.Interceptor
 import okio.*
+import org.radarbase.producer.rest.RestClient
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
 import java.lang.Exception
 
-class DownloadProgress(context: Context, delegate: TaskDelegate) {
-    private val mContext: Context = context
-    private val mDelegate: TaskDelegate = delegate
-
+class DownloadProgress(
+    private val mContext: Context,
+    private val mDelegate: TaskDelegate,
+) {
+    /*
+    should be run from a separate thread.
+     */
     @SuppressLint("SetWorldReadable")
     @Throws(Exception::class)
     fun run(url: String) {
@@ -40,17 +44,24 @@ class DownloadProgress(context: Context, delegate: TaskDelegate) {
                 }
             }
         }
-        val client: OkHttpClient = OkHttpClient.Builder()
+        val client: OkHttpClient = RestClient.global()
+            .httpClientBuilder()
             .addNetworkInterceptor(Interceptor { chain: Interceptor.Chain ->
                 val originalResponse = chain.proceed(chain.request())
-                originalResponse.newBuilder()
-                    .body(ProgressResponseBody(originalResponse.body, progressListener))
-                    .build()
+                val originalBody = originalResponse.body
+                if (originalBody != null) {
+                    originalResponse.newBuilder()
+                        .body(ProgressResponseBody(originalBody, progressListener))
+                        .build()
+                } else originalResponse
             })
             .build()
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            val apkData = response.body?.byteStream()
+            val apkData = response.body?.byteStream() ?: run {
+                logger.error("No APK data provided from ${request.url}")
+                return@use
+            }
 
             val outputFile = File(mContext.filesDir, DOWNLOADED_FILE)
             if (outputFile.exists()) {
@@ -59,14 +70,12 @@ class DownloadProgress(context: Context, delegate: TaskDelegate) {
 
             outputFile.setReadable(true, false)
 
-            if (apkData != null) {
-                try {
-                    mContext.openFileOutput(DOWNLOADED_FILE, Context.MODE_PRIVATE).use { output ->
-                        output.write(apkData.readBytes())
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
+            try {
+                mContext.openFileOutput(DOWNLOADED_FILE, Context.MODE_PRIVATE).use { output ->
+                    output.write(apkData.readBytes())
                 }
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
 
             mDelegate.taskCompletionResult()
