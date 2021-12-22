@@ -19,10 +19,7 @@ package org.radarcns.detail
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.radarbase.android.AbstractRadarApplication
@@ -35,7 +32,7 @@ import org.slf4j.impl.HandroidLoggerAdapter
 /**
  * Radar application class for the detailed application.
  */
-class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
+class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver {
     var enableCrashRecovery: Boolean = false
         private set
 
@@ -71,7 +68,6 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
             AppConfigRadarConfiguration(this)
     )
 
-
     override fun createConfiguration(): RadarConfiguration {
         FirebaseAnalytics.getInstance(this).apply {
             setUserProperty(TEST_PHASE, if (BuildConfig.DEBUG) "dev" else "production")
@@ -79,16 +75,6 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
         return super.createConfiguration().apply {
             fetch()
         }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onAppBackgrounded() {
-        isInForeground = false
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onAppForegrounded() {
-        isInForeground = true
     }
 
     override val mainActivity: Class<MainActivityImpl> = MainActivityImpl::class.java
@@ -101,5 +87,13 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleObserver {
 
     companion object {
         private const val TEST_PHASE = "test_phase"
+    }
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        isInForeground = when (event) {
+            Lifecycle.Event.ON_STOP -> false
+            Lifecycle.Event.ON_START -> true
+            else -> isInForeground
+        }
     }
 }

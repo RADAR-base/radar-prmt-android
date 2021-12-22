@@ -88,8 +88,6 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
         progressBar = findViewById(R.id.progressBar)
         progressBarPercent = findViewById(R.id.progressbar_percent)
 
-
-
         // TODO not all notifications should be canceled
         val notificationMng =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -189,29 +187,25 @@ class UpdatesActivity : AppCompatActivity(), TaskDelegate {
             applicationContext.packageName.toString() + PROVIDER_PATH,
             fileLocation
         )
-        val install = Intent(Intent.ACTION_VIEW)
-        install.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        install.setDataAndType(
-            uri,
-            MIME_TYPE
-        )
-        startActivity(install)
+        startActivity(Intent(Intent.ACTION_VIEW).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            setDataAndType(uri, PACKAGE_MIME_TYPE)
+        })
     }
 
     override fun taskCompletionResult(result: String?) {
-        if(isInstallApkValid()) {
+        if (isInstallApkValid()) {
             install()
-            progressBarContainerLayout.visibility = View.GONE
             updateLinearLayout.visibility = View.VISIBLE
-        }else{
+        } else {
             updateStatus.text = getString(R.string.error_in_package_name)
-            progressBarContainerLayout.visibility = View.GONE
         }
+        progressBarContainerLayout.visibility = View.GONE
     }
 
     companion object {
-        private const val MIME_TYPE = "application/vnd.android.package-archive"
+        private const val PACKAGE_MIME_TYPE = "application/vnd.android.package-archive"
         private const val PROVIDER_PATH = ".provider"
         private const val HOUR = 60 * 60 * 1000L
         const val DAY = 24 * HOUR

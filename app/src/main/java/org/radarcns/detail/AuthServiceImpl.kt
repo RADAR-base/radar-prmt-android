@@ -7,7 +7,8 @@ import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 
 class AuthServiceImpl : AuthService() {
     override fun createLoginManagers(appAuth: AppAuthState): List<LoginManager> = listOf(
-            ManagementPortalLoginManager(this, appAuth))
+        ManagementPortalLoginManager(this, appAuth),
+    )
 
     override fun showLoginNotification() = Unit
 }
