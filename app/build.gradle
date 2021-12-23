@@ -14,6 +14,7 @@ android {
         versionName '1.0.15-SNAPSHOT'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
+        ndkVersion "23.1.7779620"
     }
     lintOptions {
         abortOnError false
@@ -23,6 +24,9 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk {
+                debugSymbolLevel = 'full'
+            }
         }
         debug {
             shrinkResources false
