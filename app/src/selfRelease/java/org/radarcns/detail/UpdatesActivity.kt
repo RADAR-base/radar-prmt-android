@@ -14,18 +14,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.FileProvider
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Response
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
 import org.radarcns.detail.DownloadProgress.Companion.DOWNLOADED_FILE
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.IOException
-import java.lang.Exception
-import java.util.*
 
 class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
 
@@ -50,10 +43,14 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
 
     private lateinit var packageUtil: PackageUtil
 
+    private lateinit var githubClient: GithubAssetClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         packageUtil = PackageUtil(this)
+        githubClient = GithubAssetClient()
+
         setContentView(R.layout.activity_updates)
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar).apply {
             setTitle(R.string.updates)
@@ -66,18 +63,19 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
         contactTextView = findViewById(R.id.contact)
 
         config = radarConfig
-        config.config.observe(this, { config ->
+        config.config.observe(this) { config ->
             val newReleaseUrl = config.getString(UPDATE_RELEASES_URL_KEY)
-            if( releasesUrl != newReleaseUrl ) {
+            if (releasesUrl != newReleaseUrl) {
                 releasesUrl = newReleaseUrl
                 checkForUpdates()
             }
             val contactPhone = config.optString(CONTACT_PHONE_KEY)
             val contactEmail = config.optString(CONTACT_EMAIL_KEY)
             if (contactPhone != null && contactEmail != null) {
-                contactTextView.text = this.getString(R.string.update_notification_contact, contactPhone, contactEmail)
+                contactTextView.text =
+                    this.getString(R.string.update_notification_contact, contactPhone, contactEmail)
             }
-        })
+        }
 
         currentVersion = findViewById(R.id.current_version)
         updateStatus = findViewById(R.id.update_status)
@@ -126,52 +124,33 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
     }
 
     private fun setCurrentVersion() {
-        currentVersion.text = getString(R.string.currentVersion, packageUtil.getInstalledPackageVersion())
+        currentVersion.text = getString(R.string.currentVersion, packageUtil.installedPackageVersion)
     }
 
     private fun checkForUpdates() {
         val url = releasesUrl ?: return
-        val request = okhttp3.Request.Builder().url(url).build()
+        githubClient.retrieveLatestAsset(url) { asset ->
+            val isLaterVersion = packageUtil.assetIsUpdate(asset)
 
-        val client = OkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                logger.error("Failed to get latest release.", e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!response.isSuccessful) {
-                        logger.error("Failed to retrieve updated APK url: ${response.code}")
-                        return@use
-                    }
-                    val responseBody = response.body?.string() ?: run {
-                        logger.error("Failed to retrieve updated APK url: empty response body")
-                        return@use
-                    }
-                    runOnUiThread {
-                        val updatePackage = packageUtil.getUpdatePackage(responseBody)
-                        val updateStatus: TextView = findViewById(R.id.update_status)
-                        if (updatePackage != null) {
-                            newVersionApkUrl = updatePackage.get(UPDATE_VERSION_URL_KEY) as String
-                            updateStatus.text = getString(
-                                R.string.new_version_available,
-                                getString(R.string.app_name),
-                                updatePackage.get(UPDATE_VERSION_NAME_KEY)
-                            )
-                            updateLinearLayout.visibility = View.VISIBLE
-                        } else {
-                            updateStatus.text = getString(
-                                R.string.new_version_not_available, getString(
-                                    R.string.app_name
-                                )
-                            )
-                            updateLinearLayout.visibility = View.GONE
-                        }
-                    }
+            runOnUiThread {
+                val updateStatus: TextView = findViewById(R.id.update_status)
+                if (isLaterVersion) {
+                    newVersionApkUrl = asset.url
+                    updateStatus.text = getString(
+                        R.string.new_version_available,
+                        getString(R.string.app_name),
+                        asset.tag,
+                    )
+                    updateLinearLayout.visibility = View.VISIBLE
+                } else {
+                    updateStatus.text = getString(
+                        R.string.new_version_not_available,
+                        getString(R.string.app_name)
+                    )
+                    updateLinearLayout.visibility = View.GONE
                 }
             }
-        })
+        }
     }
 
     private fun startDownloading() {
@@ -194,8 +173,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
     private fun isInstallApkValid(): Boolean {
         val fileName = DOWNLOADED_FILE
         val fileLocation = File(filesDir, fileName)
-
-        return packageUtil.isPackageNameSame(fileLocation.absolutePath)
+        return packageUtil.packageNameMatches(fileLocation.absolutePath)
     }
 
     private fun install() {
