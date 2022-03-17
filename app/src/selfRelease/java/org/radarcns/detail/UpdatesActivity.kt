@@ -48,9 +48,12 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
 
     private lateinit var newVersionApkUrl: String
 
+    private lateinit var packageUtil: PackageUtil
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        packageUtil = PackageUtil(this)
         setContentView(R.layout.activity_updates)
         setSupportActionBar(findViewById<Toolbar>(R.id.toolbar).apply {
             setTitle(R.string.updates)
@@ -123,7 +126,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
     }
 
     private fun setCurrentVersion() {
-        currentVersion.text = getString(R.string.currentVersion, getInstalledPackageVersion(this))
+        currentVersion.text = getString(R.string.currentVersion, packageUtil.getInstalledPackageVersion())
     }
 
     private fun checkForUpdates() {
@@ -147,7 +150,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
                         return@use
                     }
                     runOnUiThread {
-                        val updatePackage = getUpdatePackage(this@UpdatesActivity, responseBody)
+                        val updatePackage = packageUtil.getUpdatePackage(responseBody)
                         val updateStatus: TextView = findViewById(R.id.update_status)
                         if (updatePackage != null) {
                             newVersionApkUrl = updatePackage.get(UPDATE_VERSION_URL_KEY) as String
@@ -192,7 +195,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
         val fileName = DOWNLOADED_FILE
         val fileLocation = File(filesDir, fileName)
 
-        return isPackageNameSame(this, fileLocation.absolutePath)
+        return packageUtil.isPackageNameSame(fileLocation.absolutePath)
     }
 
     private fun install() {

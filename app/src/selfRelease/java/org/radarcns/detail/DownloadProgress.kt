@@ -83,22 +83,22 @@ class DownloadProgress(
     }
 
     private class ProgressResponseBody(
-        private val responseBody: ResponseBody?,
+        private val responseBody: ResponseBody,
         private val progressListener: ProgressListener
     ) :
         ResponseBody() {
         private var bufferedSource: BufferedSource? = null
         override fun contentType(): MediaType? {
-            return responseBody!!.contentType()
+            return responseBody.contentType()
         }
 
         override fun contentLength(): Long {
-            return responseBody!!.contentLength()
+            return responseBody.contentLength()
         }
 
         override fun source(): BufferedSource {
             if (bufferedSource == null) {
-                bufferedSource = source(responseBody!!.source()).buffer()
+                bufferedSource = source(responseBody.source()).buffer()
             }
             return bufferedSource!!
         }
@@ -114,7 +114,7 @@ class DownloadProgress(
                     totalBytesRead += if (bytesRead != -1L) bytesRead else 0
                     progressListener.update(
                         totalBytesRead,
-                        responseBody!!.contentLength(),
+                        responseBody.contentLength(),
                         bytesRead == -1L
                     )
                     return bytesRead
