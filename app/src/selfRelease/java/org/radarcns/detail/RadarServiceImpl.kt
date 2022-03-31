@@ -30,6 +30,7 @@ import org.radarbase.android.RadarConfiguration.Companion.START_AT_BOOT
 import org.radarbase.android.RadarService
 import org.radarbase.android.config.SingleRadarConfiguration
 import org.radarbase.android.source.SourceProvider
+import org.radarbase.android.util.toPendingIntentFlag
 import org.radarbase.monitor.application.ApplicationStatusProvider
 import org.radarbase.passive.audio.OpenSmileAudioProvider
 import org.radarbase.passive.bittium.FarosProvider
@@ -134,7 +135,12 @@ class RadarServiceImpl : RadarService() {
 
         updateCheckAlarmIntent = Intent(this, UpdateAlarmReceiver::class.java).let { intent ->
             intent.putExtra(UPDATE_RELEASES_URL_KEY, releasesUrl)
-            PendingIntent.getBroadcast(this, UPDATE_CHECK_INTENT_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                UPDATE_CHECK_INTENT_REQ_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT.toPendingIntentFlag()
+            )
         }
 
         updateCheckAlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager

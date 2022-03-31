@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import org.radarbase.android.RadarApplication.Companion.radarApp
+import org.radarbase.android.util.toPendingIntentFlag
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_RELEASES_URL_KEY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_VERSION_NAME_KEY
 import org.radarcns.detail.UpdatesActivity.Companion.UPDATE_VERSION_URL_KEY
@@ -55,7 +56,7 @@ class UpdateAlarmReceiver: BroadcastReceiver() {
                     context,
                     UPDATE_NOTIFICATION_INTENT_REQ_CODE,
                     repeaterIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT
+                    PendingIntent.FLAG_CANCEL_CURRENT.toPendingIntentFlag()
                 ))
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                     setPriority(Notification.PRIORITY_MAX)

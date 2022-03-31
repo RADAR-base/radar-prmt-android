@@ -12,6 +12,7 @@ import android.net.Uri
 import android.os.SystemClock
 import androidx.annotation.Nullable
 import org.radarbase.android.RadarApplication
+import org.radarbase.android.util.toPendingIntentFlag
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -59,7 +60,12 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
                     or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
-        val pendingIntent = PendingIntent.getActivity(currentContext, 231912, intent, PendingIntent.FLAG_ONE_SHOT)
+        val pendingIntent = PendingIntent.getActivity(
+            currentContext,
+            231912,
+            intent,
+            PendingIntent.FLAG_ONE_SHOT.toPendingIntentFlag()
+        )
 
         (currentContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager)
             .set(AlarmManager.ELAPSED_REALTIME,
