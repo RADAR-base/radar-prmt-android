@@ -75,13 +75,14 @@ class RadarServiceImpl : RadarService() {
     )
 
     override val servicePermissions: List<String>
-        get() = ArrayList(super.servicePermissions).apply {
-            this += RECEIVE_BOOT_COMPLETED
+        get() = buildList {
+            addAll(super.servicePermissions)
+            add(RECEIVE_BOOT_COMPLETED)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                this += REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT
+                add(REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT)
             }
             if (configuration.latestConfig.getBoolean(START_AT_BOOT, false)) {
-                this += SYSTEM_ALERT_WINDOW
+                add(SYSTEM_ALERT_WINDOW)
             }
         }
 
