@@ -84,7 +84,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-oss-licenses:17.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'org.slf4j:slf4j-api:2.0.0'
 
     implementation 'com.google.firebase:firebase-core'
     implementation 'com.google.firebase:firebase-config'
@@ -103,13 +103,13 @@ dependencies {
     implementation "org.radarbase:radar-android-faros:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-ppg:$radarCommonsVersion"
 
-    implementation 'androidx.lifecycle:lifecycle-process:2.4.1'
+    implementation 'androidx.lifecycle:lifecycle-process:2.5.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     testImplementation 'junit:junit:4.13.2'
-    testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.36'
+    testRuntimeOnly 'org.slf4j:slf4j-simple:2.0.0'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
