@@ -91,7 +91,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-analytics'
 
-    implementation 'com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.0-SNAPSHOT'
+    implementation 'com.gitlab.mvysny.slf4j:slf4j-handroid:2.0.0'
 
     implementation "org.radarbase:radar-android-phone:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-phone-usage:$radarCommonsVersion"
