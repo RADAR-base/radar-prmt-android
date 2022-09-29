@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
@@ -16,7 +15,6 @@ import org.radarbase.android.util.toPendingIntentFlag
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.lang.IllegalStateException
 import kotlin.system.exitProcess
 
 class UncaughtExceptionHandlerContentProvider : ContentProvider() {
@@ -66,11 +64,12 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
             intent,
             PendingIntent.FLAG_ONE_SHOT.toPendingIntentFlag()
         )
-
-        (currentContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager)
-            .set(AlarmManager.ELAPSED_REALTIME,
-                SystemClock.elapsedRealtime() + 100,
-                pendingIntent)
+        val alarmManager = currentContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.set(
+            AlarmManager.ELAPSED_REALTIME,
+            SystemClock.elapsedRealtime() + 100,
+            pendingIntent,
+        )
     }
 
     override fun query(
