@@ -275,10 +275,10 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                             .replace(baseUrlPrefixRegex, "")
                             .replace(baseUrlPostfixRegex, "")
                     val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.editText?.text}"
-                    onProcessing()
                     try {
                         mpManager.setTokenFromUrl(authState, url)
                         dialog.dismiss()
+                        onProcessing()
                     } catch (ex: MalformedURLException) {
                         loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
                     }

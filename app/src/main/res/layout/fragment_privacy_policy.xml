@@ -192,7 +192,7 @@
             app:logo="@drawable/radar_logo_32"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
-            app:titleMarginStart="@dimen/size_medium">
+            app:titleMarginStart="@dimen/size_xlarge">
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
