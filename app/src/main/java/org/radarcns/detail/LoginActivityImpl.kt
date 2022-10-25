@@ -16,18 +16,15 @@
 
 package org.radarcns.detail
 
-import android.app.AlertDialog
-import android.app.ProgressDialog
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
-import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
@@ -39,7 +36,6 @@ import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
-import org.radarbase.android.widget.TextDrawable
 import org.radarbase.producer.AuthenticationException
 import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
@@ -51,13 +47,17 @@ import java.net.URI
 class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
-    private var progressDialog: ProgressDialog? = null
+    private lateinit var progressDialog: Dialog
     private lateinit var networkReceiver: NetworkConnectedReceiver
     private var didCreate: Boolean = false
 
     private lateinit var binding: ActivityLoginBinding
 
     private lateinit var qrCodeScanner: QrCodeScanner
+    private lateinit var dialog: Dialog
+
+    private lateinit var scanButton: MaterialButton
+    private lateinit var credentialButton: MaterialButton
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
@@ -72,6 +72,15 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             value?.takeTrimmedIfNotEmpty()
                 ?.also { parseQrCode(it) }
         }
+
+        scanButton = findViewById(R.id.scanButton)
+        scanButton.setOnClickListener { v -> scan(v) }
+
+        credentialButton = findViewById(R.id.enterCredentialsButton)
+        credentialButton.setOnClickListener { v -> enterCredentials(v) }
+
+        progressDialog = Dialog(this)
+        progressDialog.setContentView(R.layout.progress)
     }
 
     override fun onResume() {
@@ -86,7 +95,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     private fun parseQrCode(qrCode: String) {
-        onProcessing(R.string.logging_in)
+        onProcessing()
         logger.info("Read tokenUrl: {}", qrCode)
 
         if (qrCode.isEmpty()) {
@@ -135,20 +144,13 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    private fun onProcessing(titleResource: Int) {
-        progressDialog = ProgressDialog(this).apply {
-            isIndeterminate = true
-            setTitle(titleResource)
-            show()
-        }
+    private fun onProcessing() {
+        setProgressDialog(true)
     }
 
     private fun onDoneProcessing() {
-        progressDialog?.apply {
-            logger.info("Closing progress window")
-            cancel()
-        }
-        progressDialog = null
+        setProgressDialog(false)
+        logger.info("Closing progress window")
     }
 
     override fun onNetworkConnectionChanged(state: NetworkConnectedReceiver.NetworkState) {
@@ -166,7 +168,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
         if (canLogin) {
             canLogin = false
             qrCodeScanner.start()
@@ -249,71 +251,49 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    fun enterCredentials(@Suppress("UNUSED_PARAMETER") view: View) {
-        val baseUrlInput = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
-            setCompoundDrawables(TextDrawable(this, "https://"), null, null, null)
-            setOnKeyListener { _, _, e ->
-                if (e.action == KeyEvent.ACTION_UP) {
-                    didModifyBaseUrl = true
-                }
-                true
-            }
-        }
+    private fun enterCredentials(@Suppress("UNUSED_PARAMETER") view: View) {
+        dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_login_token)
 
-        radarConfig.config.observe(this, { config ->
+        val baseUrlInput = dialog.findViewById<TextInputLayout>(R.id.baseUrl)
+        radarConfig.config.observe(this) { config ->
             if (!didModifyBaseUrl) {
                 val baseUrl = config.getString(BASE_URL_KEY, "").toHttpUrlOrNull() ?: return@observe
                 val urlString = baseUrl.toString().substring(baseUrl.scheme.length + 3)
-                baseUrlInput.setText(urlString)
+                baseUrlInput.editText?.setText(urlString)
             }
-        })
-
-        val tokenInput = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
         }
 
-        // Layout containing label and input
-        val layout = LinearLayout(this).apply {
-            orientation = VERTICAL
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            setPadding(70, 0, 70, 0)
+        val tokenInput = dialog.findViewById<TextInputLayout>(R.id.token)
 
-            addView(TextView(this@LoginActivityImpl).apply {
-                setText(R.string.enter_credentials_description)
-            })
-            addView(TextView(this@LoginActivityImpl).apply {
-                setText(R.string.label_meta_token)
-            })
-            addView(tokenInput)
-            addView(TextView(this@LoginActivityImpl).apply {
-                setText(R.string.label_base_url)
-            })
-            addView(baseUrlInput)
-        }
+        dialog.findViewById<Button>(R.id.ok_button).setOnClickListener {
 
-        AlertDialog.Builder(this).apply {
-            setTitle(R.string.enter_credentials_title)
-            setView(layout)
-            setPositiveButton(R.string.ok) { dialog, _ ->
-                if (canLogin) {
-                    canLogin = false
-                    applyMpManager { _, mpManager, authState ->
-                        val baseUrl = baseUrlInput.text.toString()
-                                .replace(baseUrlPrefixRegex, "")
-                                .replace(baseUrlPostfixRegex, "")
-                        val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.text}"
-                        try {
-                            mpManager.setTokenFromUrl(authState, url)
-                            dialog.dismiss()
-                        } catch (ex: MalformedURLException) {
-                            loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
-                        }
+            if (canLogin) {
+                canLogin = false
+                applyMpManager { _, mpManager, authState ->
+                    val baseUrl = baseUrlInput.editText?.text.toString()
+                            .replace(baseUrlPrefixRegex, "")
+                            .replace(baseUrlPostfixRegex, "")
+                    val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.editText?.text}"
+                    onProcessing()
+                    try {
+                        mpManager.setTokenFromUrl(authState, url)
+                        dialog.dismiss()
+                    } catch (ex: MalformedURLException) {
+                        loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
                     }
                 }
             }
-            setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
-        }.show()
+        }
+
+        dialog.findViewById<Button>(R.id.cancel_button).setOnClickListener {
+            dialog.cancel()
+        }
+        dialog.show()
+    }
+
+    private fun setProgressDialog(show: Boolean) {
+        if (show) progressDialog.show() else progressDialog.dismiss()
     }
 
     companion object {

@@ -17,7 +17,8 @@
 package org.radarcns.detail
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.lifecycle.*
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -59,7 +60,7 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
         private set
 
     override val largeIcon: Bitmap
-        get() = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        get() = getBitmapFromDrawable(getDrawable(R.mipmap.ic_launcher)!!)
 
     override val smallIcon = R.drawable.ic_bt_connected
 
@@ -95,5 +96,17 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
             Lifecycle.Event.ON_START -> true
             else -> isInForeground
         }
+    }
+
+    private fun getBitmapFromDrawable(drawable: Drawable): Bitmap {
+        val bmp = Bitmap.createBitmap(
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bmp)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bmp
     }
 }

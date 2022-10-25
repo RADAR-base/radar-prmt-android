@@ -12,75 +12,73 @@
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/size_medium">
 
-            <TextView
-                android:id="@+id/network_settings_header"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/network_settings_header"
-                android:textStyle="bold"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="5dp"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintTop_toTopOf="@id/constraintLayout"
-                app:layout_constraintBottom_toTopOf="@id/enableDataSwitch"
-                android:textColor="?attr/colorPrimaryDark"/>
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/enableDataSwitch"
+            <LinearLayout
+                android:id="@+id/constraintLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/enable_data_for_sending"
-                android:layout_marginBottom="5dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="5dp"
-                app:layout_constraintStart_toStartOf="@id/network_settings_header"
-                app:layout_constraintTop_toBottomOf="@id/network_settings_header"
-                app:layout_constraintBottom_toTopOf="@id/enableDataHighPrioritySwitch"/>
+                android:orientation="vertical"
+                android:padding="@dimen/size_medium">
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/enableDataHighPrioritySwitch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/enable_data_high_priority_only"
-                android:enabled="false"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:layout_marginStart="35dp"
-                app:layout_constraintTop_toBottomOf="@id/enableDataSwitch"
-                app:layout_constraintStart_toStartOf="@id/enableDataSwitch" />
+                <TextView
+                    android:id="@+id/info_header"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/network_settings_header"
+                    android:textAppearance="?attr/textAppearanceHeadline6" />
 
-            <Button
-                android:id="@+id/resetSettingsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginStart="5dp"
-                android:text="@string/button_reset"
-                android:onClick="startReset"
-                app:layout_constraintTop_toBottomOf="@id/enableDataHighPrioritySwitch"
-                app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/enableDataSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:text="@string/enable_data_for_sending" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/enableDataHighPrioritySwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/enable_data_high_priority_only"
+                    android:enabled="false" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/resetSettingsButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/button_reset"
+                        style="?attr/buttonStyle" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent">
-
+        android:theme="@style/AppTheme.AppBarOverlay">
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
-            app:title="Settings"
-            android:background="?attr/colorPrimary"
-            android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:contentInsetLeft="@dimen/size_medium"
+            app:contentInsetStart="@dimen/size_medium"
             app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:layout_scrollFlags="scroll|enterAlways">
-        </androidx.appcompat.widget.Toolbar>
+            app:title="RADAR pRMT" />
     </com.google.android.material.appbar.AppBarLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

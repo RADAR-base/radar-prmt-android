@@ -16,11 +16,14 @@
 
 package org.radarcns.detail
 
+import android.graphics.drawable.Animatable2
+import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.GridLayout
-import android.widget.TextView
+import android.widget.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
 import org.radarbase.android.IRadarBinder
 import org.radarbase.android.MainActivityView
@@ -50,9 +53,9 @@ class MainActivityViewImpl(
     private val mUserId: TextView
     private val mSourcesTable: ViewGroup
     private val mProjectId: TextView
-    private val mActionDivider: View
-    private val mActionHeader: View
     private val mActionLayout: GridLayout
+    private val mActionWrapperLayout: LinearLayout
+    private val mDevicesNoneText: View
 
     private val userIdCache = ChangeRunner<String>()
     private val projectIdCache = ChangeRunner<String>()
@@ -84,9 +87,23 @@ class MainActivityViewImpl(
             mProjectId = findViewById(R.id.inputProjectId)
             mSourcesTable = findViewById(R.id.sourcesTable)
 
-            mActionHeader = findViewById(R.id.actionHeader)
-            mActionDivider = findViewById(R.id.actionDivider)
             mActionLayout = findViewById(R.id.actionLayout)
+            mActionWrapperLayout = findViewById(R.id.actionWrapperLayout)
+
+            mDevicesNoneText = findViewById(R.id.no_devices)
+
+            val logo: ImageView = findViewById(R.id.logo)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val avd = (logo.drawable as AnimatedVectorDrawable?)
+                avd?.registerAnimationCallback(
+                    @RequiresApi(Build.VERSION_CODES.M)
+                    object : Animatable2.AnimationCallback() {
+                        override fun onAnimationEnd(drawable: Drawable?) {
+                            logo.post { avd.start() }
+                        }
+                    })
+                avd?.start()
+            }
             this@MainActivityViewImpl.update()
         }
     }
@@ -116,17 +133,29 @@ class MainActivityViewImpl(
                     }
                 }
 
-                rows = p.map {
-                    SourceRowView(mainActivity, it, root).apply {
-                        update()
+                if (p.isEmpty()) {
+                    mDevicesNoneText.visibility = View.VISIBLE
+                    mSourcesTable.visibility = View.GONE
+                    rows = listOf()
+                } else {
+                    mDevicesNoneText.visibility = View.GONE
+                    mSourcesTable.visibility = View.VISIBLE
+                    rows = p.map {
+                        SourceRowView(mainActivity, it, root).apply {
+                            update()
+                        }
                     }
                 }
-            }
 
+//                rows = p.map {
+//                    SourceRowView(mainActivity, it, root).apply {
+//                        update()
+//                    }
+//                }
+            }
             actionsCells.applyIfChanged(currentActions) { actionList ->
                 if (actionList.isNotEmpty()) {
-                    mActionHeader.visibility = View.VISIBLE
-                    mActionDivider.visibility = View.VISIBLE
+                    mActionWrapperLayout.visibility = View.VISIBLE
                     mActionLayout.apply {
                         visibility = View.VISIBLE
                         removeAllViews()
@@ -138,8 +167,7 @@ class MainActivityViewImpl(
                         }
                     }
                 } else {
-                    mActionHeader.visibility = View.GONE
-                    mActionDivider.visibility = View.GONE
+                    mActionWrapperLayout.visibility = View.GONE
                     mActionLayout.apply {
                         visibility = View.GONE
                         removeAllViews()
@@ -166,7 +194,7 @@ class MainActivityViewImpl(
                     visibility = View.GONE
                 } else {
                     visibility = View.VISIBLE
-                    text = mainActivity.getString(R.string.user_id_message, id.truncate(MAX_USERNAME_LENGTH))
+                    text = id.truncate(MAX_USERNAME_LENGTH)
                 }
 
             }
@@ -177,7 +205,7 @@ class MainActivityViewImpl(
                     visibility = View.GONE
                 } else {
                     visibility = View.VISIBLE
-                    text = mainActivity.getString(R.string.study_id_message, id.truncate(MAX_USERNAME_LENGTH))
+                    text = id.truncate(MAX_USERNAME_LENGTH)
                 }
             }
         }

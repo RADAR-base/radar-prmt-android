@@ -19,11 +19,16 @@ package org.radarcns.detail
 import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.drawable.Animatable2
+import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.annotation.RequiresApi
 import org.radarbase.android.MainActivity
 import org.radarbase.android.source.BaseSourceState
 import org.radarbase.android.source.SourceProvider
@@ -42,7 +47,7 @@ class SourceRowView internal constructor(
     provider: SourceProvider<*>, root: ViewGroup
 ) {
     private val connection: SourceServiceConnection<*> = provider.connection
-    private val mStatusIcon: View
+    private val mStatusIcon: ImageView
     private val mBatteryLabel: ImageView
     private val sourceNameLabel: TextView
     private val devicePreferences: SharedPreferences =
@@ -61,7 +66,7 @@ class SourceRowView internal constructor(
         val inflater = this.mainActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         inflater.inflate(R.layout.activity_overview_source_row, root)
 
-        (root.getChildAt(root.childCount - 1) as TableRow).apply {
+        (root.getChildAt(root.childCount - 1) as LinearLayout).apply {
             mStatusIcon = findViewById(R.id.status_icon)
             sourceNameLabel = findViewById(R.id.sourceNameLabel)
             mBatteryLabel = findViewById(R.id.batteryStatusLabel)
@@ -70,7 +75,6 @@ class SourceRowView internal constructor(
                     setOnClickListener { dialogFilterSource() }
                     isEnabled = true
                 }
-                text = provider.displayName
             }
             findViewById<View>(R.id.refreshButton)
                     .setOnClickListener { reconnectSource() }
@@ -149,13 +153,26 @@ class SourceRowView internal constructor(
         statusCache.applyIfChanged(sourceState?.status ?: SourceStatusListener.Status.DISCONNECTED) { status ->
             logger.info("Source status is {}", status)
 
-            mStatusIcon.setBackgroundResource(when(status) {
-                SourceStatusListener.Status.CONNECTED -> R.drawable.status_connected
-                SourceStatusListener.Status.DISCONNECTED -> R.drawable.status_disconnected
-                SourceStatusListener.Status.READY -> R.drawable.status_searching
-                SourceStatusListener.Status.CONNECTING -> R.drawable.status_searching
+            mStatusIcon.setImageResource(when(status) {
+                SourceStatusListener.Status.CONNECTED -> R.drawable.connected_anim
+                SourceStatusListener.Status.DISCONNECTED -> R.drawable.disconnected_icon
+                SourceStatusListener.Status.READY -> R.drawable.ready_icon
+                SourceStatusListener.Status.CONNECTING -> R.drawable.connecting_anim
                 else -> sourceStatusIconDefault
             })
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val avd = mStatusIcon.drawable
+                if(avd is AnimatedVectorDrawable) {
+                    avd.registerAnimationCallback(
+                        @RequiresApi(Build.VERSION_CODES.M)
+                        object : Animatable2.AnimationCallback() {
+                            override fun onAnimationEnd(drawable: Drawable?) {
+                                mStatusIcon.post { avd.start() }
+                            }
+                        })
+                    avd.start()
+                }
+            }
         }
     }
 
