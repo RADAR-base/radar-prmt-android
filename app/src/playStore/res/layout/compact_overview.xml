@@ -55,7 +55,6 @@
                             android:layout_marginStart="@dimen/size_medium"
                             android:layout_marginTop="@dimen/size_medium"
                             android:layout_marginEnd="@dimen/size_medium"
-                            android:layout_marginBottom="@dimen/size_medium"
                             android:text="@string/patient_separator"
                             android:textAppearance="?attr/textAppearanceHeadline6" />
 
@@ -120,7 +119,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="@dimen/size_small">
+                        android:padding="@dimen/size_medium">
 
                         <TextView
                             android:layout_width="wrap_content"

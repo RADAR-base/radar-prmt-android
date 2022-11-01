@@ -154,10 +154,10 @@ class SourceRowView internal constructor(
             logger.info("Source status is {}", status)
 
             mStatusIcon.setImageResource(when(status) {
-                SourceStatusListener.Status.CONNECTED -> R.drawable.connected_anim
-                SourceStatusListener.Status.DISCONNECTED -> R.drawable.disconnected_icon
-                SourceStatusListener.Status.READY -> R.drawable.ready_icon
-                SourceStatusListener.Status.CONNECTING -> R.drawable.connecting_anim
+                SourceStatusListener.Status.CONNECTED -> R.drawable.avd_anim_connected
+                SourceStatusListener.Status.DISCONNECTED -> R.drawable.avd_icon_disconnected
+                SourceStatusListener.Status.READY -> R.drawable.avd_icon_ready
+                SourceStatusListener.Status.CONNECTING -> R.drawable.avd_anim_connecting
                 else -> sourceStatusIconDefault
             })
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

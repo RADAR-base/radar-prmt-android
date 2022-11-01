@@ -12,7 +12,7 @@
         android:id="@+id/status_icon"
         android:layout_width="@dimen/size_xlarge"
         android:layout_height="@dimen/size_xlarge"
-        android:src="@drawable/disconnected_icon"
+        android:src="@drawable/avd_icon_disconnected"
         android:contentDescription="@string/device_disconnected" />
 
     <ImageView
@@ -37,7 +37,7 @@
         android:insetTop="0dp"
         android:insetRight="0dp"
         android:insetBottom="0dp"
-        app:icon="@drawable/baseline_filter_alt_24"
+        app:icon="@drawable/baseline_filter_alt_black_24dp"
         android:contentDescription="@string/filter_title"
         app:iconGravity="textStart"
         app:iconPadding="0dp"
@@ -54,7 +54,7 @@
     android:insetTop="0dp"
     android:insetRight="0dp"
     android:insetBottom="0dp"
-    app:icon="@drawable/baseline_refresh_24"
+    app:icon="@drawable/baseline_refresh_black_24dp"
     app:iconGravity="textStart"
     app:iconPadding="0dp" />
 
