@@ -56,7 +56,7 @@
                             android:layout_marginTop="@dimen/size_medium"
                             android:layout_marginEnd="@dimen/size_medium"
                             android:text="@string/patient_separator"
-                            android:textAppearance="?attr/textAppearanceHeadline6" />
+                            style="@style/TextAppearance.MaterialComponents.Headline6" />
 
                         <TableLayout
                             android:id="@+id/table"
@@ -71,15 +71,18 @@
                                     android:text="@string/user_id"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:textStyle="bold"
+                                    style="@style/TextAppearance.MaterialComponents.Body2"
                                     />
                                 <TextView
                                     android:id="@+id/inputUserId"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:textAppearance="?attr/textAppearanceBody2"
-                                    android:textColor="?android:attr/textColorSecondary"
-                                    android:layout_marginStart="@dimen/size_small"/>
+                                    android:layout_weight="1"
+                                    style="@style/TextAppearance.MaterialComponents.Body2"
+                                    android:layout_marginStart="@dimen/size_small"
+                                    android:scrollHorizontally="true"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"/>
                             </TableRow>
 
                             <TableRow
@@ -90,16 +93,19 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="@string/study_id"
-                                    android:textStyle="bold"
+                                    style="@style/TextAppearance.MaterialComponents.Body2"
                                     />
 
                                 <TextView
                                     android:id="@+id/inputProjectId"
-                                    android:layout_width="wrap_content"
+                                    android:layout_width="0dp"
                                     android:layout_height="wrap_content"
-                                    android:textAppearance="?attr/textAppearanceBody2"
-                                    android:textColor="?android:attr/textColorSecondary"
-                                    android:layout_marginStart="@dimen/size_small"/>
+                                    android:layout_weight="1"
+                                    style="@style/TextAppearance.MaterialComponents.Body2"
+                                    android:layout_marginStart="@dimen/size_small"
+                                    android:scrollHorizontally="true"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"/>
 
                             </TableRow>
 
@@ -125,7 +131,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/devices_separator"
-                            android:textAppearance="?attr/textAppearanceHeadline6" />
+                            style="@style/TextAppearance.MaterialComponents.Headline6"
+                             />
 
                         <LinearLayout
                             android:id="@+id/sourcesTable"
@@ -139,6 +146,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             android:text="@string/no_plugins_activated" />
 
                     </LinearLayout>
@@ -208,7 +216,7 @@
             android:background="?attr/colorPrimary"
             app:contentInsetLeft="@dimen/size_medium"
             app:contentInsetStart="@dimen/size_medium"
-            app:logo="@drawable/radar_logo_32"
+            app:logo="@drawable/avd_icon_radar"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
             app:titleMarginStart="@dimen/size_xlarge">

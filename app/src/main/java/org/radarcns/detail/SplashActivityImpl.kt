@@ -3,11 +3,9 @@ package org.radarcns.detail
 import android.graphics.drawable.Animatable2
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast.LENGTH_LONG
-import androidx.annotation.RequiresApi
 import org.radarbase.android.RadarApplication.Companion.radarApp
 import org.radarbase.android.splash.SplashActivity
 import org.radarbase.android.util.Boast
@@ -33,17 +31,14 @@ class SplashActivityImpl : SplashActivity() {
         radarApp.notificationHandler.cancel(BOOT_START_NOTIFICATION_ID)
 
         val logo: ImageView = findViewById(R.id.splash_image)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val avd = (logo.drawable as AnimatedVectorDrawable?)
-            avd?.registerAnimationCallback(
-                @RequiresApi(Build.VERSION_CODES.M)
-                object : Animatable2.AnimationCallback() {
-                    override fun onAnimationEnd(drawable: Drawable?) {
-                        logo.post { avd.start() }
-                    }
-                })
-            avd?.start()
-        }
+        val avd = (logo.drawable as AnimatedVectorDrawable?)
+        avd?.registerAnimationCallback(
+            object : Animatable2.AnimationCallback() {
+                override fun onAnimationEnd(drawable: Drawable?) {
+                    logo.post { avd.start() }
+                }
+            })
+        avd?.start()
     }
 
     override fun createView() {

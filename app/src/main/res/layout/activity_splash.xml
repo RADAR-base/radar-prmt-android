@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -23,15 +23,9 @@
     android:layout_height="match_parent"
     android:layout_margin="@dimen/size_medium"
     android:gravity="center"
+    android:orientation="vertical"
     tools:context=".SplashActivityImpl">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:gravity="center">
         <ImageView
             android:id="@+id/splash_image"
             android:layout_width="240dp"
@@ -40,12 +34,12 @@
             app:srcCompat="@drawable/avd_anim_logo_splash_primary"
             android:contentDescription="@string/radar_base_logo" />
 
-        <TextView
-            android:id="@+id/splashMessageText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/size_xlarge"
-            android:gravity="center" />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/splash_message_text"
+        style="@style/TextAppearance.MaterialComponents.Body2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="@dimen/size_medium" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

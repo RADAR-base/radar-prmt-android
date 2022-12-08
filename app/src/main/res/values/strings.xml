@@ -4,7 +4,8 @@
     <string name="ibi_label">IBI</string>
     <string name="emptyText">—</string>
     <string name="temp_label">Temperature</string>
-    <string name="battery_label">Battery</string>    <string name="stop_recording">Stop recording</string>
+    <string name="battery_label">Battery</string>
+    <string name="stop_recording">Stop recording</string>
     <string name="show_heart_rate">Show heart rate</string>
     <string name="reconnect_to_server">Reconnect to server</string>
     <string name="no_devices_connected">No devices connected</string>
@@ -148,4 +149,5 @@
     <string name="title_item_detail">Item Detail</string>
     <string name="zero_percent">0%</string>
     <string name="hundred_percent">100%</string>
+    <string name="reject_privacy_policy_button">Reject</string>
 </resources>

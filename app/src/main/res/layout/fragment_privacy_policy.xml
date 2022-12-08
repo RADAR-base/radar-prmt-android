@@ -34,83 +34,86 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/size_small">
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/size_medium">
+
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="@dimen/size_medium">
+                            android:text="@string/patient_separator"
+                            style="@style/TextAppearance.MaterialComponents.Headline6" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/patient_separator"
+                        <TableLayout
+                            android:id="@+id/table"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2">
 
-                                android:textAppearance="?attr/textAppearanceHeadline6" />
-
-                            <TableLayout
-                                android:id="@+id/table"
+                            <TableRow
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_marginTop="@dimen/size_medium">
+                                android:layout_height="match_parent">
+                                <TextView
+                                    android:text="@string/user_id"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    style="@style/TextAppearance.MaterialComponents.Body2" />
+                                <TextView
+                                    android:id="@+id/inputUserId"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:layout_marginStart="@dimen/size_small"
+                                    style="@style/TextAppearance.MaterialComponents.Body2"
+                                    android:scrollHorizontally="true"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"/>
 
-                                <TableRow
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent">
-                                    <TextView
-                                        android:text="@string/user_id"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:textStyle="bold"
-                                        />
-                                    <TextView
-                                        android:id="@+id/inputUserId"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:textAppearance="?attr/textAppearanceBody2"
-                                        android:textColor="?android:attr/textColorSecondary"
-                                        android:layout_marginStart="@dimen/size_small"/>
+                            </TableRow>
 
-                                </TableRow>
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/study_id"
+                                    style="@style/TextAppearance.MaterialComponents.Body2" />
 
-                                <TableRow
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent">
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="@string/study_id"
-                                        android:textStyle="bold"
-                                        />
+                                <TextView
+                                    android:id="@+id/inputProjectId"
+                                    android:layout_width="0dp"
+                                    android:layout_weight="1"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/size_small"
+                                    style="@style/TextAppearance.MaterialComponents.Body2"
+                                    android:scrollHorizontally="true"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"/>
 
-                                    <TextView
-                                        android:id="@+id/inputProjectId"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:textAppearance="?attr/textAppearanceBody2"
-                                        android:textColor="?android:attr/textColorSecondary"
-                                        android:layout_marginStart="@dimen/size_small"/>
+                            </TableRow>
 
-                                </TableRow>
+                            <TableRow
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/server_base_url"
+                                    style="@style/TextAppearance.MaterialComponents.Body2" />
 
-                                <TableRow
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent">
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="@string/server_base_url"
-                                        android:textStyle="bold"
-                                        />
-
-                                    <TextView
-                                        android:id="@+id/inputDestinationUrl"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="@dimen/size_small"
-                                        />
-                                </TableRow>
-                            </TableLayout>
-                        </LinearLayout>
+                                <TextView
+                                    android:id="@+id/inputDestinationUrl"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/size_small"
+                                    style="@style/TextAppearance.MaterialComponents.Body2" />
+                            </TableRow>
+                        </TableLayout>
+                    </LinearLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 
@@ -129,7 +132,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/privacy_statement_header"
-                            android:textAppearance="?attr/textAppearanceHeadline6"
+                            style="@style/TextAppearance.MaterialComponents.Headline6"
                             />
 
                         <TextView
@@ -138,7 +141,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:layout_marginTop="@dimen/size_medium"
-                            android:textSize="16sp"
+                            style="@style/TextAppearance.MaterialComponents.Body1"
                             android:textColor="#57a0d4"
                             android:text="@string/general_privacy_policy"
                             />
@@ -149,7 +152,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:layout_marginTop="@dimen/size_small"
-                            android:textSize="16sp"
+                            style="@style/TextAppearance.MaterialComponents.Body1"
                             android:textColor="#57a0d4"
                             android:text="@string/collected_data_description"
                             />
@@ -160,16 +163,34 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/size_medium"
                             android:textAlignment="textStart"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             android:text="@string/policy_acceptance_message"
                             />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/accept_privacy_policy_button"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/size_small"
-                            android:text="@string/accept_privacy_policy_button"
-                            style="?attr/buttonStyle" />
+                            android:orientation="horizontal">
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/reject_privacy_policy_button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingHorizontal="@dimen/size_xxlarge"
+                                android:layout_marginTop="@dimen/size_small"
+                                android:text="@string/reject_privacy_policy_button"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                            <Space
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"/>
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/accept_privacy_policy_button"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/size_small"
+                                android:paddingHorizontal="@dimen/size_xxlarge"
+                                android:text="@string/accept_privacy_policy_button" />
+                        </LinearLayout>
+
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -189,7 +210,7 @@
             android:background="?attr/colorPrimary"
             app:contentInsetLeft="@dimen/size_medium"
             app:contentInsetStart="@dimen/size_medium"
-            app:logo="@drawable/radar_logo_32"
+            app:logo="@drawable/avd_icon_radar"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
             app:titleMarginStart="@dimen/size_xlarge">

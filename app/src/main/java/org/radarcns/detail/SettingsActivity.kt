@@ -26,12 +26,12 @@ class SettingsActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        val enableDataButton: SwitchCompat = findViewById(R.id.enableDataSwitch)
+        val enableDataButton: SwitchCompat = findViewById(R.id.enable_data_switch)
         enableDataButton.setOnCheckedChangeListener { _, isChecked ->
             config.put(RadarConfiguration.SEND_ONLY_WITH_WIFI, !isChecked)
             config.persistChanges()
         }
-        val enableDataPriorityButton: SwitchCompat = findViewById(R.id.enableDataHighPrioritySwitch)
+        val enableDataPriorityButton: SwitchCompat = findViewById(R.id.enable_data_high_priority_switch)
         enableDataPriorityButton.setOnCheckedChangeListener { _, isChecked ->
             config.put(RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY, isChecked)
             config.persistChanges()
@@ -45,7 +45,7 @@ class SettingsActivity : AppCompatActivity() {
             enableDataPriorityButton.isChecked = useData && useHighPriority
         }
 
-        findViewById<MaterialButton>(R.id.resetSettingsButton).setOnClickListener { v -> startReset(v) }
+        findViewById<MaterialButton>(R.id.reset_settings_button).setOnClickListener { v -> startReset(v) }
     }
 
     private fun startReset(@Suppress("UNUSED_PARAMETER") view: View) {

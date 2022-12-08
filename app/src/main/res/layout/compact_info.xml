@@ -12,19 +12,19 @@
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/size_medium">
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:layout_margin="@dimen/size_medium">
+
                 <TableLayout
                     android:id="@+id/table"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
-
                     <TableRow
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
@@ -32,14 +32,14 @@
                             android:text="@string/app_name_head"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textStyle="bold"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             />
-
                         <TextView
                             android:id="@+id/app_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             />
                     </TableRow>
 
@@ -50,14 +50,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/version"
-                            android:textStyle="bold"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             />
-
                         <TextView
                             android:id="@+id/version"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             />
                     </TableRow>
 
@@ -68,14 +68,14 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/server_base_url"
-                            android:textStyle="bold"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             />
-
                         <TextView
                             android:id="@+id/server_base_url"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
                             />
                     </TableRow>
                 </TableLayout>
@@ -84,25 +84,25 @@
                     android:id="@+id/privacyStatement"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minHeight="48dp"
-                    android:layout_marginTop="@dimen/size_small"
+                    android:layout_marginTop="@dimen/size_medium"
                     android:gravity="center_vertical"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/table"
                     android:text="@string/privacy_policy"
+                    style="@style/TextAppearance.MaterialComponents.Body1"
                     android:textColor="#57a0d4" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/licenses_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/size_small"
+                    android:layout_marginTop="@dimen/size_medium"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
                     app:layout_constraintTop_toBottomOf="@id/privacyStatement"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="@string/licences_button"
-                    style="?attr/buttonStyle" />
+                    android:text="@string/licences_button" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
     </androidx.core.widget.NestedScrollView>

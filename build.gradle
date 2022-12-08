@@ -2,23 +2,53 @@
 buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:7.3.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
-        classpath 'com.google.gms:google-services:4.3.13'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.1'
+        classpath 'com.google.gms:google-services:4.3.14'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.2'
         classpath 'com.google.android.gms:oss-licenses-plugin:0.10.5'
     }
 }
 
 plugins {
-    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.github.ben-manes.versions") version "0.44.0"
+    id("com.github.davidmc24.gradle.plugin.avro-base") version "1.5.0" apply false
+}
+
+subprojects {
+    ext.radarCommonsVersion = '1.2.2-SNAPSHOT'
+
+    repositories {
+        flatDir { dirs 'libs' }
+        google()
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url 'https://repo.thehyve.nl/content/repositories/releases' }
+    }
+
+    afterEvaluate {
+        configurations.all {
+            resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+            resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+        }
+
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+            kotlinOptions {
+                jvmTarget = '11'
+                apiVersion = '1.7'
+                languageVersion = '1.7'
+            }
+        }
+    }
 }
 
 def isNonStable = { String version ->

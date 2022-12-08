@@ -22,13 +22,11 @@ import android.content.SharedPreferences
 import android.graphics.drawable.Animatable2
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.annotation.RequiresApi
 import org.radarbase.android.MainActivity
 import org.radarbase.android.source.BaseSourceState
 import org.radarbase.android.source.SourceProvider
@@ -36,7 +34,6 @@ import org.radarbase.android.source.SourceServiceConnection
 import org.radarbase.android.source.SourceStatusListener
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.ChangeRunner
-import org.radarcns.detail.MainActivityViewImpl.Companion.truncate
 import org.slf4j.LoggerFactory
 
 /**
@@ -49,7 +46,7 @@ class SourceRowView internal constructor(
     private val connection: SourceServiceConnection<*> = provider.connection
     private val mStatusIcon: ImageView
     private val mBatteryLabel: ImageView
-    private val sourceNameLabel: TextView
+    private val mSourceNameLabel: TextView
     private val devicePreferences: SharedPreferences =
         mainActivity.getSharedPreferences("device." + connection.serviceClassName, Context.MODE_PRIVATE)
     private val filter = ChangeRunner("")
@@ -68,7 +65,7 @@ class SourceRowView internal constructor(
 
         (root.getChildAt(root.childCount - 1) as LinearLayout).apply {
             mStatusIcon = findViewById(R.id.status_icon)
-            sourceNameLabel = findViewById(R.id.sourceNameLabel)
+            mSourceNameLabel = findViewById(R.id.sourceNameLabel)
             mBatteryLabel = findViewById(R.id.batteryStatusLabel)
             findViewById<Button>(R.id.filterSourceButton).apply {
                 if (provider.isFilterable) {
@@ -154,24 +151,21 @@ class SourceRowView internal constructor(
             logger.info("Source status is {}", status)
 
             mStatusIcon.setImageResource(when(status) {
-                SourceStatusListener.Status.CONNECTED -> R.drawable.avd_anim_connected
-                SourceStatusListener.Status.DISCONNECTED -> R.drawable.avd_icon_disconnected
-                SourceStatusListener.Status.READY -> R.drawable.avd_icon_ready
+                SourceStatusListener.Status.CONNECTED -> R.drawable.avd_anim_connected_circle
+                SourceStatusListener.Status.DISCONNECTED -> R.drawable.baseline_wifi_off_red_700_24dp // R.drawable.avd_icon_disconnected
+                SourceStatusListener.Status.READY -> R.drawable.baseline_wifi_grey_600_24dp
                 SourceStatusListener.Status.CONNECTING -> R.drawable.avd_anim_connecting
                 else -> sourceStatusIconDefault
             })
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val avd = mStatusIcon.drawable
-                if(avd is AnimatedVectorDrawable) {
-                    avd.registerAnimationCallback(
-                        @RequiresApi(Build.VERSION_CODES.M)
-                        object : Animatable2.AnimationCallback() {
-                            override fun onAnimationEnd(drawable: Drawable?) {
-                                mStatusIcon.post { avd.start() }
-                            }
-                        })
-                    avd.start()
-                }
+            val avd = mStatusIcon.drawable
+            if(avd is AnimatedVectorDrawable) {
+                avd.registerAnimationCallback(
+                    object : Animatable2.AnimationCallback() {
+                        override fun onAnimationEnd(drawable: Drawable?) {
+                            mStatusIcon.post { avd.start() }
+                        }
+                    })
+                avd.start()
             }
         }
     }
@@ -179,12 +173,12 @@ class SourceRowView internal constructor(
     private fun updateBattery() {
         batteryLevelCache.applyIfChanged(sourceState?.batteryLevel ?: Float.NaN) {
             mBatteryLabel.setImageResource(when {
-                it.isNaN() -> R.drawable.ic_battery_unknown
-                it < 0.1 -> R.drawable.ic_battery_empty
-                it < 0.3 -> R.drawable.ic_battery_low
-                it < 0.6 -> R.drawable.ic_battery_50
-                it < 0.85 -> R.drawable.ic_battery_80
-                else -> R.drawable.ic_battery_full
+                it.isNaN() -> R.drawable.baseline_battery_unknown_black_24dp
+                it < 0.1 -> R.drawable.baseline_battery_alert_red_700_24dp
+                it < 0.3 -> R.drawable.baseline_battery_2_bar_red_700_24dp
+                it < 0.6 -> R.drawable.baseline_battery_3_bar_orange_700_24dp
+                it < 0.85 -> R.drawable.baseline_battery_5_bar_green_700_24dp
+                else -> R.drawable.baseline_battery_full_green_700_24dp
             })
         }
     }
@@ -192,13 +186,12 @@ class SourceRowView internal constructor(
     private fun updateSourceName() {
         // \u2014 == —
         sourceNameCache.applyIfChanged(sourceName ?: "\u2014") {
-            sourceNameLabel.text = it.truncate(MAX_UI_SOURCE_NAME_LENGTH)
+            mSourceNameLabel.text = it
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SourceRowView::class.java)
-        private const val MAX_UI_SOURCE_NAME_LENGTH = 10
         private const val sourceStatusIconDefault = R.drawable.status_searching
     }
 }

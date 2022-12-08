@@ -13,53 +13,45 @@
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/size_medium">
 
             <LinearLayout
-                android:id="@+id/constraintLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="@dimen/size_medium">
 
                 <TextView
-                    android:id="@+id/info_header"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/network_settings_header"
-                    android:textAppearance="?attr/textAppearanceHeadline6" />
+                    style="@style/TextAppearance.MaterialComponents.Headline6" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/enableDataSwitch"
+                    android:id="@+id/enable_data_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/size_small"
+                    style="@style/TextAppearance.MaterialComponents.Body2"
                     android:text="@string/enable_data_for_sending" />
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/enableDataHighPrioritySwitch"
+                    android:id="@+id/enable_data_high_priority_switch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    style="@style/TextAppearance.MaterialComponents.Body2"
                     android:text="@string/enable_data_high_priority_only"
                     android:enabled="false" />
 
-                <LinearLayout
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/reset_settings_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/size_small"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/resetSettingsButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/button_reset"
-                        style="?attr/buttonStyle" />
-
-                </LinearLayout>
+                    android:paddingHorizontal="@dimen/size_xxlarge"
+                    android:layout_marginTop="@dimen/size_medium"
+                    android:text="@string/button_reset" />
 
             </LinearLayout>
 

@@ -23,14 +23,12 @@
     tools:context=".LoginActivityImpl">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="@dimen/size_medium"
         android:gravity="center">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="?attr/actionBarSize"
@@ -51,36 +49,42 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/size_xlarge"
                     android:text="@string/login_title"
-                    android:textAppearance="?attr/textAppearanceHeadline6" />
+                    style="@style/TextAppearance.MaterialComponents.Headline6" />
 
                 <TextView
-                    android:id="@+id/inputUserId"
+                    android:id="@+id/input_user_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/size_small"
                     android:text="@string/login_description"
                     android:textAlignment="center"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    android:textColor="?android:attr/textColorSecondary" />
+                    style="@style/TextAppearance.MaterialComponents.Body2" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/scanButton"
-                    style="?attr/buttonStyle"
-                    android:layout_width="200dp"
+                    android:id="@+id/scan_button"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
                     android:layout_marginTop="@dimen/size_medium"
                     android:text="@string/scan_qr_button" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/enterCredentialsButton"
-                    style="?attr/buttonStyle"
-                    android:layout_width="200dp"
+                    android:id="@+id/enter_credentials_button"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
                     android:layout_marginTop="@dimen/size_small"
                     android:text="@string/enter_credentials" />
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/loader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:indeterminate="true"
+                    android:visibility="gone"/>
 
                 <TextView
-                    android:id="@+id/messageText"
+                    android:id="@+id/message_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/size_small" />
@@ -88,7 +92,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -102,7 +106,7 @@
             android:background="?attr/colorPrimary"
             app:contentInsetLeft="@dimen/size_medium"
             app:contentInsetStart="@dimen/size_medium"
-            app:logo="@drawable/radar_logo_32"
+            app:logo="@drawable/avd_icon_radar"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
             app:titleMarginStart="@dimen/size_xlarge">

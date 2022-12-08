@@ -19,11 +19,9 @@ package org.radarcns.detail
 import android.graphics.drawable.Animatable2
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
 import org.radarbase.android.IRadarBinder
 import org.radarbase.android.MainActivityView
@@ -93,17 +91,14 @@ class MainActivityViewImpl(
             mDevicesNoneText = findViewById(R.id.no_devices)
 
             val logo: ImageView = findViewById(R.id.logo)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val avd = (logo.drawable as AnimatedVectorDrawable?)
-                avd?.registerAnimationCallback(
-                    @RequiresApi(Build.VERSION_CODES.M)
-                    object : Animatable2.AnimationCallback() {
-                        override fun onAnimationEnd(drawable: Drawable?) {
-                            logo.post { avd.start() }
-                        }
-                    })
-                avd?.start()
-            }
+            val avd = (logo.drawable as AnimatedVectorDrawable?)
+            avd?.registerAnimationCallback(
+                object : Animatable2.AnimationCallback() {
+                    override fun onAnimationEnd(drawable: Drawable?) {
+                        logo.post { avd.start() }
+                    }
+                })
+            avd?.start()
             this@MainActivityViewImpl.update()
         }
     }
@@ -194,7 +189,7 @@ class MainActivityViewImpl(
                     visibility = View.GONE
                 } else {
                     visibility = View.VISIBLE
-                    text = id.truncate(MAX_USERNAME_LENGTH)
+                    text = id
                 }
 
             }
@@ -205,7 +200,7 @@ class MainActivityViewImpl(
                     visibility = View.GONE
                 } else {
                     visibility = View.VISIBLE
-                    text = id.truncate(MAX_USERNAME_LENGTH)
+                    text = id
                 }
             }
         }
@@ -214,14 +209,5 @@ class MainActivityViewImpl(
     companion object {
         private val logger = LoggerFactory.getLogger(MainActivityViewImpl::class.java)
         private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-        internal const val MAX_USERNAME_LENGTH = 20
-
-        internal fun String?.truncate(maxLength: Int): String {
-            return when {
-                this == null -> ""
-                length > maxLength -> substring(0, maxLength - 3) + "\u2026"
-                else -> this
-            }
-        }
     }
 }

@@ -12,22 +12,26 @@
         android:id="@+id/status_icon"
         android:layout_width="@dimen/size_xlarge"
         android:layout_height="@dimen/size_xlarge"
-        android:src="@drawable/avd_icon_disconnected"
+        android:src="@drawable/baseline_wifi_off_red_700_24dp"
         android:contentDescription="@string/device_disconnected" />
 
     <ImageView
         android:id="@+id/batteryStatusLabel"
         android:layout_width="@dimen/size_xlarge"
         android:layout_height="@dimen/size_xlarge"
-        android:src="@drawable/ic_battery_unknown"
+        android:src="@drawable/baseline_battery_unknown_black_24dp"
         android:contentDescription="@string/battery_status" />
 
-        <TextView
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/sourceNameLabel"
-            android:text="@string/emptyText" />
+    <TextView
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/sourceNameLabel"
+        android:text="@string/emptyText"
+        style="@style/TextAppearance.MaterialComponents.Body2"
+        android:scrollHorizontally="true"
+        android:ellipsize="end"
+        android:maxLines="1"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/filterSourceButton"
@@ -44,18 +48,18 @@
         android:enabled="false"
         style="?attr/borderlessButtonStyle" />
 
-<com.google.android.material.button.MaterialButton
-    android:id="@+id/refreshButton"
-    style="?attr/borderlessButtonStyle"
-    android:layout_width="52dp"
-    android:layout_height="52dp"
-    android:contentDescription="@string/refresh"
-    android:insetLeft="0dp"
-    android:insetTop="0dp"
-    android:insetRight="0dp"
-    android:insetBottom="0dp"
-    app:icon="@drawable/baseline_refresh_black_24dp"
-    app:iconGravity="textStart"
-    app:iconPadding="0dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/refreshButton"
+        style="?attr/borderlessButtonStyle"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:contentDescription="@string/refresh"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        app:icon="@drawable/baseline_refresh_black_24dp"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp" />
 
 </LinearLayout>

@@ -24,6 +24,7 @@ import android.view.View
 import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.RadarApplication.Companion.radarApp
+import org.radarbase.android.auth.LoginManager
 
 class MainActivityImpl : MainActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +40,7 @@ class MainActivityImpl : MainActivity() {
     override fun createView(): MainActivityView {
         return MainActivityViewImpl(this)
     }
+
 
     fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
         logout(true)
