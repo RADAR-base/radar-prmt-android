@@ -128,67 +128,78 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="@dimen/size_medium">
+
                         <TextView
+                            style="@style/TextAppearance.MaterialComponents.Headline6"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/privacy_statement_header"
-                            style="@style/TextAppearance.MaterialComponents.Headline6"
-                            />
+                            android:text="@string/consent" />
 
-                        <TextView
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/generalPrivacyPolicyStatement"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="@dimen/size_medium"
-                            style="@style/TextAppearance.MaterialComponents.Body1"
-                            android:textColor="#57a0d4"
+                            style="@style/Widget.MaterialComponents.FloatingActionButton"
+                            android:backgroundTint="@color/colorAccent"
                             android:text="@string/general_privacy_policy"
-                            />
+                            android:layout_marginTop="@dimen/size_medium"/>
 
-                        <TextView
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/dataCollectionDescriptionStatement"
-                            android:layout_width="match_parent"
+                            style="@style/Widget.MaterialComponents.FloatingActionButton"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="@dimen/size_small"
-                            style="@style/TextAppearance.MaterialComponents.Body1"
-                            android:textColor="#57a0d4"
+                            android:backgroundTint="@color/colorAccent"
                             android:text="@string/collected_data_description"
                             />
 
-                        <TextView
-                            android:id="@+id/policyAcceptanceStatement"
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/consentPrivacyPolicy"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/size_medium"
-                            android:textAlignment="textStart"
-                            style="@style/TextAppearance.MaterialComponents.Body2"
-                            android:text="@string/policy_acceptance_message"
-                            />
+                            android:gravity="fill"
+                            android:layout_marginTop="@dimen/size_medium"/>
+
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/consentCollectedData"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="fill"/>
+
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/consentServer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="fill"/>
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:layout_marginTop="@dimen/size_small">
+
                             <com.google.android.material.button.MaterialButton
-                                android:id="@+id/reject_privacy_policy_button"
+                                android:id="@+id/rejectPrivacyPolicyButton"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:paddingHorizontal="@dimen/size_xxlarge"
                                 android:layout_marginTop="@dimen/size_small"
-                                android:text="@string/reject_privacy_policy_button"
-                                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                                android:paddingHorizontal="@dimen/size_xxlarge"
+                                android:text="@string/reject_privacy_policy_button" />
+
                             <Space
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"/>
+                                android:layout_weight="1" />
+
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/accept_privacy_policy_button"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/size_small"
                                 android:paddingHorizontal="@dimen/size_xxlarge"
-                                android:text="@string/accept_privacy_policy_button" />
+                                android:text="@string/accept_privacy_policy_button"
+                                android:enabled="false"/>
                         </LinearLayout>
 
 

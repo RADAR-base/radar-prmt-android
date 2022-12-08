@@ -75,10 +75,28 @@ class PrivacyPolicyFragment : Fragment() {
             inputUserId.text = userId
 
             val baseUrl = baseUrl ?: "Unknown server"
-            policyAcceptanceStatement.text = fromHtml(R.string.policy_acceptance_message, baseUrl)
+            consentPrivacyPolicy.apply {
+                text = fromHtml(R.string.consent_privacy_policy, Html.FROM_HTML_MODE_LEGACY)
+                setOnCheckedChangeListener { _, isChecked ->
+                    acceptPrivacyPolicyButton.isEnabled = consentCollectedData.isChecked && consentServer.isChecked && isChecked
+                }
+            }
+            consentCollectedData.apply{
+                text = fromHtml(R.string.consent_collected_data, Html.FROM_HTML_MODE_LEGACY)
+                setOnCheckedChangeListener { _, isChecked ->
+                    acceptPrivacyPolicyButton.isEnabled = consentPrivacyPolicy.isChecked && consentServer.isChecked && isChecked
+                }
+            }
+            consentServer.apply{
+                text = fromHtml(R.string.consent_server, baseUrl, Html.FROM_HTML_MODE_LEGACY)
+                setOnCheckedChangeListener { _, isChecked ->
+                    acceptPrivacyPolicyButton.isEnabled = consentPrivacyPolicy.isChecked && consentCollectedData.isChecked && isChecked
+                }
+            }
             inputDestinationUrl.text = baseUrl
         }
     }
+
 
     @Suppress("DEPRECATION")
     private fun fromHtml(@StringRes resourceId: Int, vararg parameters: Any): Spanned {
