@@ -58,6 +58,7 @@ class TextDrawable(textView: TextView, mText: String) : Drawable(), TextWatcher 
         paint.colorFilter = colorFilter
     }
 
+    @Deprecated("Super getOpacity is deprecated")
     override fun getOpacity(): Int = when (paint.alpha) {
         0 -> PixelFormat.TRANSPARENT
         255 -> PixelFormat.OPAQUE

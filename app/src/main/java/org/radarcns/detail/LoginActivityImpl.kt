@@ -48,7 +48,6 @@ import java.net.ConnectException
 import java.net.MalformedURLException
 import java.net.URI
 
-
 class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
@@ -174,11 +173,11 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
+    @Deprecated(message = "Super onActivityResult is deprecated")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        data?.let {
-            qrCodeScanner.onActivityResult(requestCode, resultCode, it)
-        }
+        data ?: return
+        qrCodeScanner.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun loginFailed(manager: LoginManager?, ex: Exception?) {

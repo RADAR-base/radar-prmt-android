@@ -32,7 +32,9 @@ import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MainActivityViewImpl internal constructor(private val mainActivity: MainActivityImpl) : MainActivityView {
+class MainActivityViewImpl(
+    private val mainActivity: MainActivityImpl
+) : MainActivityView {
     private val connectionRows = ChangeRunner<List<SourceProvider<*>>>(emptyList())
     private val actionsCells = ChangeRunner<List<SourceProvider.Action>>(emptyList())
 
@@ -183,7 +185,7 @@ class MainActivityViewImpl internal constructor(private val mainActivity: MainAc
 
     companion object {
         private val logger = LoggerFactory.getLogger(MainActivityViewImpl::class.java)
-        private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
+        private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         internal const val MAX_USERNAME_LENGTH = 20
 
         internal fun String?.truncate(maxLength: Int): String {

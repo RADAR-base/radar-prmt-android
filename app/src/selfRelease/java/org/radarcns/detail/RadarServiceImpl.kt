@@ -30,6 +30,7 @@ import org.radarbase.android.RadarConfiguration.Companion.START_AT_BOOT
 import org.radarbase.android.RadarService
 import org.radarbase.android.config.SingleRadarConfiguration
 import org.radarbase.android.source.SourceProvider
+import org.radarbase.android.util.toPendingIntentFlag
 import org.radarbase.monitor.application.ApplicationStatusProvider
 import org.radarbase.passive.audio.OpenSmileAudioProvider
 import org.radarbase.passive.bittium.FarosProvider
@@ -74,20 +75,20 @@ class RadarServiceImpl : RadarService() {
     )
 
     override val servicePermissions: List<String>
-        get() = ArrayList(super.servicePermissions).apply {
-            this += RECEIVE_BOOT_COMPLETED
+        get() = buildList {
+            addAll(super.servicePermissions)
+            add(RECEIVE_BOOT_COMPLETED)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                this += REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT
+                add(REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT)
             }
             if (configuration.latestConfig.getBoolean(START_AT_BOOT, false)) {
-                this += SYSTEM_ALERT_WINDOW
+                add(SYSTEM_ALERT_WINDOW)
             }
         }
 
     override fun doConfigure(config: SingleRadarConfiguration) {
         super.doConfigure(config)
         configureRunAtBoot(config, MainActivityBootStarter::class.java)
-
         setupUpdateCheckAlarmManager(config)
    }
 
@@ -135,7 +136,12 @@ class RadarServiceImpl : RadarService() {
 
         updateCheckAlarmIntent = Intent(this, UpdateAlarmReceiver::class.java).let { intent ->
             intent.putExtra(UPDATE_RELEASES_URL_KEY, releasesUrl)
-            PendingIntent.getBroadcast(this, UPDATE_CHECK_INTENT_REQ_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                UPDATE_CHECK_INTENT_REQ_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT.toPendingIntentFlag()
+            )
         }
 
         updateCheckAlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
