@@ -22,6 +22,7 @@ import android.content.SharedPreferences
 import android.graphics.drawable.Animatable2
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
@@ -152,19 +153,21 @@ class SourceRowView internal constructor(
 
             mStatusIcon.setImageResource(when(status) {
                 SourceStatusListener.Status.CONNECTED -> R.drawable.avd_anim_connected_circle
-                SourceStatusListener.Status.DISCONNECTED -> R.drawable.baseline_wifi_off_red_700_24dp // R.drawable.avd_icon_disconnected
+                SourceStatusListener.Status.DISCONNECTED -> R.drawable.baseline_circle_red_700_24dp
                 SourceStatusListener.Status.READY -> R.drawable.baseline_wifi_grey_600_24dp
                 SourceStatusListener.Status.CONNECTING -> R.drawable.avd_anim_connecting
                 else -> sourceStatusIconDefault
             })
             val avd = mStatusIcon.drawable
             if(avd is AnimatedVectorDrawable) {
-                avd.registerAnimationCallback(
-                    object : Animatable2.AnimationCallback() {
-                        override fun onAnimationEnd(drawable: Drawable?) {
-                            mStatusIcon.post { avd.start() }
-                        }
-                    })
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    avd.registerAnimationCallback(
+                        object : Animatable2.AnimationCallback() {
+                            override fun onAnimationEnd(drawable: Drawable?) {
+                                mStatusIcon.post { avd.start() }
+                            }
+                        })
+                }
                 avd.start()
             }
         }

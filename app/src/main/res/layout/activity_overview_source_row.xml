@@ -12,7 +12,7 @@
         android:id="@+id/status_icon"
         android:layout_width="@dimen/size_xlarge"
         android:layout_height="@dimen/size_xlarge"
-        android:src="@drawable/baseline_wifi_off_red_700_24dp"
+        android:src="@drawable/baseline_circle_red_700_24dp"
         android:contentDescription="@string/device_disconnected" />
 
     <ImageView
