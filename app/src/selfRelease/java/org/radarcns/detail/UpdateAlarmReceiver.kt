@@ -49,7 +49,7 @@ class UpdateAlarmReceiver: BroadcastReceiver() {
                 channel = UPDATE_NOTIFICATION_CHANNEL_ID,
                 includeStartIntent = true,
             ) {
-                setSmallIcon(R.drawable.ic_baseline_update_24)
+                setSmallIcon(R.drawable.baseline_update_black_24dp)
                 setContentTitle(context.getString(R.string.app_name))
                 setContentText(context.getString(R.string.update_notification_content))
                 setContentIntent(PendingIntent.getActivity(
