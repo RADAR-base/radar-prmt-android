@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.7.20'
     repositories {
         mavenLocal()
         google()
@@ -19,36 +19,7 @@ buildscript {
 }
 
 plugins {
-    id("com.github.ben-manes.versions") version "0.44.0"
-    id("com.github.davidmc24.gradle.plugin.avro-base") version "1.5.0" apply false
-}
-
-subprojects {
-    ext.radarCommonsVersion = '1.2.2-SNAPSHOT'
-
-    repositories {
-        flatDir { dirs 'libs' }
-        google()
-        mavenLocal()
-        mavenCentral()
-        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-        maven { url 'https://repo.thehyve.nl/content/repositories/releases' }
-    }
-
-    afterEvaluate {
-        configurations.all {
-            resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
-            resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-        }
-
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-            kotlinOptions {
-                jvmTarget = '11'
-                apiVersion = '1.7'
-                languageVersion = '1.7'
-            }
-        }
-    }
+    id("com.github.ben-manes.versions") version "0.42.0"
 }
 
 def isNonStable = { String version ->
