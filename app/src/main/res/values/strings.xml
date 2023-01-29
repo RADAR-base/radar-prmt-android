@@ -91,12 +91,7 @@
     <string name="settings">Settings</string>
     <string name="network_settings_header">Network settings</string>
     <string name="collected_data_description">Description of collected data</string>
-    <string name="general_privacy_policy">General privacy policy</string>
-<!--    <string name="policy_acceptance_message"><![CDATA[By pressing the <b>ACCEPT</b> button:-->
-<!--        \n\n <p>1) You have read <b><u>General privacy policy</u></b> and agree to it.</p>-->
-<!--        \n\n <p>2) You have read <b><u>Description of collected data</u></b> and agree to it.</p>-->
-<!--        \n\n <p>3) You agree to send data to <b><u>%1$s</u></b>.</p>]]>-->
-<!--    </string>-->
+    <string name="general_privacy_policy">General Privacy Policy</string>
     <string name="consent_privacy_policy"><![CDATA[I have read <b><u>General privacy policy</u></b> and agree to it.]]></string>
     <string name="consent_collected_data"><![CDATA[I have read <b><u>Description of collected data</u></b> and agree to it.]]></string>
     <string name="consent_server"><![CDATA[I agree to send data to <b><u>%1$s</u></b>.]]></string>
