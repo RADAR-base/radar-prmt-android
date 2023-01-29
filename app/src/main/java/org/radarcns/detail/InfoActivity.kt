@@ -27,7 +27,7 @@ class InfoActivity : AppCompatActivity() {
             policyUrl = config.optString(PRIVACY_POLICY)
 
             if (policyUrl == null) {
-                findViewById<TextView>(R.id.privacyStatement).apply {
+                findViewById<TextView>(R.id.generalPrivacyPolicyStatement).apply {
                     visibility = View.GONE
                 }
             }
@@ -40,7 +40,7 @@ class InfoActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        findViewById<TextView>(R.id.privacyStatement).setOnClickListener { v -> openPrivacyPolicy(v) }
+        findViewById<TextView>(R.id.generalPrivacyPolicyStatement).setOnClickListener { v -> openPrivacyPolicy(v) }
         findViewById<TextView>(R.id.licenses_button).setOnClickListener { v -> showLicenses(v) }
     }
 

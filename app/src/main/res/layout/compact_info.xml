@@ -80,17 +80,14 @@
                     </TableRow>
                 </TableLayout>
 
-                <TextView
-                    android:id="@+id/privacyStatement"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/generalPrivacyPolicyStatement"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/size_medium"
-                    android:gravity="center_vertical"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/table"
-                    android:text="@string/privacy_policy"
-                    style="@style/TextAppearance.MaterialComponents.Body1"
-                    android:textColor="#57a0d4" />
+                    style="@style/Widget.MaterialComponents.FloatingActionButton"
+                    android:backgroundTint="@color/colorAccent"
+                    android:text="@string/general_privacy_policy"
+                    android:layout_marginTop="@dimen/size_medium"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/licenses_button"
@@ -98,7 +95,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/size_medium"
                     android:paddingHorizontal="@dimen/size_xxlarge"
-                    app:layout_constraintTop_toBottomOf="@id/privacyStatement"
+                    app:layout_constraintTop_toBottomOf="@id/generalPrivacyPolicyStatement"
                     app:layout_constraintStart_toStartOf="parent"
                     android:text="@string/licences_button" />
 
