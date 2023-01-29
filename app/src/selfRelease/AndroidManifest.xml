@@ -19,7 +19,9 @@
 
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+<!--  TODO: Check if necessary  -->
     <uses-permission android:name="android.permission.SET_ALARM"/>
+
     <supports-screens android:largeScreens="true"
         android:xlargeScreens="true" />
 
@@ -72,8 +74,7 @@
             android:name=".LoginActivityImpl"
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="userPortrait"
-            android:exported="true"
-            android:label="@string/app_name" >
+            android:exported="true">
             <intent-filter android:label="@string/filter_open_prmt" >
                 <action android:name="android.intent.action.VIEW" />
 
@@ -96,7 +97,6 @@
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="userPortrait"
             android:exported="false"
-            android:label="@string/app_name"
             android:launchMode="singleInstance" >
         </activity>
         <activity
