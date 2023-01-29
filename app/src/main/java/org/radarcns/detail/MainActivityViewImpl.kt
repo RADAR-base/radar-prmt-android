@@ -19,6 +19,7 @@ package org.radarcns.detail
 import android.graphics.drawable.Animatable2
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -92,12 +93,14 @@ class MainActivityViewImpl(
 
             val logo: ImageView = findViewById(R.id.logo)
             val avd = (logo.drawable as AnimatedVectorDrawable?)
-            avd?.registerAnimationCallback(
-                object : Animatable2.AnimationCallback() {
-                    override fun onAnimationEnd(drawable: Drawable?) {
-                        logo.post { avd.start() }
-                    }
-                })
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                avd?.registerAnimationCallback(
+                    object : Animatable2.AnimationCallback() {
+                        override fun onAnimationEnd(drawable: Drawable?) {
+                            logo.post { avd.start() }
+                        }
+                    })
+            }
             avd?.start()
             this@MainActivityViewImpl.update()
         }
