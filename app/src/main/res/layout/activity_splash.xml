@@ -51,6 +51,22 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@id/constraintLayout"
         app:layout_constraintTop_toBottomOf="@id/splash_image"
-        app:layout_constraintBottom_toBottomOf="@id/constraintLayout"/>
+        app:layout_constraintBottom_toTopOf="@id/splash_privacy_policy_url"/>
+
+    <TextView
+        android:id="@+id/splash_privacy_policy_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:gravity="center"
+        android:text="@string/privacy_policy"
+        android:textColor="#57a0d4"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@id/constraintLayout"
+        app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

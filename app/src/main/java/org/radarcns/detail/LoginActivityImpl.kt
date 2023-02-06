@@ -19,6 +19,7 @@ package org.radarcns.detail
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.view.KeyEvent
@@ -28,10 +29,12 @@ import android.widget.*
 import android.widget.LinearLayout.VERTICAL
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
 import org.json.JSONObject
+import org.radarbase.android.RadarApplication.Companion.radarApp
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
@@ -41,6 +44,7 @@ import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
 import org.radarbase.android.widget.TextDrawable
 import org.radarbase.producer.AuthenticationException
+import org.radarcns.detail.SplashActivityImpl.Companion.addPrivacyPolicy
 import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -72,6 +76,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             value?.takeTrimmedIfNotEmpty()
                 ?.also { parseQrCode(it) }
         }
+
+        addPrivacyPolicy(binding.loginPrivacyPolicyUrl)
     }
 
     override fun onResume() {
@@ -173,13 +179,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    @Deprecated(message = "Super onActivityResult is deprecated")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        data ?: return
-        qrCodeScanner.onActivityResult(requestCode, resultCode, data)
-    }
-
     override fun loginFailed(manager: LoginManager?, ex: Exception?) {
         canLogin = true
         onDoneProcessing()
@@ -242,6 +241,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             updateState {
                 isPrivacyPolicyAccepted = true
             }
+            logger.debug("Enabling Firebase Analytics")
+            FirebaseAnalytics.getInstance(this@LoginActivityImpl).setAnalyticsCollectionEnabled(true)
             applyState {
                 logger.info("Updating privacyPolicyAccepted {}", this)
                 super.loginSucceeded(null, this)
@@ -261,13 +262,14 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             }
         }
 
-        radarConfig.config.observe(this, { config ->
-            if (!didModifyBaseUrl) {
-                val baseUrl = config.getString(BASE_URL_KEY, "").toHttpUrlOrNull() ?: return@observe
+        val config = radarConfig.config.value
+        if (!didModifyBaseUrl) {
+            val baseUrl = config?.getString(BASE_URL_KEY, "")?.toHttpUrlOrNull()
+            if (baseUrl != null) {
                 val urlString = baseUrl.toString().substring(baseUrl.scheme.length + 3)
                 baseUrlInput.setText(urlString)
             }
-        })
+        }
 
         val tokenInput = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_TEXT

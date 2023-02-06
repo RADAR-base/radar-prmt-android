@@ -41,7 +41,6 @@ import org.radarbase.passive.phone.PhoneLocationProvider
 import org.radarbase.passive.phone.PhoneSensorProvider
 import org.radarbase.passive.phone.telephony.PhoneLogProvider
 import org.radarbase.passive.phone.usage.PhoneUsageProvider
-import org.radarbase.passive.ppg.PhonePpgProvider
 import org.radarbase.passive.weather.WeatherApiProvider
 import org.radarcns.detail.UpdatesActivity.Companion.DAY
 import org.radarcns.detail.UpdatesActivity.Companion.LAST_AUTO_UPDATE_CHECK_TIME_KEY
@@ -70,7 +69,6 @@ class RadarServiceImpl : RadarService() {
         PhoneSensorProvider(this),
         PhoneLogProvider(this),
         PhoneUsageProvider(this),
-        PhonePpgProvider(this),
         WeatherApiProvider(this),
     )
 
@@ -145,7 +143,7 @@ class RadarServiceImpl : RadarService() {
         }
 
         updateCheckAlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        updateCheckAlarmManager!!.setRepeating(
+        updateCheckAlarmManager!!.setInexactRepeating(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
             updateCheckInterval,

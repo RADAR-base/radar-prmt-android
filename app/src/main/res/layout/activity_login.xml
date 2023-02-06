@@ -74,4 +74,16 @@
         app:layout_constraintStart_toStartOf="@id/constraintLayout"
         app:layout_constraintTop_toBottomOf="@id/enterCredentialsButton" />
 
+    <TextView
+        android:id="@+id/loginPrivacyPolicyUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/privacy_policy"
+        android:textColor="#57a0d4"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@id/constraintLayout"
+        app:layout_constraintBottom_toBottomOf="@id/constraintLayout" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

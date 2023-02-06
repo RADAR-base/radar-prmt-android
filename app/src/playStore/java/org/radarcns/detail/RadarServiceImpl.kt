@@ -33,7 +33,6 @@ import org.radarbase.passive.phone.PhoneContactListProvider
 import org.radarbase.passive.phone.PhoneLocationProvider
 import org.radarbase.passive.phone.PhoneSensorProvider
 import org.radarbase.passive.phone.usage.PhoneUsageProvider
-import org.radarbase.passive.ppg.PhonePpgProvider
 import org.radarbase.passive.weather.WeatherApiProvider
 
 class RadarServiceImpl : RadarService() {
@@ -47,7 +46,6 @@ class RadarServiceImpl : RadarService() {
         PhoneLocationProvider(this),
         PhoneSensorProvider(this),
         PhoneUsageProvider(this),
-        PhonePpgProvider(this),
         WeatherApiProvider(this),
     )
 
