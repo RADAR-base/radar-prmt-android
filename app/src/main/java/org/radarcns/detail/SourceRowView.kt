@@ -35,6 +35,7 @@ import org.radarbase.android.source.SourceServiceConnection
 import org.radarbase.android.source.SourceStatusListener
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.ChangeRunner
+import org.radarbase.android.widget.repeatAnimation
 import org.slf4j.LoggerFactory
 
 /**
@@ -158,18 +159,7 @@ class SourceRowView internal constructor(
                 SourceStatusListener.Status.CONNECTING -> R.drawable.avd_anim_connecting
                 else -> sourceStatusIconDefault
             })
-            val avd = mStatusIcon.drawable
-            if(avd is AnimatedVectorDrawable) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    avd.registerAnimationCallback(
-                        object : Animatable2.AnimationCallback() {
-                            override fun onAnimationEnd(drawable: Drawable?) {
-                                mStatusIcon.post { avd.start() }
-                            }
-                        })
-                }
-                avd.start()
-            }
+            mStatusIcon.repeatAnimation()
         }
     }
 

@@ -29,6 +29,7 @@ import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
@@ -41,6 +42,7 @@ import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
 import org.radarbase.producer.AuthenticationException
+import org.radarbase.android.widget.addPrivacyPolicy
 import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -87,6 +89,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         loader = findViewById(R.id.loader)
         loader.visibility = View.GONE
 
+        addPrivacyPolicy(binding.loginPrivacyPolicyUrl)
     }
 
     override fun onResume() {
@@ -181,13 +184,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    @Deprecated(message = "Super onActivityResult is deprecated")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        data ?: return
-        qrCodeScanner.onActivityResult(requestCode, resultCode, data)
-    }
-
     override fun loginFailed(manager: LoginManager?, ex: Exception?) {
         canLogin = true
 
@@ -252,6 +248,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             updateState {
                 isPrivacyPolicyAccepted = true
             }
+            logger.debug("Enabling Firebase Analytics")
+            FirebaseAnalytics.getInstance(this@LoginActivityImpl).setAnalyticsCollectionEnabled(true)
             applyState {
                 logger.info("Updating privacyPolicyAccepted {}", this)
                 super.loginSucceeded(null, this)

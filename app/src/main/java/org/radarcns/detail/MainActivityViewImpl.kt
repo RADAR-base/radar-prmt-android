@@ -16,10 +16,6 @@
 
 package org.radarcns.detail
 
-import android.graphics.drawable.Animatable2
-import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.Drawable
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -30,6 +26,7 @@ import org.radarbase.android.source.SourceProvider
 import org.radarbase.android.util.ChangeApplier
 import org.radarbase.android.util.ChangeRunner
 import org.radarbase.android.util.TimedLong
+import org.radarbase.android.widget.repeatAnimation
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
@@ -91,17 +88,7 @@ class MainActivityViewImpl(
 
             mDevicesNoneText = findViewById(R.id.no_devices)
 
-            val logo: ImageView = findViewById(R.id.logo)
-            val avd = (logo.drawable as AnimatedVectorDrawable?)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                avd?.registerAnimationCallback(
-                    object : Animatable2.AnimationCallback() {
-                        override fun onAnimationEnd(drawable: Drawable?) {
-                            logo.post { avd.start() }
-                        }
-                    })
-            }
-            avd?.start()
+            findViewById<ImageView>(R.id.logo).repeatAnimation()
             this@MainActivityViewImpl.update()
         }
     }
