@@ -37,6 +37,15 @@ Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with 
 
 [Full Firebase guide](https://firebase.google.com/docs/remote-config/use-config-android)
 
+### Build and Deploy RADAR-pRMT on target device
+
+1. Set up firebase remote configuration as mentioned above.
+2. In project level **build.gradle** file add mavenLocal() in repositories.
+3. Remove empatica plugin from app level **build.gradle** also remove empatica plugin in ``app/src/main/java/org/radarbase/passive/app/RadarServiceImpl.kt``. Process    of adding a plugin is mentioned above, reverse it to delete a plugin.
+4. Change the package name of google-services.json it should be same as local package name of the app.
+5. Add the following property and value either in remote config or the xml values file ``oauth2_client_secret=saturday$SHARE$scale``.
+6. Ask maintainers to add you to test management portal, where you can generate QR code.
+
 ## Android Installation
 
 The guide for installing Android on Raspberry Pi3 and UDOO boards is available [here](https://github.com/RADAR-base/RADAR-AndroidApplication/wiki)
