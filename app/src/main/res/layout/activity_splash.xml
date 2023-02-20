@@ -46,11 +46,10 @@
         android:id="@+id/splash_privacy_policy_url"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:gravity="bottom"
+        android:layout_marginTop="@dimen/size_medium"
+        android:gravity="center"
         android:text="@string/privacy_policy"
-        android:textColor="#57a0d4"
+        android:textColor="@color/colorAccent"
         />
 
 </LinearLayout>
