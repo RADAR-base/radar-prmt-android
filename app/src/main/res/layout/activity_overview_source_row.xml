@@ -19,7 +19,7 @@
         android:id="@+id/batteryStatusLabel"
         android:layout_width="@dimen/size_xlarge"
         android:layout_height="@dimen/size_xlarge"
-        android:src="@drawable/baseline_battery_unknown_black_24dp"
+        android:src="@drawable/baseline_battery_unknown_gray_24dp"
         android:contentDescription="@string/battery_status" />
 
     <TextView

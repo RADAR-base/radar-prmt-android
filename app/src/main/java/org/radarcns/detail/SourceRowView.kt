@@ -133,7 +133,8 @@ class SourceRowView internal constructor(
     fun update() {
         sourceState = connection.sourceState
         sourceName = when (sourceState?.status) {
-                SourceStatusListener.Status.CONNECTED,
+            SourceStatusListener.Status.CONNECTED,
+            SourceStatusListener.Status.READY,
                 SourceStatusListener.Status.CONNECTING -> connection.sourceName
                         ?.replace("Empatica", "")
                         ?.trim { c -> c <= ' ' }
@@ -154,7 +155,7 @@ class SourceRowView internal constructor(
             mStatusIcon.setImageResource(when(status) {
                 SourceStatusListener.Status.CONNECTED -> R.drawable.avd_anim_connected_circle
                 SourceStatusListener.Status.DISCONNECTED -> R.drawable.baseline_circle_red_700_24dp
-                SourceStatusListener.Status.READY -> R.drawable.baseline_wifi_grey_600_24dp
+                SourceStatusListener.Status.READY -> R.drawable.avd_anim_ready
                 SourceStatusListener.Status.CONNECTING -> R.drawable.avd_anim_connecting
                 else -> sourceStatusIconDefault
             })
@@ -176,7 +177,7 @@ class SourceRowView internal constructor(
     private fun updateBattery() {
         batteryLevelCache.applyIfChanged(sourceState?.batteryLevel ?: Float.NaN) {
             mBatteryLabel.setImageResource(when {
-                it.isNaN() -> R.drawable.baseline_battery_unknown_black_24dp
+                it.isNaN() -> R.drawable.baseline_battery_unknown_gray_24dp
                 it < 0.1 -> R.drawable.baseline_battery_alert_red_700_24dp
                 it < 0.3 -> R.drawable.baseline_battery_2_bar_red_700_24dp
                 it < 0.6 -> R.drawable.baseline_battery_3_bar_orange_700_24dp
