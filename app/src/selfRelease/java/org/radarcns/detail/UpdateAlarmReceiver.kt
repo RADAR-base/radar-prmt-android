@@ -59,6 +59,7 @@ class UpdateAlarmReceiver: BroadcastReceiver() {
                     PendingIntent.FLAG_CANCEL_CURRENT.toPendingIntentFlag()
                 ))
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    @Suppress("DEPRECATION")
                     setPriority(Notification.PRIORITY_MAX)
                 }
             }
