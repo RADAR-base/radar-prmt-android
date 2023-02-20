@@ -110,5 +110,9 @@
         <key>contact_email</key>
         <value>myemail@email.com</value>
     </entry>
+    <entry>
+        <key>oauth2_client_secret</key>
+        <value>saturday$SHARE$scale</value>
+    </entry>
 </defaultsMap>
 <!-- END xml_defaults -->
