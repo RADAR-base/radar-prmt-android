@@ -96,20 +96,38 @@ dependencies {
     implementation "org.radarbase:radar-android-phone:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-phone-usage:$radarCommonsVersion"
     selfReleaseImplementation "org.radarbase:radar-android-phone-telephony:$radarCommonsVersion"
-    implementation "org.radarbase:radar-android-empatica:$radarCommonsVersion"
+   // implementation "org.radarbase:radar-android-empatica:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-application-status:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-weather:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-audio:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-faros:$radarCommonsVersion"
-    implementation "org.radarbase:radar-android-ppg:$radarCommonsVersion"
+    //implementation "org.radarbase:radar-android-ppg:$radarCommonsVersion"
 
     implementation 'androidx.lifecycle:lifecycle-process:2.5.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     testImplementation 'junit:junit:4.13.2'
     testRuntimeOnly 'org.slf4j:slf4j-simple:2.0.3'
+
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:31.2.2')
+
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+
+    // Add the dependency for the Firebase SDK for Google Analytics
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    // TODO: Add the dependencies for any other Firebase products you want to use
+    // See https://firebase.google.com/docs/android/setup#available-libraries
+    // For example, add the dependencies for Firebase Authentication and Cloud Firestore
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation 'com.google.firebase:firebase-core:21.1.1'
+
+
+
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

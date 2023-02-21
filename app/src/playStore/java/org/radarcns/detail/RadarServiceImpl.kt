@@ -27,27 +27,27 @@ import org.radarbase.android.source.SourceProvider
 import org.radarbase.monitor.application.ApplicationStatusProvider
 import org.radarbase.passive.audio.OpenSmileAudioProvider
 import org.radarbase.passive.bittium.FarosProvider
-import org.radarbase.passive.empatica.E4Provider
+//import org.radarbase.passive.empatica.E4Provider
 import org.radarbase.passive.phone.PhoneBluetoothProvider
 import org.radarbase.passive.phone.PhoneContactListProvider
 import org.radarbase.passive.phone.PhoneLocationProvider
 import org.radarbase.passive.phone.PhoneSensorProvider
 import org.radarbase.passive.phone.usage.PhoneUsageProvider
-import org.radarbase.passive.ppg.PhonePpgProvider
+//import org.radarbase.passive.ppg.PhonePpgProvider
 import org.radarbase.passive.weather.WeatherApiProvider
 
 class RadarServiceImpl : RadarService() {
     override val plugins: List<SourceProvider<*>> = listOf(
         ApplicationStatusProvider(this),
         OpenSmileAudioProvider(this),
-        E4Provider(this),
+       // E4Provider(this),
         FarosProvider(this),
         PhoneBluetoothProvider(this),
         PhoneContactListProvider(this),
         PhoneLocationProvider(this),
         PhoneSensorProvider(this),
         PhoneUsageProvider(this),
-        PhonePpgProvider(this),
+       // PhonePpgProvider(this),
         WeatherApiProvider(this),
     )
 
