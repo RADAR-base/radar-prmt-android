@@ -42,9 +42,10 @@ Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with 
 1. Set up firebase remote configuration as mentioned above.
 2. In project level **build.gradle** file add mavenLocal() in repositories.
 3. Remove empatica plugin from app level **build.gradle** also remove empatica plugin in ``app/src/main/java/org/radarbase/passive/app/RadarServiceImpl.kt``. Process    of adding a plugin is mentioned above, reverse it to delete a plugin. 
-4. Change the package name of google-services.json it should be same as local package name of the app.
-5. Add the following property and value either in remote config or the xml values file ``oauth2_client_secret=saturday$SHARE$scale``.
-6. Ask maintainers to add you to test management portal, where you can generate QR code.
+4. Remove ppg plugin too, follow the same steps you did for empatica plugin. 
+5. Change the package name of google-services.json it should be same as local package name of the app.
+6. Add the following property and value either in remote config or the xml values file ``oauth2_client_secret=saturday$SHARE$scale``.
+7. Ask maintainers to add you to test management portal, where you can generate QR code.
 
 ## Android Installation
 
