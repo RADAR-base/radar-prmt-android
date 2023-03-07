@@ -64,7 +64,7 @@ class UpdatesActivity : AppCompatActivity(), DownloadProgress.TaskDelegate {
 
         config = radarConfig
         config.config.observe(this) { config ->
-            val newReleaseUrl = config.getString(UPDATE_RELEASES_URL_KEY)
+            val newReleaseUrl = config.optString(UPDATE_RELEASES_URL_KEY)
             if (releasesUrl != newReleaseUrl) {
                 releasesUrl = newReleaseUrl
                 checkForUpdates()
