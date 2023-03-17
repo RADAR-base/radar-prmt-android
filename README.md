@@ -39,14 +39,8 @@ Note - Set the `unsafe_kafka_connection` parameter to `true` if the server with 
 
 ### Build and Deploy RADAR-pRMT on target device 
 
-1. Set up firebase remote configuration as mentioned above.
-2. Remove empatica plugin from app level **build.gradle** also remove empatica plugin in ``app/src/main/java/org/radarbase/passive/app/RadarServiceImpl.kt``. Process    of adding a plugin is mentioned above, reverse it to delete a plugin. 
-3. Remove ppg plugin too, follow the same steps you did for empatica plugin. 
-4. Change the package name in google-services.json it should be same as local package name of the app.
-5. Add the following property and value either in remote config or the xml values file ``oauth2_client_secret=saturday$SHARE$scale``.
-6. Ask maintainers to add you to test management portal, where you can generate QR code.
-
-If you want to test radar-commons (which is not released), you may have to publish it first to mavenLocal so that it can be included in the build as dependency in the pRMT app.
+1. Remove empatica plugin from app level **build.gradle** also remove empatica plugin in ``app/src/main/java/org/radarbase/passive/app/RadarServiceImpl.kt``. Process    of adding a plugin is mentioned above, reverse it to delete a plugin. 
+2. In the latest build, because of RenderScript being outdated, we can no longer publish radar-android-ppg. You can remove it from dependencies, and in                  RadarServiceImpl, remove it from the list of accepted plugins.
 
 ## Android Installation
 
