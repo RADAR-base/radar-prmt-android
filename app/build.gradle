@@ -11,8 +11,8 @@ android {
         applicationId 'org.radarcns.detail'
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 60
-        versionName '1.1.1-SNAPSHOT'
+        versionCode 61
+        versionName '1.1.2'
         manifestPlaceholders = ['appAuthRedirectScheme': 'org.radarbase.passive.app']
         multiDexEnabled true
         ndkVersion "23.1.7779620"
@@ -68,13 +68,13 @@ configurations.all {
 repositories {
     flatDir { dirs 'libs' }
     google()
-    mavenLocal()
+//    mavenLocal()
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url 'https://repo.thehyve.nl/content/repositories/releases' }
 }
 
-ext.radarCommonsVersion = '1.2.2'
+ext.radarCommonsVersion = '1.2.3-SNAPSHOT'
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"

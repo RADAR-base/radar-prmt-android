@@ -221,7 +221,7 @@
             android:background="?attr/colorPrimary"
             app:contentInsetLeft="@dimen/size_medium"
             app:contentInsetStart="@dimen/size_medium"
-            app:logo="@drawable/avd_icon_radar"
+            app:logo="@drawable/vd_logo_white"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
             app:titleMarginStart="@dimen/size_xlarge">

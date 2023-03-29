@@ -31,7 +31,7 @@
             android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
-            app:srcCompat="@drawable/avd_anim_logo_splash_primary"
+            app:srcCompat="@drawable/avd_logo_splash"
             android:contentDescription="@string/radar_base_logo" />
 
     <TextView

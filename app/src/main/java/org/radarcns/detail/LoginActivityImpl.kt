@@ -19,6 +19,8 @@ package org.radarcns.detail
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -26,8 +28,6 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
@@ -41,8 +41,8 @@ import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
-import org.radarbase.producer.AuthenticationException
 import org.radarbase.android.widget.addPrivacyPolicy
+import org.radarbase.producer.AuthenticationException
 import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -51,10 +51,12 @@ import java.net.MalformedURLException
 import java.net.URI
 
 class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
+    private var startActivityFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
 
     private lateinit var networkReceiver: NetworkConnectedReceiver
+    private var networkIsConnected = false
     private var didCreate: Boolean = false
 
     private lateinit var binding: ActivityLoginBinding
@@ -62,13 +64,12 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private lateinit var qrCodeScanner: QrCodeScanner
     private lateinit var dialog: Dialog
 
-    private lateinit var scanButton: MaterialButton
-    private lateinit var credentialButton: MaterialButton
-    private lateinit var loader: CircularProgressIndicator
+    private lateinit var mainHandler: Handler
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
         didModifyBaseUrl = false
+        mainHandler = Handler(Looper.getMainLooper())
         super.onCreate(savedInstanceBundle)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -80,14 +81,12 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                 ?.also { parseQrCode(it) }
         }
 
-        scanButton = findViewById(R.id.scan_button)
-        scanButton.setOnClickListener { v -> scan(v) }
-
-        credentialButton = findViewById(R.id.enter_credentials_button)
-        credentialButton.setOnClickListener { v -> enterCredentials(v) }
-
-        loader = findViewById(R.id.loader)
-        loader.visibility = View.GONE
+        with(binding) {
+            scanButton.setOnClickListener { v -> scan(v) }
+            enterCredentialsButton.setOnClickListener { v -> enterCredentials(v) }
+            loader.visibility = View.GONE
+        }
+        checkNetworkConnection()
 
         addPrivacyPolicy(binding.loginPrivacyPolicyUrl)
     }
@@ -164,16 +163,21 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     override fun onNetworkConnectionChanged(state: NetworkConnectedReceiver.NetworkState) {
         logger.info("Network change: {}", state.isConnected)
-        runOnUiThread {
-            binding.apply {
-                if (state.isConnected) {
-                    scanButton.isEnabled = true
-                    messageText.text = ""
-                } else {
-                    scanButton.isEnabled = false
-                    messageText.setText(R.string.no_connection)
-                }
-            }
+        networkIsConnected = state.isConnected
+        mainHandler.post {
+            checkNetworkConnection()
+        }
+    }
+
+    private fun checkNetworkConnection() = with(binding) {
+        if (networkIsConnected) {
+            scanButton.isEnabled = true
+            enterCredentialsButton.isEnabled = true
+            messageText.text = ""
+        } else {
+            scanButton.isEnabled = false
+            enterCredentialsButton.isEnabled = false
+            messageText.setText(R.string.no_connection)
         }
     }
 
@@ -188,7 +192,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         canLogin = true
 
         logger.error("Failed to log in with {}", manager, ex)
-        runOnUiThread {
+        mainHandler.post {
             onDoneProcessing()
             val res: Int = when (ex) {
                 is QrException -> R.string.login_failed_qr
@@ -204,22 +208,33 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     override fun loginSucceeded(manager: LoginManager?, authState: AppAuthState) {
 
-        runOnUiThread {
-            onDoneProcessing()
-            if (authState.isPrivacyPolicyAccepted) {
-                super.loginSucceeded(manager, authState)
-                if (!didCreate) {
-                    overridePendingTransition(0, 0)
-                }
-            } else {
+        mainHandler.post {
+            startActivityFuture?.let {
+                mainHandler.removeCallbacks(it)
+                startActivityFuture = null
+            }
+            val runnable = Runnable {
+                onDoneProcessing()
                 if (supportFragmentManager.fragments.any { it.id == R.id.privacy_policy_fragment }) {
                     logger.info("Privacy policy fragment already started.")
+                } else if (authState.isPrivacyPolicyAccepted) {
+                    super.loginSucceeded(manager, authState)
+                    if (!didCreate) {
+                        overridePendingTransition(0, 0)
+                    }
                 } else {
                     logger.info("Login succeeded. Calling privacy-policy fragment")
                     startPrivacyPolicyFragment(authState)
                 }
+                startActivityFuture = null
             }
+            startActivityFuture = runnable
+            mainHandler.postDelayed(runnable, 100L)
         }
+    }
+
+    override fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) {
+        TODO("Not yet implemented")
     }
 
     private fun startPrivacyPolicyFragment(state: AppAuthState) {
@@ -317,19 +332,17 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         dialog.show()
     }
 
-    private fun setLoader(show: Boolean) {
+    private fun setLoader(show: Boolean) = with(binding) {
         if (show) {
             scanButton.visibility = View.GONE
-            credentialButton.visibility = View.GONE
+            enterCredentialsButton.visibility = View.GONE
             loader.visibility = View.VISIBLE
         } else {
             scanButton.visibility = View.VISIBLE
-            credentialButton.visibility = View.VISIBLE
+            enterCredentialsButton.visibility = View.VISIBLE
             loader.visibility = View.GONE
         }
     }
-
-     //override fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) {}
 
     companion object {
         private val logger = LoggerFactory.getLogger(LoginActivityImpl::class.java)

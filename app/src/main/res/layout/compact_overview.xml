@@ -47,7 +47,7 @@
                             android:paddingStart="@dimen/size_medium"
                             android:paddingEnd="@dimen/size_medium"
                             android:scaleType="centerCrop"
-                            app:srcCompat="@drawable/avd_anim_logo_heartbeat" />
+                            app:srcCompat="@drawable/vd_logo" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -195,9 +195,10 @@
             android:id="@+id/statusServerMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#eee"
+            android:background="@color/colorBackgroundSecondary"
             android:padding="@dimen/size_medium"
             android:text="@string/sync_default"
+            style="@style/TextAppearance.MaterialComponents.Body2"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
@@ -216,7 +217,7 @@
             android:background="?attr/colorPrimary"
             app:contentInsetLeft="@dimen/size_medium"
             app:contentInsetStart="@dimen/size_medium"
-            app:logo="@drawable/avd_icon_radar"
+            app:logo="@drawable/vd_logo_white"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
             app:titleMarginStart="@dimen/size_xlarge">

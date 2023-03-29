@@ -4,6 +4,8 @@
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" tools:replace="required" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" tools:replace="required" />
 
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 

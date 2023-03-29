@@ -88,7 +88,10 @@
                     android:id="@+id/message_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/size_small" />
+                    android:layout_marginTop="@dimen/size_small"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorPrimary"
+                    style="@style/TextAppearance.MaterialComponents.Body2"/>
 
                 <TextView
                     android:id="@+id/loginPrivacyPolicyUrl"
@@ -117,7 +120,7 @@
             android:background="?attr/colorPrimary"
             app:contentInsetLeft="@dimen/size_medium"
             app:contentInsetStart="@dimen/size_medium"
-            app:logo="@drawable/avd_icon_radar"
+            app:logo="@drawable/vd_logo_white"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT"
             app:titleMarginStart="@dimen/size_xlarge">

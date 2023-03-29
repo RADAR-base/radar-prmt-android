@@ -19,10 +19,6 @@ package org.radarcns.detail
 import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.drawable.Animatable2
-import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.Drawable
-import android.os.Build
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
@@ -43,7 +39,7 @@ import org.slf4j.LoggerFactory
  */
 class SourceRowView internal constructor(
     private val mainActivity: MainActivity,
-    provider: SourceProvider<*>, root: ViewGroup
+    private val provider: SourceProvider<*>, root: ViewGroup
 ) {
     private val connection: SourceServiceConnection<*> = provider.connection
     private val mStatusIcon: ImageView
@@ -136,10 +132,11 @@ class SourceRowView internal constructor(
         sourceName = when (sourceState?.status) {
             SourceStatusListener.Status.CONNECTED,
             SourceStatusListener.Status.READY,
-                SourceStatusListener.Status.CONNECTING -> connection.sourceName
-                        ?.replace("Empatica", "")
-                        ?.trim { c -> c <= ' ' }
-                else -> null
+            SourceStatusListener.Status.CONNECTING -> connection.sourceName
+                    ?.replace("Empatica", "")
+                    ?.trim { c -> c <= ' ' }
+            SourceStatusListener.Status.DISCONNECTED -> provider.displayName
+            else -> null
         }
     }
 
@@ -154,10 +151,10 @@ class SourceRowView internal constructor(
             logger.info("Source status is {}", status)
 
             mStatusIcon.setImageResource(when(status) {
-                SourceStatusListener.Status.CONNECTED -> R.drawable.avd_anim_connected_circle
+                SourceStatusListener.Status.CONNECTED -> R.drawable.avd_connected_circle
                 SourceStatusListener.Status.DISCONNECTED -> R.drawable.baseline_circle_red_700_24dp
                 SourceStatusListener.Status.READY -> R.drawable.avd_anim_ready
-                SourceStatusListener.Status.CONNECTING -> R.drawable.avd_anim_connecting
+                SourceStatusListener.Status.CONNECTING -> R.drawable.avd_connecting
                 else -> sourceStatusIconDefault
             })
             mStatusIcon.repeatAnimation()
