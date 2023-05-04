@@ -41,7 +41,7 @@ class MainActivityImpl : MainActivity() {
         return MainActivityViewImpl(this)
     }
 
-    override fun loginFailed(manager: LoginManager?, ex: Exception?) {
+    fun loginFailed(manager: LoginManager?, ex: Exception?) {
         TODO("Not yet implemented")
     }
 

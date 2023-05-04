@@ -32,8 +32,8 @@ class PackageUtil(private val context: Context) {
     fun assetIsUpdate(asset: OnlineAsset): Boolean {
         return try {
             val currentPackageVersion = SemVer.parse(installedPackageVersion ?: return false)
-            val assetTag = if (asset.tag.startsWith("v")) asset.tag.substring(0) else asset.tag
-            val updatePackageVersion = SemVer.parse(assetTag.drop(1))
+            val assetTag = asset.tag.removePrefix("v")
+            val updatePackageVersion = SemVer.parse(assetTag)
 
             updatePackageVersion > currentPackageVersion
         } catch (e: Throwable) {

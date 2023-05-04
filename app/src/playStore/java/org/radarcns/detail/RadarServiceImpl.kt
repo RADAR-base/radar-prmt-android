@@ -17,6 +17,7 @@
 package org.radarcns.detail
 
 import android.Manifest.permission.RECEIVE_BOOT_COMPLETED
+import android.Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
 import android.Manifest.permission.SYSTEM_ALERT_WINDOW
 import android.os.Build
 import org.radarbase.android.RadarConfiguration
@@ -53,9 +54,7 @@ class RadarServiceImpl : RadarService() {
         get() = buildList {
             addAll(super.servicePermissions)
             add(RECEIVE_BOOT_COMPLETED)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                add(REQUEST_IGNORE_BATTERY_OPTIMIZATIONS_COMPAT)
-            }
+            add(REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
             if (configuration.latestConfig.getBoolean(START_AT_BOOT, false)) {
                 add(SYSTEM_ALERT_WINDOW)
             }
