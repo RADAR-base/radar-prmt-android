@@ -33,7 +33,7 @@ class PackageUtil(private val context: Context) {
         return try {
             val currentPackageVersion = SemVer.parse(installedPackageVersion ?: return false)
             val assetTag = if (asset.tag.startsWith("v")) asset.tag.substring(0) else asset.tag
-            val updatePackageVersion = SemVer.parse(assetTag)
+            val updatePackageVersion = SemVer.parse(assetTag.drop(1))
 
             updatePackageVersion > currentPackageVersion
         } catch (e: Throwable) {

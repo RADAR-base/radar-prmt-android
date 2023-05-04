@@ -233,7 +233,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    override fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) {
+    fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) {
         TODO("Not yet implemented")
     }
 
