@@ -9,7 +9,6 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.os.SystemClock
-import androidx.annotation.Nullable
 import org.radarbase.android.RadarApplication
 import org.radarbase.android.util.toPendingIntentFlag
 import org.slf4j.LoggerFactory
@@ -82,8 +81,7 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
 
     override fun getType(uri: Uri): String? = null
 
-    @Nullable
-    override fun insert(uri: Uri, @Nullable values: ContentValues?): Uri? {
+    override fun insert(uri: Uri, values: ContentValues?): Uri? {
         return null
     }
 

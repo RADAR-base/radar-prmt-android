@@ -6,6 +6,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
+import com.google.android.material.button.MaterialButton
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
 
@@ -25,27 +26,29 @@ class SettingsActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        val enableDataButton: SwitchCompat = findViewById(R.id.enableDataSwitch)
+        val enableDataButton: SwitchCompat = findViewById(R.id.enable_data_switch)
         enableDataButton.setOnCheckedChangeListener { _, isChecked ->
             config.put(RadarConfiguration.SEND_ONLY_WITH_WIFI, !isChecked)
             config.persistChanges()
         }
-        val enableDataPriorityButton: SwitchCompat = findViewById(R.id.enableDataHighPrioritySwitch)
+        val enableDataPriorityButton: SwitchCompat = findViewById(R.id.enable_data_high_priority_switch)
         enableDataPriorityButton.setOnCheckedChangeListener { _, isChecked ->
             config.put(RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY, isChecked)
             config.persistChanges()
         }
 
-        config.config.observe(this, { config ->
+        config.config.observe(this) { config ->
             val useData = !config.getBoolean(RadarConfiguration.SEND_ONLY_WITH_WIFI, true)
             val useHighPriority = config.getBoolean(RadarConfiguration.SEND_OVER_DATA_HIGH_PRIORITY, false)
             enableDataButton.isChecked = useData
             enableDataPriorityButton.isEnabled = useData
             enableDataPriorityButton.isChecked = useData && useHighPriority
-        })
+        }
+
+        findViewById<MaterialButton>(R.id.reset_settings_button).setOnClickListener { v -> startReset(v) }
     }
 
-    fun startReset(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun startReset(@Suppress("UNUSED_PARAMETER") view: View) {
         AlertDialog.Builder(this).apply {
             setTitle("Reset")
             setMessage("Do you really want to reset to default settings?")

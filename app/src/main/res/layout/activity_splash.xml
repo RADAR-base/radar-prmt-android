@@ -15,42 +15,41 @@
   ~ limitations under the License.
   -->
 
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="20pt"
+    android:layout_margin="@dimen/size_medium"
     android:gravity="center"
-    tools:context=".SplashActivityImpl"
-    android:id="@+id/constraintLayout">
+    android:orientation="vertical"
+    tools:context=".SplashActivityImpl">
 
-    <ImageView
-        android:id="@+id/splash_image"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="32dp"
-        android:adjustViewBounds="true"
-        android:src="@mipmap/ic_launcher"
-        app:layout_constraintBottom_toTopOf="@id/splashMessageText"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toTopOf="@id/constraintLayout"
-        app:layout_constraintVertical_bias="0.503"
-        android:contentDescription="@string/radar_cns_logo" />
+        <ImageView
+            android:id="@+id/splash_image"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            app:srcCompat="@drawable/avd_logo_splash"
+            android:contentDescription="@string/radar_base_logo" />
 
     <TextView
-        android:id="@+id/splashMessageText"
+        android:id="@+id/splash_message_text"
+        style="@style/TextAppearance.MaterialComponents.Body2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
         android:gravity="center"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/splash_image"
-        app:layout_constraintBottom_toBottomOf="@id/constraintLayout"/>
+        android:layout_marginTop="@dimen/size_medium" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/splash_privacy_policy_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/size_medium"
+        android:gravity="center"
+        android:text="@string/privacy_policy"
+        android:textColor="@color/colorAccent"
+        />
+
+</LinearLayout>

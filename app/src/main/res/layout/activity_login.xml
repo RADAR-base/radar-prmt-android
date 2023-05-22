@@ -14,64 +14,116 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="20pt"
-    android:gravity="center"
-    tools:context=".LoginActivityImpl"
-    android:id="@+id/constraintLayout">
+    tools:context=".LoginActivityImpl">
 
-    <ImageView
-        android:id="@+id/splash_image"
-        android:layout_width="240dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="32dp"
-        android:adjustViewBounds="true"
-        android:src="@mipmap/ic_launcher"
-        app:layout_constraintBottom_toTopOf="@id/scanButton"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toTopOf="@id/constraintLayout"
-        app:layout_constraintVertical_bias="0.503"
-        android:contentDescription="@string/radar_cns_logo"
-        app:layout_constraintVertical_chainStyle="spread"/>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/size_medium"
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/scanButton"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:onClick="scan"
-        android:text="@string/scan_qr_button"
-        app:layout_constraintBottom_toTopOf="@id/enterCredentialsButton"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/splash_image"
-        app:layout_constraintVertical_chainStyle="spread" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="?attr/actionBarSize"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/enterCredentialsButton"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:onClick="enterCredentials"
-        android:text="@string/enter_credentials"
-        app:layout_constraintBottom_toTopOf="@id/messageText"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/scanButton"
-        app:layout_constraintVertical_chainStyle="spread"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="@dimen/size_medium">
 
-    <TextView
-        android:id="@+id/messageText"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_xlarge"
+                    android:text="@string/login_title"
+                    style="@style/TextAppearance.MaterialComponents.Headline6" />
+
+                <TextView
+                    android:id="@+id/input_user_id"
+                    style="@style/TextAppearance.MaterialComponents.Body2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:gravity="center"
+                    android:text="@string/login_description"
+                    android:textAlignment="center" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/scan_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
+                    android:layout_marginTop="@dimen/size_medium"
+                    android:text="@string/scan_qr_button" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/enter_credentials_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:text="@string/enter_credentials" />
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/loader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:indeterminate="true"
+                    android:visibility="gone"/>
+
+                <TextView
+                    android:id="@+id/message_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_small"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorPrimary"
+                    style="@style/TextAppearance.MaterialComponents.Body2"/>
+
+                <TextView
+                    android:id="@+id/loginPrivacyPolicyUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_medium"
+                    android:gravity="center"
+                    android:text="@string/privacy_policy"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorAccent" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="@id/constraintLayout"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@id/enterCredentialsButton" />
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:contentInsetLeft="@dimen/size_medium"
+            app:contentInsetStart="@dimen/size_medium"
+            app:logo="@drawable/vd_logo_white"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:title="RADAR pRMT"
+            app:titleMarginStart="@dimen/size_xlarge">
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

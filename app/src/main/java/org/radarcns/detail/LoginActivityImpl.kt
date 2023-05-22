@@ -16,18 +16,20 @@
 
 package org.radarcns.detail
 
-import android.app.AlertDialog
-import android.app.ProgressDialog
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
-import android.view.KeyEvent
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
-import android.widget.LinearLayout.VERTICAL
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import androidx.fragment.app.commit
+import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
@@ -39,7 +41,7 @@ import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
-import org.radarbase.android.widget.TextDrawable
+import org.radarbase.android.widget.addPrivacyPolicy
 import org.radarbase.producer.AuthenticationException
 import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
@@ -49,19 +51,25 @@ import java.net.MalformedURLException
 import java.net.URI
 
 class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
+    private var startActivityFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
-    private var progressDialog: ProgressDialog? = null
+
     private lateinit var networkReceiver: NetworkConnectedReceiver
+    private var networkIsConnected = false
     private var didCreate: Boolean = false
 
     private lateinit var binding: ActivityLoginBinding
 
     private lateinit var qrCodeScanner: QrCodeScanner
+    private lateinit var dialog: Dialog
+
+    private lateinit var mainHandler: Handler
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
         didModifyBaseUrl = false
+        mainHandler = Handler(Looper.getMainLooper())
         super.onCreate(savedInstanceBundle)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -72,6 +80,15 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             value?.takeTrimmedIfNotEmpty()
                 ?.also { parseQrCode(it) }
         }
+
+        with(binding) {
+            scanButton.setOnClickListener { v -> scan(v) }
+            enterCredentialsButton.setOnClickListener { v -> enterCredentials(v) }
+            loader.visibility = View.GONE
+        }
+        checkNetworkConnection()
+
+        addPrivacyPolicy(binding.loginPrivacyPolicyUrl)
     }
 
     override fun onResume() {
@@ -86,7 +103,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     private fun parseQrCode(qrCode: String) {
-        onProcessing(R.string.logging_in)
+        onProcessing()
         logger.info("Read tokenUrl: {}", qrCode)
 
         if (qrCode.isEmpty()) {
@@ -135,56 +152,48 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    private fun onProcessing(titleResource: Int) {
-        progressDialog = ProgressDialog(this).apply {
-            isIndeterminate = true
-            setTitle(titleResource)
-            show()
-        }
+    private fun onProcessing() {
+        setLoader(true)
     }
 
     private fun onDoneProcessing() {
-        progressDialog?.apply {
-            logger.info("Closing progress window")
-            cancel()
-        }
-        progressDialog = null
+        setLoader(false)
+        logger.info("Closing progress window")
     }
 
     override fun onNetworkConnectionChanged(state: NetworkConnectedReceiver.NetworkState) {
         logger.info("Network change: {}", state.isConnected)
-        runOnUiThread {
-            binding.apply {
-                if (state.isConnected) {
-                    scanButton.isEnabled = true
-                    messageText.text = ""
-                } else {
-                    scanButton.isEnabled = false
-                    messageText.setText(R.string.no_connection)
-                }
-            }
+        networkIsConnected = state.isConnected
+        mainHandler.post {
+            checkNetworkConnection()
         }
     }
 
-    fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun checkNetworkConnection() = with(binding) {
+        if (networkIsConnected) {
+            scanButton.isEnabled = true
+            enterCredentialsButton.isEnabled = true
+            messageText.text = ""
+        } else {
+            scanButton.isEnabled = false
+            enterCredentialsButton.isEnabled = false
+            messageText.setText(R.string.no_connection)
+        }
+    }
+
+    private fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
         if (canLogin) {
             canLogin = false
             qrCodeScanner.start()
         }
     }
 
-    @Deprecated(message = "Super onActivityResult is deprecated")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        data ?: return
-        qrCodeScanner.onActivityResult(requestCode, resultCode, data)
-    }
-
     override fun loginFailed(manager: LoginManager?, ex: Exception?) {
         canLogin = true
-        onDoneProcessing()
+
         logger.error("Failed to log in with {}", manager, ex)
-        runOnUiThread {
+        mainHandler.post {
+            onDoneProcessing()
             val res: Int = when (ex) {
                 is QrException -> R.string.login_failed_qr
                 is AuthenticationException -> R.string.login_failed_authentication
@@ -198,21 +207,29 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     override fun loginSucceeded(manager: LoginManager?, authState: AppAuthState) {
-        onDoneProcessing()
-        runOnUiThread {
-            if (authState.isPrivacyPolicyAccepted) {
-                super.loginSucceeded(manager, authState)
-                if (!didCreate) {
-                    overridePendingTransition(0, 0)
-                }
-            } else {
+
+        mainHandler.post {
+            startActivityFuture?.let {
+                mainHandler.removeCallbacks(it)
+                startActivityFuture = null
+            }
+            val runnable = Runnable {
+                onDoneProcessing()
                 if (supportFragmentManager.fragments.any { it.id == R.id.privacy_policy_fragment }) {
                     logger.info("Privacy policy fragment already started.")
+                } else if (authState.isPrivacyPolicyAccepted) {
+                    super.loginSucceeded(manager, authState)
+                    if (!didCreate) {
+                        overridePendingTransition(0, 0)
+                    }
                 } else {
                     logger.info("Login succeeded. Calling privacy-policy fragment")
                     startPrivacyPolicyFragment(authState)
                 }
+                startActivityFuture = null
             }
+            startActivityFuture = runnable
+            mainHandler.postDelayed(runnable, 100L)
         }
     }
 
@@ -232,9 +249,9 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             this.id = id
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         })
-        supportFragmentManager.beginTransaction().add(id, fragment).apply {
-            addToBackStack(null)
-        }.commit()
+        supportFragmentManager.commit {
+            add(id, fragment)
+        }
     }
 
     override fun onAcceptPrivacyPolicy() {
@@ -242,6 +259,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             updateState {
                 isPrivacyPolicyAccepted = true
             }
+            logger.debug("Enabling Firebase Analytics")
+            FirebaseAnalytics.getInstance(this@LoginActivityImpl).setAnalyticsCollectionEnabled(true)
             applyState {
                 logger.info("Updating privacyPolicyAccepted {}", this)
                 super.loginSucceeded(null, this)
@@ -249,71 +268,76 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    fun enterCredentials(@Suppress("UNUSED_PARAMETER") view: View) {
-        val baseUrlInput = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
-            setCompoundDrawables(TextDrawable(this, "https://"), null, null, null)
-            setOnKeyListener { _, _, e ->
-                if (e.action == KeyEvent.ACTION_UP) {
-                    didModifyBaseUrl = true
-                }
-                true
+    override fun onRejectPrivacyPolicy() {
+        authConnection.applyBinder {
+            updateState {
+                isPrivacyPolicyAccepted = false
             }
+            invalidate(null, true)
         }
+        val intent = Intent(this, LoginActivityImpl::class.java)
+        finish()
+        startActivity(intent.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_TASK_ON_HOME or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        })
+    }
 
-        radarConfig.config.observe(this, { config ->
+    private fun enterCredentials(@Suppress("UNUSED_PARAMETER") view: View) {
+        dialog = Dialog(this)
+        dialog.setContentView(R.layout.dialog_login_token)
+
+        val baseUrlInput = dialog.findViewById<TextInputLayout>(R.id.baseUrl)
+        radarConfig.config.observe(this) { config ->
             if (!didModifyBaseUrl) {
                 val baseUrl = config.getString(BASE_URL_KEY, "").toHttpUrlOrNull() ?: return@observe
-                val urlString = baseUrl.toString().substring(baseUrl.scheme.length + 3)
-                baseUrlInput.setText(urlString)
+                var urlString = baseUrl.toString().substring(baseUrl.scheme.length + 3)
+                if (urlString.endsWith("/")) {
+                    urlString = urlString.substring(0, urlString.length - 1)
+                }
+                baseUrlInput.editText?.setText(urlString)
             }
-        })
-
-        val tokenInput = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_TEXT
         }
 
-        // Layout containing label and input
-        val layout = LinearLayout(this).apply {
-            orientation = VERTICAL
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            setPadding(70, 0, 70, 0)
+        val tokenInput = dialog.findViewById<TextInputLayout>(R.id.token)
 
-            addView(TextView(this@LoginActivityImpl).apply {
-                setText(R.string.enter_credentials_description)
-            })
-            addView(TextView(this@LoginActivityImpl).apply {
-                setText(R.string.label_meta_token)
-            })
-            addView(tokenInput)
-            addView(TextView(this@LoginActivityImpl).apply {
-                setText(R.string.label_base_url)
-            })
-            addView(baseUrlInput)
-        }
+        dialog.findViewById<Button>(R.id.ok_button).setOnClickListener {
 
-        AlertDialog.Builder(this).apply {
-            setTitle(R.string.enter_credentials_title)
-            setView(layout)
-            setPositiveButton(R.string.ok) { dialog, _ ->
-                if (canLogin) {
-                    canLogin = false
-                    applyMpManager { _, mpManager, authState ->
-                        val baseUrl = baseUrlInput.text.toString()
-                                .replace(baseUrlPrefixRegex, "")
-                                .replace(baseUrlPostfixRegex, "")
-                        val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.text}"
-                        try {
-                            mpManager.setTokenFromUrl(authState, url)
-                            dialog.dismiss()
-                        } catch (ex: MalformedURLException) {
-                            loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
-                        }
+            if (canLogin) {
+                canLogin = false
+                applyMpManager { _, mpManager, authState ->
+                    var baseUrl = baseUrlInput.editText?.text.toString()
+                        .replace(baseUrlPrefixRegex, "")
+                        .replace(baseUrlPostfixRegex, "")
+                    if (baseUrl.endsWith("/")) {
+                        baseUrl = baseUrl.substring(0, baseUrl.length - 1)
+                    }
+                    val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.editText?.text}"
+                    try {
+                        mpManager.setTokenFromUrl(authState, url)
+                        dialog.dismiss()
+                    } catch (ex: MalformedURLException) {
+                        loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
                     }
                 }
             }
-            setNegativeButton(R.string.cancel) { dialog, _ -> dialog.cancel() }
-        }.show()
+        }
+
+        dialog.findViewById<Button>(R.id.cancel_button).setOnClickListener {
+            dialog.cancel()
+        }
+        dialog.show()
+    }
+
+    private fun setLoader(show: Boolean) = with(binding) {
+        if (show) {
+            scanButton.visibility = View.GONE
+            enterCredentialsButton.visibility = View.GONE
+            loader.visibility = View.VISIBLE
+        } else {
+            scanButton.visibility = View.VISIBLE
+            enterCredentialsButton.visibility = View.VISIBLE
+            loader.visibility = View.GONE
+        }
     }
 
     companion object {

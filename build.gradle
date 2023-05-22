@@ -1,24 +1,25 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '1.7.20'
+    ext.kotlin_version = '1.8.10'
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.0'
+        classpath 'com.android.tools.build:gradle:7.4.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
-        classpath 'com.google.gms:google-services:4.3.14'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.2'
-        classpath 'com.google.android.gms:oss-licenses-plugin:0.10.5'
+        classpath 'com.google.gms:google-services:4.3.15'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.4'
+        classpath 'com.google.android.gms:oss-licenses-plugin:0.10.6'
     }
 }
 
 plugins {
-    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.github.ben-manes.versions") version "0.45.0"
 }
 
 def isNonStable = { String version ->
@@ -34,5 +35,5 @@ tasks.named("dependencyUpdates").configure {
 }
 
 wrapper {
-    gradleVersion '7.5.1'
+    gradleVersion '8.0'
 }

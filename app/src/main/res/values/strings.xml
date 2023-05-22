@@ -1,10 +1,11 @@
 <resources>
-    <string name="app_name">RADAR-base passive Remote Monitoring</string>
+    <string name="app_name">RADAR pRMT</string>
 
     <string name="ibi_label">IBI</string>
     <string name="emptyText">—</string>
     <string name="temp_label">Temperature</string>
-    <string name="battery_label">Battery</string>    <string name="stop_recording">Stop recording</string>
+    <string name="battery_label">Battery</string>
+    <string name="stop_recording">Stop recording</string>
     <string name="show_heart_rate">Show heart rate</string>
     <string name="reconnect_to_server">Reconnect to server</string>
     <string name="no_devices_connected">No devices connected</string>
@@ -16,15 +17,15 @@
     <string name="request_E4_key">Enter E4 S/N</string>
     <string name="request_group_id">Enter Patient ID</string>
     <string name="button_input">-</string>
-    <string name="header_battery"></string>
-    <string name="header_device_status"></string>
+    <string name="header_battery" />
+    <string name="header_device_status" />
     <string name="header_server_status">Server</string>
     <string name="header_device">Device</string>
     <string name="header_temp">T</string>
     <string name="header_hr">H</string>
     <string name="header_acceleration">A</string>
-    <string name="header_device_key"></string>
-    <string name="header_scan"></string>
+    <string name="header_device_key" />
+    <string name="header_scan" />
     <string name="header_records_sent">Number of records sent</string>
     <string name="label_firebase_status">Firebase</string>
     <string name="label_group_id_input">Patient ID: %1$s</string>
@@ -56,9 +57,9 @@
     <string name="filter_help_label">Enter part of a device name or MAC address. Separate multiple options with commas.</string>
     <string name="firebase_fetching">Fetching remote config</string>
 
-    <string name="patient_separator">Person Details</string>
-    <string name="patient_id_input_dialog">User ID</string>
-    <string name="devices_separator">Sensors</string>
+    <string name="patient_separator">Participant Details</string>
+    <string name="patient_id_input_dialog">Participant ID</string>
+    <string name="devices_separator">Plugins</string>
     <string name="sync_separator">Synchronisation</string>
     <string name="sync_default">-</string>
     <string name="sync_button_description">Synchronize now</string>
@@ -66,17 +67,17 @@
     <string name="login_button">Login on the website</string>
     <string name="logout_button">Log out</string>
     <string name="scan_qr_button">Scan QR code</string>
-    <string name="logging_in">Logging in</string>
+    <string name="logging_in">Logging in …</string>
     <string name="retrieving_configuration">Retrieving configuration</string>
-    <string name="user_id_message">User: %1$s</string>
-    <string name="study_id_message">Study: %1$s</string>
+    <string name="user_id">Participant ID</string>
+    <string name="study_id">Study</string>
     <string name="login_failed_qr">QR code scanning failed. Please try again.</string>
     <string name="login_failed_authentication">Authentication failed. Please login with different credentials or QR code.</string>
     <string name="login_failed_firebase">Settings are incomplete. Please update the Firebase Remote Configuration</string>
     <string name="login_failed_connection">No network connection available. Please connect your phone to the internet and try again.</string>
     <string name="login_failed_mp">Login failed. Please try again later.</string>
     <string name="no_connection">No internet connection available. Please make sure wifi and/or cellphone data is turned on.</string>
-    <string name="info">Info</string>
+    <string name="info">About This App</string>
     <string name="radar_prmt_title">RADAR pRMT</string>
     <string name="licences_button">Used code licences</string>
     <string name="privacy_policy"><u>Privacy Policy</u></string>
@@ -89,13 +90,16 @@
     <string name="button_reset">Reset</string>
     <string name="settings">Settings</string>
     <string name="network_settings_header">Network settings</string>
-    <string name="collected_data_description"><u>Description of collected data</u></string>
-    <string name="general_privacy_policy"><u>General privacy policy</u></string>
-    <string name="policy_acceptance_message">By pressing the “Accept” button, you agree to our General privacy policy and have read our Description of collected data. You agree to send data to <u>%1$s</u>.</string>
+    <string name="collected_data_description">Description of collected data</string>
+    <string name="general_privacy_policy">General Privacy Policy</string>
+    <string name="consent_privacy_policy"><![CDATA[I have read <b><u>General privacy policy</u></b> and agree to it.]]></string>
+    <string name="consent_collected_data"><![CDATA[I have read <b><u>Description of collected data</u></b> and agree to it.]]></string>
+    <string name="consent_server"><![CDATA[I agree to send data to <b><u>%1$s</u></b>.]]></string>
     <string name="filter_open_prmt">Open RADAR pRMT</string>
     <string name="action_header">Actions</string>
     <string name="appUpdated">pRMT successfully updated</string>
     <string name="radar_cns_logo">RADAR-CNS logo</string>
+    <string name="radar_base_logo">RADAR-base logo</string>
     <string name="app_initializing">Initializing…</string>
     <string name="app_authorizing">Authorizing…</string>
     <string name="app_fetching_config">Fetching configuration…</string>
@@ -106,8 +110,8 @@
     <string name="enter_credentials_title">Enter credentials</string>
     <string name="enter_credentials_description">Enter the base URL and token listed in the ManagementPortal Pair App screen.</string>
     <string name="baseUrlPrefix">https://</string>
-    <string name="label_base_url">Base URL:</string>
-    <string name="label_meta_token">Token:</string>
+    <string name="label_base_url">Base URL</string>
+    <string name="label_meta_token">Token</string>
     <string name="person_logo">Person logo</string>
     <string name="accept_privacy_policy_button">Accept</string>
     <string name="privacy_statement_header">Privacy statement</string>
@@ -115,12 +119,14 @@
     <string name="recovered_from_crash">pRMT recovered from a crash and restarted.</string>
     <string name="refresh">Refresh</string>
     <string name="server_base_url">Server</string>
-    <string name="last_upload_succeeded">last upload at %1$s</string>
-    <string name="last_upload_failed">last upload failed at %1$s</string>
+    <string name="last_upload_succeeded">Last upload at %1$s</string>
+    <string name="last_upload_failed">Last upload failed at %1$s</string>
 
     <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
     <string name="bootstart_title">Please start RADAR pRMT</string>
     <string name="bootstart_text">RADAR pRMT has automatically been stopped. Please press this notification to start it again.</string>
+
+    <string name="no_plugins_activated">No plugins activated</string>
 
     <!-- Updates  -->
     <string name="updates">Updates</string>
@@ -132,6 +138,15 @@
     <string name="no">Remind me later</string>
     <string name="dont_show_again">Cancel Update Notifications for a Week</string>
     <string name="start_downloading">Download and Install</string>
-    <string name="update_question"></string>
+    <string name="update_question" />
     <string name="error_in_package_name">Error in package name!</string>
+    <string name="login_description">Log in to pRMT App with the QR Code or Token provided to you.</string>
+    <string name="login_title">Login</string>
+    <string name="title_activity_item_detail_host">ItemDetailHostActivity</string>
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
+    <string name="zero_percent">0%</string>
+    <string name="hundred_percent">100%</string>
+    <string name="reject_privacy_policy_button">Reject</string>
+    <string name="consent">Consent</string>
 </resources>

@@ -19,7 +19,6 @@ package org.radarcns.detail
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.core.app.NotificationCompat.CATEGORY_ALARM
@@ -48,7 +47,7 @@ class MainActivityBootStarter : BroadcastReceiver() {
     }
 
     private fun Context.startApp() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+        if (!Settings.canDrawOverlays(this)) {
             radarApp.notificationHandler.notify(
                 id = BOOT_START_NOTIFICATION_ID,
                 channel = NOTIFICATION_CHANNEL_ALERT,

@@ -18,10 +18,13 @@ package org.radarcns.detail
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.RadarApplication.Companion.radarApp
+import org.radarbase.android.auth.LoginManager
 
 class MainActivityImpl : MainActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,19 +32,29 @@ class MainActivityImpl : MainActivity() {
         super.onCreate(savedInstanceState)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
     override fun createView(): MainActivityView {
         return MainActivityViewImpl(this)
     }
+
+    fun loginFailed(manager: LoginManager?, ex: Exception?) {
+        TODO("Not yet implemented")
+    }
+
 
     fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
         logout(true)
     }
 
-    fun showInfo(@Suppress("UNUSED_PARAMETER")view: View) {
-        startActivity(Intent(this, InfoActivity::class.java))
+    fun showSettings(@Suppress("UNUSED_PARAMETER")item: MenuItem) {
+        startActivity(Intent(this, SettingsActivity::class.java))
     }
 
-    fun showSettings(@Suppress("UNUSED_PARAMETER")view: View) {
-        startActivity(Intent(this, SettingsActivity::class.java))
+    fun showInfo(@Suppress("UNUSED_PARAMETER") item: MenuItem) {
+        startActivity(Intent(this, InfoActivity::class.java))
     }
 }

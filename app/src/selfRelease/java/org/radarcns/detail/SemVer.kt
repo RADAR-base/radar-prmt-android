@@ -1,7 +1,5 @@
 package org.radarcns.detail
 
-import kotlin.math.min
-
 /**
  * Version number in [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html) specification (SemVer).
  *
@@ -12,43 +10,21 @@ import kotlin.math.min
  * @property buildMetadata build metadata.
  */
 data class SemVer(
-        val major: Int = 0,
-        val minor: Int = 0,
-        val patch: Int = 0,
-        val preRelease: String? = null,
-        val buildMetadata: String? = null
+    val major: Int = 0,
+    val minor: Int = 0,
+    val patch: Int = 0,
+    val preRelease: String? = null,
+    val buildMetadata: String? = null
 ) : Comparable<SemVer> {
-    companion object {
-        /**
-         * Parse the version string to [SemVer] data object.
-         * @param version version string.
-         * @throws IllegalArgumentException if the version is not valid.
-         */
-        fun parse(version: String): SemVer {
-            val result = requireNotNull(pattern.matchEntire(version)) { "Invalid version string [$version]" }
-            return SemVer(
-                    major = result.groupValues[1].toInt(),
-                    minor = result.groupValues[2].toInt(),
-                    patch = result.groupValues[3].toInt(),
-                    preRelease = result.groupValues[4].ifEmpty { null },
-                    buildMetadata = result.groupValues[5].ifEmpty { null }
-            )
-        }
-
-        private val numericRegex = Regex("""\d+""")
-        private val extraRegex = Regex("""[\dA-z\-]+(?:\.[\dA-z\-]+)*""")
-        private val pattern = Regex("""(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([\dA-z\-]+(?:\.[\dA-z\-]+)*))?(?:\+([\dA-z\-]+(?:\.[\dA-z\-]+)*))?""")
-    }
-
     init {
         require(major >= 0) { "Major version must be a positive number" }
         require(minor >= 0) { "Minor version must be a positive number" }
         require(patch >= 0) { "Patch version must be a positive number" }
-        if (preRelease != null) require(extraRegex.matches(preRelease)) { "Pre-release version is not valid" }
-        if (buildMetadata != null) require(extraRegex.matches(buildMetadata)) { "Build metadata is not valid" }
+        if (preRelease != null) require(extraRegex matches preRelease) { "Pre-release version is not valid" }
+        if (buildMetadata != null) require(extraRegex matches buildMetadata) { "Build metadata is not valid" }
     }
 
-    override fun toString(): String = buildString {
+    override fun toString(): String = buildString(25) {
         append(major)
         append('.')
         append(minor)
@@ -79,54 +55,62 @@ data class SemVer(
         if (patch > other.patch) return 1
         if (patch < other.patch) return -1
 
-        if (preRelease == null && other.preRelease == null) return 0
-        if (preRelease != null && other.preRelease == null) return -1
-        if (preRelease == null && other.preRelease != null) return 1
-
-        val parts = preRelease.orEmpty().split(".")
-        val otherParts = other.preRelease.orEmpty().split(".")
-
-        val endIndex = min(parts.size, otherParts.size) - 1
-        for (i in 0..endIndex) {
-            val part = parts[i]
-            val otherPart = otherParts[i]
-            if (part == otherPart) continue
-
-            val partIsNumeric = part.isNumeric()
-            val otherPartIsNumeric = otherPart.isNumeric()
-
+        return preRelease.compareExtraVersionTo(other.preRelease) { part, otherPart ->
+            val partInt = part.toIntOrNull()
+            val otherPartInt = otherPart.toIntOrNull()
             when {
-                partIsNumeric && !otherPartIsNumeric -> {
-                    // lower priority
-                    return -1
-                }
-                !partIsNumeric && otherPartIsNumeric -> {
-                    // higher priority
-                    return 1
-                }
-                !partIsNumeric && !otherPartIsNumeric -> {
-                    if (part > otherPart) return 1
-                    if (part < otherPart) return -1
-                }
-                else -> {
-                    val partInt = part.toInt()
-                    val otherPartInt = otherPart.toInt()
-                    if (partInt > otherPartInt) return 1
-                    if (partInt < otherPartInt) return -1
-                }
+                partInt != null && otherPartInt != null -> partInt.compareTo(otherPartInt)
+                // prefer numeric values
+                partInt != null -> -1
+                otherPartInt != null -> 1
+                else -> part.compareTo(otherPart)
             }
-        }
-
-        return if (parts.size == endIndex + 1 && otherParts.size > endIndex + 1) {
-            // parts is ended and otherParts is not ended
-            -1
-        } else if (parts.size > endIndex + 1 && otherParts.size == endIndex + 1) {
-            // parts is not ended and otherParts is ended
-            1
-        } else {
-            0
         }
     }
 
-    private fun String.isNumeric(): Boolean = numericRegex.matches(this)
+    companion object {
+        /**
+         * Parse the version string to [SemVer] data object.
+         * @param version version string.
+         * @throws IllegalArgumentException if the version is not valid.
+         */
+        fun parse(version: String): SemVer {
+            val result = requireNotNull(pattern.matchEntire(version)) { "Invalid version string [$version]" }
+            return SemVer(
+                major = result.groupValues[1].toInt(),
+                minor = result.groupValues[2].toInt(),
+                patch = result.groupValues[3].toInt(),
+                preRelease = result.groupValues[4].ifEmpty { null },
+                buildMetadata = result.groupValues[5].ifEmpty { null },
+            )
+        }
+
+        private val extraRegex = """[\dA-z\-]+(?:\.[\dA-z\-]+)*""".toRegex()
+        private val pattern = """(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([\dA-z\-]+(?:\.[\dA-z\-]+)*))?(?:\+([\dA-z\-]+(?:\.[\dA-z\-]+)*))?""".toRegex()
+
+        private val terminal = Any()
+        private fun String?.splitToSequenceWithTerminal(delimiter: Char): Sequence<Any> = if (this != null) {
+            splitToSequence(delimiter) + terminal
+        } else sequenceOf(terminal)
+
+        private inline fun String?.compareExtraVersionTo(
+            other: String?,
+            crossinline compare: (String, String) -> Int,
+        ): Int {
+            if (this == other) return 0
+
+            return splitToSequenceWithTerminal('.')
+                .zip(other.splitToSequenceWithTerminal('.'))
+                .map { (part, otherPart) ->
+                    when {
+                        part == otherPart -> 0
+                        part === terminal -> -1
+                        otherPart === terminal -> 1
+                        else -> compare(part as String, otherPart as String)
+                    }
+                }
+                .firstOrNull { it != 0 }
+                ?: 0
+        }
+    }
 }

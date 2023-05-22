@@ -49,7 +49,7 @@ class GithubAssetClient(client: OkHttpClient? = null) {
             val tagName = latestRelease.optString("tag_name")
                 .takeIf { it != "" }
                 ?: return null
-            OnlineAsset(browserDownloadUrl, tagName)
+            OnlineAsset(tagName, browserDownloadUrl)
         } catch (t: Throwable) {
             logger.error("Could not parse malformed JSON: \"{}\"", response, t)
             null

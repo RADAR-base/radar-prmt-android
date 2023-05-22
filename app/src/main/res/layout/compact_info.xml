@@ -11,113 +11,114 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/app_name_head"
-                android:text="@string/app_name_head"
-                android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/size_medium">
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimaryDark"
-                android:layout_margin="8dp"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintBottom_toTopOf="@id/version_head"
-                app:layout_constraintTop_toTopOf="@id/constraintLayout"/>
+                android:orientation="vertical"
+                android:layout_margin="@dimen/size_medium">
 
-            <TextView
-                android:id="@+id/app_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                app:layout_constraintStart_toEndOf="@id/app_name_head"
-                app:layout_constraintBaseline_toBaselineOf="@id/app_name_head"/>
+                <TableLayout
+                    android:id="@+id/table"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:text="@string/app_name_head"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
+                            />
+                        <TextView
+                            android:id="@+id/app_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
+                            />
+                    </TableRow>
 
-            <TextView
-                android:id="@+id/version_head"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:text="@string/version"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimaryDark"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintBottom_toTopOf="@id/server_base_url_head"
-                app:layout_constraintTop_toBottomOf="@id/app_name_head"/>
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/version"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
+                            />
+                        <TextView
+                            android:id="@+id/version"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
+                            />
+                    </TableRow>
 
-            <TextView
-                android:id="@+id/version"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="@id/app_name"
-                app:layout_constraintBottom_toBottomOf="@id/version_head"
-                app:layout_constraintBaseline_toBaselineOf="@id/version_head"/>
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/server_base_url"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
+                            />
+                        <TextView
+                            android:id="@+id/server_base_url"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/size_small"
+                            style="@style/TextAppearance.MaterialComponents.Body2"
+                            />
+                    </TableRow>
+                </TableLayout>
 
-            <TextView
-                android:id="@+id/server_base_url_head"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:text="@string/server_base_url"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimaryDark"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintBottom_toTopOf="@id/privacyStatement"
-                app:layout_constraintTop_toBottomOf="@id/version_head"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/generalPrivacyPolicyStatement"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.FloatingActionButton"
+                    android:backgroundTint="@color/colorAccent"
+                    android:text="@string/general_privacy_policy"
+                    android:layout_marginTop="@dimen/size_medium"/>
 
-            <TextView
-                android:id="@+id/server_base_url"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="@id/app_name"
-                app:layout_constraintBottom_toBottomOf="@id/server_base_url_head"
-                app:layout_constraintBaseline_toBaselineOf="@id/server_base_url_head"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/licenses_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/size_medium"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
+                    app:layout_constraintTop_toBottomOf="@id/generalPrivacyPolicyStatement"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:text="@string/licences_button" />
 
-            <TextView
-                android:id="@+id/privacyStatement"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="openPrivacyPolicy"
-                android:text="@string/privacy_policy"
-                android:textColor="#57a0d4"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintTop_toBottomOf="@id/server_base_url_head"
-                app:layout_constraintBottom_toTopOf="@id/licenses_button"/>
+            </LinearLayout>
 
-            <Button
-                android:id="@+id/licenses_button"
-                android:text="@string/licences_button"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:onClick="showLicenses"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="16dp"
-                app:layout_constraintStart_toStartOf="@id/constraintLayout"
-                app:layout_constraintTop_toBottomOf="@id/privacyStatement"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
+        </com.google.android.material.card.MaterialCardView>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent">
+        android:theme="@style/AppTheme.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
-            app:title="Info"
-            android:background="?attr/colorPrimary"
-            android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:contentInsetLeft="@dimen/size_medium"
+            app:contentInsetStart="@dimen/size_medium"
             app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:layout_scrollFlags="scroll|enterAlways">
-        </androidx.appcompat.widget.Toolbar>
+            app:title="@string/info" />
+
     </com.google.android.material.appbar.AppBarLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

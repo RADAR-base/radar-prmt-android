@@ -17,8 +17,11 @@
 package org.radarcns.detail
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -58,10 +61,10 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
     var isInForeground: Boolean = false
         private set
 
-    override val largeIcon: Bitmap
-        get() = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+    val largeIcon: Bitmap
+        get() = AppCompatResources.getDrawable(this, R.mipmap.ic_launcher)!!.toBitmap()
 
-    override val smallIcon = R.drawable.ic_bt_connected
+    val smallIcon = R.drawable.ic_bt_connected
 
     override fun createRemoteConfiguration(): List<RemoteConfig> = listOf(
             FirebaseRemoteConfiguration(this, BuildConfig.DEBUG, R.xml.remote_config_defaults),

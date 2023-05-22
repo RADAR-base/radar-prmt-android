@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="org.radarcns.detail">
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" tools:replace="required" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" tools:replace="required" />
+
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -17,37 +18,40 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
-    <uses-permission android:name="android.permission.SET_ALARM"/>
     <supports-screens android:largeScreens="true"
         android:xlargeScreens="true" />
 
     <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme"
         android:name=".RadarApplicationImpl"
+        android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
-        android:installLocation="internalOnly">
+        android:icon="@mipmap/ic_launcher"
+        android:installLocation="internalOnly"
+        android:configChanges="orientation"
+        android:screenOrientation="userPortrait"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:theme="@style/AppTheme" >
+
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false"/>
+        <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false"/>
+        <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false"/>
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true" >
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
 
         <receiver
-            android:enabled="false"
             android:name=".MainActivityBootStarter"
-            android:exported="true">
-
+            android:enabled="false"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
@@ -58,62 +62,68 @@
 
         <activity
             android:name=".SplashActivityImpl"
-            android:screenOrientation="userPortrait"
+            android:exported="true"
             android:noHistory="true"
-            android:exported="true">
+            android:screenOrientation="userPortrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".LoginActivityImpl"
-            android:label="@string/app_name"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="userPortrait"
             android:exported="true">
-            <intent-filter android:label="@string/filter_open_prmt">
+            <intent-filter android:label="@string/filter_open_prmt" >
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Accepts URIs that begin with "http://www.example.com/gizmos” -->
-                <data android:scheme="https"
+                <data
                     android:host="radar-base.org"
-                    android:pathPrefix="/prmt" />
-                <!-- note that the leading "/" is required for pathPrefix-->
+                    android:pathPrefix="/prmt"
+                    android:scheme="https" />
+                <!-- note that the leading "/" is required for pathPrefix -->
                 <!-- Accepts URIs that begin with "example://gizmos” -->
-                <data android:scheme="org.radarbase.prmt"
-                    android:host="radar-base.org" />
+                <data
+                    android:host="radar-base.org"
+                    android:scheme="org.radarbase.prmt" />
             </intent-filter>
         </activity>
-
         <activity
-            android:exported="false"
             android:name=".MainActivityImpl"
-            android:label="@string/app_name"
-            android:launchMode="singleInstance"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="userPortrait"
+            android:exported="false"
+            android:launchMode="singleInstance" >
         </activity>
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
+            android:screenOrientation="userPortrait"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".InfoActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
+        <activity
+            android:name=".InfoActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".MainActivityImpl" />
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".MainActivityImpl" />
+        <service android:name=".RadarServiceImpl" />
+        <service android:name=".AuthServiceImpl" />
 
-        <activity android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
-
-        <activity android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
-            android:parentActivityName=".InfoActivity"/>
-
-        <activity android:name=".InfoActivity"
-            android:parentActivityName=".MainActivityImpl"/>
-        <activity android:name=".SettingsActivity"
-            android:parentActivityName=".MainActivityImpl"/>
-        <activity android:name=".UpdatesActivity"
-            android:parentActivityName=".MainActivityImpl"/>
-        <service android:name=".RadarServiceImpl"/>
-        <service android:name=".AuthServiceImpl"/>
-        <receiver android:name=".UpdateAlarmReceiver"/>
-
-        <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
-     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
+        <!--
+ ATTENTION: This was auto-generated to add Google Play services to your project for
+     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
+        -->
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -122,7 +132,8 @@
             android:name=".UncaughtExceptionHandlerContentProvider"
             android:authorities="${applicationId}"
             android:exported="false"
-            android:initOrder="101"
-            android:grantUriPermissions="false" />
+            android:grantUriPermissions="false"
+            android:initOrder="101" />
     </application>
+
 </manifest>

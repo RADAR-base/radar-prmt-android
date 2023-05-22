@@ -10,79 +10,87 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        android:fillViewport="true">
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/constraintLayout"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="16dp">
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/size_medium">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/size_medium">
 
             <TextView
                 android:id="@+id/app_title"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/app_name"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:textAppearance="?attr/textAppearanceHeadline6" />
 
             <TextView
                 android:id="@+id/current_version"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/app_title" />
+                android:layout_marginTop="@dimen/size_small" />
 
             <TextView
                 android:id="@+id/update_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/current_version"
-                android:layout_marginTop="32dp" />
+                android:layout_marginTop="@dimen/size_small" />
 
             <LinearLayout
                 android:id="@+id/update_linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/update_status"
-                android:layout_marginTop="16dp"
-                android:visibility="gone"
-                >
+                android:layout_marginTop="@dimen/size_medium"
+                android:visibility="gone">
+
                 <TextView
                     android:id="@+id/update_question"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/update_question"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/size_medium"
                     />
 
-                <Button
-                    android:id="@+id/start_downloading_button"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/start_downloading" />
+                    android:orientation="vertical"
+                    android:layout_marginTop="@dimen/size_small">
 
-                <Button
-                    android:id="@+id/cancel_update_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/no" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/start_downloading_button"
+                        android:text="@string/start_downloading"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="@dimen/size_small"
+                        android:paddingHorizontal="@dimen/size_xxlarge" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/cancel_update_button"
+                        android:text="@string/no"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/size_small"
+                        android:paddingHorizontal="@dimen/size_xxlarge" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/stop_notification_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/dont_show_again"
-                    android:layout_marginTop="64dp"
+                    android:layout_marginTop="@dimen/size_xxlarge"
                     android:textAlignment="center"
                     android:visibility="gone"/>
 
@@ -90,7 +98,7 @@
                     android:id="@+id/contact"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="64dp" />
+                    android:layout_marginTop="@dimen/size_xxlarge" />
 
             </LinearLayout>
 
@@ -98,12 +106,8 @@
                 android:id="@+id/progressbar_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/update_linearLayout"
-                android:layout_marginTop="32dp"
-                android:visibility="gone"
-                >
+                android:layout_marginTop="@dimen/size_xlarge"
+                android:visibility="gone">
 
                 <ProgressBar
                     android:id="@+id/progressBar"
@@ -119,7 +123,7 @@
                     android:layout_height="wrap_content"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/progressBar"
-                    android:text="0%"
+                    android:text="@string/zero_percent"
                     />
 
                 <TextView
@@ -128,29 +132,30 @@
                     android:layout_height="wrap_content"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/progressBar"
-                    android:text="100%"
+                    android:text="@string/hundred_percent"
                     />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent">
-
+        android:theme="@style/AppTheme.AppBarOverlay">
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
-            app:title="Updates"
-            android:background="?attr/colorPrimary"
-            android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:contentInsetLeft="@dimen/size_medium"
+            app:contentInsetStart="@dimen/size_medium"
             app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:layout_scrollFlags="scroll|enterAlways">
-        </androidx.appcompat.widget.Toolbar>
-
+            app:title="RADAR pRMT" />
     </com.google.android.material.appbar.AppBarLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

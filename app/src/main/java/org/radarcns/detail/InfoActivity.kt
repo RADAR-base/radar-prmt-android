@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
@@ -22,32 +21,34 @@ class InfoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.app_name).setText(R.string.app_name)
         findViewById<TextView>(R.id.version).text = BuildConfig.VERSION_NAME
 
-        radarConfig.config.observe(this, { config ->
+        radarConfig.config.observe(this) { config ->
             findViewById<TextView>(R.id.server_base_url).text = config.getString(BASE_URL_KEY, "")
 
             policyUrl = config.optString(PRIVACY_POLICY)
 
             if (policyUrl == null) {
-                findViewById<TextView>(R.id.privacyStatement).apply {
+                findViewById<TextView>(R.id.generalPrivacyPolicyStatement).apply {
                     visibility = View.GONE
                 }
             }
-        })
+        }
 
-        setSupportActionBar(findViewById<Toolbar>(R.id.toolbar).apply {
-            setTitle(R.string.info)
-        })
+        setSupportActionBar(findViewById(R.id.toolbar))
+
         supportActionBar?.apply {
             setDisplayShowHomeEnabled(true)
             setDisplayHomeAsUpEnabled(true)
         }
+
+        findViewById<TextView>(R.id.generalPrivacyPolicyStatement).setOnClickListener { v -> openPrivacyPolicy(v) }
+        findViewById<TextView>(R.id.licenses_button).setOnClickListener { v -> showLicenses(v) }
     }
 
-    fun showLicenses(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun showLicenses(@Suppress("UNUSED_PARAMETER") view: View) {
         startActivity(Intent(this, OssLicensesMenuActivity::class.java))
     }
 
-    fun openPrivacyPolicy(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun openPrivacyPolicy(@Suppress("UNUSED_PARAMETER") view: View) {
         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(policyUrl)))
     }
 

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="org.radarcns.detail">
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" tools:replace="required" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" tools:replace="required" />
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <!-- Start on boot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
+    <!-- Battery optimization -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+<!--  TODO: Check if necessary  -->
+    <uses-permission android:name="android.permission.SET_ALARM"/>
+
+    <supports-screens android:largeScreens="true"
+        android:xlargeScreens="true" />
+
+    <application
+        android:name=".RadarApplicationImpl"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_descriptor"
+        android:icon="@mipmap/ic_launcher"
+        android:installLocation="internalOnly"
+        android:configChanges="orientation"
+        android:screenOrientation="userPortrait"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:theme="@style/AppTheme" >
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true" >
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
+        <receiver
+            android:name=".MainActivityBootStarter"
+            android:enabled="false"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".SplashActivityImpl"
+            android:exported="true"
+            android:noHistory="true"
+            android:screenOrientation="userPortrait" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".LoginActivityImpl"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="userPortrait"
+            android:exported="true">
+            <intent-filter android:label="@string/filter_open_prmt" >
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "http://www.example.com/gizmos” -->
+                <data
+                    android:host="radar-base.org"
+                    android:pathPrefix="/prmt"
+                    android:scheme="https" />
+                <!-- note that the leading "/" is required for pathPrefix -->
+                <!-- Accepts URIs that begin with "example://gizmos” -->
+                <data
+                    android:host="radar-base.org"
+                    android:scheme="org.radarbase.prmt" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivityImpl"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="userPortrait"
+            android:exported="false"
+            android:launchMode="singleInstance" >
+        </activity>
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
+            android:screenOrientation="userPortrait"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".InfoActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
+        <activity
+            android:name=".InfoActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".MainActivityImpl" />
+        <activity
+            android:name=".SettingsActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".MainActivityImpl" />
+        <activity
+            android:name=".UpdatesActivity"
+            android:screenOrientation="userPortrait"
+            android:parentActivityName=".MainActivityImpl" />
+
+        <service android:name=".RadarServiceImpl" />
+        <service android:name=".AuthServiceImpl" />
+
+        <receiver android:name=".UpdateAlarmReceiver" />
+        <!--
+ ATTENTION: This was auto-generated to add Google Play services to your project for
+     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <provider
+            android:name=".UncaughtExceptionHandlerContentProvider"
+            android:authorities="${applicationId}"
+            android:exported="false"
+            android:grantUriPermissions="false"
+            android:initOrder="101" />
+    </application>
+
+</manifest>

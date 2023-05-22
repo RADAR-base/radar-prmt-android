@@ -18,9 +18,7 @@ package org.radarcns.detail
 
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.GridLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import org.radarbase.android.IRadarBinder
 import org.radarbase.android.MainActivityView
@@ -28,6 +26,7 @@ import org.radarbase.android.source.SourceProvider
 import org.radarbase.android.util.ChangeApplier
 import org.radarbase.android.util.ChangeRunner
 import org.radarbase.android.util.TimedLong
+import org.radarbase.android.widget.repeatAnimation
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
@@ -50,9 +49,9 @@ class MainActivityViewImpl(
     private val mUserId: TextView
     private val mSourcesTable: ViewGroup
     private val mProjectId: TextView
-    private val mActionDivider: View
-    private val mActionHeader: View
     private val mActionLayout: GridLayout
+    private val mActionWrapperLayout: LinearLayout
+    private val mDevicesNoneText: View
 
     private val userIdCache = ChangeRunner<String>()
     private val projectIdCache = ChangeRunner<String>()
@@ -84,9 +83,12 @@ class MainActivityViewImpl(
             mProjectId = findViewById(R.id.inputProjectId)
             mSourcesTable = findViewById(R.id.sourcesTable)
 
-            mActionHeader = findViewById(R.id.actionHeader)
-            mActionDivider = findViewById(R.id.actionDivider)
             mActionLayout = findViewById(R.id.actionLayout)
+            mActionWrapperLayout = findViewById(R.id.actionWrapperLayout)
+
+            mDevicesNoneText = findViewById(R.id.no_devices)
+
+            findViewById<ImageView>(R.id.logo).repeatAnimation()
             this@MainActivityViewImpl.update()
         }
     }
@@ -116,17 +118,23 @@ class MainActivityViewImpl(
                     }
                 }
 
-                rows = p.map {
-                    SourceRowView(mainActivity, it, root).apply {
-                        update()
+                if (p.isEmpty()) {
+                    mDevicesNoneText.visibility = View.VISIBLE
+                    mSourcesTable.visibility = View.GONE
+                    rows = listOf()
+                } else {
+                    mDevicesNoneText.visibility = View.GONE
+                    mSourcesTable.visibility = View.VISIBLE
+                    rows = p.map {
+                        SourceRowView(mainActivity, it, root).apply {
+                            update()
+                        }
                     }
                 }
             }
-
             actionsCells.applyIfChanged(currentActions) { actionList ->
                 if (actionList.isNotEmpty()) {
-                    mActionHeader.visibility = View.VISIBLE
-                    mActionDivider.visibility = View.VISIBLE
+                    mActionWrapperLayout.visibility = View.VISIBLE
                     mActionLayout.apply {
                         visibility = View.VISIBLE
                         removeAllViews()
@@ -138,8 +146,7 @@ class MainActivityViewImpl(
                         }
                     }
                 } else {
-                    mActionHeader.visibility = View.GONE
-                    mActionDivider.visibility = View.GONE
+                    mActionWrapperLayout.visibility = View.GONE
                     mActionLayout.apply {
                         visibility = View.GONE
                         removeAllViews()
@@ -166,7 +173,7 @@ class MainActivityViewImpl(
                     visibility = View.GONE
                 } else {
                     visibility = View.VISIBLE
-                    text = mainActivity.getString(R.string.user_id_message, id.truncate(MAX_USERNAME_LENGTH))
+                    text = id
                 }
 
             }
@@ -177,7 +184,7 @@ class MainActivityViewImpl(
                     visibility = View.GONE
                 } else {
                     visibility = View.VISIBLE
-                    text = mainActivity.getString(R.string.study_id_message, id.truncate(MAX_USERNAME_LENGTH))
+                    text = id
                 }
             }
         }
@@ -186,14 +193,5 @@ class MainActivityViewImpl(
     companion object {
         private val logger = LoggerFactory.getLogger(MainActivityViewImpl::class.java)
         private val timeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-        internal const val MAX_USERNAME_LENGTH = 20
-
-        internal fun String?.truncate(maxLength: Int): String {
-            return when {
-                this == null -> ""
-                length > maxLength -> substring(0, maxLength - 3) + "\u2026"
-                else -> this
-            }
-        }
     }
 }

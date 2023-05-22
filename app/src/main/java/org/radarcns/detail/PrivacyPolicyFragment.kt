@@ -3,7 +3,6 @@ package org.radarcns.detail
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
@@ -19,8 +18,6 @@ import org.radarbase.android.auth.AppAuthState
 import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.AuthService.Companion.PRIVACY_POLICY_URL_PROPERTY
 import org.radarcns.detail.InfoActivity.Companion.PRIVACY_POLICY
-import org.radarcns.detail.MainActivityViewImpl.Companion.MAX_USERNAME_LENGTH
-import org.radarcns.detail.MainActivityViewImpl.Companion.truncate
 import org.radarcns.detail.databinding.FragmentPrivacyPolicyBinding
 import org.slf4j.LoggerFactory
 
@@ -72,24 +69,39 @@ class PrivacyPolicyFragment : Fragment() {
             }
 
             acceptPrivacyPolicyButton.setOnClickListener { acceptPrivacyPolicy() }
+            rejectPrivacyPolicyButton.setOnClickListener { rejectPrivacyPolicy() }
 
-            inputProjectId.text = getString(R.string.study_id_message, projectId)
-            inputUserId.text = getString(R.string.user_id_message, userId.truncate(MAX_USERNAME_LENGTH))
+            inputProjectId.text = projectId
+            inputUserId.text = userId
 
             val baseUrl = baseUrl ?: "Unknown server"
-            policyAcceptanceStatement.text = fromHtml(R.string.policy_acceptance_message, baseUrl)
-            inputDestinationUrl.text = fromHtml(R.string.base_url_message, baseUrl)
+            consentPrivacyPolicy.apply {
+                text = fromHtml(R.string.consent_privacy_policy, Html.FROM_HTML_MODE_LEGACY)
+                setOnCheckedChangeListener { _, isChecked ->
+                    acceptPrivacyPolicyButton.isEnabled = consentCollectedData.isChecked && consentServer.isChecked && isChecked
+                }
+            }
+            consentCollectedData.apply{
+                text = fromHtml(R.string.consent_collected_data, Html.FROM_HTML_MODE_LEGACY)
+                setOnCheckedChangeListener { _, isChecked ->
+                    acceptPrivacyPolicyButton.isEnabled = consentPrivacyPolicy.isChecked && consentServer.isChecked && isChecked
+                }
+            }
+            consentServer.apply{
+                text = fromHtml(R.string.consent_server, baseUrl, Html.FROM_HTML_MODE_LEGACY)
+                setOnCheckedChangeListener { _, isChecked ->
+                    acceptPrivacyPolicyButton.isEnabled = consentPrivacyPolicy.isChecked && consentCollectedData.isChecked && isChecked
+                }
+            }
+            inputDestinationUrl.text = baseUrl
         }
     }
+
 
     @Suppress("DEPRECATION")
     private fun fromHtml(@StringRes resourceId: Int, vararg parameters: Any): Spanned {
         val s = getString(resourceId, *parameters)
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY)
-        } else {
-            Html.fromHtml(s)
-        }
+        return Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY)
     }
 
     override fun onAttach(context: Context) {
@@ -128,6 +140,11 @@ class PrivacyPolicyFragment : Fragment() {
         mListener?.onAcceptPrivacyPolicy()
     }
 
+    private fun rejectPrivacyPolicy() {
+        logger.info("Policy rejected. Redirecting to LoginActivity...")
+        mListener?.onRejectPrivacyPolicy()
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -139,6 +156,7 @@ class PrivacyPolicyFragment : Fragment() {
      */
     interface OnFragmentInteractionListener {
         fun onAcceptPrivacyPolicy()
+        fun onRejectPrivacyPolicy()
     }
 
     companion object {
