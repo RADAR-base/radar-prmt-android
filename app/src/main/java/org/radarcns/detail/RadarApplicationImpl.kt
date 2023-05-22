@@ -59,10 +59,10 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
     var isInForeground: Boolean = false
         private set
 
-    override val largeIcon: Bitmap
+    val largeIcon: Bitmap
         get() = getBitmapFromDrawable(getDrawable(R.mipmap.ic_launcher)!!)
 
-    override val smallIcon = R.drawable.ic_bt_connected
+    val smallIcon = R.drawable.ic_bt_connected
 
     override fun createRemoteConfiguration(): List<RemoteConfig> = listOf(
             FirebaseRemoteConfiguration(this, BuildConfig.DEBUG, R.xml.remote_config_defaults),

@@ -74,7 +74,7 @@ repositories {
     maven { url 'https://repo.thehyve.nl/content/repositories/releases' }
 }
 
-ext.radarCommonsVersion = '1.2.3'
+ext.radarCommonsVersion = '1.2.4'
 
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
