@@ -27,7 +27,7 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
+import androidx.fragment.app.commit
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
@@ -249,9 +249,9 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             this.id = id
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         })
-        val fragmentTransaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-        fragmentTransaction.add(id, fragment)
-        fragmentTransaction.commit()
+        supportFragmentManager.commit {
+            add(id, fragment)
+        }
     }
 
     override fun onAcceptPrivacyPolicy() {

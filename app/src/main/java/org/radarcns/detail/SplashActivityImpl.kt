@@ -12,7 +12,7 @@ import org.radarcns.detail.MainActivityBootStarter.Companion.BOOT_START_NOTIFICA
 import org.radarcns.detail.databinding.ActivitySplashBinding
 
 class SplashActivityImpl : SplashActivity() {
-    override val delayMs: Long = 5000L
+    override val delayMs: Long = 0L
     private var notifyResume = false
     private lateinit var binding: ActivitySplashBinding
 

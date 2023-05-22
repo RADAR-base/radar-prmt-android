@@ -131,12 +131,6 @@ class MainActivityViewImpl(
                         }
                     }
                 }
-
-//                rows = p.map {
-//                    SourceRowView(mainActivity, it, root).apply {
-//                        update()
-//                    }
-//                }
             }
             actionsCells.applyIfChanged(currentActions) { actionList ->
                 if (actionList.isNotEmpty()) {

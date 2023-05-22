@@ -20,6 +20,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.util.Log
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.*
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -60,7 +62,7 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
         private set
 
     val largeIcon: Bitmap
-        get() = getBitmapFromDrawable(getDrawable(R.mipmap.ic_launcher)!!)
+        get() = AppCompatResources.getDrawable(this, R.mipmap.ic_launcher)!!.toBitmap()
 
     val smallIcon = R.drawable.ic_bt_connected
 
@@ -96,17 +98,5 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
             Lifecycle.Event.ON_START -> true
             else -> isInForeground
         }
-    }
-
-    private fun getBitmapFromDrawable(drawable: Drawable): Bitmap {
-        val bmp = Bitmap.createBitmap(
-            drawable.intrinsicWidth,
-            drawable.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bmp)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-        return bmp
     }
 }
