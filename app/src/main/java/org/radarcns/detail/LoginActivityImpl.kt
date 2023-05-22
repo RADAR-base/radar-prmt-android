@@ -233,10 +233,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) {
-        TODO("Not yet implemented")
-    }
-
     private fun startPrivacyPolicyFragment(state: AppAuthState) {
         logger.info("Starting privacy policy fragment")
 
