@@ -24,6 +24,21 @@ This application depends on plugins to collect information. Project-supported pl
 
 See the plugin documentation on what link to each plugin for its configuration options and data collection settings.
 
+During the testing of a new plugin, some common errors may occur. Here is an example of a common error and its resolution:
+
+* **Duplicate class error**: A Duplicate class error can occur when a new plugin is added as a dependency in `app/build.gradle`. This error is typically caused by conflicting classes from different dependencies. To resolve this issue, the conflicting dependency can be excluded. For example, if there are conflicting classes for Avro, such as `org.apache.avro:avro:1.11.1` and `org.radarbase:avro-android:1.2.4-SNAPSHOT`, you can exclude one of them using the following code snippet:
+
+```gradle
+dependencies {
+    configurations.all {
+        resolutionStrategy {
+            exclude group: 'org.apache.avro'
+        }
+    }
+    // Other dependencies...
+}
+```
+
 ### Setup Firebase Remote Configuration
 
 Firebase can be used to remotely configure some device and system parameters, e.g. the E4 API key, kafka server address and upload rate. The default parameters are also stored locally in `app/src/main/res/xml/remote_config_defaults.xml`, which will be used if the remote parameters cannot be accessed.
