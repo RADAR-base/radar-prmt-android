@@ -53,6 +53,7 @@ class SourceRowView internal constructor(
     private val batteryLevelCache = ChangeRunner<Float>()
     private val sourceNameCache = ChangeRunner<String>()
     private val statusCache = ChangeRunner<SourceStatusListener.Status>()
+    private val imageResource = provider.imageResource(null)
 
     private val splitRegex = this.mainActivity.getString(R.string.filter_split_regex).toRegex()
 
@@ -163,6 +164,10 @@ class SourceRowView internal constructor(
 
     private fun updateBattery() {
         batteryLevelCache.applyIfChanged(sourceState?.batteryLevel ?: Float.NaN) {
+            if (imageResource != -1) {
+                mBatteryLabel.setImageResource(imageResource)
+                return@applyIfChanged
+            }
             mBatteryLabel.setImageResource(when {
                 it.isNaN() -> R.drawable.baseline_battery_unknown_gray_24dp
                 it < 0.1 -> R.drawable.baseline_battery_alert_red_700_24dp
