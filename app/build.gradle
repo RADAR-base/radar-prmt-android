@@ -102,6 +102,9 @@ dependencies {
     implementation "org.radarbase:radar-android-weather:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-audio:$radarCommonsVersion"
     implementation "org.radarbase:radar-android-faros:$radarCommonsVersion"
+    implementation "org.radarbase:radar-android-google-sleep:$radarCommonsVersion"
+    implementation "org.radarbase:radar-android-google-activity:$radarCommonsVersion"
+    implementation "org.radarbase:radar-android-google-places:$radarCommonsVersion"
 
     implementation 'androidx.lifecycle:lifecycle-process:2.5.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
