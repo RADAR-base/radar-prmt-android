@@ -35,5 +35,5 @@ tasks.named("dependencyUpdates").configure {
 }
 
 wrapper {
-    gradleVersion '8.0'
+    gradleVersion '8.4'
 }
