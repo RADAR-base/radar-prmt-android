@@ -101,6 +101,7 @@ dependencies {
     implementation "org.radarbase:radar-android-weather:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-audio:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-faros:$radar_commons_android_version"
+    implementation "org.radarbase:radar-android-login-oauth2:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-polar:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-google-sleep:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-google-activity:$radar_commons_android_version"
