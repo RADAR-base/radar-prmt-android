@@ -37,6 +37,7 @@ import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
+import org.radarbase.android.auth.oauth2.OAuth2LoginManager
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
@@ -61,7 +62,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     private lateinit var binding: ActivityLoginBinding
 
-    private lateinit var qrCodeScanner: QrCodeScanner
+    private lateinit var mpQrCodeScanner: QrCodeScanner
+    private lateinit var oAuthQrCodeScanner: QrCodeScanner
     private lateinit var dialog: Dialog
 
     private lateinit var mainHandler: Handler
@@ -76,9 +78,13 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
         networkReceiver = NetworkConnectedReceiver(this, this)
         didCreate = true
-        qrCodeScanner = QrCodeScanner(this) { value ->
+        mpQrCodeScanner = QrCodeScanner(this) { value ->
             value?.takeTrimmedIfNotEmpty()
-                ?.also { parseQrCode(it) }
+                ?.also { parseMpQrCode(it) }
+        }
+        oAuthQrCodeScanner = QrCodeScanner(this) { value ->
+            value?.takeTrimmedIfNotEmpty()
+                ?.also { parseOAuthQrCode(it) }
         }
 
         with(binding) {
@@ -102,7 +108,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         networkReceiver.run { unregister() }
     }
 
-    private fun parseQrCode(qrCode: String) {
+    private fun parseMpQrCode(qrCode: String) {
         onProcessing()
         logger.info("Read tokenUrl: {}", qrCode)
 
@@ -142,12 +148,46 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
+    private fun parseOAuthQrCode(qrData: String) {
+        onProcessing()
+        logger.debug("Processing data from QR code {}", qrData)
+
+        if (qrData.isEmpty()) {
+            loginFailed(null, QrException("QR code is empty. Please retry"))
+            logger.error("QR code is empty. Please retry")
+            return
+        }
+
+        applyOAuthManager { binder, oAuthManager, authState ->
+            if (qrData.startsWith('{')) {
+                try {
+
+                } catch (ex: Exception) {
+                    loginFailed(oAuthManager, ex)
+                }
+            } else {
+                // QR code should have data in JSON format if scanning from SEP UI
+                loginFailed(oAuthManager, QrException("QR code doesn't contains the data in JSON format"))
+            }
+        }
+    }
+
     private fun applyMpManager(callback: (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState) -> Unit) {
         authConnection.applyBinder {
             val manager = managers.find { it is ManagementPortalLoginManager }
                     as? ManagementPortalLoginManager ?: return@applyBinder
             applyState {
                 callback(this@applyBinder, manager, this)
+            }
+        }
+    }
+
+    private fun applyOAuthManager(callback: (AuthService.AuthServiceBinder, OAuth2LoginManager, AppAuthState) -> Unit) {
+        authConnection.applyBinder {
+            val oauthManager = managers.find { it is OAuth2LoginManager }
+                    as? OAuth2LoginManager ?: return@applyBinder
+            applyState {
+                callback(this@applyBinder, oauthManager, this)
             }
         }
     }
@@ -184,7 +224,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
         if (canLogin) {
             canLogin = false
-            qrCodeScanner.start()
+            mpQrCodeScanner.start()
         }
     }
 
