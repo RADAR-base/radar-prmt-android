@@ -142,8 +142,10 @@
     <string name="start_downloading">Download and Install</string>
     <string name="update_question" />
     <string name="error_in_package_name">Error in package name!</string>
-    <string name="login_description">Log in to pRMT App with the QR Code or Token provided to you.</string>
-    <string name="login_title">Login</string>
+    <string name="mp_login_description">Log in to pRMT App with the QR Code or Token provided to you by Management Portal.</string>
+    <string name="sep_login_description">Log in to pRMT App with the QR Code provided to you by Self Enrolment Portal.</string>
+    <string name="mp_login_title">Login With Management Portal</string>
+    <string name="sep_login_title">Login With Self Enrolment Portal</string>
     <string name="title_activity_item_detail_host">ItemDetailHostActivity</string>
     <string name="title_item_list">Items</string>
     <string name="title_item_detail">Item Detail</string>
