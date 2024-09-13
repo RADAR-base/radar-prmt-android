@@ -63,7 +63,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private lateinit var binding: ActivityLoginBinding
 
     private lateinit var mpQrCodeScanner: QrCodeScanner
-    private lateinit var oAuthQrCodeScanner: QrCodeScanner
+    private lateinit var sepQrCodeScanner: QrCodeScanner
     private lateinit var dialog: Dialog
 
     private lateinit var mainHandler: Handler
@@ -82,13 +82,14 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             value?.takeTrimmedIfNotEmpty()
                 ?.also { parseMpQrCode(it) }
         }
-        oAuthQrCodeScanner = QrCodeScanner(this) { value ->
+        sepQrCodeScanner = QrCodeScanner(this) { value ->
             value?.takeTrimmedIfNotEmpty()
                 ?.also { parseOAuthQrCode(it) }
         }
 
         with(binding) {
-            scanButton.setOnClickListener { v -> scan(v) }
+            mpScanButton.setOnClickListener { v -> scanQrFromMP(v) }
+            sepScanButton.setOnClickListener { scanQrFromSEP() }
             enterCredentialsButton.setOnClickListener { v -> enterCredentials(v) }
             loader.visibility = View.GONE
         }
@@ -171,6 +172,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                 loginFailed(oAuthManager, QrException("QR code doesn't contains the data in JSON format"))
                 return@applyOAuthManager
             }
+            binder.update(oAuthManager)
         }
     }
 
@@ -213,20 +215,29 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     private fun checkNetworkConnection() = with(binding) {
         if (networkIsConnected) {
-            scanButton.isEnabled = true
+            mpScanButton.isEnabled = true
+            sepScanButton.isEnabled = true
             enterCredentialsButton.isEnabled = true
             messageText.text = ""
         } else {
-            scanButton.isEnabled = false
+            mpScanButton.isEnabled = false
+            sepScanButton.isEnabled = false
             enterCredentialsButton.isEnabled = false
             messageText.setText(R.string.no_connection)
         }
     }
 
-    private fun scan(@Suppress("UNUSED_PARAMETER") view: View) {
+    private fun scanQrFromMP(@Suppress("UNUSED_PARAMETER") view: View) {
         if (canLogin) {
             canLogin = false
             mpQrCodeScanner.start()
+        }
+    }
+
+    private fun scanQrFromSEP() {
+        if (canLogin) {
+            canLogin = false
+            sepQrCodeScanner.start()
         }
     }
 
@@ -372,11 +383,13 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
     private fun setLoader(show: Boolean) = with(binding) {
         if (show) {
-            scanButton.visibility = View.GONE
+            mpScanButton.visibility = View.GONE
+            sepScanButton.visibility = View.GONE
             enterCredentialsButton.visibility = View.GONE
             loader.visibility = View.VISIBLE
         } else {
-            scanButton.visibility = View.VISIBLE
+            mpScanButton.visibility = View.VISIBLE
+            sepScanButton.visibility = View.VISIBLE
             enterCredentialsButton.visibility = View.VISIBLE
             loader.visibility = View.GONE
         }
