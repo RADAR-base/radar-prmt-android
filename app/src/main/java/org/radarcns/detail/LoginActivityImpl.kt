@@ -161,13 +161,15 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         applyOAuthManager { binder, oAuthManager, authState ->
             if (qrData.startsWith('{')) {
                 try {
-
+                    oAuthManager.parsePreLoginQr(authState, qrData)
                 } catch (ex: Exception) {
                     loginFailed(oAuthManager, ex)
+                    return@applyOAuthManager
                 }
             } else {
                 // QR code should have data in JSON format if scanning from SEP UI
                 loginFailed(oAuthManager, QrException("QR code doesn't contains the data in JSON format"))
+                return@applyOAuthManager
             }
         }
     }
