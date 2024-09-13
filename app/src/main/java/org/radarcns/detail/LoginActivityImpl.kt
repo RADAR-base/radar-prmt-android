@@ -84,7 +84,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
         sepQrCodeScanner = QrCodeScanner(this) { value ->
             value?.takeTrimmedIfNotEmpty()
-                ?.also { parseOAuthQrCode(it) }
+                ?.also { parseSepQrCode(it) }
         }
 
         with(binding) {
@@ -149,7 +149,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    private fun parseOAuthQrCode(qrData: String) {
+    private fun parseSepQrCode(qrData: String) {
         onProcessing()
         logger.debug("Processing data from QR code {}", qrData)
 
