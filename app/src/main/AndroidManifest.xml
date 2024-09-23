@@ -96,7 +96,6 @@
                 <data
                     android:host="radar-base.org"
                     android:scheme="org.radarbase.prmt" />
-
             </intent-filter>
         </activity>
         <activity
