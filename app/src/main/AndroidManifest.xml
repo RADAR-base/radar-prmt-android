@@ -81,16 +81,22 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!-- Accepts URIs that begin with "http://www.example.com/gizmos” -->
+                <!-- Accepts URIs that begin with "http://www.radar-base.org/prmt/...” -->
                 <data
                     android:host="radar-base.org"
                     android:pathPrefix="/prmt"
                     android:scheme="https" />
-                <!-- note that the leading "/" is required for pathPrefix -->
-                <!-- Accepts URIs that begin with "example://gizmos” -->
+            </intent-filter>
+            <intent-filter android:label="@string/custom_filter_open_prmt">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "radar-base.org://org.radarbase.prmt” -->
                 <data
                     android:host="radar-base.org"
                     android:scheme="org.radarbase.prmt" />
+
             </intent-filter>
         </activity>
         <activity

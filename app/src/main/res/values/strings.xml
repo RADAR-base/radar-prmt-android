@@ -98,6 +98,7 @@
     <string name="consent_collected_data"><![CDATA[I have read <b><u>Description of collected data</u></b> and agree to it.]]></string>
     <string name="consent_server"><![CDATA[I agree to send data to <b><u>%1$s</u></b>.]]></string>
     <string name="filter_open_prmt">Open RADAR pRMT</string>
+    <string name="custom_filter_open_prmt">Open pRMT Application</string>
     <string name="action_header">Actions</string>
     <string name="appUpdated">pRMT successfully updated</string>
     <string name="radar_cns_logo">RADAR-CNS logo</string>
