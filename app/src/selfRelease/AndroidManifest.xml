@@ -75,7 +75,8 @@
             android:configChanges="keyboardHidden|orientation"
             android:screenOrientation="userPortrait"
             android:exported="true">
-            <intent-filter android:label="@string/filter_open_prmt" >
+            <intent-filter android:label="@string/filter_open_prmt"
+                android:autoVerify="true" >
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -95,7 +96,6 @@
                 <data
                     android:host="radar-base.org"
                     android:scheme="org.radarbase.prmt" />
-
             </intent-filter>
         </activity>
         <activity
