@@ -20,13 +20,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.RadarApplication.Companion.radarApp
-import org.radarbase.android.auth.LoginManager
 
 class MainActivityImpl : MainActivity() {
+
+//    private var mainHandler = Handler(Looper.getMainLooper())
+
     override fun onCreate(savedInstanceState: Bundle?) {
         radarApp.notificationHandler.cancel(MainActivityBootStarter.BOOT_START_NOTIFICATION_ID)
         super.onCreate(savedInstanceState)
@@ -41,13 +42,22 @@ class MainActivityImpl : MainActivity() {
         return MainActivityViewImpl(this)
     }
 
-    fun loginFailed(manager: LoginManager?, ex: Exception?) {
-        TODO("Not yet implemented")
-    }
 
 
-    fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
+    fun logout(@Suppress("UNUSED_PARAMETER")item: MenuItem) {
         logout(true)
+
+        /* Not starting the splash activity again, login activity automatically starts when main activity is closed
+
+        val intent = Intent(this, SplashActivityImpl::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_TASK_ON_HOME or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        mainHandler.postDelayed({
+            startActivity(intent)
+        }, 1000)
+        finish()
+        */
     }
 
     fun showSettings(@Suppress("UNUSED_PARAMETER")item: MenuItem) {
