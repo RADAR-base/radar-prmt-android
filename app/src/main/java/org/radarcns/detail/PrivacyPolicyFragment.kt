@@ -11,6 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.PROJECT_ID_KEY
 import org.radarbase.android.RadarConfiguration.Companion.USER_ID_KEY
@@ -68,8 +70,12 @@ class PrivacyPolicyFragment : Fragment() {
                 }
             }
 
-            acceptPrivacyPolicyButton.setOnClickListener { acceptPrivacyPolicy() }
-            rejectPrivacyPolicyButton.setOnClickListener { rejectPrivacyPolicy() }
+            acceptPrivacyPolicyButton.setOnClickListener { lifecycleScope.launch {
+                acceptPrivacyPolicy()
+            } }
+            rejectPrivacyPolicyButton.setOnClickListener { lifecycleScope.launch {
+                rejectPrivacyPolicy()
+            } }
 
             inputProjectId.text = projectId
             inputUserId.text = userId
@@ -135,12 +141,12 @@ class PrivacyPolicyFragment : Fragment() {
         }
     }
 
-    private fun acceptPrivacyPolicy() {
+    private suspend fun acceptPrivacyPolicy() {
         logger.info("Policy accepted. Redirecting to DetailedMainView...")
         mListener?.onAcceptPrivacyPolicy()
     }
 
-    private fun rejectPrivacyPolicy() {
+    private suspend fun rejectPrivacyPolicy() {
         logger.info("Policy rejected. Redirecting to LoginActivity...")
         mListener?.onRejectPrivacyPolicy()
     }
@@ -155,8 +161,8 @@ class PrivacyPolicyFragment : Fragment() {
      * See the Android Training lesson [Communicating with Other Fragments](http://developer.android.com/training/basics/fragments/communicating.html) for more information.
      */
     interface OnFragmentInteractionListener {
-        fun onAcceptPrivacyPolicy()
-        fun onRejectPrivacyPolicy()
+        suspend fun onAcceptPrivacyPolicy()
+        suspend fun onRejectPrivacyPolicy()
     }
 
     companion object {
