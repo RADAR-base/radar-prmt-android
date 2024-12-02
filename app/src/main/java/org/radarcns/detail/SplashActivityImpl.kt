@@ -3,6 +3,8 @@ package org.radarcns.detail
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast.LENGTH_LONG
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.radarbase.android.RadarApplication.Companion.radarApp
 import org.radarbase.android.splash.SplashActivity
 import org.radarbase.android.util.Boast
@@ -29,8 +31,10 @@ class SplashActivityImpl : SplashActivity() {
         }
         radarApp.notificationHandler.cancel(BOOT_START_NOTIFICATION_ID)
 
-        findViewById<ImageView>(R.id.splash_image).repeatAnimation()
-        addPrivacyPolicy(binding.splashPrivacyPolicyUrl)
+        lifecycleScope.launch {
+            findViewById<ImageView>(R.id.splash_image).repeatAnimation()
+            addPrivacyPolicy(binding.splashPrivacyPolicyUrl, this@launch)
+        }
     }
 
     override fun createView() {

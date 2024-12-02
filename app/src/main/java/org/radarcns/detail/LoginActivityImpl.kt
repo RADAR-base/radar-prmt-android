@@ -28,10 +28,18 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
@@ -42,6 +50,7 @@ import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
 import org.radarbase.android.widget.addPrivacyPolicy
+import org.radarbase.android.widget.toUrlOrNull
 import org.radarbase.producer.AuthenticationException
 import org.radarcns.detail.databinding.ActivityLoginBinding
 import org.slf4j.LoggerFactory
@@ -50,7 +59,7 @@ import java.net.ConnectException
 import java.net.MalformedURLException
 import java.net.URI
 
-class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
+class LoginActivityImpl : LoginActivity(), PrivacyPolicyFragment.OnFragmentInteractionListener {
     private var startActivityFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
@@ -74,11 +83,14 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        networkReceiver = NetworkConnectedReceiver(this, this)
+        networkReceiver = NetworkConnectedReceiver(this)
         didCreate = true
         qrCodeScanner = QrCodeScanner(this) { value ->
             value?.takeTrimmedIfNotEmpty()
-                ?.also { parseQrCode(it) }
+                ?.also {
+                    lifecycleScope.launch {
+                    parseQrCode(it)
+                } }
         }
 
         with(binding) {
@@ -88,21 +100,33 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
         checkNetworkConnection()
 
-        addPrivacyPolicy(binding.loginPrivacyPolicyUrl)
+        with(lifecycleScope) {
+            launch {
+                addPrivacyPolicy(binding.loginPrivacyPolicyUrl, this)
+            }
+            launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    networkReceiver.monitor()
+                    networkReceiver.state?.distinctUntilChanged()?.map {
+                      it != NetworkConnectedReceiver.NetworkState.Disconnected
+                    }?.collectLatest { isConnected ->
+                        logger.info("Is network connected : {}", isConnected)
+                        networkIsConnected = isConnected
+                        withContext(Dispatchers.Main) {
+                            checkNetworkConnection()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
         canLogin = true
-        networkReceiver.run { register() }
     }
 
-    override fun onPause() {
-        super.onPause()
-        networkReceiver.run { unregister() }
-    }
-
-    private fun parseQrCode(qrCode: String) {
+    private suspend fun parseQrCode(qrCode: String) {
         onProcessing()
         logger.info("Read tokenUrl: {}", qrCode)
 
@@ -110,7 +134,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             loginFailed(null, QrException("Please scan the correct QR code."))
             return
         }
-
         applyMpManager { auth, mpManager, authState ->
             if (qrCode[0] == '{') {
                 // parse as JSON with embedded refresh token
@@ -138,16 +161,15 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                 loginFailed(null, QrException("Please scan your QR code again."))
                 return@applyMpManager
             }
-            auth.update(mpManager)
         }
     }
 
-    private fun applyMpManager(callback: (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState) -> Unit) {
-        authConnection.applyBinder {
+    private suspend fun applyMpManager(callback: suspend (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState.Builder) -> Unit) {
+        authServiceConnection.applyBinder {
             val manager = managers.find { it is ManagementPortalLoginManager }
                     as? ManagementPortalLoginManager ?: return@applyBinder
             applyState {
-                callback(this@applyBinder, manager, this)
+                callback(this@applyBinder, manager, AppAuthState.Builder(this))
             }
         }
     }
@@ -159,14 +181,6 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private fun onDoneProcessing() {
         setLoader(false)
         logger.info("Closing progress window")
-    }
-
-    override fun onNetworkConnectionChanged(state: NetworkConnectedReceiver.NetworkState) {
-        logger.info("Network change: {}", state.isConnected)
-        networkIsConnected = state.isConnected
-        mainHandler.post {
-            checkNetworkConnection()
-        }
     }
 
     private fun checkNetworkConnection() = with(binding) {
@@ -233,6 +247,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
+    override fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) = Unit
+
     private fun startPrivacyPolicyFragment(state: AppAuthState) {
         logger.info("Starting privacy policy fragment")
 
@@ -254,8 +270,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    override fun onAcceptPrivacyPolicy() {
-        authConnection.applyBinder {
+    override suspend fun onAcceptPrivacyPolicy() {
+        authServiceConnection.applyBinder {
             updateState {
                 isPrivacyPolicyAccepted = true
             }
@@ -268,8 +284,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    override fun onRejectPrivacyPolicy() {
-        authConnection.applyBinder {
+    override suspend fun onRejectPrivacyPolicy() {
+        authServiceConnection.applyBinder {
             updateState {
                 isPrivacyPolicyAccepted = false
             }
@@ -287,14 +303,16 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         dialog.setContentView(R.layout.dialog_login_token)
 
         val baseUrlInput = dialog.findViewById<TextInputLayout>(R.id.baseUrl)
-        radarConfig.config.observe(this) { config ->
-            if (!didModifyBaseUrl) {
-                val baseUrl = config.getString(BASE_URL_KEY, "").toHttpUrlOrNull() ?: return@observe
-                var urlString = baseUrl.toString().substring(baseUrl.scheme.length + 3)
-                if (urlString.endsWith("/")) {
-                    urlString = urlString.substring(0, urlString.length - 1)
+        lifecycleScope.launch {
+            radarConfig.config.collect { config ->
+                if (!didModifyBaseUrl) {
+                    val baseUrl = config.getString(BASE_URL_KEY, "").toUrlOrNull() ?: return@collect
+                    var urlString = baseUrl.toString().substring(baseUrl.protocol.name.length + 3)
+                    if (urlString.endsWith("/")) {
+                        urlString = urlString.substring(0, urlString.length - 1)
+                    }
+                    baseUrlInput.editText?.setText(urlString)
                 }
-                baseUrlInput.editText?.setText(urlString)
             }
         }
 
@@ -302,21 +320,26 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
 
         dialog.findViewById<Button>(R.id.ok_button).setOnClickListener {
 
-            if (canLogin) {
-                canLogin = false
-                applyMpManager { _, mpManager, authState ->
-                    var baseUrl = baseUrlInput.editText?.text.toString()
-                        .replace(baseUrlPrefixRegex, "")
-                        .replace(baseUrlPostfixRegex, "")
-                    if (baseUrl.endsWith("/")) {
-                        baseUrl = baseUrl.substring(0, baseUrl.length - 1)
-                    }
-                    val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.editText?.text}"
-                    try {
-                        mpManager.setTokenFromUrl(authState, url)
-                        dialog.dismiss()
-                    } catch (ex: MalformedURLException) {
-                        loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
+            lifecycleScope.launch {
+                if (canLogin) {
+                    canLogin = false
+                    applyMpManager { _, mpManager, authState ->
+                        var baseUrl = baseUrlInput.editText?.text.toString()
+                            .replace(baseUrlPrefixRegex, "")
+                            .replace(baseUrlPostfixRegex, "")
+                        if (baseUrl.endsWith("/")) {
+                            baseUrl = baseUrl.substring(0, baseUrl.length - 1)
+                        }
+                        val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.editText?.text}"
+                        try {
+                            mpManager.setTokenFromUrl(authState, url)
+                            dialog.dismiss()
+                        } catch (ex: MalformedURLException) {
+                            loginFailed(
+                                mpManager,
+                                IllegalArgumentException("Cannot parse URL $url")
+                            )
+                        }
                     }
                 }
             }
