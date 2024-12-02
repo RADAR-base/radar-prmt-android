@@ -34,7 +34,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -60,7 +64,7 @@ import java.net.MalformedURLException
 import java.net.URI
 
 class LoginActivityImpl : LoginActivity(), PrivacyPolicyFragment.OnFragmentInteractionListener {
-    private var startActivityFuture: Runnable? = null
+    private var startActivityFuture: Job? = null
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
 
@@ -73,12 +77,10 @@ class LoginActivityImpl : LoginActivity(), PrivacyPolicyFragment.OnFragmentInter
     private lateinit var qrCodeScanner: QrCodeScanner
     private lateinit var dialog: Dialog
 
-    private lateinit var mainHandler: Handler
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
         didModifyBaseUrl = false
-        mainHandler = Handler(Looper.getMainLooper())
         super.onCreate(savedInstanceBundle)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -206,7 +208,7 @@ class LoginActivityImpl : LoginActivity(), PrivacyPolicyFragment.OnFragmentInter
         canLogin = true
 
         logger.error("Failed to log in with {}", manager, ex)
-        mainHandler.post {
+        lifecycleScope.launch {
             onDoneProcessing()
             val res: Int = when (ex) {
                 is QrException -> R.string.login_failed_qr
@@ -222,28 +224,28 @@ class LoginActivityImpl : LoginActivity(), PrivacyPolicyFragment.OnFragmentInter
 
     override fun loginSucceeded(manager: LoginManager?, authState: AppAuthState) {
 
-        mainHandler.post {
-            startActivityFuture?.let {
-                mainHandler.removeCallbacks(it)
-                startActivityFuture = null
-            }
-            val runnable = Runnable {
-                onDoneProcessing()
-                if (supportFragmentManager.fragments.any { it.id == R.id.privacy_policy_fragment }) {
-                    logger.info("Privacy policy fragment already started.")
-                } else if (authState.isPrivacyPolicyAccepted) {
-                    super.loginSucceeded(manager, authState)
-                    if (!didCreate) {
-                        overridePendingTransition(0, 0)
-                    }
-                } else {
-                    logger.info("Login succeeded. Calling privacy-policy fragment")
-                    startPrivacyPolicyFragment(authState)
+        startActivityFuture?.let {
+            it.cancel()
+            startActivityFuture = null
+        }
+        val runnable = lifecycleScope.launch(start = CoroutineStart.LAZY) {
+            onDoneProcessing()
+            if (supportFragmentManager.fragments.any { it.id == R.id.privacy_policy_fragment }) {
+                logger.info("Privacy policy fragment already started.")
+            } else if (authState.isPrivacyPolicyAccepted) {
+                super.loginSucceeded(manager, authState)
+                if (!didCreate) {
+                    overridePendingTransition(0, 0)
                 }
-                startActivityFuture = null
+            } else {
+                logger.info("Login succeeded. Calling privacy-policy fragment")
+                startPrivacyPolicyFragment(authState)
             }
-            startActivityFuture = runnable
-            mainHandler.postDelayed(runnable, 100L)
+            startActivityFuture = null
+        }
+        lifecycleScope.launch {
+            delay(100)
+            runnable.start()
         }
     }
 
