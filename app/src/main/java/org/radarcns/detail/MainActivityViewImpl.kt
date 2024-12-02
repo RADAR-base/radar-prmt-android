@@ -20,6 +20,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.radarbase.android.IRadarBinder
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.source.SourceProvider
@@ -59,7 +61,7 @@ class MainActivityViewImpl(
 
     private val serverStatusMessage: String?
         get() {
-            return mainActivity.radarService?.latestNumberOfRecordsSent?.let { numberOfRecords ->
+            return mainActivity.radarBinder?.latestNumberOfRecordsSent?.let { numberOfRecords ->
                 if (numberOfRecords.time >= 0) {
                     timestampCache.applyIfChanged(numberOfRecords)
                 } else {
@@ -87,8 +89,9 @@ class MainActivityViewImpl(
             mActionWrapperLayout = findViewById(R.id.actionWrapperLayout)
 
             mDevicesNoneText = findViewById(R.id.no_devices)
-
-            findViewById<ImageView>(R.id.logo).repeatAnimation()
+            lifecycleScope.launch {
+                findViewById<ImageView>(R.id.logo).repeatAnimation()
+            }
             this@MainActivityViewImpl.update()
         }
     }
@@ -98,12 +101,12 @@ class MainActivityViewImpl(
     }
 
     override fun update() {
-        val providers = mainActivity.radarService
+        val providers = mainActivity.radarBinder
                 ?.connections
                 ?.filter { it.isDisplayable }
                 ?: emptyList()
 
-        val currentActions = mainActivity.radarService
+        val currentActions = mainActivity.radarBinder
                 ?.connections
                 ?.flatMap { it.actions }
                 ?: emptyList()

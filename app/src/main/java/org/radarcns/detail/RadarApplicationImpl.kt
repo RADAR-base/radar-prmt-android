@@ -27,6 +27,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.radarbase.android.AbstractRadarApplication
 import org.radarbase.android.RadarConfiguration
+import org.radarbase.android.RadarService
 import org.radarbase.android.config.AppConfigRadarConfiguration
 import org.radarbase.android.config.FirebaseRemoteConfiguration
 import org.radarbase.android.config.RemoteConfig
@@ -36,6 +37,7 @@ import org.slf4j.impl.HandroidLoggerAdapter
  * Radar application class for the detailed application.
  */
 class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver {
+
     var enableCrashRecovery: Boolean = false
         private set
 
@@ -66,12 +68,12 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
 
     val smallIcon = R.drawable.ic_bt_connected
 
-    override fun createRemoteConfiguration(): List<RemoteConfig> = listOf(
+    override suspend fun createRemoteConfiguration(): List<RemoteConfig> = listOf(
             FirebaseRemoteConfiguration(this, BuildConfig.DEBUG, R.xml.remote_config_defaults),
             AppConfigRadarConfiguration(this)
     )
 
-    override fun createConfiguration(): RadarConfiguration {
+    override suspend fun createConfiguration(): RadarConfiguration {
         FirebaseAnalytics.getInstance(this).apply {
             setUserProperty(TEST_PHASE, if (BuildConfig.DEBUG) "dev" else "production")
         }

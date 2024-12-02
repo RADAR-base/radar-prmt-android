@@ -24,6 +24,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.radarbase.android.MainActivity
 import org.radarbase.android.source.BaseSourceState
 import org.radarbase.android.source.SourceProvider
@@ -111,7 +113,7 @@ class SourceRowView internal constructor(
 
             logger.info("setting source filter {}", allowed)
 
-            mainActivity.radarService?.setAllowedSourceIds(connection, allowed)
+            mainActivity.radarBinder?.setAllowedSourceIds(connection, allowed)
         }
     }
 
@@ -157,7 +159,9 @@ class SourceRowView internal constructor(
                 SourceStatusListener.Status.CONNECTING -> R.drawable.avd_connecting
                 else -> sourceStatusIconDefault
             })
-            mStatusIcon.repeatAnimation()
+            mainActivity.lifecycleScope.launch {
+                mStatusIcon.repeatAnimation()
+            }
         }
     }
 
