@@ -68,7 +68,7 @@ class RadarServiceImpl : RadarService() {
             }
         }
 
-    override fun doConfigure(config: SingleRadarConfiguration) {
+    override suspend fun doConfigure(config: SingleRadarConfiguration) {
         super.doConfigure(config)
         configureRunAtBoot(config, MainActivityBootStarter::class.java)
     }

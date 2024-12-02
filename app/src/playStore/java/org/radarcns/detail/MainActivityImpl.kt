@@ -41,12 +41,12 @@ class MainActivityImpl : MainActivity() {
         return MainActivityViewImpl(this)
     }
 
-    fun loginFailed(manager: LoginManager?, ex: Exception?) {
+    override fun loginFailed(manager: LoginManager?, ex: Exception?) {
         TODO("Not yet implemented")
     }
 
 
-    fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
+    suspend fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
         logout(true)
     }
 
