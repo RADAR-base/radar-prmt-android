@@ -41,6 +41,8 @@ class RadarApplicationImpl : AbstractRadarApplication(), LifecycleEventObserver 
     var enableCrashRecovery: Boolean = false
         private set
 
+    override val radarServiceImpl: RadarServiceImpl = RadarServiceImpl()
+
     override fun onCreate() {
         super.onCreate()
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)

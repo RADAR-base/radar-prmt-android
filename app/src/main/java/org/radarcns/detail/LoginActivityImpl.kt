@@ -249,7 +249,7 @@ class LoginActivityImpl : LoginActivity(), PrivacyPolicyFragment.OnFragmentInter
         }
     }
 
-    override fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) = Unit
+    override suspend fun logoutSucceeded(manager: LoginManager?, authState: AppAuthState) = Unit
 
     private fun startPrivacyPolicyFragment(state: AppAuthState) {
         logger.info("Starting privacy policy fragment")
