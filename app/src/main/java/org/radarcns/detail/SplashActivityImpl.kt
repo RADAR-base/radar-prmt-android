@@ -12,6 +12,8 @@ import org.radarbase.android.widget.addPrivacyPolicy
 import org.radarbase.android.widget.repeatAnimation
 import org.radarcns.detail.MainActivityBootStarter.Companion.BOOT_START_NOTIFICATION_ID
 import org.radarcns.detail.databinding.ActivitySplashBinding
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class SplashActivityImpl : SplashActivity() {
     override val delayMs: Long = 0L
@@ -29,6 +31,7 @@ class SplashActivityImpl : SplashActivity() {
         } else {
             (application as RadarApplicationImpl).enableCrashProcessing()
         }
+        logger.trace("Creating SplashActivity")
         radarApp.notificationHandler.cancel(BOOT_START_NOTIFICATION_ID)
 
         lifecycleScope.launch {
@@ -53,7 +56,7 @@ class SplashActivityImpl : SplashActivity() {
             Boast.makeText(this, R.string.recovered_from_crash, LENGTH_LONG).show()
             notifyResume = false
         }
-        binding.splashMessageText.setText(when (state) {
+        val newState = when (state) {
             STATE_INITIAL -> R.string.app_initializing
             STATE_STARTING, STATE_FINISHED -> R.string.app_starting
             STATE_AUTHORIZING -> R.string.app_authorizing
@@ -61,6 +64,13 @@ class SplashActivityImpl : SplashActivity() {
             STATE_DISCONNECTED -> R.string.app_disconnected
             STATE_FIREBASE_UNAVAILABLE -> R.string.firebase_unavailable
             else -> R.string.emptyText
-        })
+        }
+
+        binding.splashMessageText.setText(newState)
+        logger.trace("Updated state to {}", newState)
+    }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(SplashActivityImpl::class.java)
     }
 }

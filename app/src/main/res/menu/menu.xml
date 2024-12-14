@@ -9,4 +9,8 @@
         android:id="@+id/info"
         app:showAsAction="never"
         android:onClick="showInfo"/>
+    <item android:title="@string/logout_button"
+        android:id="@+id/logout"
+        app:showAsAction="never"
+        android:onClick="logout" />
 </menu>
