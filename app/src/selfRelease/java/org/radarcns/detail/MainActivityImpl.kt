@@ -40,8 +40,12 @@ class MainActivityImpl : MainActivity() {
         return MainActivityViewImpl(this)
     }
 
-    fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
+    suspend fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
         logout(true)
+    }
+
+    override fun loginFailed(manager: LoginManager?, ex: Exception?) {
+        TODO("Not yet implemented")
     }
 
     fun showSettings(@Suppress("UNUSED_PARAMETER")item: MenuItem) {

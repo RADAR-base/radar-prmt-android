@@ -18,8 +18,11 @@ package org.radarcns.detail
 
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.radarbase.android.IRadarBinder
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.source.SourceProvider
@@ -44,6 +47,8 @@ class MainActivityViewImpl(
     }, { b -> time == b?.time })
     private val serverStatusCache = ChangeRunner<String>()
 
+    private var responsiveOnTouch: Boolean = true
+
     // View elements
     private val mServerMessage: TextView
     private val mUserId: TextView
@@ -52,6 +57,8 @@ class MainActivityViewImpl(
     private val mActionLayout: GridLayout
     private val mActionWrapperLayout: LinearLayout
     private val mDevicesNoneText: View
+    private val logoutProgressText: View
+    private val logoutProgressBar: View
 
     private val userIdCache = ChangeRunner<String>()
     private val projectIdCache = ChangeRunner<String>()
@@ -59,7 +66,7 @@ class MainActivityViewImpl(
 
     private val serverStatusMessage: String?
         get() {
-            return mainActivity.radarService?.latestNumberOfRecordsSent?.let { numberOfRecords ->
+            return mainActivity.radarBinder?.latestNumberOfRecordsSent?.let { numberOfRecords ->
                 if (numberOfRecords.time >= 0) {
                     timestampCache.applyIfChanged(numberOfRecords)
                 } else {
@@ -87,8 +94,13 @@ class MainActivityViewImpl(
             mActionWrapperLayout = findViewById(R.id.actionWrapperLayout)
 
             mDevicesNoneText = findViewById(R.id.no_devices)
+            logoutProgressText = findViewById(R.id.pb_logout)
+            logoutProgressBar = findViewById(R.id.tv_logout_progress_message)
 
-            findViewById<ImageView>(R.id.logo).repeatAnimation()
+            lifecycleScope.launch {
+                findViewById<ImageView>(R.id.logo).repeatAnimation()
+            }
+            stopLogoutProgress()
             this@MainActivityViewImpl.update()
         }
     }
@@ -97,13 +109,35 @@ class MainActivityViewImpl(
         logger.debug("Radar service bound")
     }
 
+    override fun showLogoutProgress() {
+        if (responsiveOnTouch) {
+            mainActivity.window.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            )
+            responsiveOnTouch = false
+        }
+        logoutProgressBar.visibility = View.VISIBLE
+        logoutProgressText.visibility = View.VISIBLE
+    }
+
+    override fun stopLogoutProgress() {
+        if (!responsiveOnTouch) {
+            mainActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            responsiveOnTouch = true
+        }
+
+        logoutProgressBar.visibility = View.INVISIBLE
+        logoutProgressText.visibility = View.INVISIBLE
+    }
+
     override fun update() {
-        val providers = mainActivity.radarService
+        val providers = mainActivity.radarBinder
                 ?.connections
                 ?.filter { it.isDisplayable }
                 ?: emptyList()
 
-        val currentActions = mainActivity.radarService
+        val currentActions = mainActivity.radarBinder
                 ?.connections
                 ?.flatMap { it.actions }
                 ?: emptyList()

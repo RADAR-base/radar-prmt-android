@@ -20,13 +20,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.RadarApplication.Companion.radarApp
+import org.radarbase.android.auth.AppAuthState
 import org.radarbase.android.auth.LoginManager
+import org.slf4j.LoggerFactory
 
 class MainActivityImpl : MainActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         radarApp.notificationHandler.cancel(MainActivityBootStarter.BOOT_START_NOTIFICATION_ID)
         super.onCreate(savedInstanceState)
@@ -38,23 +42,33 @@ class MainActivityImpl : MainActivity() {
     }
 
     override fun createView(): MainActivityView {
-        return MainActivityViewImpl(this)
+        return MainActivityViewImpl(this).also {
+            mainActivityView = it
+        }
     }
 
-    fun loginFailed(manager: LoginManager?, ex: Exception?) {
+    override fun loginFailed(manager: LoginManager?, ex: Exception?) {
         TODO("Not yet implemented")
     }
 
 
-    fun logout(@Suppress("UNUSED_PARAMETER")view: View) {
-        logout(true)
+    fun logout(@Suppress("UNUSED_PARAMETER") item: MenuItem) {
+        logger.trace("NewBroadcastTrace: now performing logout")
+        lifecycleScope.launch {
+            super.logout(true)
+        }
     }
 
     fun showSettings(@Suppress("UNUSED_PARAMETER")item: MenuItem) {
-        startActivity(Intent(this, SettingsActivity::class.java))
+        val intent = Intent(this, SettingsActivity::class.java)
+        startActivity(intent)
     }
 
     fun showInfo(@Suppress("UNUSED_PARAMETER") item: MenuItem) {
         startActivity(Intent(this, InfoActivity::class.java))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MainActivity::class.java)
     }
 }

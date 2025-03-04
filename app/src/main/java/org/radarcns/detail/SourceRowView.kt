@@ -24,6 +24,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.radarbase.android.MainActivity
 import org.radarbase.android.source.BaseSourceState
 import org.radarbase.android.source.SourceProvider
@@ -111,19 +115,27 @@ class SourceRowView internal constructor(
 
             logger.info("setting source filter {}", allowed)
 
-            mainActivity.radarService?.setAllowedSourceIds(connection, allowed)
+            mainActivity.radarBinder?.setAllowedSourceIds(connection, allowed)
         }
     }
 
     private fun reconnectSource() {
-        try {
-            // will restart scanning after disconnect
-            if (connection.isRecording) {
-                connection.stopRecording()
+        mainActivity.lifecycleScope.launch {
+            try {
+                // will restart scanning after disconnect
+                if (connection.isRecording) {
+                    withContext(Dispatchers.Default) {
+                        connection.stopRecording()
+                    }
+                }
+            } catch (iobe: IndexOutOfBoundsException) {
+                Boast.makeText(
+                    this@SourceRowView.mainActivity,
+                    "Could not restart scanning, there is no valid row index associated with this button.",
+                    Toast.LENGTH_LONG
+                ).show()
+                logger.warn(iobe.message)
             }
-        } catch (iobe: IndexOutOfBoundsException) {
-            Boast.makeText(this.mainActivity, "Could not restart scanning, there is no valid row index associated with this button.", Toast.LENGTH_LONG).show()
-            logger.warn(iobe.message)
         }
     }
 
@@ -157,7 +169,9 @@ class SourceRowView internal constructor(
                 SourceStatusListener.Status.CONNECTING -> R.drawable.avd_connecting
                 else -> sourceStatusIconDefault
             })
-            mStatusIcon.repeatAnimation()
+            mainActivity.lifecycleScope.launch {
+                mStatusIcon.repeatAnimation()
+            }
         }
     }
 
