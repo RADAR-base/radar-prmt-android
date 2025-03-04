@@ -154,4 +154,5 @@
     <string name="consent">Consent</string>
     <string name="filter_split_regex">,</string>
     <string name="logout_progress_message">Syncing sources...</string>
+    <string name="special_fgs_explanation">RadarService operates with plugins and modules that may need permissions beyond standard foreground service types. Defining a special use subtype ensures compliance with Android’s requirements for permissions that may vary dynamically based on active plugins</string>
 </resources>

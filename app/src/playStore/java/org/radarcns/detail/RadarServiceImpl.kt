@@ -35,7 +35,7 @@ import org.radarbase.passive.phone.PhoneContactListProvider
 import org.radarbase.passive.phone.PhoneLocationProvider
 import org.radarbase.passive.phone.PhoneSensorProvider
 import org.radarbase.passive.phone.audio.input.PhoneAudioInputProvider
-import org.radarbase.passive.polar.PolarProvider
+//import org.radarbase.passive.polar.PolarProvider
 import org.radarbase.passive.phone.usage.PhoneUsageProvider
 import org.radarbase.passive.weather.WeatherApiProvider
 
@@ -45,7 +45,7 @@ class RadarServiceImpl : RadarService() {
         OpenSmileAudioProvider(this),
         E4Provider(this),
         FarosProvider(this),
-        PolarProvider(this),
+//        PolarProvider(this),
         PhoneBluetoothProvider(this),
         PhoneContactListProvider(this),
         PhoneLocationProvider(this),

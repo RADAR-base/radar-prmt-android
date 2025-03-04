@@ -40,8 +40,8 @@ class PrivacyPolicyFragment : Fragment() {
         projectId = args.getString(PROJECT_ID_KEY)
         userId = args.getString(USER_ID_KEY)
         baseUrl = args.getString(BASE_URL_PROPERTY)
-        privacyPolicyUrl = args.getString(PRIVACY_POLICY_URL_PROPERTY)
-        dataCollectionUrl = args.getString(PRIVACY_POLICY)
+        privacyPolicyUrl = args.getString(PRIVACY_POLICY) //args.getString(PRIVACY_POLICY_URL_PROPERTY)
+        dataCollectionUrl = "https://radar-base.org/docs/4048-2/"
     }
 
     override fun onCreateView(

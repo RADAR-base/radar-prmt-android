@@ -18,6 +18,13 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Foreground service types permissions (for targeting devices running on android 14 and above) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+
     <supports-screens android:largeScreens="true"
         android:xlargeScreens="true" />
 
@@ -117,7 +124,13 @@
             android:name=".SettingsActivity"
             android:screenOrientation="userPortrait"
             android:parentActivityName=".MainActivityImpl" />
-        <service android:name=".RadarServiceImpl" />
+
+        <service
+            android:name=".RadarServiceImpl"
+            android:exported="false"
+            android:foregroundServiceType="dataSync|health|location|microphone|connectedDevice" >
+        </service>
+
         <service android:name=".AuthServiceImpl" />
 
         <!--
