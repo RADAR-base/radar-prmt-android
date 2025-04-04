@@ -1,6 +1,8 @@
 package org.radarcns.detail
 
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -14,6 +16,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,7 +75,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.reset_settings_button).setOnClickListener { v -> startReset(v) }
         findViewById<MaterialButton>(R.id.share_app_status).setOnClickListener {
             lifecycleScope.launch {
-                emailApplicationStatuses()
+                showSharingOptions()
             }
         }
         progressOverlay = findViewById(R.id.progress_overlay)
@@ -94,62 +97,116 @@ class SettingsActivity : AppCompatActivity() {
         }.show()
     }
 
-    private suspend fun emailApplicationStatuses() {
+    private fun emailSourceStatuses() {
+        val authority = "${packageName}.provider"
+        val file = File(filesDir, SOURCE_STATUS_FILE_PATH)
+        val fileUri: Uri = FileProvider.getUriForFile(this, authority, file)
+
+        val emailIntent = Intent(Intent.ACTION_SEND).apply {
+            type = TEXT_CSV
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("rb-test@kcl.ac.uk"))
+            putExtra(Intent.EXTRA_SUBJECT, DEBUG_PAYLOAD_SUBJECT)
+            putExtra(Intent.EXTRA_TEXT, DEBUG_PAYLOAD_BODY)
+            putExtra(Intent.EXTRA_STREAM, fileUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val gmailIntent = Intent(emailIntent).apply {
+            setPackage("com.google.android.gm")
+        }
+
+        try {
+            startActivity(gmailIntent)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(Intent.createChooser(emailIntent, "Send email via:"))
+        }
+    }
+
+    private fun emailNetworkStatuses() {
+        val authority = "${packageName}.provider"
+        val file = File(filesDir, NETWORK_STATUS_FILE_PATH)
+        val fileUri: Uri = FileProvider.getUriForFile(this, authority, file)
+
+        val emailIntent = Intent(Intent.ACTION_SEND).apply {
+            type = TEXT_CSV
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("rb-test@kcl.ac.uk"))
+            putExtra(Intent.EXTRA_SUBJECT, DEBUG_PAYLOAD_SUBJECT)
+            putExtra(Intent.EXTRA_TEXT, DEBUG_PAYLOAD_BODY)
+            putExtra(Intent.EXTRA_STREAM, fileUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val gmailIntent = Intent(emailIntent).apply {
+            setPackage("com.google.android.gm")
+        }
+
+        try {
+            startActivity(gmailIntent)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(Intent.createChooser(emailIntent, "Send email via:"))
+        }
+    }
+
+    private fun showSharingOptions() {
+        MaterialAlertDialogBuilder(
+            this,
+            com.google.android.material.R.style.ThemeOverlay_Material3_Dialog_Alert
+        )
+            .setIcon(R.drawable.baseline_share_files)
+            .setTitle("Select the entity you want to share")
+            .setMessage("Would you like to share data for Source Status or Network Status?")
+            .setPositiveButton("Sources") { dialogue: DialogInterface, _: Int ->
+                dialogue.dismiss()
+                lifecycleScope.launch(Dispatchers.Default) {
+                    processSharing {
+                        csvExtractor.exportSourceEntities()
+                    }
+                    emailSourceStatuses()
+                }
+            }
+            .setNegativeButton("Network") { dialogue: DialogInterface, _: Int ->
+                dialogue.dismiss()
+                lifecycleScope.launch(Dispatchers.Default) {
+                    processSharing {
+                        csvExtractor.exportNetworkEntities()
+                    }
+                    emailNetworkStatuses()
+                }
+            }.show()
+    }
+
+    private suspend fun processSharing(block: suspend () -> Unit) {
         try {
             enableProcessingUI()
-            withContext(Dispatchers.Default) {
-                csvExtractor.exportEntities()
-            }
+            block()
         } catch (ex: IllegalStateException) {
             logger.error("Failed to send debug payload files: {}", ex.message)
             Toast.makeText(this, "Failed to share the files", Toast.LENGTH_LONG).show()
-            return
         } finally {
             disableProcessingUI()
         }
+    }
 
-        val authority = "${packageName}.provider"
-
-        val payloadFileUris: List<Uri> = listOf(
-            File(filesDir, SOURCE_STATUS_FILE_PATH), File(filesDir, NETWORK_STATUS_FILE_PATH)
-        ).let { files ->
-            files.map {
-                FileProvider.getUriForFile(
-                    this,
-                    authority,
-                    it
+    private suspend fun enableProcessingUI() {
+        withContext(Dispatchers.Main) {
+            progressOverlay.visibility = View.VISIBLE
+            if (responsiveOnTouch) {
+                window.setFlags(
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 )
+                responsiveOnTouch = false
             }
         }
-
-        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-            type = TEXT_CSV
-            putExtra(Intent.EXTRA_EMAIL, "rb-test@kcl.ac.uk")
-            putExtra(Intent.EXTRA_SUBJECT, DEBUG_PAYLOAD_SUBJECT)
-            putCharSequenceArrayListExtra(Intent.EXTRA_TEXT, arrayListOf(DEBUG_PAYLOAD_BODY))
-            putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(payloadFileUris))
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }.also {
-            startActivity(Intent.createChooser(it, "Send email via:"))
-        }
     }
 
-    private fun enableProcessingUI() {
-        progressOverlay.visibility = View.VISIBLE
-        if (responsiveOnTouch) {
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-            )
-            responsiveOnTouch = false
-        }
-    }
-
-    private fun disableProcessingUI() {
-        progressOverlay.visibility = View.GONE
-        if (!responsiveOnTouch) {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-            responsiveOnTouch = true
+    private suspend fun disableProcessingUI() {
+        withContext(Dispatchers.Main) {
+            progressOverlay.visibility = View.GONE
+            if (!responsiveOnTouch) {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                responsiveOnTouch = true
+            }
         }
     }
 
