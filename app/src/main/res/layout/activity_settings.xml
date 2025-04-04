@@ -53,6 +53,14 @@
                     android:layout_marginTop="@dimen/size_medium"
                     android:text="@string/button_reset" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/share_app_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/size_xxlarge"
+                    android:layout_marginTop="@dimen/size_medium"
+                    android:text="@string/share_application_status" />
+
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -73,4 +81,33 @@
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:title="RADAR pRMT" />
     </com.google.android.material.appbar.AppBarLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone"
+        android:id="@+id/progress_overlay">
+
+        <ProgressBar
+            android:id="@+id/pb_sharing"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="?attr/colorPrimary" />
+
+        <TextView
+            android:id="@+id/tv_sharing_progress_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/size_small"
+            android:text="@string/logout_progress_message"
+            android:textStyle="bold"
+            android:textColor="?attr/colorPrimary"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:visibility="gone" />
+    </FrameLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
