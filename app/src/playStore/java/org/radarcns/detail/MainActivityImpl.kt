@@ -25,10 +25,12 @@ import org.radarbase.android.MainActivity
 import org.radarbase.android.MainActivityView
 import org.radarbase.android.RadarApplication.Companion.radarApp
 import org.radarbase.android.auth.LoginManager
+import org.radarcns.detail.UncaughtExceptionHandlerContentProvider.Companion.CRASH_RESTART_NOTIFICATION_ID
 
 class MainActivityImpl : MainActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         radarApp.notificationHandler.cancel(MainActivityBootStarter.BOOT_START_NOTIFICATION_ID)
+        radarApp.notificationHandler.cancel(CRASH_RESTART_NOTIFICATION_ID)
         super.onCreate(savedInstanceState)
     }
 
