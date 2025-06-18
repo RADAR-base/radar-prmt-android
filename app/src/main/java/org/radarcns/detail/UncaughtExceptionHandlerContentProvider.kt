@@ -13,7 +13,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.provider.Settings
+import androidx.core.app.NotificationCompat.CATEGORY_ALARM
 import org.radarbase.android.RadarApplication
+import org.radarbase.android.RadarApplication.Companion.radarApp
+import org.radarbase.android.util.NotificationHandler.Companion.NOTIFICATION_CHANNEL_ALERT
 import org.radarbase.android.util.toPendingIntentFlag
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -54,6 +58,21 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
         val currentContext = context ?: return
 
         currentContext.stopService(Intent(currentContext, RadarServiceImpl::class.java))
+
+        if (!Settings.canDrawOverlays(currentContext)) {
+            currentContext.radarApp.notificationHandler.notify(
+                id = CRASH_RESTART_NOTIFICATION_ID,
+                channel = NOTIFICATION_CHANNEL_ALERT,
+                includeStartIntent = true,
+            ) {
+                currentContext.run {
+                    setContentTitle(getString(R.string.crash_restart_title))
+                    setContentTitle(getString(R.string.crash_restart_text))
+                    setCategory(CATEGORY_ALARM)
+                }
+            }
+            return
+        }
 
         val intent = Intent(currentContext, SplashActivityImpl::class.java).apply {
             putExtra("crash", true)
