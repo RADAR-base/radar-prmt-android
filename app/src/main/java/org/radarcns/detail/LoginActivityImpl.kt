@@ -38,6 +38,7 @@ import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
+import org.radarbase.android.auth.sep.SEPLoginManager
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
@@ -49,6 +50,7 @@ import java.io.IOException
 import java.net.ConnectException
 import java.net.MalformedURLException
 import java.net.URI
+import java.net.URISyntaxException
 
 class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
     private var startActivityFuture: Runnable? = null
@@ -62,7 +64,8 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private lateinit var binding: ActivityLoginBinding
 
     private lateinit var qrCodeScanner: QrCodeScanner
-    private lateinit var dialog: Dialog
+    private lateinit var credentialsDialog: Dialog
+    private lateinit var studyIdDialog: Dialog
 
     private lateinit var mainHandler: Handler
 
@@ -84,6 +87,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         with(binding) {
             scanButton.setOnClickListener { v -> scan(v) }
             enterCredentialsButton.setOnClickListener { v -> enterCredentials(v) }
+            enterStudyIdButton.setOnClickListener { v -> enterStudyId(v) }
             loader.visibility = View.GONE
         }
         checkNetworkConnection()
@@ -111,6 +115,14 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             return
         }
 
+        if (qrCode.contains(PRMT_CUSTOM_SCHEME)) {
+            sepLoginFlow(qrCode)
+        } else {
+            mpLoginFlow(qrCode)
+        }
+    }
+
+    private fun mpLoginFlow(qrCode: String) {
         applyMpManager { auth, mpManager, authState ->
             if (qrCode[0] == '{') {
                 // parse as JSON with embedded refresh token
@@ -142,10 +154,31 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
+    private fun sepLoginFlow(qrCode: String) {
+        applySepManager { auth, sepManager, authState ->
+            sepManager.sepQrFlow(authState, qrCode)
+            auth.update(sepManager)
+        }
+    }
+
+    private fun oAuthFlow(url: String) {
+
+    }
+
     private fun applyMpManager(callback: (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState) -> Unit) {
         authConnection.applyBinder {
             val manager = managers.find { it is ManagementPortalLoginManager }
                     as? ManagementPortalLoginManager ?: return@applyBinder
+            applyState {
+                callback(this@applyBinder, manager, this)
+            }
+        }
+    }
+
+    private fun applySepManager(callback: (AuthService.AuthServiceBinder, SEPLoginManager, AppAuthState) -> Unit) {
+        authConnection.applyBinder {
+            val manager = managers.find { it is SEPLoginManager }
+                    as? SEPLoginManager ?: return@applyBinder
             applyState {
                 callback(this@applyBinder, manager, this)
             }
@@ -172,11 +205,11 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private fun checkNetworkConnection() = with(binding) {
         if (networkIsConnected) {
             scanButton.isEnabled = true
-            enterCredentialsButton.isEnabled = true
+            enterCredentialsButton.isClickable = true
             messageText.text = ""
         } else {
             scanButton.isEnabled = false
-            enterCredentialsButton.isEnabled = false
+            enterCredentialsButton.isClickable = false
             messageText.setText(R.string.no_connection)
         }
     }
@@ -283,10 +316,10 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     }
 
     private fun enterCredentials(@Suppress("UNUSED_PARAMETER") view: View) {
-        dialog = Dialog(this)
-        dialog.setContentView(R.layout.dialog_login_token)
+        credentialsDialog = Dialog(this)
+        credentialsDialog.setContentView(R.layout.dialog_login_token)
 
-        val baseUrlInput = dialog.findViewById<TextInputLayout>(R.id.baseUrl)
+        val baseUrlInput = credentialsDialog.findViewById<TextInputLayout>(R.id.baseUrl)
         radarConfig.config.observe(this) { config ->
             if (!didModifyBaseUrl) {
                 val baseUrl = config.getString(BASE_URL_KEY, "").toHttpUrlOrNull() ?: return@observe
@@ -298,10 +331,9 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             }
         }
 
-        val tokenInput = dialog.findViewById<TextInputLayout>(R.id.token)
+        val tokenInput = credentialsDialog.findViewById<TextInputLayout>(R.id.token)
 
-        dialog.findViewById<Button>(R.id.ok_button).setOnClickListener {
-
+        credentialsDialog.findViewById<Button>(R.id.ok_button).setOnClickListener {
             if (canLogin) {
                 canLogin = false
                 applyMpManager { _, mpManager, authState ->
@@ -314,7 +346,7 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
                     val url = "https://$baseUrl/managementportal/api/meta-token/${tokenInput.editText?.text}"
                     try {
                         mpManager.setTokenFromUrl(authState, url)
-                        dialog.dismiss()
+                        credentialsDialog.dismiss()
                     } catch (ex: MalformedURLException) {
                         loginFailed(mpManager, IllegalArgumentException("Cannot parse URL $url"))
                     }
@@ -322,11 +354,12 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             }
         }
 
-        dialog.findViewById<Button>(R.id.cancel_button).setOnClickListener {
-            dialog.cancel()
+        credentialsDialog.findViewById<Button>(R.id.cancel_button).setOnClickListener {
+            credentialsDialog.cancel()
         }
-        dialog.show()
+        credentialsDialog.show()
     }
+
 
     private fun setLoader(show: Boolean) = with(binding) {
         if (show) {
@@ -340,9 +373,13 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
+    class InvalidStudyIdException(val info: String): RuntimeException(info)
+
     companion object {
         private val logger = LoggerFactory.getLogger(LoginActivityImpl::class.java)
 
+        private const val PRMT_CUSTOM_SCHEME = "org.radarbase.prmt://"
+        private const val STUDY_ID_CONSTANT = "study_id_url_map"
         private val baseUrlPrefixRegex = "^https?:?/?/?".toRegex()
         // Allow for typos in managementportal.
         private val baseUrlPostfixRegex = "/[mangetporl]+/?$".toRegex()
