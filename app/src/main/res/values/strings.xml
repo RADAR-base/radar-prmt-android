@@ -78,6 +78,7 @@
     <string name="login_failed_connection">No network connection available. Please connect your phone to the internet and try again.</string>
     <string name="login_failed_mp">Login failed. Please try again later.</string>
     <string name="login_failed">Login failed. Please try again later.</string>
+    <string name="blank_study_id">Blank study ID</string>
     <string name="no_connection">No internet connection available. Please make sure wifi and/or cellphone data is turned on.</string>
     <string name="info">About This App</string>
     <string name="radar_prmt_title">RADAR pRMT</string>
@@ -110,7 +111,8 @@
     <string name="app_starting">Starting app…</string>
     <string name="enter_study_id">Enter Study ID</string>
     <string name="enter_study_id_title">Enter Study ID</string>
-    <string name="enter_study_id_description">Enter the study id from portal to proceed</string>
+    <string name="study_image_description">Study Image Description</string>
+    <string name="enter_study_id_description">Enter study id from portal to proceed</string>
     <string name="enter_credentials_title">Enter credentials</string>
     <string name="enter_credentials_description">Enter the base URL and token listed in the ManagementPortal Pair App screen.</string>
     <string name="baseUrlPrefix">https://</string>
