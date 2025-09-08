@@ -26,6 +26,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import com.google.android.material.textfield.TextInputLayout
@@ -35,8 +36,11 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
+import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
+import org.radarbase.android.auth.oauth2.OAuth2LoginManager
+import org.radarbase.android.auth.oauth2.OAuth2LoginManager.Companion.SOURCE_TYPE_OAUTH2
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.auth.sep.SEPLoginManager
 import org.radarbase.android.util.Boast
@@ -52,8 +56,13 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 
-class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConnectedListener, PrivacyPolicyFragment.OnFragmentInteractionListener {
+class LoginActivityImpl :
+    LoginActivity(),
+    NetworkConnectedReceiver.NetworkConnectedListener,
+    PrivacyPolicyFragment.OnFragmentInteractionListener,
+    StudyIdFragment.FragmentInteractionListener {
     private var startActivityFuture: Runnable? = null
+    private var oAuthFlowFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
 
@@ -66,8 +75,36 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
     private lateinit var qrCodeScanner: QrCodeScanner
     private lateinit var credentialsDialog: Dialog
     private lateinit var studyIdDialog: Dialog
+    private var studyIdFragment: StudyIdFragment? = null
 
     private lateinit var mainHandler: Handler
+
+    private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val resultIntent = result.data
+        logger.info("AuthRequestDebug: activity result dataUri={}", resultIntent?.data)
+
+        if (resultIntent != null) {
+            intent = resultIntent
+        }
+
+        logIntent(resultIntent, "activityResult")
+
+        authConnection.applyBinder {
+            managers.find { it.onActivityCreate(this@LoginActivityImpl, this@applyBinder) }
+                ?.let { this@applyBinder.update(it) }
+        }
+    }
+
+    private fun logIntent(intent: Intent?, where: String) {
+        val data = intent?.data
+        val action = intent?.action
+        val flags = intent?.flags
+        val extrasKeys = intent?.extras?.keySet()?.joinToString(", ") ?: "null"
+        logger.info("AuthRequestDebug: $where — action=$action, data=$data, flags=$flags, extras=$extrasKeys")
+        intent?.extras?.keySet()?.forEach { k ->
+            logger.info("AuthRequestDebug: extra $k => ${intent.extras?.get(k)}")
+        }
+    }
 
     override fun onCreate(savedInstanceBundle: Bundle?) {
         didCreate = false
@@ -161,8 +198,21 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         }
     }
 
-    private fun oAuthFlow(url: String) {
-
+    private fun oAuthFlow(baseUrl: String) {
+        applyOAuth2Manager { auth, oAuthManager, authState ->
+            authState.alter {
+                attributes[BASE_URL_KEY] = baseUrl
+                needsRegisteredSources = true
+                authenticationSource = SOURCE_TYPE_OAUTH2
+            }
+            radarConfig.apply {
+                put(RadarConfiguration.SEP_URL_KEY, baseUrl)
+                put(RadarConfiguration.OAUTH2_TOKEN_URL, "$baseUrl/hydra/oauth2/token")
+                put(RadarConfiguration.OAUTH2_AUTHORIZE_URL, "$baseUrl/hydra/oauth2/auth")
+                persistChanges()
+            }
+            oAuthManager.start(authState, activityResultLauncher)
+        }
     }
 
     private fun applyMpManager(callback: (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState) -> Unit) {
@@ -179,6 +229,16 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         authConnection.applyBinder {
             val manager = managers.find { it is SEPLoginManager }
                     as? SEPLoginManager ?: return@applyBinder
+            applyState {
+                callback(this@applyBinder, manager, this)
+            }
+        }
+    }
+
+    private fun applyOAuth2Manager(callback: (AuthService.AuthServiceBinder, OAuth2LoginManager, AppAuthState) -> Unit) {
+        authConnection.applyBinder {
+            val manager = managers.find { it is OAuth2LoginManager }
+                    as? OAuth2LoginManager ?: return@applyBinder
             applyState {
                 callback(this@applyBinder, manager, this)
             }
@@ -308,6 +368,48 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
             }
             invalidate(null, true)
         }
+        startLoginActivity()
+    }
+
+    override fun onStudyIdEntered(studyId: String) {
+        if (canLogin) {
+            canLogin = false
+            try {
+                closeStudyIdFragment()
+                val studyUrl = urlJsonFromRemoteConfig(studyId) ?: run {
+                    logger.error("No study id with name {} is present. Aborting login.", studyId)
+                    return
+                }
+
+                val uri = URI(studyUrl)
+                val defaultPort = when (uri.scheme.lowercase()) {
+                    "http" -> 80
+                    "https" -> 443
+                    else -> -1
+                }
+                val sepBaseUrl = if (uri.port != -1 && uri.port != defaultPort) {
+                    "${uri.scheme}://${uri.host}:${uri.port}"
+                } else {
+                    "${uri.scheme}://${uri.host}"
+                }
+                logger.debug("Starting oauth flow at {}", uri.toString())
+                oAuthFlow(sepBaseUrl)
+            } catch (ex: InvalidStudyIdException) {
+                logger.error("Invalid study id")
+                loginFailed(null, ex)
+            } catch (ex: URISyntaxException) {
+                logger.error("Invalid url scanned from portal")
+                loginFailed(null, ex)
+            }
+        }
+    }
+
+    override fun onStudyIdCancelled() {
+        logger.info("Study ID cancelled")
+        startLoginActivity()
+    }
+
+    private fun startLoginActivity() {
         val intent = Intent(this, LoginActivityImpl::class.java)
         finish()
         startActivity(intent.apply {
@@ -360,6 +462,55 @@ class LoginActivityImpl : LoginActivity(), NetworkConnectedReceiver.NetworkConne
         credentialsDialog.show()
     }
 
+    private fun enterStudyId(@Suppress("UNUSED_PARAMETER") view: View) {
+//        studyIdDialog = Dialog(this).apply {
+//            setContentView(R.layout.dialogue_study_id)
+//        }
+//
+//        val studyIdInput = studyIdDialog.findViewById<TextInputLayout>(R.id.inputStudyId)
+        startStudyIdFragment()
+//        studyIdDialog.findViewById<Button>(R.id.cancel_button).setOnClickListener {
+//            studyIdDialog.cancel()
+//        }
+//        studyIdDialog.show()
+    }
+
+    private fun urlJsonFromRemoteConfig(studyId: String): String? {
+        try {
+            val json = radarConfig.latestConfig.optString(STUDY_ID_CONSTANT)?.let(::JSONObject)
+            return json?.getString(studyId) ?: throw InvalidStudyIdException(
+                "Study with id (${studyId}) doesn't exists"
+            )
+        } catch (e: JSONException) {
+            loginFailed(null, e)
+            return null
+        } catch (ex: InvalidStudyIdException) {
+            loginFailed(null, ex)
+            return null
+        }
+    }
+
+    private fun startStudyIdFragment() {
+        logger.info("Starting study id fragment...")
+
+        try {
+            studyIdFragment = StudyIdFragment().also {
+                createFragmentLayout(R.id.study_id_fragment, it)
+            }
+        } catch (ex: IllegalStateException) {
+            logger.error(
+                "Failed to start study id fragment -- is login activity already closed?",
+                ex
+            )
+        }
+    }
+
+    private fun closeStudyIdFragment() {
+        supportFragmentManager.commit {
+            studyIdFragment?.let { remove(it) }
+            studyIdFragment = null
+        }
+    }
 
     private fun setLoader(show: Boolean) = with(binding) {
         if (show) {
