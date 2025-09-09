@@ -40,9 +40,9 @@ import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.oauth2.OAuth2LoginManager
-import org.radarbase.android.auth.oauth2.OAuth2LoginManager.Companion.SOURCE_TYPE_OAUTH2
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.auth.sep.SEPLoginManager
+import org.radarbase.android.auth.sep.SEPLoginManager.Companion.SOURCE_TYPE_OAUTH2
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty

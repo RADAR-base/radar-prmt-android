@@ -11,7 +11,7 @@ class AuthServiceImpl : AuthService() {
     override fun createLoginManagers(appAuth: AppAuthState): List<LoginManager> = listOf(
         ManagementPortalLoginManager(this, appAuth),
         SEPLoginManager(this, appAuth),
-        OAuth2LoginManager(this, "", "")
+        OAuth2LoginManager(this)
     )
 
     override fun showLoginNotification() = Unit
