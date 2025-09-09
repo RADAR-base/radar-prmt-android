@@ -43,15 +43,22 @@
                             android:layout_margin="@dimen/size_medium"
                             android:text="@string/enter_study_id" />
 
-                        <ImageView
-                            android:id="@+id/studyImage"
+                        <androidx.cardview.widget.CardView
                             android:layout_width="160dp"
                             android:layout_height="350dp"
                             android:layout_gravity="center_horizontal"
                             android:layout_marginBottom="@dimen/size_small"
-                            android:contentDescription="@string/study_image_description"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/sep_login_image" />
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp">
+
+                            <ImageView
+                                android:id="@+id/studyImage"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:contentDescription="@string/study_image_description"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/sep_login" />
+                        </androidx.cardview.widget.CardView>
 
                         <TextView
                             android:id="@+id/inputUserId"
