@@ -62,7 +62,6 @@ class LoginActivityImpl :
     PrivacyPolicyFragment.OnFragmentInteractionListener,
     StudyIdFragment.FragmentInteractionListener {
     private var startActivityFuture: Runnable? = null
-    private var oAuthFlowFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
     private var canLogin: Boolean = false
 
@@ -74,35 +73,18 @@ class LoginActivityImpl :
 
     private lateinit var qrCodeScanner: QrCodeScanner
     private lateinit var credentialsDialog: Dialog
-    private lateinit var studyIdDialog: Dialog
     private var studyIdFragment: StudyIdFragment? = null
 
     private lateinit var mainHandler: Handler
 
     private val activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val resultIntent = result.data
-        logger.info("AuthRequestDebug: activity result dataUri={}", resultIntent?.data)
-
         if (resultIntent != null) {
             intent = resultIntent
         }
-
-        logIntent(resultIntent, "activityResult")
-
         authConnection.applyBinder {
             managers.find { it.onActivityCreate(this@LoginActivityImpl, this@applyBinder) }
                 ?.let { this@applyBinder.update(it) }
-        }
-    }
-
-    private fun logIntent(intent: Intent?, where: String) {
-        val data = intent?.data
-        val action = intent?.action
-        val flags = intent?.flags
-        val extrasKeys = intent?.extras?.keySet()?.joinToString(", ") ?: "null"
-        logger.info("AuthRequestDebug: $where — action=$action, data=$data, flags=$flags, extras=$extrasKeys")
-        intent?.extras?.keySet()?.forEach { k ->
-            logger.info("AuthRequestDebug: extra $k => ${intent.extras?.get(k)}")
         }
     }
 
@@ -124,7 +106,7 @@ class LoginActivityImpl :
         with(binding) {
             scanButton.setOnClickListener { v -> scan(v) }
             enterCredentialsButton.setOnClickListener { v -> enterCredentials(v) }
-            enterStudyIdButton.setOnClickListener { v -> enterStudyId(v) }
+            enterStudyIdButton.setOnClickListener { v -> startStudyIdFragment() }
             loader.visibility = View.GONE
         }
         checkNetworkConnection()
@@ -266,10 +248,12 @@ class LoginActivityImpl :
         if (networkIsConnected) {
             scanButton.isEnabled = true
             enterCredentialsButton.isClickable = true
+            enterStudyIdButton.isEnabled = true
             messageText.text = ""
         } else {
             scanButton.isEnabled = false
             enterCredentialsButton.isClickable = false
+            enterStudyIdButton.isEnabled = false
             messageText.setText(R.string.no_connection)
         }
     }
@@ -290,6 +274,7 @@ class LoginActivityImpl :
             val res: Int = when (ex) {
                 is QrException -> R.string.login_failed_qr
                 is AuthenticationException -> R.string.login_failed_authentication
+                is InvalidStudyIdException -> R.string.invalid_study_id
                 is FirebaseRemoteConfigException -> R.string.login_failed_firebase
                 is ConnectException -> R.string.login_failed_connection
                 is IOException -> R.string.login_failed_mp
@@ -394,9 +379,6 @@ class LoginActivityImpl :
                 }
                 logger.debug("Starting oauth flow at {}", uri.toString())
                 oAuthFlow(sepBaseUrl)
-            } catch (ex: InvalidStudyIdException) {
-                logger.error("Invalid study id")
-                loginFailed(null, ex)
             } catch (ex: URISyntaxException) {
                 logger.error("Invalid url scanned from portal")
                 loginFailed(null, ex)
@@ -462,19 +444,6 @@ class LoginActivityImpl :
         credentialsDialog.show()
     }
 
-    private fun enterStudyId(@Suppress("UNUSED_PARAMETER") view: View) {
-//        studyIdDialog = Dialog(this).apply {
-//            setContentView(R.layout.dialogue_study_id)
-//        }
-//
-//        val studyIdInput = studyIdDialog.findViewById<TextInputLayout>(R.id.inputStudyId)
-        startStudyIdFragment()
-//        studyIdDialog.findViewById<Button>(R.id.cancel_button).setOnClickListener {
-//            studyIdDialog.cancel()
-//        }
-//        studyIdDialog.show()
-    }
-
     private fun urlJsonFromRemoteConfig(studyId: String): String? {
         try {
             val json = radarConfig.latestConfig.optString(STUDY_ID_CONSTANT)?.let(::JSONObject)
@@ -492,7 +461,6 @@ class LoginActivityImpl :
 
     private fun startStudyIdFragment() {
         logger.info("Starting study id fragment...")
-
         try {
             studyIdFragment = StudyIdFragment().also {
                 createFragmentLayout(R.id.study_id_fragment, it)
@@ -516,15 +484,17 @@ class LoginActivityImpl :
         if (show) {
             scanButton.visibility = View.GONE
             enterCredentialsButton.visibility = View.GONE
+            enterStudyIdButton.visibility = View.GONE
             loader.visibility = View.VISIBLE
         } else {
             scanButton.visibility = View.VISIBLE
             enterCredentialsButton.visibility = View.VISIBLE
+            enterStudyIdButton.visibility = View.GONE
             loader.visibility = View.GONE
         }
     }
 
-    class InvalidStudyIdException(val info: String): RuntimeException(info)
+    class InvalidStudyIdException(info: String): RuntimeException(info)
 
     companion object {
         private val logger = LoggerFactory.getLogger(LoginActivityImpl::class.java)

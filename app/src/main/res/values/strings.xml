@@ -78,7 +78,8 @@
     <string name="login_failed_connection">No network connection available. Please connect your phone to the internet and try again.</string>
     <string name="login_failed_mp">Login failed. Please try again later.</string>
     <string name="login_failed">Login failed. Please try again later.</string>
-    <string name="blank_study_id">Blank study ID</string>
+    <string name="blank_study_id">Blank study id</string>
+    <string name="invalid_study_id">Invalid study id</string>
     <string name="no_connection">No internet connection available. Please make sure wifi and/or cellphone data is turned on.</string>
     <string name="info">About This App</string>
     <string name="radar_prmt_title">RADAR pRMT</string>
@@ -147,7 +148,7 @@
     <string name="start_downloading">Download and Install</string>
     <string name="update_question" />
     <string name="error_in_package_name">Error in package name!</string>
-    <string name="login_description">Log in using the QR code from the Management Portal or the Self Enrollment Portal</string>
+    <string name="login_description">Log in using the QR code</string>
     <string name="token_id_description">or enter a token</string>
     <string name="login_title">Login</string>
     <string name="title_activity_item_detail_host">ItemDetailHostActivity</string>
