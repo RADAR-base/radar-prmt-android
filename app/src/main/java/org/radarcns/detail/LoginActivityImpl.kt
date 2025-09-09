@@ -39,6 +39,7 @@ import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
+import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.oauth2.OAuth2LoginManager
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.auth.sep.SEPLoginManager
@@ -182,18 +183,22 @@ class LoginActivityImpl :
 
     private fun oAuthFlow(baseUrl: String) {
         applyOAuth2Manager { auth, oAuthManager, authState ->
-            authState.alter {
-                attributes[BASE_URL_KEY] = baseUrl
+            val appAuth = authState.alter {
+                attributes[BASE_URL_PROPERTY] = baseUrl
                 needsRegisteredSources = true
                 authenticationSource = SOURCE_TYPE_OAUTH2
             }
+
             radarConfig.apply {
                 put(RadarConfiguration.SEP_URL_KEY, baseUrl)
                 put(RadarConfiguration.OAUTH2_TOKEN_URL, "$baseUrl/hydra/oauth2/token")
                 put(RadarConfiguration.OAUTH2_AUTHORIZE_URL, "$baseUrl/hydra/oauth2/auth")
                 persistChanges()
             }
-            oAuthManager.start(authState, activityResultLauncher)
+            //TODO Try to update configs with auth state from here
+
+            oAuthManager.start(appAuth, activityResultLauncher)
+
         }
     }
 
@@ -363,6 +368,7 @@ class LoginActivityImpl :
                 closeStudyIdFragment()
                 val studyUrl = urlJsonFromRemoteConfig(studyId) ?: run {
                     logger.error("No study id with name {} is present. Aborting login.", studyId)
+                    startLoginActivity()
                     return
                 }
 
@@ -447,9 +453,14 @@ class LoginActivityImpl :
     private fun urlJsonFromRemoteConfig(studyId: String): String? {
         try {
             val json = radarConfig.latestConfig.optString(STUDY_ID_CONSTANT)?.let(::JSONObject)
-            return json?.getString(studyId) ?: throw InvalidStudyIdException(
-                "Study with id (${studyId}) doesn't exists"
-            )
+            return json?.optString(studyId).let { url ->
+                if (url.isNullOrBlank()) {
+                    throw InvalidStudyIdException(
+                        "Study with id (${studyId}) doesn't exists"
+                    )
+                }
+                url
+            }
         } catch (e: JSONException) {
             loginFailed(null, e)
             return null
