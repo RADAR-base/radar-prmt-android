@@ -175,18 +175,20 @@ class LoginActivityImpl :
     }
 
     private fun sepLoginFlow(qrCode: String) {
-        applySepManager { auth, sepManager, authState ->
+        applySepManager { binder, sepManager, authState ->
             sepManager.sepQrFlow(authState, qrCode)
-            auth.update(sepManager)
+            binder.update(sepManager)
         }
     }
 
     private fun oAuthFlow(baseUrl: String) {
-        applyOAuth2Manager { auth, oAuthManager, authState ->
-            val appAuth = authState.alter {
+        applyOAuth2Manager { binder, oAuthManager, authState ->
+            val updatedAuth = authState.alter {
                 attributes[BASE_URL_PROPERTY] = baseUrl
-                needsRegisteredSources = true
-                authenticationSource = SOURCE_TYPE_OAUTH2
+            }
+
+            binder.updateState {
+                attributes.putAll(updatedAuth.attributes)
             }
 
             radarConfig.apply {
@@ -195,9 +197,9 @@ class LoginActivityImpl :
                 put(RadarConfiguration.OAUTH2_AUTHORIZE_URL, "$baseUrl/hydra/oauth2/auth")
                 persistChanges()
             }
-            //TODO Try to update configs with auth state from here
-
-            oAuthManager.start(appAuth, activityResultLauncher)
+            //TODO Try to update configs with auth state fromin here
+            logger.debug("AppAuthDebug: {}", updatedAuth)
+            oAuthManager.start(updatedAuth, activityResultLauncher)
 
         }
     }
