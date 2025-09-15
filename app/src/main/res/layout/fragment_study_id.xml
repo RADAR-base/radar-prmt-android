@@ -57,7 +57,7 @@
                                 android:layout_height="match_parent"
                                 android:contentDescription="@string/study_image_description"
                                 android:scaleType="centerCrop"
-                                android:src="@drawable/sep_login" />
+                                android:src="@drawable/sep_prmt" />
                         </androidx.cardview.widget.CardView>
 
                         <TextView
