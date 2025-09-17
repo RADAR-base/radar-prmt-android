@@ -32,6 +32,7 @@ import androidx.fragment.app.commit
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
+import net.openid.appauth.AuthorizationException
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
 import org.json.JSONObject
@@ -41,9 +42,9 @@ import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.oauth2.OAuth2LoginManager
+import org.radarbase.android.auth.oauth2.OAuth2StateManager.Companion.MissingConfigurationException
 import org.radarbase.android.auth.portal.ManagementPortalLoginManager
 import org.radarbase.android.auth.sep.SEPLoginManager
-import org.radarbase.android.auth.sep.SEPLoginManager.Companion.SOURCE_TYPE_OAUTH2
 import org.radarbase.android.util.Boast
 import org.radarbase.android.util.NetworkConnectedReceiver
 import org.radarbase.android.util.takeTrimmedIfNotEmpty
@@ -83,6 +84,13 @@ class LoginActivityImpl :
         if (resultIntent != null) {
             intent = resultIntent
         }
+
+        val authEx = AuthorizationException.fromIntent(resultIntent)
+        if ((authEx != null) && authEx.code == USER_CANCELLED_OAUTH_FLOW) {
+            loginFailed(null, OAuthFlowAbortException("Oauth flow cancelled by user"))
+            startLoginActivity()
+        }
+
         authConnection.applyBinder {
             managers.find { it.onActivityCreate(this@LoginActivityImpl, this@applyBinder) }
                 ?.let { this@applyBinder.update(it) }
@@ -191,46 +199,63 @@ class LoginActivityImpl :
                 attributes.putAll(updatedAuth.attributes)
             }
 
-            radarConfig.apply {
-                put(RadarConfiguration.SEP_URL_KEY, baseUrl)
-                put(RadarConfiguration.OAUTH2_TOKEN_URL, "$baseUrl/hydra/oauth2/token")
-                put(RadarConfiguration.OAUTH2_AUTHORIZE_URL, "$baseUrl/hydra/oauth2/auth")
-                persistChanges()
-            }
-            //TODO Try to update configs with auth state fromin here
-            logger.debug("AppAuthDebug: {}", updatedAuth)
-            oAuthManager.start(updatedAuth, activityResultLauncher)
+//            radarConfig.apply {
+//                put(RadarConfiguration.SEP_URL_KEY, baseUrl)
+//                put(RadarConfiguration.OAUTH2_TOKEN_URL, "$baseUrl/hydra/oauth2/token")
+//                put(RadarConfiguration.OAUTH2_AUTHORIZE_URL, "$baseUrl/hydra/oauth2/auth")
+//                persistChanges()
+//            }
 
+            radarConfig.updateWithAuthState(this, updatedAuth)
+            logger.debug("AppAuthDebug: {}", updatedAuth)
+            try {
+                oAuthManager.start(updatedAuth, activityResultLauncher)
+            } catch (ex: MissingConfigurationException) {
+                loginFailed(oAuthManager, ex)
+                startLoginActivity()
+            }
         }
     }
 
     private fun applyMpManager(callback: (AuthService.AuthServiceBinder, ManagementPortalLoginManager, AppAuthState) -> Unit) {
         authConnection.applyBinder {
-            val manager = managers.find { it is ManagementPortalLoginManager }
+            val mpManager = managers.find { it is ManagementPortalLoginManager }
                     as? ManagementPortalLoginManager ?: return@applyBinder
+
             applyState {
-                callback(this@applyBinder, manager, this)
+                initializeManager(mpManager, this)
+                callback(this@applyBinder, mpManager, this)
             }
         }
     }
 
     private fun applySepManager(callback: (AuthService.AuthServiceBinder, SEPLoginManager, AppAuthState) -> Unit) {
         authConnection.applyBinder {
-            val manager = managers.find { it is SEPLoginManager }
+            val sepManager = managers.find { it is SEPLoginManager }
                     as? SEPLoginManager ?: return@applyBinder
+
             applyState {
-                callback(this@applyBinder, manager, this)
+                initializeManager(sepManager, this)
+                callback(this@applyBinder, sepManager, this)
             }
         }
     }
 
     private fun applyOAuth2Manager(callback: (AuthService.AuthServiceBinder, OAuth2LoginManager, AppAuthState) -> Unit) {
         authConnection.applyBinder {
-            val manager = managers.find { it is OAuth2LoginManager }
+            val oauthManager = managers.find { it is OAuth2LoginManager }
                     as? OAuth2LoginManager ?: return@applyBinder
+
             applyState {
-                callback(this@applyBinder, manager, this)
+                initializeManager(oauthManager, this)
+                callback(this@applyBinder, oauthManager, this)
             }
+        }
+    }
+
+    private fun initializeManager(manager: LoginManager, authState: AppAuthState) {
+        if (!manager.isStarted) {
+            manager.init(authState)
         }
     }
 
@@ -285,6 +310,8 @@ class LoginActivityImpl :
                 is FirebaseRemoteConfigException -> R.string.login_failed_firebase
                 is ConnectException -> R.string.login_failed_connection
                 is IOException -> R.string.login_failed_mp
+                is MissingConfigurationException -> R.string.missing_config_exception
+                is OAuthFlowAbortException -> R.string.oauth_flow_aborted
                 else -> R.string.login_failed
             }
             Boast.makeText(this@LoginActivityImpl, res, Toast.LENGTH_LONG).show()
@@ -292,7 +319,6 @@ class LoginActivityImpl :
     }
 
     override fun loginSucceeded(manager: LoginManager?, authState: AppAuthState) {
-
         mainHandler.post {
             startActivityFuture?.let {
                 mainHandler.removeCallbacks(it)
@@ -366,8 +392,8 @@ class LoginActivityImpl :
     override fun onStudyIdEntered(studyId: String) {
         if (canLogin) {
             canLogin = false
+            closeStudyIdFragment()
             try {
-                closeStudyIdFragment()
                 val studyUrl = urlJsonFromRemoteConfig(studyId) ?: run {
                     logger.error("No study id with name {} is present. Aborting login.", studyId)
                     startLoginActivity()
@@ -514,8 +540,11 @@ class LoginActivityImpl :
 
         private const val PRMT_CUSTOM_SCHEME = "org.radarbase.prmt://"
         private const val STUDY_ID_CONSTANT = "study_id_url_map"
+        private const val USER_CANCELLED_OAUTH_FLOW = 1
         private val baseUrlPrefixRegex = "^https?:?/?/?".toRegex()
         // Allow for typos in managementportal.
         private val baseUrlPostfixRegex = "/[mangetporl]+/?$".toRegex()
+
+        class OAuthFlowAbortException(message: String): RuntimeException(message)
     }
 }

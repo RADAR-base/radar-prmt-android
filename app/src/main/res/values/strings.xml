@@ -77,6 +77,8 @@
     <string name="login_failed_firebase">Settings are incomplete. Please update the Firebase Remote Configuration</string>
     <string name="login_failed_connection">No network connection available. Please connect your phone to the internet and try again.</string>
     <string name="login_failed_mp">Login failed. Please try again later.</string>
+    <string name="missing_config_exception">Missing firebase configuration. Please update the Firebase Remote Configuration</string>
+    <string name="oauth_flow_aborted">Login interrupted by user</string>
     <string name="login_failed">Login failed. Please try again later.</string>
     <string name="blank_study_id">Blank study id</string>
     <string name="invalid_study_id">Invalid study id</string>
