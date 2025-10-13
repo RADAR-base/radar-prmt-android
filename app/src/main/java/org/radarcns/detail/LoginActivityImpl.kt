@@ -33,11 +33,11 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import net.openid.appauth.AuthorizationException
+import net.openid.appauth.AuthorizationResponse
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
-import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
@@ -70,6 +70,7 @@ class LoginActivityImpl :
     private lateinit var networkReceiver: NetworkConnectedReceiver
     private var networkIsConnected = false
     private var didCreate: Boolean = false
+    private var authAttempt: Int = 0
 
     private lateinit var binding: ActivityLoginBinding
 
@@ -89,11 +90,29 @@ class LoginActivityImpl :
         if ((authEx != null) && authEx.code == USER_CANCELLED_OAUTH_FLOW) {
             loginFailed(null, OAuthFlowAbortException("Oauth flow cancelled by user"))
             startLoginActivity()
+            return@registerForActivityResult
+        }
+
+        val authResp = resultIntent?.let(AuthorizationResponse::fromIntent)
+        if (authResp != null && ++authAttempt == 1) {
+            secondAuthAttempt()
+            return@registerForActivityResult
         }
 
         authConnection.applyBinder {
             managers.find { it.onActivityCreate(this@LoginActivityImpl, this@applyBinder) }
                 ?.let { this@applyBinder.update(it) }
+        }
+    }
+
+    private fun secondAuthAttempt() {
+        applyOAuth2Manager { binder, manager, state ->
+            try {
+                manager.start(state, activityResultLauncher)
+            } catch (ex: MissingConfigurationException) {
+                loginFailed(manager, ex)
+                startLoginActivity()
+            }
         }
     }
 
@@ -199,13 +218,6 @@ class LoginActivityImpl :
                 attributes.putAll(updatedAuth.attributes)
             }
 
-//            radarConfig.apply {
-//                put(RadarConfiguration.SEP_URL_KEY, baseUrl)
-//                put(RadarConfiguration.OAUTH2_TOKEN_URL, "$baseUrl/hydra/oauth2/token")
-//                put(RadarConfiguration.OAUTH2_AUTHORIZE_URL, "$baseUrl/hydra/oauth2/auth")
-//                persistChanges()
-//            }
-
             radarConfig.updateWithAuthState(this, updatedAuth)
             logger.debug("AppAuthDebug: {}", updatedAuth)
             try {
@@ -223,7 +235,6 @@ class LoginActivityImpl :
                     as? ManagementPortalLoginManager ?: return@applyBinder
 
             applyState {
-                initializeManager(mpManager, this)
                 callback(this@applyBinder, mpManager, this)
             }
         }
@@ -235,7 +246,6 @@ class LoginActivityImpl :
                     as? SEPLoginManager ?: return@applyBinder
 
             applyState {
-                initializeManager(sepManager, this)
                 callback(this@applyBinder, sepManager, this)
             }
         }
@@ -247,15 +257,8 @@ class LoginActivityImpl :
                     as? OAuth2LoginManager ?: return@applyBinder
 
             applyState {
-                initializeManager(oauthManager, this)
                 callback(this@applyBinder, oauthManager, this)
             }
-        }
-    }
-
-    private fun initializeManager(manager: LoginManager, authState: AppAuthState) {
-        if (!manager.isStarted) {
-            manager.init(authState)
         }
     }
 
@@ -309,9 +312,9 @@ class LoginActivityImpl :
                 is InvalidStudyIdException -> R.string.invalid_study_id
                 is FirebaseRemoteConfigException -> R.string.login_failed_firebase
                 is ConnectException -> R.string.login_failed_connection
-                is IOException -> R.string.login_failed_mp
                 is MissingConfigurationException -> R.string.missing_config_exception
                 is OAuthFlowAbortException -> R.string.oauth_flow_aborted
+                is IOException -> R.string.login_failed_mp
                 else -> R.string.login_failed
             }
             Boast.makeText(this@LoginActivityImpl, res, Toast.LENGTH_LONG).show()
