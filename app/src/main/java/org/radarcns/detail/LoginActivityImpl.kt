@@ -219,7 +219,6 @@ class LoginActivityImpl :
             }
 
             radarConfig.updateWithAuthState(this, updatedAuth)
-            logger.debug("AppAuthDebug: {}", updatedAuth)
             try {
                 oAuthManager.start(updatedAuth, activityResultLauncher)
             } catch (ex: MissingConfigurationException) {
