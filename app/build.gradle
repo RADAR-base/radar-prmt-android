@@ -106,6 +106,7 @@ dependencies {
     implementation "org.radarbase:radar-android-google-activity:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-google-places:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-phone-audio-input:$radar_commons_android_version"
+    implementation("org.radarbase:radar-android-login-oauth2:$radar_commons_android_version")
 
     implementation "androidx.lifecycle:lifecycle-process:$lifecycle_process_version"
     implementation "androidx.legacy:legacy-support-v4:$legacy_support_version"
