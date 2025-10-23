@@ -95,7 +95,6 @@ dependencies {
     implementation "org.radarbase:radar-android-phone:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-phone-usage:$radar_commons_android_version"
     selfReleaseImplementation "org.radarbase:radar-android-phone-telephony:$radar_commons_android_version"
-    implementation "org.radarbase:radar-android-empatica:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-application-status:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-weather:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-audio:$radar_commons_android_version"

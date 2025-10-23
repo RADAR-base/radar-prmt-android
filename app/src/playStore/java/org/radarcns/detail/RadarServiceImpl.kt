@@ -26,7 +26,6 @@ import org.radarbase.android.source.SourceProvider
 import org.radarbase.monitor.application.ApplicationStatusProvider
 import org.radarbase.passive.audio.OpenSmileAudioProvider
 import org.radarbase.passive.bittium.FarosProvider
-import org.radarbase.passive.empatica.E4Provider
 import org.radarbase.passive.google.activity.GoogleActivityProvider
 import org.radarbase.passive.google.places.GooglePlacesProvider
 import org.radarbase.passive.google.sleep.GoogleSleepProvider
@@ -43,7 +42,6 @@ class RadarServiceImpl : RadarService() {
     override val plugins: List<SourceProvider<*>> = listOf(
         ApplicationStatusProvider(this),
         OpenSmileAudioProvider(this),
-        E4Provider(this),
         FarosProvider(this),
 //        PolarProvider(this),
         PhoneBluetoothProvider(this),
