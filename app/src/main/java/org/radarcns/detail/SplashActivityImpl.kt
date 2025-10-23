@@ -1,5 +1,6 @@
 package org.radarcns.detail
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast.LENGTH_LONG
@@ -9,8 +10,10 @@ import org.radarbase.android.util.Boast
 import org.radarbase.android.widget.addPrivacyPolicy
 import org.radarbase.android.widget.repeatAnimation
 import org.radarcns.detail.MainActivityBootStarter.Companion.BOOT_START_NOTIFICATION_ID
+import org.radarcns.detail.UncaughtExceptionHandlerContentProvider.Companion.CRASH_RESTART_NOTIFICATION_ID
 import org.radarcns.detail.databinding.ActivitySplashBinding
 
+@SuppressLint("CustomSplashScreen")
 class SplashActivityImpl : SplashActivity() {
     override val delayMs: Long = 0L
     private var notifyResume = false
@@ -28,6 +31,7 @@ class SplashActivityImpl : SplashActivity() {
             (application as RadarApplicationImpl).enableCrashProcessing()
         }
         radarApp.notificationHandler.cancel(BOOT_START_NOTIFICATION_ID)
+        radarApp.notificationHandler.cancel(CRASH_RESTART_NOTIFICATION_ID)
 
         findViewById<ImageView>(R.id.splash_image).repeatAnimation()
         addPrivacyPolicy(binding.splashPrivacyPolicyUrl)

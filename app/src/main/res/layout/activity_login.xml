@@ -70,12 +70,24 @@
                     android:text="@string/scan_qr_button" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/enter_credentials_button"
+                    android:id="@+id/enter_study_id_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="@dimen/size_xxlarge"
                     android:layout_marginTop="@dimen/size_small"
-                    android:text="@string/enter_credentials" />
+                    android:text="@string/enter_study_id" />
+
+                <TextView
+                    android:id="@+id/enter_credentials_button"
+                    style="@style/TextAppearance.MaterialComponents.Body2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:textColor="#2196F3"
+                    android:text="@string/token_id_description"
+                    android:textAlignment="center" />
+
                 <com.google.android.material.progressindicator.CircularProgressIndicator
                     android:id="@+id/loader"
                     android:layout_width="wrap_content"

@@ -1,5 +1,7 @@
 package org.radarcns.detail
 
+import android.annotation.SuppressLint
+import android.app.ActivityOptions
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.ContentProvider
@@ -8,8 +10,14 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
+import android.provider.Settings
+import androidx.core.app.NotificationCompat.CATEGORY_ALARM
 import org.radarbase.android.RadarApplication
+import org.radarbase.android.RadarApplication.Companion.radarApp
+import org.radarbase.android.util.NotificationHandler.Companion.NOTIFICATION_CHANNEL_ALERT
 import org.radarbase.android.util.toPendingIntentFlag
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -45,10 +53,26 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
         return true
     }
 
+    @SuppressLint("ImplicitSamInstance")
     private fun triggerRestart() {
         val currentContext = context ?: return
 
         currentContext.stopService(Intent(currentContext, RadarServiceImpl::class.java))
+
+        if (!Settings.canDrawOverlays(currentContext)) {
+            currentContext.radarApp.notificationHandler.notify(
+                id = CRASH_RESTART_NOTIFICATION_ID,
+                channel = NOTIFICATION_CHANNEL_ALERT,
+                includeStartIntent = true,
+            ) {
+                currentContext.run {
+                    setContentTitle(getString(R.string.crash_restart_title))
+                    setContentTitle(getString(R.string.crash_restart_text))
+                    setCategory(CATEGORY_ALARM)
+                }
+            }
+            return
+        }
 
         val intent = Intent(currentContext, SplashActivityImpl::class.java).apply {
             putExtra("crash", true)
@@ -57,12 +81,23 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
                     or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
+        val activityOptionsBundle: Bundle? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ActivityOptions.makeBasic().run {
+                setPendingIntentCreatorBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED
+                )
+                toBundle()
+            }
+        } else null
+
         val pendingIntent = PendingIntent.getActivity(
             currentContext,
             231912,
             intent,
-            PendingIntent.FLAG_ONE_SHOT.toPendingIntentFlag()
+            PendingIntent.FLAG_ONE_SHOT.toPendingIntentFlag(),
+            activityOptionsBundle
         )
+
         val alarmManager = currentContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.set(
             AlarmManager.ELAPSED_REALTIME,
@@ -97,4 +132,9 @@ class UncaughtExceptionHandlerContentProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<String?>?,
     ): Int = 0
+
+    companion object {
+        const val CRASH_RESTART_NOTIFICATION_ID = 35003
+    }
+
 }
