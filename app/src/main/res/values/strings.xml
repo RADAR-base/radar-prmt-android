@@ -128,6 +128,10 @@
     <string name="bootstart_title">Please start RADAR pRMT</string>
     <string name="bootstart_text">RADAR pRMT has automatically been stopped. Please press this notification to start it again.</string>
 
+    <string name="crash_restart_title">Please start RADAR pRMT</string>
+    <string name="crash_restart_text">RADAR pRMT has been crashed. Please press this notification to start it again</string>
+
+    <string name="fgs_special_type_use">The application uses the specialUse foreground service to continuously send data to the server, as it collects and uploads or caches health data. Previously, it used the dataSync permission, but with the Android 15 update, the dataSync foreground service times out after 6 hours within 24 hours, potentially causing crashes. Therefore, the specialUse foreground service is now used instead.</string>
     <string name="no_plugins_activated">No plugins activated</string>
 
     <!-- Updates  -->
