@@ -1,5 +1,6 @@
 package org.radarcns.detail
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast.LENGTH_LONG
@@ -12,6 +13,7 @@ import org.radarcns.detail.MainActivityBootStarter.Companion.BOOT_START_NOTIFICA
 import org.radarcns.detail.UncaughtExceptionHandlerContentProvider.Companion.CRASH_RESTART_NOTIFICATION_ID
 import org.radarcns.detail.databinding.ActivitySplashBinding
 
+@SuppressLint("CustomSplashScreen")
 class SplashActivityImpl : SplashActivity() {
     override val delayMs: Long = 0L
     private var notifyResume = false

@@ -80,7 +80,7 @@
     </entry>
     <entry>
         <key>oauth2_redirect_url</key>
-        <value>org.radarcns.detail://oauth2/redirect</value>
+        <value>org.radarbase.prmt://login</value>
     </entry>
     <entry>
         <key>privacy_policy</key>
