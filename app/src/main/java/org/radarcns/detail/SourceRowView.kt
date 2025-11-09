@@ -53,6 +53,8 @@ class SourceRowView internal constructor(
     private val batteryLevelCache = ChangeRunner<Float>()
     private val sourceNameCache = ChangeRunner<String>()
     private val statusCache = ChangeRunner<SourceStatusListener.Status>()
+    private var pluginImageResource: Int = -1
+    private var imageResourceRef: (SourceStatusListener.Status) -> Int = provider::imageResource
 
     private val splitRegex = this.mainActivity.getString(R.string.filter_split_regex).toRegex()
 
@@ -149,7 +151,7 @@ class SourceRowView internal constructor(
     private fun updateSourceStatus() {
         statusCache.applyIfChanged(sourceState?.status ?: SourceStatusListener.Status.DISCONNECTED) { status ->
             logger.info("Source status is {}", status)
-
+            updateSourceIcon(status)
             mStatusIcon.setImageResource(when(status) {
                 SourceStatusListener.Status.CONNECTED -> R.drawable.avd_connected_circle
                 SourceStatusListener.Status.DISCONNECTED -> R.drawable.baseline_circle_red_700_24dp
@@ -163,6 +165,10 @@ class SourceRowView internal constructor(
 
     private fun updateBattery() {
         batteryLevelCache.applyIfChanged(sourceState?.batteryLevel ?: Float.NaN) {
+            if (pluginImageResource != -1) {
+                mBatteryLabel.setImageResource(pluginImageResource)
+                return@applyIfChanged
+            }
             mBatteryLabel.setImageResource(when {
                 it.isNaN() -> R.drawable.baseline_battery_unknown_gray_24dp
                 it < 0.1 -> R.drawable.baseline_battery_alert_red_700_24dp
@@ -171,6 +177,13 @@ class SourceRowView internal constructor(
                 it < 0.85 -> R.drawable.baseline_battery_5_bar_green_700_24dp
                 else -> R.drawable.baseline_battery_full_green_700_24dp
             })
+        }
+    }
+
+    private fun updateSourceIcon(status: SourceStatusListener.Status) {
+        pluginImageResource = imageResourceRef(status)
+        if (pluginImageResource != -1) {
+            mBatteryLabel.setImageResource(pluginImageResource)
         }
     }
 
