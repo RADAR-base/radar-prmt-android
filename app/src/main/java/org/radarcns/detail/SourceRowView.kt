@@ -163,6 +163,10 @@ class SourceRowView internal constructor(
 
     private fun updateBattery() {
         batteryLevelCache.applyIfChanged(sourceState?.batteryLevel ?: Float.NaN) {
+            if(provider.pluginNames.first() == "google_sleep") {
+                mBatteryLabel.setImageResource(R.drawable.google_sleep_icon)
+                return@applyIfChanged
+            }
             mBatteryLabel.setImageResource(when {
                 it.isNaN() -> R.drawable.baseline_battery_unknown_gray_24dp
                 it < 0.1 -> R.drawable.baseline_battery_alert_red_700_24dp
