@@ -139,8 +139,12 @@
     <string name="crash_restart_title">Please start RADAR pRMT</string>
     <string name="crash_restart_text">RADAR pRMT has been crashed. Please press this notification to start it again</string>
 
-    <string name="fgs_special_type_use">The application uses the specialUse foreground service to continuously send data to the server, as it collects and uploads or caches health data. Previously, it used the dataSync permission, but with the Android 15 update, the dataSync foreground service times out after 6 hours within 24 hours, potentially causing crashes. Therefore, the specialUse foreground service is now used instead.</string>
+    <string name="fgs_special_type_use">RADAR pRMT keeps a long-running foreground service active so it can continuously collect and upload health, sensor, and location data from the participant\'s phone and any paired study devices (e.g. Bluetooth wearables) to the research study server. The service must keep running while the phone is locked or the app is in the background, because participants contribute data 24/7 for the duration of the study.</string>
     <string name="no_plugins_activated">No plugins activated</string>
+
+    <string name="bg_location_disclosure_title">RADAR pRMT needs background location access</string>
+    <string name="bg_location_disclosure_body">RADAR pRMT collects location samples from your phone, including when the app is closed or not in use, so that the research study can:\n\n• keep your paired Bluetooth study device (e.g. wearable) reachable in the background, and\n\n• passively measure behavioural indicators relevant to the research — including mental-health and wellbeing markers, social isolation and home-stay patterns, and daily activity — as described in the consent you accepted.\n\nCoordinates are stored as relative values, so the absolute location of your phone cannot be determined from the data. Location data is uploaded only to the study server you agreed to. Tap Accept to be asked by Android for the &quot;Allow all the time&quot; location permission.</string>
+    <string name="bg_location_disclosure_revoke_hint">You can revoke this permission at any time in Android Settings &gt; Apps &gt; RADAR pRMT &gt; Permissions.</string>
 
     <!-- Updates  -->
     <string name="updates">Updates</string>
