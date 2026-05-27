@@ -139,7 +139,6 @@
     <string name="crash_restart_title">Please start RADAR pRMT</string>
     <string name="crash_restart_text">RADAR pRMT has been crashed. Please press this notification to start it again</string>
 
-    <string name="fgs_special_type_use">RADAR pRMT keeps a long-running foreground service active so it can continuously collect and upload health, sensor, and location data from the participant\'s phone and any paired study devices (e.g. Bluetooth wearables) to the research study server. The service must keep running while the phone is locked or the app is in the background, because participants contribute data 24/7 for the duration of the study.</string>
     <string name="no_plugins_activated">No plugins activated</string>
 
     <string name="bg_location_disclosure_title">RADAR pRMT needs background location access</string>
