@@ -27,7 +27,6 @@ import android.widget.*
 import androidx.core.text.HtmlCompat
 import org.radarbase.android.MainActivity
 import org.radarbase.android.RadarApplication.Companion.radarConfig
-import org.radarbase.android.RadarConfiguration
 import org.radarbase.android.source.BaseSourceState
 import org.radarbase.android.source.SourceProvider
 import org.radarbase.android.source.SourceServiceConnection
@@ -189,9 +188,7 @@ class SourceRowView internal constructor(
     }
 
     private val infoEnabled: Boolean
-        get() = mainActivity.radarConfig.latestConfig.getBoolean(
-            RadarConfiguration.ENABLE_SOURCE_INFO_UI,
-            false)
+        get() = mainActivity.radarConfig.latestConfig.isExplicitDisclosureProject()
 
     private fun updateInfoButton() {
         mInfoButton.visibility = if (infoEnabled) View.VISIBLE else View.GONE
