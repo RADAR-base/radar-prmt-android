@@ -191,7 +191,7 @@ class SourceRowView internal constructor(
     private val infoEnabled: Boolean
         get() = mainActivity.radarConfig.latestConfig.getBoolean(
             RadarConfiguration.ENABLE_SOURCE_INFO_UI,
-            true)
+            false)
 
     private fun updateInfoButton() {
         mInfoButton.visibility = if (infoEnabled) View.VISIBLE else View.GONE
