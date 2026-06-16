@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import org.radarbase.android.RadarApplication.Companion.radarConfig
+import org.radarbase.android.RadarConfiguration.Companion.DATA_COLLECTION_DISCLOSURE_BODY_KEY
+import org.radarbase.android.RadarConfiguration.Companion.DATA_COLLECTION_DISCLOSURE_TITLE_KEY
 import org.radarcns.detail.databinding.FragmentStartDataCollectionBinding
 import org.slf4j.LoggerFactory
 
@@ -28,9 +31,18 @@ class StartDataCollectionFragment : Fragment() {
         .root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding?.startDataCollectionButton?.setOnClickListener {
-            logger.info("Participant tapped start data collection")
-            listener?.onStartDataCollection()
+        val config = requireContext().radarConfig.latestConfig
+        binding?.apply {
+            dataCollectionTitle.text = config.optString(DATA_COLLECTION_DISCLOSURE_TITLE_KEY)
+                ?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.data_collection_title)
+            dataCollectionBody.text = config.optString(DATA_COLLECTION_DISCLOSURE_BODY_KEY)
+                ?.takeIf { it.isNotBlank() }
+                ?: getString(R.string.data_collection_disclosure)
+            startDataCollectionButton.setOnClickListener {
+                logger.info("Participant tapped start data collection")
+                listener?.onStartDataCollection()
+            }
         }
     }
 
