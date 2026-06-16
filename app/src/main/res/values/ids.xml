@@ -1,4 +1,5 @@
 <resources>
     <item name="privacy_policy_fragment" type="id"/>
     <item name="study_id_fragment" type="id"/>
+    <item name="start_data_collection_fragment" type="id"/>
 </resources>
