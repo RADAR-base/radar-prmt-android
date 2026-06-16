@@ -39,6 +39,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
+import org.radarbase.android.RadarConfiguration.Companion.ENABLE_DATA_COLLECTION_DISCLOSURE
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.oauth2.OAuth2LoginManager
@@ -62,6 +63,7 @@ class LoginActivityImpl :
     LoginActivity(),
     NetworkConnectedReceiver.NetworkConnectedListener,
     PrivacyPolicyFragment.OnFragmentInteractionListener,
+    StartDataCollectionFragment.OnStartDataCollectionListener,
     StudyIdFragment.FragmentInteractionListener {
     private var startActivityFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
@@ -374,10 +376,30 @@ class LoginActivityImpl :
             }
             logger.debug("Enabling Firebase Analytics")
             FirebaseAnalytics.getInstance(this@LoginActivityImpl).setAnalyticsCollectionEnabled(true)
+        }
+        if (radarConfig.latestConfig.getBoolean(ENABLE_DATA_COLLECTION_DISCLOSURE, false)) {
+            mainHandler.post { startDataCollectionFragment() }
+        } else {
+            onStartDataCollection()
+        }
+    }
+
+    override fun onStartDataCollection() {
+        logger.info("Participant started data collection. Opening main activity.")
+        authConnection.applyBinder {
             applyState {
                 logger.info("Updating privacyPolicyAccepted {}", this)
                 super.loginSucceeded(null, this)
             }
+        }
+    }
+
+    private fun startDataCollectionFragment() {
+        logger.info("Starting data collection fragment")
+        try {
+            createFragmentLayout(R.id.start_data_collection_fragment, StartDataCollectionFragment())
+        } catch (ex: IllegalStateException) {
+            logger.error("Failed to start data collection fragment: is login activity already closed?", ex)
         }
     }
 

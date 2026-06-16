@@ -169,4 +169,9 @@
     <string name="consent">Consent</string>
     <string name="filter_split_regex">,</string>
     <string name="special_fgs_explanation">RadarService operates with plugins and modules that may need permissions beyond standard foreground service types. Defining a special use subtype ensures compliance with Android’s requirements for permissions that may vary dynamically based on active plugins</string>
+
+    <string name="start_data_collection">Start data collection</string>
+    <string name="source_info">Information</string>
+    <string name="data_collection_title">Start data collection</string>
+    <string name="data_collection_disclosure">RADAR pRMT collects research data for the study you just consented to. This includes your phone sensors and location, and a wearable device if you set one up.\n\nData collection runs in the background so the study keeps receiving your data. Tap the button below to start.</string>
 </resources>

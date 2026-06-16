@@ -24,9 +24,7 @@
 
     <!-- Foreground service types permissions (for targeting devices running on android 14 and above) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
     <supports-screens android:largeScreens="true"
         android:xlargeScreens="true" />
@@ -130,7 +128,7 @@
         <service
             android:name=".RadarServiceImpl"
             android:exported="false"
-            android:foregroundServiceType="health|location|microphone|connectedDevice" >
+            android:foregroundServiceType="location|connectedDevice" >
         </service>
 
         <service android:name=".AuthServiceImpl" />
