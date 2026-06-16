@@ -39,7 +39,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.RadarConfiguration.Companion.BASE_URL_KEY
-import org.radarbase.android.RadarConfiguration.Companion.ENABLE_DATA_COLLECTION_DISCLOSURE
 import org.radarbase.android.auth.*
 import org.radarbase.android.auth.AuthService.Companion.BASE_URL_PROPERTY
 import org.radarbase.android.auth.oauth2.OAuth2LoginManager
@@ -377,8 +376,10 @@ class LoginActivityImpl :
             logger.debug("Enabling Firebase Analytics")
             FirebaseAnalytics.getInstance(this@LoginActivityImpl).setAnalyticsCollectionEnabled(true)
         }
-        if (radarConfig.latestConfig.getBoolean(ENABLE_DATA_COLLECTION_DISCLOSURE, false)) {
-            mainHandler.post { startDataCollectionFragment() }
+        val showDisclosure = radarConfig.latestConfig.isExplicitDisclosureProject()
+        logger.info("Data collection disclosure decision: show={}", showDisclosure)
+        if (showDisclosure) {
+            startDataCollectionFragment()
         } else {
             onStartDataCollection()
         }
