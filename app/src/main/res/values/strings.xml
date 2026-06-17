@@ -173,5 +173,5 @@
     <string name="start_data_collection">Start data collection</string>
     <string name="source_info">Information</string>
     <string name="data_collection_title">Start data collection</string>
-    <string name="data_collection_disclosure">RADAR pRMT collects research data for the study you just consented to. This includes your phone sensors and location, and a wearable device if you set one up.\n\nData collection runs in the background so the study keeps receiving your data. Tap the button below to start.</string>
+    <string name="data_collection_disclosure">RADAR pRMT collects data for the research study you just consented to, including while the app is closed or not in use. The data may include your location, phone sensors, and continuous data from a connected bluetooth wearable.\n\nYour data is stored in a secure format that is accessible only to your clinician and the study coordinators, and it is used solely for authorized clinical research. Nothing is collected or sent without your consent, and you can revoke location or bluetooth permissions at any time in your device settings.\n\nTap the button below to start data collection.</string>
 </resources>

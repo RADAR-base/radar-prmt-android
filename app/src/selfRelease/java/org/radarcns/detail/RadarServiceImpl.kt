@@ -33,7 +33,6 @@ import org.radarbase.android.config.SingleRadarConfiguration
 import org.radarbase.android.source.SourceProvider
 import org.radarbase.android.util.toPendingIntentFlag
 import org.radarbase.monitor.application.ApplicationStatusProvider
-import org.radarbase.passive.audio.OpenSmileAudioProvider
 import org.radarbase.passive.bittium.FarosProvider
 import org.radarbase.passive.google.places.GooglePlacesProvider
 import org.radarbase.passive.phone.PhoneBluetoothProvider
@@ -42,7 +41,6 @@ import org.radarbase.passive.phone.PhoneLocationProvider
 import org.radarbase.passive.phone.PhoneSensorProvider
 import org.radarbase.passive.phone.telephony.PhoneLogProvider
 import org.radarbase.passive.phone.usage.PhoneUsageProvider
-import org.radarbase.passive.phone.audio.input.PhoneAudioInputProvider
 import org.radarbase.passive.polar.PolarProvider
 import org.radarbase.passive.weather.WeatherApiProvider
 import org.radarcns.detail.UpdatesActivity.Companion.DAY
@@ -73,7 +71,6 @@ class RadarServiceImpl : RadarService() {
         PhoneUsageProvider(this),
         WeatherApiProvider(this),
         GooglePlacesProvider(this),
-        PhoneAudioInputProvider(this)
     )
 
     override val servicePermissions: List<String>
