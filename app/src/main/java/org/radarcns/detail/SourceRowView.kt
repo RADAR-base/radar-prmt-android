@@ -24,7 +24,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.text.HtmlCompat
 import org.radarbase.android.MainActivity
+import org.radarbase.android.RadarApplication.Companion.radarConfig
 import org.radarbase.android.source.BaseSourceState
 import org.radarbase.android.source.SourceProvider
 import org.radarbase.android.source.SourceServiceConnection
@@ -45,6 +47,7 @@ class SourceRowView internal constructor(
     private val mStatusIcon: ImageView
     private val mBatteryLabel: ImageView
     private val mSourceNameLabel: TextView
+    private val mInfoButton: View
     private val devicePreferences: SharedPreferences =
         mainActivity.getSharedPreferences("device." + connection.serviceClassName, Context.MODE_PRIVATE)
     private val filter = ChangeRunner("")
@@ -73,6 +76,8 @@ class SourceRowView internal constructor(
             }
             findViewById<View>(R.id.refreshButton)
                     .setOnClickListener { reconnectSource() }
+            mInfoButton = findViewById(R.id.infoButton)
+            mInfoButton.setOnClickListener { showSourceInfo() }
         }
         setFilter(devicePreferences.getString("filter", "") ?: "")
     }
@@ -144,6 +149,7 @@ class SourceRowView internal constructor(
         updateBattery()
         updateSourceName()
         updateSourceStatus()
+        updateInfoButton()
     }
 
     private fun updateSourceStatus() {
@@ -179,6 +185,37 @@ class SourceRowView internal constructor(
         sourceNameCache.applyIfChanged(sourceName ?: "\u2014") {
             mSourceNameLabel.text = it
         }
+    }
+
+    private val infoEnabled: Boolean
+        get() = mainActivity.radarConfig.latestConfig.isExplicitDisclosureProject()
+
+    private fun updateInfoButton() {
+        mInfoButton.visibility = if (infoEnabled) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * Show the data types collected for this row. For a grouped row such as the phone, every plugin
+     * sharing the same [SourceProvider.infoGroup] is listed, each with its own name and description.
+     */
+    private fun showSourceInfo() {
+        val group = provider.infoGroup
+        val members = if (group != null) {
+            (mainActivity.radarService?.connections ?: emptyList())
+                .filter { it.infoGroup == group }
+        } else {
+            emptyList()
+        }.ifEmpty { listOf(provider) }
+
+        val body = members.joinToString("<br/><br/>") { p ->
+            "<b>${p.displayName}</b><br/>${p.description.orEmpty()}"
+        }
+
+        AlertDialog.Builder(mainActivity)
+            .setTitle(provider.displayName)
+            .setMessage(HtmlCompat.fromHtml(body, HtmlCompat.FROM_HTML_MODE_LEGACY))
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     companion object {

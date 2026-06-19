@@ -62,6 +62,7 @@ class LoginActivityImpl :
     LoginActivity(),
     NetworkConnectedReceiver.NetworkConnectedListener,
     PrivacyPolicyFragment.OnFragmentInteractionListener,
+    StartDataCollectionFragment.OnStartDataCollectionListener,
     StudyIdFragment.FragmentInteractionListener {
     private var startActivityFuture: Runnable? = null
     private var didModifyBaseUrl: Boolean = false
@@ -374,10 +375,32 @@ class LoginActivityImpl :
             }
             logger.debug("Enabling Firebase Analytics")
             FirebaseAnalytics.getInstance(this@LoginActivityImpl).setAnalyticsCollectionEnabled(true)
+        }
+        val showDisclosure = radarConfig.latestConfig.isExplicitDisclosureProject()
+        logger.info("Data collection disclosure decision: show={}", showDisclosure)
+        if (showDisclosure) {
+            startDataCollectionFragment()
+        } else {
+            onStartDataCollection()
+        }
+    }
+
+    override fun onStartDataCollection() {
+        logger.info("Participant started data collection. Opening main activity.")
+        authConnection.applyBinder {
             applyState {
                 logger.info("Updating privacyPolicyAccepted {}", this)
                 super.loginSucceeded(null, this)
             }
+        }
+    }
+
+    private fun startDataCollectionFragment() {
+        logger.info("Starting data collection fragment")
+        try {
+            createFragmentLayout(R.id.start_data_collection_fragment, StartDataCollectionFragment())
+        } catch (ex: IllegalStateException) {
+            logger.error("Failed to start data collection fragment: is login activity already closed?", ex)
         }
     }
 

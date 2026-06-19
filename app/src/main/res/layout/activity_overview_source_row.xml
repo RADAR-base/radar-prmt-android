@@ -34,6 +34,21 @@
         android:maxLines="1"/>
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/infoButton"
+        style="?attr/borderlessButtonStyle"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        android:visibility="gone"
+        app:icon="@drawable/baseline_info_24"
+        android:contentDescription="@string/source_info"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/filterSourceButton"
         android:layout_width="52dp"
         android:layout_height="52dp"
