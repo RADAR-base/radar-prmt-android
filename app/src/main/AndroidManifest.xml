@@ -37,6 +37,12 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/AppTheme" >
 
+        <!-- From target SDK 36, Android 16 ignores the portrait lock on screens of 600dp and wider.
+             This property keeps the portrait lock on tablets. It stops working at target SDK 37. -->
+        <property
+            android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+            android:value="true" />
+
         <meta-data android:name="firebase_analytics_collection_enabled" android:value="false"/>
         <meta-data android:name="google_analytics_adid_collection_enabled" android:value="false"/>
         <meta-data android:name="google_analytics_ssaid_collection_enabled" android:value="false"/>
