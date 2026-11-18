@@ -3,15 +3,15 @@ apply plugin: "com.google.android.gms.oss-licenses-plugin"
 apply plugin: "kotlin-android"
 
 android {
-    compileSdk 35
+    compileSdk 36
     namespace "org.radarcns.detail"
 
     defaultConfig {
         applicationId "org.radarcns.detail"
         minSdkVersion 26
-        targetSdkVersion 35
-        versionCode 75
-        versionName "1.3.5"
+        targetSdkVersion 36
+        versionCode 77
+        versionName "1.3.6"
         manifestPlaceholders = ["appAuthRedirectScheme": "org.radarbase.passive.app"]
         multiDexEnabled true
         ndkVersion "25.2.9519653"
@@ -97,7 +97,7 @@ dependencies {
     selfReleaseImplementation "org.radarbase:radar-android-phone-telephony:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-application-status:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-weather:$radar_commons_android_version"
-    implementation "org.radarbase:radar-android-faros:$radar_commons_android_version"
+//    implementation "org.radarbase:radar-android-faros:$radar_commons_android_version"
     implementation "org.radarbase:radar-android-polar:$radar_commons_android_version"
 //    implementation "org.radarbase:radar-android-google-sleep:$radar_commons_android_version"
 //    implementation "org.radarbase:radar-android-google-activity:$radar_commons_android_version"
